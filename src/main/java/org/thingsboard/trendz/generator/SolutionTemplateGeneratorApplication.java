@@ -14,15 +14,28 @@ import java.util.List;
 @SpringBootApplication
 public class SolutionTemplateGeneratorApplication implements CommandLineRunner {
 
-	@Value("${generator.solutions}")
-	private List<String> currentSolutions;
+	private final static String MODE_GENERATE = "generate";
+	private final static String MODE_REMOVE = "remove";
+
+	private final String mode;
+	private final List<String> currentSolutions;
 
 	@Autowired
 	private SolutionTemplateDispatcher solutionTemplateDispatcher;
 
 
+	public SolutionTemplateGeneratorApplication(
+			@Value("${generator.mode}") String mode,
+			@Value("${generator.solutions}") List<String> currentSolutions
+	) {
+		this.mode = mode;
+		this.currentSolutions = currentSolutions;
+	}
+
 	@Override
 	public void run(String... args) {
+		boolean modeRemove = MODE_REMOVE.equals(this.mode);
+
 		log.info("There is/are {} solutions found {}", this.currentSolutions.size(), this.currentSolutions);
 		for (String solutionName : this.currentSolutions) {
 			log.info("Starting current generator: {}", solutionName);
@@ -30,7 +43,11 @@ public class SolutionTemplateGeneratorApplication implements CommandLineRunner {
 			if (solutionGenerator == null) {
 				log.error("Solution with name {} does not exist, skipping...", solutionName);
 			} else {
-				solutionGenerator.generate();
+				if (modeRemove) {
+					solutionGenerator.remove();
+				} else {
+					solutionGenerator.generate();
+				}
 			}
 			log.info("Current generator is finished: {}", solutionName);
 		}

@@ -4,4 +4,6 @@ public interface SolutionTemplateGenerator {
 
     String getSolutionName();
     void generate();
+
+    void remove();
 }

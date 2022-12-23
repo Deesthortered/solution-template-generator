@@ -10,4 +10,5 @@ tb:
     cloud:    false
 
 generator:
+  mode: generate  # generate, remove
   solutions: Basic

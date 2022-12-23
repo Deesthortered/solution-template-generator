@@ -15,5 +15,11 @@ public class BasicSolution implements SolutionTemplateGenerator {
     @Override
     public void generate() {
         log.info("WaterMeteringSolution - generate");
+
+    }
+
+    @Override
+    public void remove() {
+        log.info("WaterMeteringSolution - remove");
     }
 }
