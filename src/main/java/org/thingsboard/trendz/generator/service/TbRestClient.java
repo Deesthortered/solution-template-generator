@@ -241,6 +241,4 @@ public class TbRestClient {
 
         return restTemplate.postForEntity(baseURL + "/api/entityGroup", entityGroup, EntityGroup.class).getBody();
     }
-
-
 }

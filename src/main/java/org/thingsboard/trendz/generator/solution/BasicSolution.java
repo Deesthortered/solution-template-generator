@@ -70,7 +70,7 @@ public class BasicSolution implements SolutionTemplateGenerator {
                         tbRestClient.deleteRuleChain(ruleChain.getUuidId());
                     });
 
-            log.error("Basic Solution removal was failed, skipping...");
+            log.info("Basic Solution - removal is completed!");
         } catch (Exception e) {
             log.error("WaterMeteringSolution removal was failed, skipping...", e);
         }
