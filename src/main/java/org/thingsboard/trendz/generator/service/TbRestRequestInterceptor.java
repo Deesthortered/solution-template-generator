@@ -46,6 +46,9 @@ public class TbRestRequestInterceptor implements ClientHttpRequestInterceptor {
 
     @Override
     public ClientHttpResponse intercept(HttpRequest request, byte[] bytes, ClientHttpRequestExecution execution) throws IOException {
+        if (TbRestClient.LOGIN_PATH.equals(request.getURI().getPath())) {
+            return execution.execute(request, bytes);
+        }
         String token = "Bearer " + gainToken();
 
         HttpRequest wrapper = new HttpRequestWrapper(request);

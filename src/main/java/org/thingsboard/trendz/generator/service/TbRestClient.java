@@ -26,6 +26,7 @@ import java.util.UUID;
 @Service
 public class TbRestClient {
 
+    public static final String LOGIN_PATH = "/api/auth/login";
     private final String baseURL;
     private final RestTemplate restTemplate;
 
@@ -39,7 +40,7 @@ public class TbRestClient {
 
 
     public AuthToken login(LoginRequest request) {
-        ResponseEntity<AuthToken> response = restTemplate.postForEntity(baseURL + "/api/auth/login", request, AuthToken.class);
+        ResponseEntity<AuthToken> response = restTemplate.postForEntity(baseURL + LOGIN_PATH, request, AuthToken.class);
         AuthToken authToken = response.getBody();
         if (authToken == null) {
             throw new IllegalStateException("Login request is failed!");
@@ -51,7 +52,7 @@ public class TbRestClient {
         Map<String, String> request = new HashMap<>();
         request.put("refreshToken", refreshToken);
 
-        ResponseEntity<AuthToken> response = restTemplate.postForEntity("/api/auth/token", request, AuthToken.class);
+        ResponseEntity<AuthToken> response = restTemplate.postForEntity(LOGIN_PATH, request, AuthToken.class);
         AuthToken authToken = response.getBody();
         if (authToken == null) {
             throw new IllegalStateException("Refresh token is failed!");
