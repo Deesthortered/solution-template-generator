@@ -3,6 +3,8 @@ package org.thingsboard.trendz.generator.service;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
@@ -17,13 +19,9 @@ import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.common.data.rule.RuleChain;
 import org.thingsboard.trendz.generator.model.AuthToken;
 import org.thingsboard.trendz.generator.model.LoginRequest;
+import org.thingsboard.trendz.generator.model.PageData;
 
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 
 @Slf4j
 @Service
@@ -33,9 +31,10 @@ public class TbRestClient {
     private final String baseURL;
     private final RestTemplate restTemplate;
 
+    @Autowired
     public TbRestClient(
             @Value("${tb.api.host}") String tbApiHost,
-            @Autowired RestTemplate restTemplate
+            RestTemplate restTemplate
     ) {
         this.baseURL = tbApiHost;
         this.restTemplate = restTemplate;
@@ -130,23 +129,51 @@ public class TbRestClient {
 
 
     public Set<Customer> getAllCustomers() {
-        Set<Customer> typeKeeper = new HashSet<>();
-        return restTemplate.getForEntity(baseURL + "/api/customers", typeKeeper.getClass()).getBody();
+        ParameterizedTypeReference<PageData<Customer>> reference = new ParameterizedTypeReference<>() {
+        };
+
+        return getAllEntities("/api/customers", reference);
     }
 
     public Set<Asset> getAllAssets() {
-        Set<Asset> typeKeeper = new HashSet<>();
-        return restTemplate.getForEntity(baseURL + "/api/tenant/assetInfos", typeKeeper.getClass()).getBody();
+        ParameterizedTypeReference<PageData<Asset>> reference = new ParameterizedTypeReference<>() {
+        };
+
+        return getAllEntities("/api/tenant/assets", reference);
     }
 
     public Set<Device> getAllDevices() {
-        Set<Device> typeKeeper = new HashSet<>();
-        return restTemplate.getForEntity(baseURL + "/api/tenant/deviceInfos", typeKeeper.getClass()).getBody();
+        ParameterizedTypeReference<PageData<Device>> reference = new ParameterizedTypeReference<>() {
+        };
+
+        return getAllEntities("/api/tenant/devices", reference);
     }
 
     public Set<RuleChain> getAllRuleChains() {
-        Set<RuleChain> typeKeeper = new HashSet<>();
-        return restTemplate.getForEntity(baseURL + "/api/ruleChains", typeKeeper.getClass()).getBody();
+        ParameterizedTypeReference<PageData<RuleChain>> reference = new ParameterizedTypeReference<>() {
+        };
+
+        return getAllEntities("/api/ruleChains", reference);
+    }
+
+    private <T> Set<T> getAllEntities(String request, ParameterizedTypeReference<PageData<T>> type) {
+        Set<T> result = new HashSet<>();
+        boolean hasNextPage = true;
+        PageData<T> page;
+        int pageIndex = 0;
+        int pageSize = 100;
+        while (hasNextPage) {
+            page = restTemplate.exchange(
+                    baseURL + request + "?page={page}&pageSize={pageSize}",
+                    HttpMethod.GET,
+                    null,
+                    type,
+                    pageIndex, pageSize
+            ).getBody();
+            hasNextPage = page.hasNext();
+            result.addAll(page.getData());
+        }
+        return result;
     }
 
 
@@ -173,7 +200,7 @@ public class TbRestClient {
     public RuleChain createRuleChain(String name) {
         RuleChain ruleChain = new RuleChain();
         ruleChain.setName(name);
-        return restTemplate.postForEntity(baseURL + "/api/customer", ruleChain, RuleChain.class).getBody();
+        return restTemplate.postForEntity(baseURL + "/api/ruleChain", ruleChain, RuleChain.class).getBody();
     }
 
 
