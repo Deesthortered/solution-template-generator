@@ -1,4 +1,4 @@
-package org.thingsboard.trendz.solution_template_generator.rest;
+package org.thingsboard.trendz.generator.service;
 
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.interfaces.DecodedJWT;
@@ -12,6 +12,8 @@ import org.springframework.http.client.ClientHttpResponse;
 import org.springframework.http.client.support.HttpRequestWrapper;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
+import org.thingsboard.trendz.generator.model.AuthToken;
+import org.thingsboard.trendz.generator.model.LoginRequest;
 
 import java.io.IOException;
 import java.util.Collections;
@@ -32,7 +34,7 @@ public class TbRestRequestInterceptor implements ClientHttpRequestInterceptor {
 
     public TbRestRequestInterceptor(
             @Value("${tb.api.username}") String tbApiUser,
-            @Value("${tb.api.pass}") String tbApiPass,
+            @Value("${tb.api.password}") String tbApiPass,
             @Autowired TbRestClient tbRestClient,
             @Autowired RestTemplate restTemplate
     ) {

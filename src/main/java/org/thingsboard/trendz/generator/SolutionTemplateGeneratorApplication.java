@@ -1,4 +1,4 @@
-package org.thingsboard.trendz.solution_template_generator;
+package org.thingsboard.trendz.generator;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -6,11 +6,9 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.thingsboard.trendz.solution_template_generator.solution.SolutionTemplateGenerator;
-import org.thingsboard.trendz.solution_template_generator.tool.SolutionTemplateDispatcher;
+import org.thingsboard.trendz.generator.solution.SolutionTemplateGenerator;
 
 import java.util.List;
-import java.util.Map;
 
 @Slf4j
 @SpringBootApplication
@@ -22,13 +20,9 @@ public class SolutionTemplateGeneratorApplication implements CommandLineRunner {
 	@Autowired
 	private SolutionTemplateDispatcher solutionTemplateDispatcher;
 
-	public static void main(String[] args) {
-		SpringApplication.run(SolutionTemplateGeneratorApplication.class, args);
-	}
-
 
 	@Override
-	public void run(String... args) throws Exception {
+	public void run(String... args) {
 		log.info("There is/are {} solutions found {}", this.currentSolutions.size(), this.currentSolutions);
 		for (String solutionName : this.currentSolutions) {
 			log.info("Starting current generator: {}", solutionName);
@@ -41,5 +35,9 @@ public class SolutionTemplateGeneratorApplication implements CommandLineRunner {
 			log.info("Current generator is finished: {}", solutionName);
 		}
 		System.exit(0);
+	}
+
+	public static void main(String[] args) {
+		SpringApplication.run(SolutionTemplateGeneratorApplication.class, args);
 	}
 }

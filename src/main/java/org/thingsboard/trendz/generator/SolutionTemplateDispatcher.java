@@ -1,9 +1,9 @@
-package org.thingsboard.trendz.solution_template_generator.tool;
+package org.thingsboard.trendz.generator;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import org.thingsboard.trendz.solution_template_generator.solution.SolutionTemplateGenerator;
+import org.thingsboard.trendz.generator.solution.SolutionTemplateGenerator;
 
 import javax.annotation.PostConstruct;
 import java.util.HashMap;

@@ -1,4 +1,4 @@
-package org.thingsboard.trendz.solution_template_generator;
+package org.thingsboard.trendz.generator;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;

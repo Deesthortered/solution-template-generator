@@ -1,0 +1,13 @@
+server:
+  port: 8887
+
+tb:
+  api:
+    host:     http://localhost:8080
+    username: solution.template.generator@thingsboard.org
+    password: password
+    pe:       false
+    cloud:    false
+
+generator:
+  solutions: Basic

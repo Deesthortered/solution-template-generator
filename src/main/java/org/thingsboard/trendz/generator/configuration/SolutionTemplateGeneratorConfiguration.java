@@ -1,4 +1,4 @@
-package org.thingsboard.trendz.solution_template_generator.configuration;
+package org.thingsboard.trendz.generator.configuration;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Bean;

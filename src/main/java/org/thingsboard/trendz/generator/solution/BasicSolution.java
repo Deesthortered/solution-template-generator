@@ -1,15 +1,15 @@
-package org.thingsboard.trendz.solution_template_generator.solution;
+package org.thingsboard.trendz.generator.solution;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 @Slf4j
 @Service
-public class WaterMeteringSolution implements SolutionTemplateGenerator {
+public class BasicSolution implements SolutionTemplateGenerator {
 
     @Override
     public String getSolutionName() {
-        return "WaterMetering";
+        return "Basic";
     }
 
     @Override
