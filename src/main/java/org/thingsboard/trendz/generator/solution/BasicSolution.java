@@ -16,6 +16,7 @@ import org.thingsboard.trendz.generator.exception.DeviceAlreadyExistException;
 import org.thingsboard.trendz.generator.exception.RuleChainAlreadyExistException;
 import org.thingsboard.trendz.generator.model.RelationType;
 import org.thingsboard.trendz.generator.model.Telemetry;
+import org.thingsboard.trendz.generator.model.Timestamp;
 import org.thingsboard.trendz.generator.service.TbRestClient;
 
 import java.util.Optional;
@@ -81,10 +82,11 @@ public class BasicSolution implements SolutionTemplateGenerator {
             tbRestClient.assignDeviceToCustomer(customer.getUuidId(), device.getUuidId());
 
             Telemetry<Integer> deviceTelemetry = new Telemetry<>("deviceTelemetry");
-            deviceTelemetry.add(new Telemetry.Point<>(1640995200000L, 10));
-            deviceTelemetry.add(new Telemetry.Point<>(1641081600000L, 20));
-            deviceTelemetry.add(new Telemetry.Point<>(1641168000000L, 30));
-            deviceTelemetry.add(new Telemetry.Point<>(1641254400000L, 40));
+            deviceTelemetry.add(new Telemetry.Point<>(Timestamp.of(1640995200000L), 10));
+            deviceTelemetry.add(new Telemetry.Point<>(Timestamp.of(1641081600000L), 20));
+            deviceTelemetry.add(new Telemetry.Point<>(Timestamp.of(1641168000000L), 30));
+            deviceTelemetry.add(new Telemetry.Point<>(Timestamp.of(1641254400000L), 40));
+            deviceTelemetry.add(new Telemetry.Point<>(Timestamp.of(1641340800000L), 50));
             DeviceCredentials credentials = tbRestClient.getCredentials(device.getUuidId());
             tbRestClient.pushTelemetry(credentials.getCredentialsId(), deviceTelemetry);
 

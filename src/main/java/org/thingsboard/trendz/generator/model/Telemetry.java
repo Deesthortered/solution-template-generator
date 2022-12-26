@@ -22,12 +22,12 @@ public class Telemetry<T> {
 
     @Data
     public static class Point<T> implements Comparable<Point<T>> {
-        private final long ts;
+        private final Timestamp ts;
         private final T value;
 
         @Override
         public int compareTo(Point point) {
-            return (int) Math.signum(this.ts - point.ts);
+            return this.ts.compareTo(point.ts);
         }
     }
 
@@ -68,7 +68,7 @@ public class Telemetry<T> {
             }
 
             ObjectNode nodePoint = JsonUtils.getObjectMapper().createObjectNode();
-            nodePoint.put("ts", point.getTs());
+            nodePoint.put("ts", point.getTs().get());
             nodePoint.set("values", valueNode);
             nodePointList.add(nodePoint);
         }

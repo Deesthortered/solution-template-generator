@@ -7,7 +7,7 @@ import java.time.ZoneId;
 import java.time.ZonedDateTime;
 
 @EqualsAndHashCode
-public class Timestamp {
+public class Timestamp implements Comparable<Timestamp> {
 
     private final long ts;
 
@@ -32,5 +32,10 @@ public class Timestamp {
 
     public static Timestamp of(long ts) {
         return new Timestamp(ts);
+    }
+
+    @Override
+    public int compareTo(Timestamp timestamp) {
+        return (int) Math.signum(this.ts - timestamp.ts);
     }
 }
