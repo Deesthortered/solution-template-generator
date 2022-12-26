@@ -9,6 +9,8 @@ import org.thingsboard.server.common.data.EntityType;
 import org.thingsboard.server.common.data.asset.Asset;
 import org.thingsboard.server.common.data.relation.EntityRelation;
 import org.thingsboard.server.common.data.rule.RuleChain;
+import org.thingsboard.server.common.data.rule.RuleChainMetaData;
+import org.thingsboard.server.common.data.rule.RuleNode;
 import org.thingsboard.server.common.data.security.DeviceCredentials;
 import org.thingsboard.trendz.generator.exception.AssetAlreadyExistException;
 import org.thingsboard.trendz.generator.exception.CustomerAlreadyExistException;
@@ -76,7 +78,6 @@ public class BasicSolution implements SolutionTemplateGenerator {
                     });
 
             Customer customer = tbRestClient.createCustomer(CUSTOMER_TITLE);
-            RuleChain ruleChain = tbRestClient.createRuleChain(RULE_CHAIN_NAME);
             Asset asset = tbRestClient.createAsset(ASSET_NAME, ASSET_TYPE);
             Device device = tbRestClient.createDevice(DEVICE_NAME, DEVICE_TYPE);
             EntityRelation relation = tbRestClient.createRelation(RelationType.CONTAINS.getType(), asset.getId(), device.getId());
@@ -106,6 +107,11 @@ public class BasicSolution implements SolutionTemplateGenerator {
             tbRestClient.setEntityAttributes(
                     asset.getUuidId(), asset.getEntityType(), Scope.SERVER_SCOPE, attributes
             );
+
+            RuleChain ruleChain = tbRestClient.createRuleChain(RULE_CHAIN_NAME);
+            RuleChainMetaData metaData = tbRestClient.getRuleChainMetadataByRuleChainId(ruleChain.getUuidId())
+                    .orElseThrow();
+
 
             log.info("Basic Solution - generation is completed!");
         } catch (Exception e) {
@@ -150,6 +156,7 @@ public class BasicSolution implements SolutionTemplateGenerator {
                     .stream()
                     .filter(ruleChain -> ruleChain.getName().equals(RULE_CHAIN_NAME))
                     .findAny()
+                    .flatMap(ruleChain -> tbRestClient.getRuleChainById(ruleChain.getUuidId()))
                     .ifPresent(ruleChain -> {
                         tbRestClient.deleteRuleChain(ruleChain.getUuidId());
                     });

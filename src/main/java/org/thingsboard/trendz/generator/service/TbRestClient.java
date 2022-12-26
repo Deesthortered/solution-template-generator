@@ -20,6 +20,7 @@ import org.thingsboard.server.common.data.id.EntityId;
 import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.common.data.relation.EntityRelation;
 import org.thingsboard.server.common.data.rule.RuleChain;
+import org.thingsboard.server.common.data.rule.RuleChainMetaData;
 import org.thingsboard.server.common.data.security.DeviceCredentials;
 import org.thingsboard.trendz.generator.exception.PushTelemetryException;
 import org.thingsboard.trendz.generator.model.Attribute;
@@ -117,15 +118,6 @@ public class TbRestClient {
         }
     }
 
-    public Optional<RuleChain> getRuleChainById(UUID ruleChainId) {
-        try {
-            RuleChain ruleChain = restTemplate.getForEntity(baseURL + "/api/device/" + ruleChainId.toString(), RuleChain.class).getBody();
-            return Optional.ofNullable(ruleChain);
-        } catch (HttpClientErrorException.NotFound e) {
-            return Optional.empty();
-        }
-    }
-
 
     public Optional<Customer> getCustomerByTitle(String title) {
         try {
@@ -176,13 +168,6 @@ public class TbRestClient {
         return getAllEntities("/api/tenant/devices", reference);
     }
 
-    public Set<RuleChain> getAllRuleChains() {
-        ParameterizedTypeReference<PageData<RuleChain>> reference = new ParameterizedTypeReference<>() {
-        };
-
-        return getAllEntities("/api/ruleChains", reference);
-    }
-
     private <T> Set<T> getAllEntities(String request, ParameterizedTypeReference<PageData<T>> type) {
         Set<T> result = new HashSet<>();
         boolean hasNextPage = true;
@@ -224,12 +209,6 @@ public class TbRestClient {
         return restTemplate.postForEntity(baseURL + "/api/device", device, Device.class).getBody();
     }
 
-    public RuleChain createRuleChain(String name) {
-        RuleChain ruleChain = new RuleChain();
-        ruleChain.setName(name);
-        return restTemplate.postForEntity(baseURL + "/api/ruleChain", ruleChain, RuleChain.class).getBody();
-    }
-
 
     public void deleteCustomer(UUID customerId) {
         restTemplate.delete(baseURL + "/api/customer/" + customerId);
@@ -241,10 +220,6 @@ public class TbRestClient {
 
     public void deleteDevice(UUID deviceId) {
         restTemplate.delete(baseURL + "/api/device/" + deviceId);
-    }
-
-    public void deleteRuleChain(UUID ruleChainId) {
-        restTemplate.delete(baseURL + "/api/ruleChain/" + ruleChainId);
     }
 
 
@@ -365,6 +340,42 @@ public class TbRestClient {
         }
 
         restTemplate.postForEntity(baseURL + "/api/plugins/telemetry/{entityType}/{entityId}/{scope}", node, Object.class, params).getBody();
+    }
+
+
+    public Set<RuleChain> getAllRuleChains() {
+        ParameterizedTypeReference<PageData<RuleChain>> reference = new ParameterizedTypeReference<>() {
+        };
+
+        return getAllEntities("/api/ruleChains", reference);
+    }
+
+    public Optional<RuleChain> getRuleChainById(UUID ruleChainId) {
+        try {
+            RuleChain ruleChain = restTemplate.getForEntity(baseURL + "/api/device/" + ruleChainId.toString(), RuleChain.class).getBody();
+            return Optional.ofNullable(ruleChain);
+        } catch (HttpClientErrorException.NotFound e) {
+            return Optional.empty();
+        }
+    }
+
+    public RuleChain createRuleChain(String name) {
+        RuleChain ruleChain = new RuleChain();
+        ruleChain.setName(name);
+        return restTemplate.postForEntity(baseURL + "/api/ruleChain", ruleChain, RuleChain.class).getBody();
+    }
+
+    public void deleteRuleChain(UUID ruleChainId) {
+        restTemplate.delete(baseURL + "/api/ruleChain/" + ruleChainId);
+    }
+
+    public Optional<RuleChainMetaData> getRuleChainMetadataByRuleChainId(UUID ruleChainId) {
+        try {
+            RuleChainMetaData metadata = restTemplate.getForEntity(baseURL + "/api/device/" + ruleChainId.toString() + "/metadata", RuleChainMetaData.class).getBody();
+            return Optional.ofNullable(metadata);
+        } catch (HttpClientErrorException.NotFound e) {
+            return Optional.empty();
+        }
     }
 
 
