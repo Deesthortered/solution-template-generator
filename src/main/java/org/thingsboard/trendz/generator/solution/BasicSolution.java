@@ -14,12 +14,15 @@ import org.thingsboard.trendz.generator.exception.AssetAlreadyExistException;
 import org.thingsboard.trendz.generator.exception.CustomerAlreadyExistException;
 import org.thingsboard.trendz.generator.exception.DeviceAlreadyExistException;
 import org.thingsboard.trendz.generator.exception.RuleChainAlreadyExistException;
+import org.thingsboard.trendz.generator.model.Attribute;
 import org.thingsboard.trendz.generator.model.RelationType;
+import org.thingsboard.trendz.generator.model.Scope;
 import org.thingsboard.trendz.generator.model.Telemetry;
 import org.thingsboard.trendz.generator.model.Timestamp;
 import org.thingsboard.trendz.generator.service.TbRestClient;
 
 import java.util.Optional;
+import java.util.Set;
 
 @Slf4j
 @Service
@@ -89,6 +92,20 @@ public class BasicSolution implements SolutionTemplateGenerator {
             deviceTelemetry.add(new Telemetry.Point<>(Timestamp.of(1641340800000L), 50));
             DeviceCredentials credentials = tbRestClient.getCredentials(device.getUuidId());
             tbRestClient.pushTelemetry(credentials.getCredentialsId(), deviceTelemetry);
+
+            Set<Attribute<?>> attributes = Set.of(
+                    new Attribute<>("doubleKey", 1.0),
+                    new Attribute<>("longKey", 1L),
+                    new Attribute<>("intKey", 1),
+                    new Attribute<>("booleanKey", true),
+                    new Attribute<>("StringKey", "qwerty")
+            );
+            tbRestClient.setEntityAttributes(
+                    device.getUuidId(), device.getEntityType(), Scope.SERVER_SCOPE, attributes
+            );
+            tbRestClient.setEntityAttributes(
+                    asset.getUuidId(), asset.getEntityType(), Scope.SERVER_SCOPE, attributes
+            );
 
             log.info("Basic Solution - generation is completed!");
         } catch (Exception e) {

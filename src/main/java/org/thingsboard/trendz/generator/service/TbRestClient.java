@@ -1,6 +1,6 @@
 package org.thingsboard.trendz.generator.service;
 
-import com.google.common.collect.Lists;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -22,10 +22,15 @@ import org.thingsboard.server.common.data.relation.EntityRelation;
 import org.thingsboard.server.common.data.rule.RuleChain;
 import org.thingsboard.server.common.data.security.DeviceCredentials;
 import org.thingsboard.trendz.generator.exception.PushTelemetryException;
-import org.thingsboard.trendz.generator.model.*;
+import org.thingsboard.trendz.generator.model.Attribute;
+import org.thingsboard.trendz.generator.model.AuthToken;
+import org.thingsboard.trendz.generator.model.LoginRequest;
+import org.thingsboard.trendz.generator.model.PageData;
+import org.thingsboard.trendz.generator.model.RelationType;
+import org.thingsboard.trendz.generator.model.Scope;
+import org.thingsboard.trendz.generator.model.Telemetry;
 import org.thingsboard.trendz.generator.utils.JsonUtils;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -337,9 +342,29 @@ public class TbRestClient {
         }
     }
 
-    private <T> void pushTelemetry0(String accessToken, Telemetry<T> telemetry) {
+    private void pushTelemetry0(String accessToken, Telemetry<?> telemetry) {
         String json = telemetry.toJson();
-        restTemplate.postForEntity(baseURL + "/api/v1/" + accessToken + "/telemetry", json, String.class);
+        restTemplate.postForEntity(baseURL + "/api/v1/" + accessToken + "/telemetry", json, String.class).getBody();
+    }
+
+
+    public void setEntityAttributes(UUID entityId, EntityType entityType, Scope scope, Set<Attribute<?>> attributes) {
+        Map<String, Object> params = new HashMap<>();
+        params.put("entityId", entityId);
+        params.put("entityType", entityType);
+        params.put("scope", scope);
+
+        ObjectNode node = JsonUtils.getObjectMapper().createObjectNode();
+        for (Attribute<?> attribute : attributes) {
+            Object value = attribute.getValue();
+            if (value instanceof Number) {
+                node.put(attribute.getKey(), Double.parseDouble(value.toString()));
+            } else {
+                node.put(attribute.getKey(), value.toString());
+            }
+        }
+
+        restTemplate.postForEntity(baseURL + "/api/plugins/telemetry/{entityType}/{entityId}/{scope}", node, Object.class, params).getBody();
     }
 
 
