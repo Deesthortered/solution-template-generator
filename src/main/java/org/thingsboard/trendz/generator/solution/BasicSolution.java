@@ -4,16 +4,29 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.thingsboard.server.common.data.Customer;
+import org.thingsboard.server.common.data.Device;
+import org.thingsboard.server.common.data.EntityType;
+import org.thingsboard.server.common.data.asset.Asset;
+import org.thingsboard.server.common.data.relation.EntityRelation;
 import org.thingsboard.server.common.data.rule.RuleChain;
+import org.thingsboard.trendz.generator.exception.AssetAlreadyExistException;
 import org.thingsboard.trendz.generator.exception.CustomerAlreadyExistException;
+import org.thingsboard.trendz.generator.exception.DeviceAlreadyExistException;
 import org.thingsboard.trendz.generator.exception.RuleChainAlreadyExistException;
+import org.thingsboard.trendz.generator.model.RelationType;
 import org.thingsboard.trendz.generator.service.TbRestClient;
+
+import java.util.Optional;
 
 @Slf4j
 @Service
 public class BasicSolution implements SolutionTemplateGenerator {
 
     private static final String CUSTOMER_TITLE = "Basic Customer";
+    private static final String DEVICE_NAME = "Basic Device Device";
+    private static final String DEVICE_TYPE = "Basic Type";
+    private static final String ASSET_NAME = "Basic Asset";
+    private static final String ASSET_TYPE = "Basic Asset Type";
     private static final String RULE_CHAIN_NAME = "Basic Rule Chain";
     private final TbRestClient tbRestClient;
 
@@ -46,8 +59,24 @@ public class BasicSolution implements SolutionTemplateGenerator {
                         throw new RuleChainAlreadyExistException(ruleChain);
                     });
 
+            tbRestClient.getAssetByName(DEVICE_NAME)
+                    .ifPresent(asset -> {
+                        throw new AssetAlreadyExistException(asset);
+                    });
+
+            tbRestClient.getDeviceByName(DEVICE_NAME)
+                    .ifPresent(device -> {
+                        throw new DeviceAlreadyExistException(device);
+                    });
+
             Customer customer = tbRestClient.createCustomer(CUSTOMER_TITLE);
             RuleChain ruleChain = tbRestClient.createRuleChain(RULE_CHAIN_NAME);
+            Asset asset = tbRestClient.createAsset(ASSET_NAME, ASSET_TYPE);
+            Device device = tbRestClient.createDevice(DEVICE_NAME, DEVICE_TYPE);
+            EntityRelation relation = tbRestClient.createRelation(RelationType.CONTAINS.getType(), asset.getId(), device.getId());
+
+            tbRestClient.assignAssetToCustomer(customer.getUuidId(), asset.getUuidId());
+            tbRestClient.assignDeviceToCustomer(customer.getUuidId(), device.getUuidId());
 
             log.info("Basic Solution - generation is completed!");
         } catch (Exception e) {
@@ -59,8 +88,34 @@ public class BasicSolution implements SolutionTemplateGenerator {
     public void remove() {
         log.info("Basic Solution - start removal");
         try {
-            tbRestClient.getCustomerByTitle(CUSTOMER_TITLE)
-                    .ifPresent(customer -> tbRestClient.deleteCustomer(customer.getUuidId()));
+            Optional<Asset> assetByName = tbRestClient.getAssetByName(ASSET_NAME);
+            Optional<Device> deviceByName = tbRestClient.getDeviceByName(DEVICE_NAME);
+            if (assetByName.isPresent() && deviceByName.isPresent()) {
+                tbRestClient.getRelation(
+                        assetByName.get().getUuidId(), EntityType.ASSET,
+                        deviceByName.get().getUuidId(), EntityType.DEVICE,
+                        RelationType.CONTAINS
+                ).ifPresent(relation -> {
+                    tbRestClient.deleteRelation(
+                            assetByName.get().getUuidId(), EntityType.ASSET,
+                            deviceByName.get().getUuidId(), EntityType.DEVICE,
+                            RelationType.CONTAINS
+                    );
+                });
+            }
+
+            assetByName.ifPresent(asset -> {
+                tbRestClient.getCustomerByTitle(CUSTOMER_TITLE)
+                        .ifPresent(customer -> tbRestClient.unassignAssetToCustomer(asset.getUuidId()));
+                tbRestClient.deleteAsset(asset.getUuidId());
+            });
+
+            deviceByName.ifPresent(device -> {
+                tbRestClient.getCustomerByTitle(CUSTOMER_TITLE)
+                        .ifPresent(customer -> tbRestClient.unassignDeviceToCustomer(device.getUuidId()));
+                tbRestClient.deleteDevice(device.getUuidId());
+            });
+
 
             tbRestClient.getAllRuleChains()
                     .stream()
@@ -69,6 +124,9 @@ public class BasicSolution implements SolutionTemplateGenerator {
                     .ifPresent(ruleChain -> {
                         tbRestClient.deleteRuleChain(ruleChain.getUuidId());
                     });
+
+            tbRestClient.getCustomerByTitle(CUSTOMER_TITLE)
+                    .ifPresent(customer -> tbRestClient.deleteCustomer(customer.getUuidId()));
 
             log.info("Basic Solution - removal is completed!");
         } catch (Exception e) {

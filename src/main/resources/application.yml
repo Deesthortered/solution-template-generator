@@ -10,5 +10,5 @@ tb:
     cloud:    false
 
 generator:
-  mode: generate  # generate, remove
+  mode: "${GENERATOR_MODE:generate}"  # generate, remove
   solutions: Basic

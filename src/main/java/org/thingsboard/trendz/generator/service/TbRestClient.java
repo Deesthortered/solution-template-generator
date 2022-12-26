@@ -15,13 +15,21 @@ import org.thingsboard.server.common.data.EntityType;
 import org.thingsboard.server.common.data.asset.Asset;
 import org.thingsboard.server.common.data.group.EntityGroup;
 import org.thingsboard.server.common.data.id.CustomerId;
+import org.thingsboard.server.common.data.id.EntityId;
 import org.thingsboard.server.common.data.id.TenantId;
+import org.thingsboard.server.common.data.relation.EntityRelation;
 import org.thingsboard.server.common.data.rule.RuleChain;
 import org.thingsboard.trendz.generator.model.AuthToken;
 import org.thingsboard.trendz.generator.model.LoginRequest;
 import org.thingsboard.trendz.generator.model.PageData;
+import org.thingsboard.trendz.generator.model.RelationType;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
+import java.util.UUID;
 
 @Slf4j
 @Service
@@ -218,6 +226,58 @@ public class TbRestClient {
 
     public void deleteRuleChain(UUID ruleChainId) {
         restTemplate.delete(baseURL + "/api/ruleChain/" + ruleChainId);
+    }
+
+
+    public Optional<EntityRelation> getRelation(UUID fromId, EntityType fromType, UUID toId, EntityType toType, RelationType type) {
+        try {
+            EntityRelation entityRelation = restTemplate.getForEntity(
+                    baseURL + "/api/relation/?fromId={fromId}&fromType={fromType}&relationType={type}&toId={toId}&toType={toType}",
+                    EntityRelation.class,
+                    fromId, fromType, type.getType(), toId, toType
+            ).getBody();
+            return Optional.ofNullable(entityRelation);
+        } catch (HttpClientErrorException.NotFound e) {
+            return Optional.empty();
+        }
+    }
+
+    public EntityRelation createRelation(String relationType, EntityId idFrom, EntityId idTo) {
+        EntityRelation relation = new EntityRelation();
+        relation.setFrom(idFrom);
+        relation.setTo(idTo);
+        relation.setType(relationType);
+        return restTemplate.postForEntity(baseURL + "/api/relation", relation, EntityRelation.class).getBody();
+    }
+
+    public void deleteRelation(UUID fromId, EntityType fromType, UUID toId, EntityType toType, RelationType type) {
+        restTemplate.delete(
+                baseURL + "/api/relation/?fromId={fromId}&fromType={fromType}&relationType={type}&toId={toId}&toType={toType}",
+                fromId, fromType, type.getType(), toId, toType
+        );
+    }
+
+
+    public Device assignDeviceToCustomer(UUID customerId, UUID deviceId) {
+        Map<String, Object> params = new HashMap<>();
+        params.put("customerId", customerId);
+        params.put("deviceId", deviceId);
+        return restTemplate.postForEntity(baseURL + "/api/customer/{customerId}/device/{deviceId}", "", Device.class, params).getBody();
+    }
+
+    public Asset assignAssetToCustomer(UUID customerId, UUID assetId) {
+        Map<String, Object> params = new HashMap<>();
+        params.put("customerId", customerId);
+        params.put("assetId", assetId);
+        return restTemplate.postForEntity(baseURL + "/api/customer/{customerId}/asset/{assetId}", "", Asset.class, params).getBody();
+    }
+
+    public void unassignDeviceToCustomer(UUID deviceId) {
+        restTemplate.delete(baseURL + "/api/customer/device/{deviceId}", deviceId);
+    }
+
+    public void unassignAssetToCustomer(UUID assetId) {
+        restTemplate.delete(baseURL + "/api/customer/asset/{assetId}", assetId);
     }
 
 
