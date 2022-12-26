@@ -9,11 +9,13 @@ import org.thingsboard.server.common.data.EntityType;
 import org.thingsboard.server.common.data.asset.Asset;
 import org.thingsboard.server.common.data.relation.EntityRelation;
 import org.thingsboard.server.common.data.rule.RuleChain;
+import org.thingsboard.server.common.data.security.DeviceCredentials;
 import org.thingsboard.trendz.generator.exception.AssetAlreadyExistException;
 import org.thingsboard.trendz.generator.exception.CustomerAlreadyExistException;
 import org.thingsboard.trendz.generator.exception.DeviceAlreadyExistException;
 import org.thingsboard.trendz.generator.exception.RuleChainAlreadyExistException;
 import org.thingsboard.trendz.generator.model.RelationType;
+import org.thingsboard.trendz.generator.model.Telemetry;
 import org.thingsboard.trendz.generator.service.TbRestClient;
 
 import java.util.Optional;
@@ -77,6 +79,14 @@ public class BasicSolution implements SolutionTemplateGenerator {
 
             tbRestClient.assignAssetToCustomer(customer.getUuidId(), asset.getUuidId());
             tbRestClient.assignDeviceToCustomer(customer.getUuidId(), device.getUuidId());
+
+            Telemetry<Integer> deviceTelemetry = new Telemetry<>("deviceTelemetry");
+            deviceTelemetry.add(new Telemetry.Point<>(1640995200000L, 10));
+            deviceTelemetry.add(new Telemetry.Point<>(1641081600000L, 20));
+            deviceTelemetry.add(new Telemetry.Point<>(1641168000000L, 30));
+            deviceTelemetry.add(new Telemetry.Point<>(1641254400000L, 40));
+            DeviceCredentials credentials = tbRestClient.getCredentials(device.getUuidId());
+            tbRestClient.pushTelemetry(credentials.getCredentialsId(), deviceTelemetry);
 
             log.info("Basic Solution - generation is completed!");
         } catch (Exception e) {

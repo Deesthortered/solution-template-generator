@@ -1,5 +1,6 @@
 package org.thingsboard.trendz.generator.service;
 
+import com.google.common.collect.Lists;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -19,32 +20,45 @@ import org.thingsboard.server.common.data.id.EntityId;
 import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.common.data.relation.EntityRelation;
 import org.thingsboard.server.common.data.rule.RuleChain;
-import org.thingsboard.trendz.generator.model.AuthToken;
-import org.thingsboard.trendz.generator.model.LoginRequest;
-import org.thingsboard.trendz.generator.model.PageData;
-import org.thingsboard.trendz.generator.model.RelationType;
+import org.thingsboard.server.common.data.security.DeviceCredentials;
+import org.thingsboard.trendz.generator.exception.PushTelemetryException;
+import org.thingsboard.trendz.generator.model.*;
+import org.thingsboard.trendz.generator.utils.JsonUtils;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
 @Slf4j
 @Service
 public class TbRestClient {
 
     public static final String LOGIN_PATH = "/api/auth/login";
+    private static final int PUSH_TELEMETRY_DELAY = 100;
+    private static final int PUSH_TELEMETRY_BATCH_SIZE = 100;
+    private static final int PUSH_TELEMETRY_SUPPRESS_ERROR_COUNT = 10;
+
     private final String baseURL;
+    private final boolean pe;
+    private final boolean cloud;
     private final RestTemplate restTemplate;
 
     @Autowired
     public TbRestClient(
             @Value("${tb.api.host}") String tbApiHost,
+            @Value("${tb.api.pe}") boolean pe,
+            @Value("${tb.api.cloud}") boolean cloud,
             RestTemplate restTemplate
     ) {
         this.baseURL = tbApiHost;
+        this.pe = pe;
+        this.cloud = cloud;
         this.restTemplate = restTemplate;
     }
 
@@ -258,18 +272,18 @@ public class TbRestClient {
     }
 
 
-    public Device assignDeviceToCustomer(UUID customerId, UUID deviceId) {
+    public void assignDeviceToCustomer(UUID customerId, UUID deviceId) {
         Map<String, Object> params = new HashMap<>();
         params.put("customerId", customerId);
         params.put("deviceId", deviceId);
-        return restTemplate.postForEntity(baseURL + "/api/customer/{customerId}/device/{deviceId}", "", Device.class, params).getBody();
+        restTemplate.postForEntity(baseURL + "/api/customer/{customerId}/device/{deviceId}", "", Device.class, params).getBody();
     }
 
-    public Asset assignAssetToCustomer(UUID customerId, UUID assetId) {
+    public void assignAssetToCustomer(UUID customerId, UUID assetId) {
         Map<String, Object> params = new HashMap<>();
         params.put("customerId", customerId);
         params.put("assetId", assetId);
-        return restTemplate.postForEntity(baseURL + "/api/customer/{customerId}/asset/{assetId}", "", Asset.class, params).getBody();
+        restTemplate.postForEntity(baseURL + "/api/customer/{customerId}/asset/{assetId}", "", Asset.class, params).getBody();
     }
 
     public void unassignDeviceToCustomer(UUID deviceId) {
@@ -278,6 +292,54 @@ public class TbRestClient {
 
     public void unassignAssetToCustomer(UUID assetId) {
         restTemplate.delete(baseURL + "/api/customer/asset/{assetId}", assetId);
+    }
+
+
+    public DeviceCredentials getCredentials(UUID id) {
+        return restTemplate.getForEntity(baseURL + "/api/device/" + id.toString() + "/credentials", DeviceCredentials.class).getBody();
+    }
+
+    public <T> void pushTelemetry(String accessToken, Telemetry<T> telemetry) {
+        if (this.cloud) {
+            log.info("Pushing telemetry '{}' to the cloud, batch size = {}, send delay = {}, suppress error count = {}",
+                    telemetry.getName(),
+                    PUSH_TELEMETRY_BATCH_SIZE,
+                    PUSH_TELEMETRY_DELAY,
+                    PUSH_TELEMETRY_SUPPRESS_ERROR_COUNT
+            );
+
+            List<Telemetry<T>> partitions = telemetry.partition(PUSH_TELEMETRY_BATCH_SIZE);
+            int errorCount = 0;
+
+            for (int i = 0; i < partitions.size(); i++) {
+                try {
+                    if (PUSH_TELEMETRY_SUPPRESS_ERROR_COUNT <= errorCount) {
+                        break;
+                    }
+
+                    TimeUnit.MILLISECONDS.sleep(PUSH_TELEMETRY_DELAY);
+                    pushTelemetry0(accessToken, partitions.get(i));
+
+                    errorCount = 0;
+                    log.info("Batch is sent ({}/{})", i, partitions.size());
+                } catch (Exception e) {
+                    log.error("Error during pushing telemetry to the cloud, error count = " + errorCount + ", retry...", e);
+                    errorCount++;
+                    i--;
+                }
+            }
+            if (PUSH_TELEMETRY_SUPPRESS_ERROR_COUNT <= errorCount) {
+                throw new PushTelemetryException(telemetry);
+            }
+
+        } else {
+            pushTelemetry0(accessToken, telemetry);
+        }
+    }
+
+    private <T> void pushTelemetry0(String accessToken, Telemetry<T> telemetry) {
+        String json = telemetry.toJson();
+        restTemplate.postForEntity(baseURL + "/api/v1/" + accessToken + "/telemetry", json, String.class);
     }
 
 
