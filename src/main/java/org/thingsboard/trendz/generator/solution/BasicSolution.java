@@ -102,10 +102,10 @@ public class BasicSolution implements SolutionTemplateGenerator {
                     new Attribute<>("StringKey", "qwerty")
             );
             tbRestClient.setEntityAttributes(
-                    device.getUuidId(), device.getEntityType(), Scope.SERVER_SCOPE, attributes
+                    device.getUuidId(), EntityType.DEVICE, Scope.SERVER_SCOPE, attributes
             );
             tbRestClient.setEntityAttributes(
-                    asset.getUuidId(), asset.getEntityType(), Scope.SERVER_SCOPE, attributes
+                    asset.getUuidId(), EntityType.ASSET, Scope.SERVER_SCOPE, attributes
             );
 
             RuleChain ruleChain = tbRestClient.createRuleChain(RULE_CHAIN_NAME);

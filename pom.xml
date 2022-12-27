@@ -17,7 +17,7 @@
 
 	<properties>
 		<java.version>11</java.version>
-		<tb.version>2.5.0PE-SNAPSHOT</tb.version>
+		<tb.version>3.4.2-SNAPSHOT</tb.version>
 		<spring.boot.version>3.0.0</spring.boot.version>
 		<jwt.version>4.2.1</jwt.version>
 		<guava.version>31.1-jre</guava.version>
@@ -29,6 +29,12 @@
 			<artifactId>data</artifactId>
 			<version>${tb.version}</version>
 		</dependency>
+		<dependency>
+			<groupId>org.thingsboard.rule-engine</groupId>
+			<artifactId>rule-engine-components</artifactId>
+			<version>${tb.version}</version>
+		</dependency>
+
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-web</artifactId>

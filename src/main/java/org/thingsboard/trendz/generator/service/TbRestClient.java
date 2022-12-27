@@ -14,10 +14,7 @@ import org.thingsboard.server.common.data.Customer;
 import org.thingsboard.server.common.data.Device;
 import org.thingsboard.server.common.data.EntityType;
 import org.thingsboard.server.common.data.asset.Asset;
-import org.thingsboard.server.common.data.group.EntityGroup;
-import org.thingsboard.server.common.data.id.CustomerId;
 import org.thingsboard.server.common.data.id.EntityId;
-import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.common.data.relation.EntityRelation;
 import org.thingsboard.server.common.data.rule.RuleChain;
 import org.thingsboard.server.common.data.rule.RuleChainMetaData;
@@ -379,24 +376,26 @@ public class TbRestClient {
     }
 
 
-    public Optional<EntityGroup> getEntityGroup(String name, EntityType entityType, UUID ownerId, boolean isCustomerOwner) {
-        try {
-            String ownerType = (isCustomerOwner ? "CUSTOMER" : "TENANT");
-            EntityGroup entityGroup = restTemplate.getForEntity(baseURL + "/api/entityGroup/" + ownerType + "/" + ownerId + "/" + entityType + "/" + name, EntityGroup.class).getBody();
-            return Optional.ofNullable(entityGroup);
-        } catch (HttpClientErrorException.NotFound e) {
-            return Optional.empty();
-        }
-    }
-
-    public EntityGroup createEntityGroup(String name, EntityType entityType, UUID ownerId, boolean isCustomerOwner) {
-        EntityGroup entityGroup = new EntityGroup();
-        entityGroup.setName(name);
-        entityGroup.setType(entityType);
-        entityGroup.setOwnerId(
-                isCustomerOwner ? new CustomerId(ownerId) : new TenantId(ownerId)
-        );
-
-        return restTemplate.postForEntity(baseURL + "/api/entityGroup", entityGroup, EntityGroup.class).getBody();
-    }
+//    // PE functions
+//
+//    public Optional<EntityGroup> getEntityGroup(String name, EntityType entityType, UUID ownerId, boolean isCustomerOwner) {
+//        try {
+//            String ownerType = (isCustomerOwner ? "CUSTOMER" : "TENANT");
+//            EntityGroup entityGroup = restTemplate.getForEntity(baseURL + "/api/entityGroup/" + ownerType + "/" + ownerId + "/" + entityType + "/" + name, EntityGroup.class).getBody();
+//            return Optional.ofNullable(entityGroup);
+//        } catch (HttpClientErrorException.NotFound e) {
+//            return Optional.empty();
+//        }
+//    }
+//
+//    public EntityGroup createEntityGroup(String name, EntityType entityType, UUID ownerId, boolean isCustomerOwner) {
+//        EntityGroup entityGroup = new EntityGroup();
+//        entityGroup.setName(name);
+//        entityGroup.setType(entityType);
+//        entityGroup.setOwnerId(
+//                isCustomerOwner ? new CustomerId(ownerId) : new TenantId(ownerId)
+//        );
+//
+//        return restTemplate.postForEntity(baseURL + "/api/entityGroup", entityGroup, EntityGroup.class).getBody();
+//    }
 }
