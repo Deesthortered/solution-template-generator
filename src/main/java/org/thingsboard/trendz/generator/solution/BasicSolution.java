@@ -3,14 +3,16 @@ package org.thingsboard.trendz.generator.solution;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.thingsboard.rule.engine.api.NodeConfiguration;
 import org.thingsboard.rule.engine.debug.TbMsgGeneratorNode;
 import org.thingsboard.rule.engine.debug.TbMsgGeneratorNodeConfiguration;
+import org.thingsboard.rule.engine.telemetry.TbMsgTimeseriesNode;
+import org.thingsboard.rule.engine.telemetry.TbMsgTimeseriesNodeConfiguration;
 import org.thingsboard.server.common.data.Customer;
 import org.thingsboard.server.common.data.Device;
 import org.thingsboard.server.common.data.EntityType;
 import org.thingsboard.server.common.data.asset.Asset;
 import org.thingsboard.server.common.data.relation.EntityRelation;
+import org.thingsboard.server.common.data.rule.NodeConnectionInfo;
 import org.thingsboard.server.common.data.rule.RuleChain;
 import org.thingsboard.server.common.data.rule.RuleChainMetaData;
 import org.thingsboard.server.common.data.rule.RuleNode;
@@ -23,6 +25,7 @@ import org.thingsboard.trendz.generator.model.*;
 import org.thingsboard.trendz.generator.service.TbRestClient;
 import org.thingsboard.trendz.generator.utils.JsonUtils;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -109,12 +112,12 @@ public class BasicSolution implements SolutionTemplateGenerator {
                     asset.getUuidId(), EntityType.ASSET, Scope.SERVER_SCOPE, attributes
             );
 
-            TbMsgGeneratorNodeConfiguration configuration = new TbMsgGeneratorNodeConfiguration();
-            configuration.setOriginatorType(EntityType.DEVICE);
-            configuration.setOriginatorId(device.getId().toString());
-            configuration.setMsgCount(0);
-            configuration.setPeriodInSeconds(3);
-            configuration.setJsScript(
+            TbMsgGeneratorNodeConfiguration generatorConfiguration = new TbMsgGeneratorNodeConfiguration();
+            generatorConfiguration.setOriginatorType(EntityType.DEVICE);
+            generatorConfiguration.setOriginatorId(device.getId().toString());
+            generatorConfiguration.setMsgCount(0);
+            generatorConfiguration.setPeriodInSeconds(60);
+            generatorConfiguration.setJsScript(
                     "var tsCycle = (Date.now() % 100) / 10;\n" +
                             "var msg = { telem_value: Math.sin(tsCycle) };\n" +
                             "var metadata = { data: 40 };\n" +
@@ -126,11 +129,29 @@ public class BasicSolution implements SolutionTemplateGenerator {
             RuleNode generatorNode = new RuleNode();
             generatorNode.setName("Basic Generator Node");
             generatorNode.setType(TbMsgGeneratorNode.class.getName());
-            generatorNode.setConfiguration(JsonUtils.makeNodeFromPojo(configuration));
+            generatorNode.setConfiguration(JsonUtils.makeNodeFromPojo(generatorConfiguration));
             generatorNode.setAdditionalInfo(
                     RuleNodeAdditionalInfo.builder()
                             .description("Basic description")
                             .layoutX(RuleNodeAdditionalInfo.CELL_SIZE * 5)
+                            .layoutY(RuleNodeAdditionalInfo.CELL_SIZE * 25)
+                            .build()
+                            .toJsonNode()
+            );
+
+            TbMsgTimeseriesNodeConfiguration saveConfiguration = new TbMsgTimeseriesNodeConfiguration();
+            saveConfiguration.setDefaultTTL(0);
+            saveConfiguration.setUseServerTs(true);
+            saveConfiguration.setSkipLatestPersistence(false);
+
+            RuleNode saveNode = new RuleNode();
+            saveNode.setName("Basic Save Node");
+            saveNode.setType(TbMsgTimeseriesNode.class.getName());
+            saveNode.setConfiguration(JsonUtils.makeNodeFromPojo(saveConfiguration));
+            saveNode.setAdditionalInfo(
+                    RuleNodeAdditionalInfo.builder()
+                            .description("Basic description")
+                            .layoutX(RuleNodeAdditionalInfo.CELL_SIZE * 15)
                             .layoutY(RuleNodeAdditionalInfo.CELL_SIZE * 25)
                             .build()
                             .toJsonNode()
@@ -142,6 +163,19 @@ public class BasicSolution implements SolutionTemplateGenerator {
 
             List<RuleNode> nodes = metaData.getNodes();
             nodes.add(generatorNode);
+            nodes.add(saveNode);
+
+            NodeConnectionInfo connection = new NodeConnectionInfo();
+            connection.setType(NodeConnectionType.SUCCESS.getType());
+            connection.setFromIndex(0);
+            connection.setToIndex(1);
+
+            List<NodeConnectionInfo> connections = metaData.getConnections();
+            if (connections == null) {
+                connections = new ArrayList<>();
+                metaData.setConnections(connections);
+            }
+            connections.add(connection);
 
             RuleChainMetaData savedMetaData = tbRestClient.saveRuleChainMetadata(metaData);
 

@@ -18,7 +18,7 @@ public class RuleNodeAdditionalInfo {
     private int layoutY;
 
 
-    public static final int CELL_SIZE = 26;
+    public static final int CELL_SIZE = 25;
 
     public JsonNode toJsonNode() {
         return JsonUtils.makeNodeFromPojo(this);
