@@ -3,6 +3,9 @@ package org.thingsboard.trendz.generator.solution;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.thingsboard.rule.engine.api.NodeConfiguration;
+import org.thingsboard.rule.engine.debug.TbMsgGeneratorNode;
+import org.thingsboard.rule.engine.debug.TbMsgGeneratorNodeConfiguration;
 import org.thingsboard.server.common.data.Customer;
 import org.thingsboard.server.common.data.Device;
 import org.thingsboard.server.common.data.EntityType;
@@ -16,13 +19,11 @@ import org.thingsboard.trendz.generator.exception.AssetAlreadyExistException;
 import org.thingsboard.trendz.generator.exception.CustomerAlreadyExistException;
 import org.thingsboard.trendz.generator.exception.DeviceAlreadyExistException;
 import org.thingsboard.trendz.generator.exception.RuleChainAlreadyExistException;
-import org.thingsboard.trendz.generator.model.Attribute;
-import org.thingsboard.trendz.generator.model.RelationType;
-import org.thingsboard.trendz.generator.model.Scope;
-import org.thingsboard.trendz.generator.model.Telemetry;
-import org.thingsboard.trendz.generator.model.Timestamp;
+import org.thingsboard.trendz.generator.model.*;
 import org.thingsboard.trendz.generator.service.TbRestClient;
+import org.thingsboard.trendz.generator.utils.JsonUtils;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
@@ -108,10 +109,41 @@ public class BasicSolution implements SolutionTemplateGenerator {
                     asset.getUuidId(), EntityType.ASSET, Scope.SERVER_SCOPE, attributes
             );
 
+            TbMsgGeneratorNodeConfiguration configuration = new TbMsgGeneratorNodeConfiguration();
+            configuration.setOriginatorType(EntityType.DEVICE);
+            configuration.setOriginatorId(device.getId().toString());
+            configuration.setMsgCount(0);
+            configuration.setPeriodInSeconds(3);
+            configuration.setJsScript(
+                    "var tsCycle = (Date.now() % 100) / 10;\n" +
+                            "var msg = { telem_value: Math.sin(tsCycle) };\n" +
+                            "var metadata = { data: 40 };\n" +
+                            "var msgType = \"POST_TELEMETRY_REQUEST\";\n" +
+                            "\n" +
+                            "return { msg: msg, metadata: metadata, msgType: msgType };"
+            );
+
+            RuleNode generatorNode = new RuleNode();
+            generatorNode.setName("Basic Generator Node");
+            generatorNode.setType(TbMsgGeneratorNode.class.getName());
+            generatorNode.setConfiguration(JsonUtils.makeNodeFromPojo(configuration));
+            generatorNode.setAdditionalInfo(
+                    RuleNodeAdditionalInfo.builder()
+                            .description("Basic description")
+                            .layoutX(RuleNodeAdditionalInfo.CELL_SIZE * 5)
+                            .layoutY(RuleNodeAdditionalInfo.CELL_SIZE * 25)
+                            .build()
+                            .toJsonNode()
+            );
+
             RuleChain ruleChain = tbRestClient.createRuleChain(RULE_CHAIN_NAME);
             RuleChainMetaData metaData = tbRestClient.getRuleChainMetadataByRuleChainId(ruleChain.getUuidId())
                     .orElseThrow();
 
+            List<RuleNode> nodes = metaData.getNodes();
+            nodes.add(generatorNode);
+
+            RuleChainMetaData savedMetaData = tbRestClient.saveRuleChainMetadata(metaData);
 
             log.info("Basic Solution - generation is completed!");
         } catch (Exception e) {

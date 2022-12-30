@@ -18,7 +18,7 @@
 	<properties>
 		<java.version>11</java.version>
 		<tb.version>3.4.2-SNAPSHOT</tb.version>
-		<spring.boot.version>3.0.0</spring.boot.version>
+		<spring.boot.version>3.0.1</spring.boot.version>
 		<jwt.version>4.2.1</jwt.version>
 		<guava.version>31.1-jre</guava.version>
 	</properties>

@@ -1,6 +1,7 @@
 package org.thingsboard.trendz.generator.utils;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class JsonUtils {
@@ -29,6 +30,18 @@ public class JsonUtils {
             return objectMapper.readValue(jsonData, clazz);
         } catch (JsonProcessingException e) {
             throw new IllegalStateException("Json error during deserializing, class:" + clazz.getName(), e);
+        }
+    }
+
+    public static JsonNode makeNodeFromPojo(Object obj) {
+        return objectMapper.valueToTree(obj);
+    }
+
+    public static JsonNode makeNodeFromRaw(String jsonData) {
+        try {
+            return objectMapper.readTree(jsonData);
+        } catch (JsonProcessingException e) {
+            throw new IllegalStateException("Json error during reading tree.", e);
         }
     }
 }

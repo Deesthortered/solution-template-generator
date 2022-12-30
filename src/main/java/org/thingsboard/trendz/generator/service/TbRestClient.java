@@ -349,7 +349,7 @@ public class TbRestClient {
 
     public Optional<RuleChain> getRuleChainById(UUID ruleChainId) {
         try {
-            RuleChain ruleChain = restTemplate.getForEntity(baseURL + "/api/device/" + ruleChainId.toString(), RuleChain.class).getBody();
+            RuleChain ruleChain = restTemplate.getForEntity(baseURL + "/api/ruleChain/" + ruleChainId.toString(), RuleChain.class).getBody();
             return Optional.ofNullable(ruleChain);
         } catch (HttpClientErrorException.NotFound e) {
             return Optional.empty();
@@ -366,15 +366,19 @@ public class TbRestClient {
         restTemplate.delete(baseURL + "/api/ruleChain/" + ruleChainId);
     }
 
+
     public Optional<RuleChainMetaData> getRuleChainMetadataByRuleChainId(UUID ruleChainId) {
         try {
-            RuleChainMetaData metadata = restTemplate.getForEntity(baseURL + "/api/device/" + ruleChainId.toString() + "/metadata", RuleChainMetaData.class).getBody();
+            RuleChainMetaData metadata = restTemplate.getForEntity(baseURL + "/api/ruleChain/" + ruleChainId.toString() + "/metadata", RuleChainMetaData.class).getBody();
             return Optional.ofNullable(metadata);
         } catch (HttpClientErrorException.NotFound e) {
             return Optional.empty();
         }
     }
 
+    public RuleChainMetaData saveRuleChainMetadata(RuleChainMetaData metaData) {
+        return restTemplate.postForEntity(baseURL + "/api/ruleChain/metadata", metaData, RuleChainMetaData.class).getBody();
+    }
 
 //    // PE functions
 //
