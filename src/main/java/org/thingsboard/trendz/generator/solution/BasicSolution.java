@@ -111,7 +111,7 @@ public class BasicSolution implements SolutionTemplateGenerator {
             tbRestClient.assignAssetToCustomer(customer.getUuidId(), asset.getUuidId());
             tbRestClient.assignDeviceToCustomer(customer.getUuidId(), device.getUuidId());
 
-            Telemetry<Integer> deviceTelemetry = new Telemetry<>("deviceTelemetry");
+            Telemetry<Integer> deviceTelemetry = new Telemetry<>("pushed_telemetry");
             deviceTelemetry.add(new Telemetry.Point<>(Timestamp.of(1640995200000L), 10));
             deviceTelemetry.add(new Telemetry.Point<>(Timestamp.of(1641081600000L), 20));
             deviceTelemetry.add(new Telemetry.Point<>(Timestamp.of(1641168000000L), 30));
@@ -138,7 +138,7 @@ public class BasicSolution implements SolutionTemplateGenerator {
             generatorConfiguration.setOriginatorType(EntityType.DEVICE);
             generatorConfiguration.setOriginatorId(device.getId().toString());
             generatorConfiguration.setMsgCount(0);
-            generatorConfiguration.setPeriodInSeconds(60);
+            generatorConfiguration.setPeriodInSeconds(30);
             generatorConfiguration.setJsScript(this.fileService.getFileContent(getSolutionName(), FILE_CODE_NAME));
 
             RuleNode generatorNode = new RuleNode();
