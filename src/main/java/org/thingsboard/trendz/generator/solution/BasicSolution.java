@@ -22,6 +22,7 @@ import org.thingsboard.trendz.generator.exception.CustomerAlreadyExistException;
 import org.thingsboard.trendz.generator.exception.DeviceAlreadyExistException;
 import org.thingsboard.trendz.generator.exception.RuleChainAlreadyExistException;
 import org.thingsboard.trendz.generator.model.Attribute;
+import org.thingsboard.trendz.generator.model.CustomerUser;
 import org.thingsboard.trendz.generator.model.NodeConnectionType;
 import org.thingsboard.trendz.generator.model.RelationType;
 import org.thingsboard.trendz.generator.model.RuleNodeAdditionalInfo;
@@ -42,6 +43,10 @@ import java.util.Set;
 public class BasicSolution implements SolutionTemplateGenerator {
 
     private static final String CUSTOMER_TITLE = "Basic Customer";
+    private static final String CUSTOMER_USER_EMAIL = "basic@thingsboard.io";
+    private static final String CUSTOMER_USER_PASSWORD = "basicpassword123";
+    private static final String CUSTOMER_USER_FIRST_NAME = "Basic First Name";
+    private static final String CUSTOMER_USER_LAST_NAME = "Basic Last Name";
     private static final String DEVICE_NAME = "Basic Device Device";
     private static final String DEVICE_TYPE = "Basic Type";
     private static final String ASSET_NAME = "Basic Asset";
@@ -94,6 +99,11 @@ public class BasicSolution implements SolutionTemplateGenerator {
                     });
 
             Customer customer = tbRestClient.createCustomer(CUSTOMER_TITLE);
+            CustomerUser customerUser = tbRestClient.createCustomerUser(
+                    customer, CUSTOMER_USER_EMAIL, CUSTOMER_USER_PASSWORD,
+                    CUSTOMER_USER_FIRST_NAME, CUSTOMER_USER_LAST_NAME
+            );
+
             Asset asset = tbRestClient.createAsset(ASSET_NAME, ASSET_TYPE);
             Device device = tbRestClient.createDevice(DEVICE_NAME, DEVICE_TYPE);
             EntityRelation relation = tbRestClient.createRelation(RelationType.CONTAINS.getType(), asset.getId(), device.getId());

@@ -14,28 +14,20 @@ import org.thingsboard.server.common.data.Customer;
 import org.thingsboard.server.common.data.Device;
 import org.thingsboard.server.common.data.EntityType;
 import org.thingsboard.server.common.data.asset.Asset;
+import org.thingsboard.server.common.data.id.CustomerId;
 import org.thingsboard.server.common.data.id.EntityId;
+import org.thingsboard.server.common.data.id.TenantId;
+import org.thingsboard.server.common.data.id.UserId;
 import org.thingsboard.server.common.data.relation.EntityRelation;
 import org.thingsboard.server.common.data.rule.RuleChain;
 import org.thingsboard.server.common.data.rule.RuleChainMetaData;
+import org.thingsboard.server.common.data.security.Authority;
 import org.thingsboard.server.common.data.security.DeviceCredentials;
 import org.thingsboard.trendz.generator.exception.PushTelemetryException;
-import org.thingsboard.trendz.generator.model.Attribute;
-import org.thingsboard.trendz.generator.model.AuthToken;
-import org.thingsboard.trendz.generator.model.LoginRequest;
-import org.thingsboard.trendz.generator.model.PageData;
-import org.thingsboard.trendz.generator.model.RelationType;
-import org.thingsboard.trendz.generator.model.Scope;
-import org.thingsboard.trendz.generator.model.Telemetry;
+import org.thingsboard.trendz.generator.model.*;
 import org.thingsboard.trendz.generator.utils.JsonUtils;
 
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 @Slf4j
@@ -85,6 +77,30 @@ public class TbRestClient {
             throw new IllegalStateException("Refresh token is failed!");
         }
         return authToken;
+    }
+
+    public CustomerUser createCustomerUser(Customer customer, String email, String password, String firstName, String lastName) {
+        CustomerUser user = CustomerUser.builder()
+                .additionalInfo(CustomerUserAdditionalInfo.defaultInfo())
+                .authority(Authority.CUSTOMER_USER)
+                .customerId(customer.getId())
+                .tenantId(customer.getTenantId())
+                .email(email)
+                .firstName(firstName)
+                .lastName(lastName)
+                .build();
+
+        CustomerUser savedUser = restTemplate.postForEntity(baseURL + "/api/user?sendActivationMail=false", user, CustomerUser.class).getBody();
+        Objects.requireNonNull(savedUser);
+
+        String activationLink = restTemplate.getForEntity(baseURL + "/api/user/" + savedUser.getId().getId() + "/activationLink", String.class).getBody();
+        Objects.requireNonNull(activationLink);
+
+        String token = activationLink.substring(activationLink.lastIndexOf('=') + 1);
+        ActivationRequest activationRequest = new ActivationRequest(token, password);
+        ActivationAuthToken activationAuthToken = restTemplate.postForEntity(baseURL + "/api/noauth/activate?sendActivationMail=true", activationRequest, ActivationAuthToken.class).getBody();
+
+        return savedUser;
     }
 
 
