@@ -21,7 +21,14 @@ import org.thingsboard.trendz.generator.exception.AssetAlreadyExistException;
 import org.thingsboard.trendz.generator.exception.CustomerAlreadyExistException;
 import org.thingsboard.trendz.generator.exception.DeviceAlreadyExistException;
 import org.thingsboard.trendz.generator.exception.RuleChainAlreadyExistException;
-import org.thingsboard.trendz.generator.model.*;
+import org.thingsboard.trendz.generator.model.Attribute;
+import org.thingsboard.trendz.generator.model.NodeConnectionType;
+import org.thingsboard.trendz.generator.model.RelationType;
+import org.thingsboard.trendz.generator.model.RuleNodeAdditionalInfo;
+import org.thingsboard.trendz.generator.model.Scope;
+import org.thingsboard.trendz.generator.model.Telemetry;
+import org.thingsboard.trendz.generator.model.Timestamp;
+import org.thingsboard.trendz.generator.service.FileService;
 import org.thingsboard.trendz.generator.service.TbRestClient;
 import org.thingsboard.trendz.generator.utils.JsonUtils;
 
@@ -40,13 +47,18 @@ public class BasicSolution implements SolutionTemplateGenerator {
     private static final String ASSET_NAME = "Basic Asset";
     private static final String ASSET_TYPE = "Basic Asset Type";
     private static final String RULE_CHAIN_NAME = "Basic Rule Chain";
+    private static final String FILE_CODE_NAME = "basic.js";
+
     private final TbRestClient tbRestClient;
+    private final FileService fileService;
 
     @Autowired
     public BasicSolution(
-            TbRestClient tbRestClient
+            TbRestClient tbRestClient,
+            FileService fileService
     ) {
         this.tbRestClient = tbRestClient;
+        this.fileService = fileService;
     }
 
     @Override
@@ -117,14 +129,7 @@ public class BasicSolution implements SolutionTemplateGenerator {
             generatorConfiguration.setOriginatorId(device.getId().toString());
             generatorConfiguration.setMsgCount(0);
             generatorConfiguration.setPeriodInSeconds(60);
-            generatorConfiguration.setJsScript(
-                    "var tsCycle = (Date.now() % 100) / 10;\n" +
-                            "var msg = { telem_value: Math.sin(tsCycle) };\n" +
-                            "var metadata = { data: 40 };\n" +
-                            "var msgType = \"POST_TELEMETRY_REQUEST\";\n" +
-                            "\n" +
-                            "return { msg: msg, metadata: metadata, msgType: msgType };"
-            );
+            generatorConfiguration.setJsScript(this.fileService.getFileContent(getSolutionName(), FILE_CODE_NAME));
 
             RuleNode generatorNode = new RuleNode();
             generatorNode.setName("Basic Generator Node");
