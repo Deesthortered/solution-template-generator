@@ -45,7 +45,7 @@ public class BasicSolution implements SolutionTemplateGenerator {
 
     private static final String CUSTOMER_TITLE = "Basic Customer";
     private static final String CUSTOMER_USER_EMAIL = "basic@thingsboard.io";
-    private static final String CUSTOMER_USER_PASSWORD = "basicpassword123";
+    private static final String CUSTOMER_USER_PASSWORD = "password";
     private static final String CUSTOMER_USER_FIRST_NAME = "Basic First Name";
     private static final String CUSTOMER_USER_LAST_NAME = "Basic Last Name";
     private static final String DEVICE_NAME = "Basic Device Name";
