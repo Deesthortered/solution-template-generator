@@ -1,4 +1,4 @@
-package org.thingsboard.trendz.generator.solution;
+package org.thingsboard.trendz.generator.solution.basic;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,6 +31,7 @@ import org.thingsboard.trendz.generator.model.Telemetry;
 import org.thingsboard.trendz.generator.model.Timestamp;
 import org.thingsboard.trendz.generator.service.FileService;
 import org.thingsboard.trendz.generator.service.TbRestClient;
+import org.thingsboard.trendz.generator.solution.SolutionTemplateGenerator;
 import org.thingsboard.trendz.generator.utils.JsonUtils;
 
 import java.util.ArrayList;
@@ -47,9 +48,9 @@ public class BasicSolution implements SolutionTemplateGenerator {
     private static final String CUSTOMER_USER_PASSWORD = "basicpassword123";
     private static final String CUSTOMER_USER_FIRST_NAME = "Basic First Name";
     private static final String CUSTOMER_USER_LAST_NAME = "Basic Last Name";
-    private static final String DEVICE_NAME = "Basic Device Device";
-    private static final String DEVICE_TYPE = "Basic Type";
-    private static final String ASSET_NAME = "Basic Asset";
+    private static final String DEVICE_NAME = "Basic Device Name";
+    private static final String DEVICE_TYPE = "Basic Device Type";
+    private static final String ASSET_NAME = "Basic Asset Name";
     private static final String ASSET_TYPE = "Basic Asset Type";
     private static final String RULE_CHAIN_NAME = "Basic Rule Chain";
     private static final String FILE_CODE_NAME = "basic.js";
@@ -112,11 +113,11 @@ public class BasicSolution implements SolutionTemplateGenerator {
             tbRestClient.assignDeviceToCustomer(customer.getUuidId(), device.getUuidId());
 
             Telemetry<Integer> deviceTelemetry = new Telemetry<>("pushed_telemetry");
-            deviceTelemetry.add(new Telemetry.Point<>(Timestamp.of(1640995200000L), 10));
-            deviceTelemetry.add(new Telemetry.Point<>(Timestamp.of(1641081600000L), 20));
-            deviceTelemetry.add(new Telemetry.Point<>(Timestamp.of(1641168000000L), 30));
-            deviceTelemetry.add(new Telemetry.Point<>(Timestamp.of(1641254400000L), 40));
-            deviceTelemetry.add(new Telemetry.Point<>(Timestamp.of(1641340800000L), 50));
+            deviceTelemetry.add(new Telemetry.Point<>(Timestamp.of(1672531200000L), 10));
+            deviceTelemetry.add(new Telemetry.Point<>(Timestamp.of(1672617600000L), 20));
+            deviceTelemetry.add(new Telemetry.Point<>(Timestamp.of(1672704000000L), 30));
+            deviceTelemetry.add(new Telemetry.Point<>(Timestamp.of(1672790400000L), 40));
+            deviceTelemetry.add(new Telemetry.Point<>(Timestamp.of(1672876800000L), 50));
             DeviceCredentials credentials = tbRestClient.getCredentials(device.getUuidId());
             tbRestClient.pushTelemetry(credentials.getCredentialsId(), deviceTelemetry);
 

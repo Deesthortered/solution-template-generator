@@ -1,7 +1,8 @@
-package org.thingsboard.trendz.generator.solution;
+package org.thingsboard.trendz.generator.solution.watermetering;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.thingsboard.trendz.generator.solution.SolutionTemplateGenerator;
 
 @Slf4j
 @Service

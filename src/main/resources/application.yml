@@ -4,7 +4,7 @@ server:
 tb:
   api:
     host:     http://localhost:8080
-    username: solution.template.generator@thingsboard.org
+    username: solution.template.generator@thingsboard.io
     password: password
     pe:       false
     cloud:    false
