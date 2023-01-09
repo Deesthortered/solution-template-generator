@@ -4,6 +4,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.thingsboard.server.common.data.Customer;
+import org.thingsboard.server.common.data.Device;
 import org.thingsboard.server.common.data.EntityType;
 import org.thingsboard.server.common.data.asset.Asset;
 import org.thingsboard.trendz.generator.exception.CustomerAlreadyExistException;
@@ -71,32 +72,108 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
                     CUSTOMER_USER_FIRST_NAME, CUSTOMER_USER_LAST_NAME
             );
 
-//            String buildingType = "building";
-//            String apartmentType = "apartment";
-//
-//            Asset buildingAlpire = tbRestClient.createAsset("Alpire", buildingType);
-//            Asset buildingFeline = tbRestClient.createAsset("Feline", buildingType);
-//            Asset buildingHogurity = tbRestClient.createAsset("Hogurity", buildingType);
-//
-//            Asset apartmentAlpire101 = tbRestClient.createAsset("Apt 101 in Alpire", apartmentType);
-//            Asset apartmentAlpire102 = tbRestClient.createAsset("Apt 102 in Alpire", apartmentType);
-//            Asset apartmentAlpire201 = tbRestClient.createAsset("Apt 201 in Alpire", apartmentType);
-//            Asset apartmentAlpire202 = tbRestClient.createAsset("Apt 202 in Alpire", apartmentType);
-//
-//            Asset apartmentFeline101 = tbRestClient.createAsset("Apt 101 in Feline", apartmentType);
-//            Asset apartmentFeline102 = tbRestClient.createAsset("Apt 101 in Feline", apartmentType);
-//            Asset apartmentFeline103 = tbRestClient.createAsset("Apt 101 in Feline", apartmentType);
-//            Asset apartmentFeline201 = tbRestClient.createAsset("Apt 101 in Feline", apartmentType);
-//            Asset apartmentFeline202 = tbRestClient.createAsset("Apt 101 in Feline", apartmentType);
-//            Asset apartmentFeline203 = tbRestClient.createAsset("Apt 101 in Feline", apartmentType);
-//            Asset apartmentFeline301 = tbRestClient.createAsset("Apt 101 in Feline", apartmentType);
-//            Asset apartmentFeline302 = tbRestClient.createAsset("Apt 101 in Feline", apartmentType);
-//            Asset apartmentFeline303 = tbRestClient.createAsset("Apt 101 in Feline", apartmentType);
-//
-//            Asset apartmentHogurity101 = tbRestClient.createAsset("Apt 101 in Hogurity", apartmentType);
-//            Asset apartmentHogurity102 = tbRestClient.createAsset("Apt 102 in Hogurity", apartmentType);
-//            Asset apartmentHogurity201 = tbRestClient.createAsset("Apt 201 in Hogurity", apartmentType);
-//            Asset apartmentHogurity202 = tbRestClient.createAsset("Apt 202 in Hogurity", apartmentType);
+
+            Building alpire = Building.builder()
+                    .systemName("Alpire")
+                    .systemLabel("Asset label for Alpire building")
+                    .address("USA, California, San Francisco, ...")
+                    .apartments(Set.of(
+                            Apartment.builder()
+                                    .systemName("Apt 101 in Alpire")
+                                    .systemLabel("")
+                                    .name("")
+                                    .localNumber(0)
+                                    .floor(0)
+                                    .area(0)
+                                    .state("")
+                                    .roomNumber(0)
+                                    .energyMeter(
+                                            EnergyMeter.builder()
+                                                    .systemName("")
+                                                    .systemLabel("")
+                                                    .serialNumber(0L)
+                                                    .installDate(0L)
+                                                    .build()
+                                    )
+                                    .heatMeter(
+                                            HeatMeter.builder()
+                                                    .systemName("")
+                                                    .systemLabel("")
+                                                    .serialNumber(0L)
+                                                    .installDate(0L)
+                                                    .build()
+                                    )
+                                    .build()
+                    ))
+                    .build();
+
+            Building feline = Building.builder()
+                    .systemName("Feline")
+                    .systemLabel("Asset label for Feline building")
+                    .address("USA, New York, New York City, Brooklyn, ...")
+                    .apartments(Set.of(
+                            Apartment.builder()
+                                    .systemName("Apt 101 in Feline")
+                                    .systemLabel("")
+                                    .name("")
+                                    .localNumber(0)
+                                    .floor(0)
+                                    .area(0)
+                                    .state("")
+                                    .roomNumber(0)
+                                    .energyMeter(
+                                            EnergyMeter.builder()
+                                                    .systemName("")
+                                                    .systemLabel("")
+                                                    .serialNumber(0L)
+                                                    .installDate(0L)
+                                                    .build()
+                                    )
+                                    .heatMeter(
+                                            HeatMeter.builder()
+                                                    .systemName("")
+                                                    .systemLabel("")
+                                                    .serialNumber(0L)
+                                                    .installDate(0L)
+                                                    .build()
+                                    )
+                                    .build()
+                    ))
+                    .build();
+
+            Building hogurity = Building.builder()
+                    .systemName("Hogurity")
+                    .systemLabel("Asset label for Hogurity building")
+                    .address("USA, New York, New York City, Manhattan, ...")
+                    .apartments(Set.of(
+                            Apartment.builder()
+                                    .systemName("Apt 101 in Hogurity")
+                                    .systemLabel("")
+                                    .name("")
+                                    .localNumber(0)
+                                    .floor(0)
+                                    .area(0)
+                                    .state("")
+                                    .roomNumber(0)
+                                    .energyMeter(
+                                            EnergyMeter.builder()
+                                                    .systemName("")
+                                                    .systemLabel("")
+                                                    .serialNumber(0L)
+                                                    .installDate(0L)
+                                                    .build()
+                                    )
+                                    .heatMeter(
+                                            HeatMeter.builder()
+                                                    .systemName("")
+                                                    .systemLabel("")
+                                                    .serialNumber(0L)
+                                                    .installDate(0L)
+                                                    .build()
+                                    )
+                                    .build()
+                    ))
+                    .build();
 
             log.info("Energy Metering Solution - generation is completed!");
         } catch (Exception e) {
@@ -143,5 +220,29 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
         tbRestClient.setEntityAttributes(asset.getUuidId(), EntityType.ASSET, Scope.SERVER_SCOPE, attributes);
 
         return asset;
+    }
+
+    private Device createEnergyMeter(EnergyMeter energyMeter) {
+        Device device = tbRestClient.createDevice(energyMeter.getSystemName(), "energyMeter");
+
+        Set<Attribute<?>> attributes = Set.of(
+                new Attribute<>("installDate", energyMeter.getInstallDate()),
+                new Attribute<>("serialNumber", energyMeter.getSerialNumber())
+        );
+        tbRestClient.setEntityAttributes(device.getUuidId(), EntityType.DEVICE, Scope.SERVER_SCOPE, attributes);
+
+        return device;
+    }
+
+    private Device createHeatMeter(HeatMeter heatMeter) {
+        Device device = tbRestClient.createDevice(heatMeter.getSystemName(), "heatMeter");
+
+        Set<Attribute<?>> attributes = Set.of(
+                new Attribute<>("installDate", heatMeter.getInstallDate()),
+                new Attribute<>("serialNumber", heatMeter.getSerialNumber())
+        );
+        tbRestClient.setEntityAttributes(device.getUuidId(), EntityType.DEVICE, Scope.SERVER_SCOPE, attributes);
+
+        return device;
     }
 }

@@ -15,9 +15,13 @@ public class Apartment {
     private String systemLabel;
 
     private String name;
-    private String localNumber;
-    private String floor;
-    private String area;
+    private int localNumber;
+    private int floor;
+    private int area;
     private String state;
-    private String roomNumber;
+    private int roomNumber;
+
+
+    private EnergyMeter energyMeter;
+    private HeatMeter heatMeter;
 }

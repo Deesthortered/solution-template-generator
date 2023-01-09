@@ -13,4 +13,7 @@ public class HeatMeter {
 
     private String systemName;
     private String systemLabel;
+
+    private long installDate;
+    private long serialNumber;
 }

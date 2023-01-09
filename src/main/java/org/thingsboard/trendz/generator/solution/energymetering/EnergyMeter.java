@@ -13,4 +13,7 @@ public class EnergyMeter {
 
     private String systemName;
     private String systemLabel;
+
+    private long installDate;
+    private long serialNumber;
 }
