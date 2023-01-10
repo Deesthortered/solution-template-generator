@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.thingsboard.trendz.generator.model.Telemetry;
 
 @Data
 @Builder
@@ -16,4 +17,6 @@ public class HeatMeter {
 
     private long installDate;
     private long serialNumber;
+    private Telemetry<Integer> heatConsumption;
+    private Telemetry<Integer> temperature;
 }

@@ -73,9 +73,10 @@ public class BasicSolution implements SolutionTemplateGenerator {
     }
 
     @Override
-    public void generate() {
-        log.info("Basic Solution - start generation");
+    public void validate() {
         try {
+            log.info("Basic Solution - start validation");
+
             tbRestClient.getCustomerByTitle(CUSTOMER_TITLE)
                     .ifPresent(customer -> {
                         throw new CustomerAlreadyExistException(customer);
@@ -98,6 +99,17 @@ public class BasicSolution implements SolutionTemplateGenerator {
                     .ifPresent(device -> {
                         throw new DeviceAlreadyExistException(device);
                     });
+
+            log.info("Basic Solution - validation is completed!");
+        } catch (Exception e) {
+            log.error("Basic Solution validation was failed, skipping...", e);
+        }
+    }
+
+    @Override
+    public void generate() {
+        log.info("Basic Solution - start generation");
+        try {
 
             Customer customer = tbRestClient.createCustomer(CUSTOMER_TITLE);
             CustomerUser customerUser = tbRestClient.createCustomerUser(

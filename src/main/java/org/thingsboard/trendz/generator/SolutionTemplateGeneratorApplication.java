@@ -46,6 +46,7 @@ public class SolutionTemplateGeneratorApplication implements CommandLineRunner {
 				if (modeRemove) {
 					solutionGenerator.remove();
 				} else {
+					solutionGenerator.validate();
 					solutionGenerator.generate();
 				}
 			}

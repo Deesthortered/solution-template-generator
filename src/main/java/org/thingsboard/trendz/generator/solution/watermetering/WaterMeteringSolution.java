@@ -14,6 +14,11 @@ public class WaterMeteringSolution implements SolutionTemplateGenerator {
     }
 
     @Override
+    public void validate() {
+        log.info("WaterMeteringSolution - validate");
+    }
+
+    @Override
     public void generate() {
         log.info("WaterMeteringSolution - generate");
     }

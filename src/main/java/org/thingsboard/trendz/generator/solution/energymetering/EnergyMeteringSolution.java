@@ -49,9 +49,10 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
     }
 
     @Override
-    public void generate() {
-        log.info("Energy Metering - start generation");
+    public void validate() {
         try {
+            log.info("Energy Metering Solution - start validation");
+
             tbRestClient.getCustomerByTitle(CUSTOMER_TITLE)
                     .ifPresent(customer -> {
                         throw new CustomerAlreadyExistException(customer);
@@ -65,6 +66,16 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
                         throw new RuleChainAlreadyExistException(ruleChain);
                     });
 
+            log.info("Energy Metering Solution - validation is completed!");
+        } catch (Exception e) {
+            log.error("Energy Metering Solution validation was failed, skipping...", e);
+        }
+    }
+
+    @Override
+    public void generate() {
+        log.info("Energy Metering Solution - start generation");
+        try {
 
             Customer customer = tbRestClient.createCustomer(CUSTOMER_TITLE);
             CustomerUser customerUser = tbRestClient.createCustomerUser(
@@ -183,7 +194,7 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
 
     @Override
     public void remove() {
-        log.info("Energy Metering - start removal");
+        log.info("Energy Metering Solution - start removal");
         try {
             tbRestClient.getCustomerByTitle(CUSTOMER_TITLE)
                     .ifPresent(customer -> tbRestClient.deleteCustomer(customer.getUuidId()));
