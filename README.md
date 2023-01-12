@@ -24,7 +24,7 @@ Data starts at 2023-01-01 00:00.000000
   * Login: `energymetering@thingsboard.io`
   * Password: `password`
 
-There are the following item types: buildings, apartments, one energy meter, and one heat meter.
+There are the following item types: `buildings`, `apartments`, one `energy meter`, and one `heat meter`.
 Buildings contain some apartments, apartments have one energy and one heat meter.
 
 There are three buildings: Alpire, Feline, and Hogurity.
@@ -62,5 +62,7 @@ It has 3 floors, each floor has 3 apartments.
 It has 4 floors, each floor has 1 apartment.
 Each of them is occupied and has a high level of consumption.
 
+Telemetry starts is on `2023-01-01` and will be consumed `each hour` from all meters.
+It can have `gaps` not longer than `1 day`.
 
 * ### Water Metering Solution 
