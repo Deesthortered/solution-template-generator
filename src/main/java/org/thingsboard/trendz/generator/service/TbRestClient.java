@@ -14,10 +14,7 @@ import org.thingsboard.server.common.data.Customer;
 import org.thingsboard.server.common.data.Device;
 import org.thingsboard.server.common.data.EntityType;
 import org.thingsboard.server.common.data.asset.Asset;
-import org.thingsboard.server.common.data.id.CustomerId;
 import org.thingsboard.server.common.data.id.EntityId;
-import org.thingsboard.server.common.data.id.TenantId;
-import org.thingsboard.server.common.data.id.UserId;
 import org.thingsboard.server.common.data.relation.EntityRelation;
 import org.thingsboard.server.common.data.rule.RuleChain;
 import org.thingsboard.server.common.data.rule.RuleChainMetaData;
@@ -288,7 +285,7 @@ public class TbRestClient {
     }
 
 
-    public DeviceCredentials getCredentials(UUID id) {
+    public DeviceCredentials getDeviceCredentials(UUID id) {
         return restTemplate.getForEntity(baseURL + "/api/device/" + id.toString() + "/credentials", DeviceCredentials.class).getBody();
     }
 

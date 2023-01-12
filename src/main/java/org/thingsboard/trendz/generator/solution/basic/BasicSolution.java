@@ -139,7 +139,7 @@ public class BasicSolution implements SolutionTemplateGenerator {
                 startTime = startTime.plus(1, ChronoUnit.DAYS);
             }
 
-            DeviceCredentials credentials = tbRestClient.getCredentials(device.getUuidId());
+            DeviceCredentials credentials = tbRestClient.getDeviceCredentials(device.getUuidId());
             tbRestClient.pushTelemetry(credentials.getCredentialsId(), deviceTelemetry);
 
             Set<Attribute<?>> attributes = Set.of(
