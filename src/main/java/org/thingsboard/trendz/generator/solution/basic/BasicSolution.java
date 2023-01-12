@@ -134,7 +134,7 @@ public class BasicSolution implements SolutionTemplateGenerator {
             ZonedDateTime today = DateTimeUtils.fromTs(now).truncatedTo(ChronoUnit.DAYS);
             int valueCounter = 0;
             while (startTime.isBefore(today)) {
-                long ts = DateTimeUtils.toTs(today);
+                long ts = DateTimeUtils.toTs(startTime);
                 deviceTelemetry.add(new Telemetry.Point<>(Timestamp.of(ts), valueCounter++));
                 startTime = startTime.plus(1, ChronoUnit.DAYS);
             }
