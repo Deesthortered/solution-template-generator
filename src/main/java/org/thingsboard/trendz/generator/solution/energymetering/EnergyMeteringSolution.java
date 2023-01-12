@@ -14,6 +14,7 @@ import org.thingsboard.trendz.generator.model.Attribute;
 import org.thingsboard.trendz.generator.model.CustomerUser;
 import org.thingsboard.trendz.generator.model.RelationType;
 import org.thingsboard.trendz.generator.model.Scope;
+import org.thingsboard.trendz.generator.model.Telemetry;
 import org.thingsboard.trendz.generator.service.FileService;
 import org.thingsboard.trendz.generator.service.TbRestClient;
 import org.thingsboard.trendz.generator.service.VisualizationService;
@@ -221,7 +222,7 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
     }
 
     private void visualizeData(List<Building> buildings) {
-
+//        visualizationService.visualize();
     }
 
     private void applyData(List<Building> buildings) {
@@ -283,7 +284,6 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
 
         tbRestClient.pushTelemetry(deviceCredentials.getCredentialsId(), energyMeter.getEnergyConsumption());
         tbRestClient.pushTelemetry(deviceCredentials.getCredentialsId(), energyMeter.getEnergyConsAbsolute());
-        tbRestClient.pushTelemetry(deviceCredentials.getCredentialsId(), energyMeter.getValue());
         return device;
     }
 
@@ -300,5 +300,25 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
         tbRestClient.pushTelemetry(deviceCredentials.getCredentialsId(), heatMeter.getHeatConsumption());
         tbRestClient.pushTelemetry(deviceCredentials.getCredentialsId(), heatMeter.getTemperature());
         return device;
+    }
+
+
+    private Telemetry<? extends Number> createTelemetryEnergyMeterConsumption(boolean occupied, int level) {
+        Telemetry<Integer> result = new Telemetry<>("");
+        return result;
+    }
+    private Telemetry<? extends Number> createTelemetryEnergyMeterConsAbsolute(boolean occupied, int level) {
+        Telemetry<Integer> result = new Telemetry<>("");
+        return result;
+    }
+
+
+    private Telemetry<? extends Number> createTelemetryHeatMeterConsumption(boolean occupied, int level) {
+        Telemetry<Integer> result = new Telemetry<>("");
+        return result;
+    }
+    private Telemetry<? extends Number> createTelemetryHeatMeterTemperature(boolean occupied, int level) {
+        Telemetry<Integer> result = new Telemetry<>("");
+        return result;
     }
 }

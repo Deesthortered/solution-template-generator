@@ -19,5 +19,4 @@ public class EnergyMeter {
     private long serialNumber;
     private Telemetry<Integer> energyConsumption;
     private Telemetry<Integer> energyConsAbsolute;
-    private Telemetry<Integer> value;
 }
