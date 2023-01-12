@@ -32,8 +32,9 @@ They have an `address` attribute and all of them are located in the USA in Calif
 
 Each building has apartments with different `floor`, `area`, and `localNumber`.
 Apartments have a `state` attribute that determines apartment is rented or empty.
-Rented apartments consume more energy and heating, and empty has only heating.
-Sometimes we can observe anomalies in energy consumption because of accidents: stolen energy and forgotten home devices.
+Rented apartments consume more energy and heating, and empty has no energy and no heating.
+Sometimes we can observe anomalies in energy consumption because of accidents: 
+stolen energy and forgotten home devices, heating anomaly: empty apartment is heated.
 To simplify the solution, there are defined 3 levels of consumption: low, medium, and high.
 Levels are not represented explicitly, it just makes a difference between apartments in their telemetry.
 
@@ -46,10 +47,10 @@ Energy Meter and Heat Meter do not make affect each other.
 
 `Alpire` building located in the `USA, California, San Francisco, ...`.
 It has 5 floors, each floor has 2 apartments.
-The apartment on the 5th floor is free and do not have anomalies.
+Apartments on the 5th floor is free and do not have anomalies.
 1st one on the 3rd floor is free, 2nd on the 1st floor too.
 Others are occupied.
-4th-floor apartments have a medium level of consumption.
+4th-floor apartments have a high level of consumption. 
 The other 3 floors have the medium level.
 
 `Feline` building located in the `USA, New York, New York City, Brooklyn, ...`.

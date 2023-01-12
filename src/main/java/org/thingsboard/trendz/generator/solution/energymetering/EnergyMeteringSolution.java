@@ -93,7 +93,7 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
 
             List<Building> data = makeData();
             visualizeData(data);
-            applyData(data);
+//            applyData(data);
 
             log.info("Energy Metering Solution - generation is completed!");
         } catch (Exception e) {
@@ -116,103 +116,11 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
 
 
     private List<Building> makeData() {
-        Building alpire = Building.builder()
-                .systemName("Alpire")
-                .systemLabel("Asset label for Alpire building")
-                .address("USA, California, San Francisco, ...")
-                .apartments(Set.of(
-                        Apartment.builder()
-                                .systemName("Apt 101 in Alpire")
-                                .systemLabel("")
-                                .floor(0)
-                                .area(0)
-                                .roomNumber(0)
-                                .state("")
-                                .energyMeter(
-                                        EnergyMeter.builder()
-                                                .systemName("")
-                                                .systemLabel("")
-                                                .serialNumber(0L)
-                                                .installDate(0L)
-                                                .build()
-                                )
-                                .heatMeter(
-                                        HeatMeter.builder()
-                                                .systemName("")
-                                                .systemLabel("")
-                                                .serialNumber(0L)
-                                                .installDate(0L)
-                                                .build()
-                                )
-                                .build()
-                ))
-                .build();
+        Building alpire = makeAlpire();
+        Building feline = makeFeline();
+        Building hogurity = makeHogurity();
 
-        Building feline = Building.builder()
-                .systemName("Feline")
-                .systemLabel("Asset label for Feline building")
-                .address("USA, New York, New York City, Brooklyn, ...")
-                .apartments(Set.of(
-                        Apartment.builder()
-                                .systemName("Apt 101 in Feline")
-                                .systemLabel("")
-                                .floor(0)
-                                .area(0)
-                                .roomNumber(0)
-                                .state("")
-                                .energyMeter(
-                                        EnergyMeter.builder()
-                                                .systemName("")
-                                                .systemLabel("")
-                                                .serialNumber(0L)
-                                                .installDate(0L)
-                                                .build()
-                                )
-                                .heatMeter(
-                                        HeatMeter.builder()
-                                                .systemName("")
-                                                .systemLabel("")
-                                                .serialNumber(0L)
-                                                .installDate(0L)
-                                                .build()
-                                )
-                                .build()
-                ))
-                .build();
-
-        Building hogurity = Building.builder()
-                .systemName("Hogurity")
-                .systemLabel("Asset label for Hogurity building")
-                .address("USA, New York, New York City, Manhattan, ...")
-                .apartments(Set.of(
-                        Apartment.builder()
-                                .systemName("Apt 101 in Hogurity")
-                                .systemLabel("")
-                                .floor(0)
-                                .area(0)
-                                .roomNumber(0)
-                                .state("")
-                                .energyMeter(
-                                        EnergyMeter.builder()
-                                                .systemName("")
-                                                .systemLabel("")
-                                                .serialNumber(0L)
-                                                .installDate(0L)
-                                                .build()
-                                )
-                                .heatMeter(
-                                        HeatMeter.builder()
-                                                .systemName("")
-                                                .systemLabel("")
-                                                .serialNumber(0L)
-                                                .installDate(0L)
-                                                .build()
-                                )
-                                .build()
-                ))
-                .build();
-
-        return List.of();
+        return List.of(alpire, feline, hogurity);
     }
 
     private void visualizeData(List<Building> buildings) {
@@ -236,6 +144,733 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
                 tbRestClient.createRelation(RelationType.CONTAINS.getType(), apartmentAsset.getId(), heatMeterDevice.getId());
             }
         }
+    }
+
+
+    private Building makeAlpire() {
+        Apartment ap11 = makeAlpireApartment11();
+        Apartment ap12 = makeAlpireApartment12();
+        Apartment ap21 = makeAlpireApartment21();
+        Apartment ap22 = makeAlpireApartment22();
+        Apartment ap31 = makeAlpireApartment31();
+        Apartment ap32 = makeAlpireApartment32();
+        Apartment ap41 = makeAlpireApartment41();
+        Apartment ap42 = makeAlpireApartment42();
+        Apartment ap51 = makeAlpireApartment51();
+        Apartment ap52 = makeAlpireApartment52();
+
+        return Building.builder()
+                .systemName("Alpire")
+                .systemLabel("Asset label for Alpire building")
+                .address("USA, California, San Francisco, ...")
+                .apartments(Set.of(ap11, ap12, ap21, ap22, ap31, ap32, ap41, ap42, ap51, ap52))
+                .build();
+    }
+
+    private Building makeFeline() {
+        Apartment ap11 = makeFelineApartment11();
+        Apartment ap12 = makeFelineApartment12();
+        Apartment ap13 = makeFelineApartment13();
+        Apartment ap21 = makeFelineApartment21();
+        Apartment ap22 = makeFelineApartment22();
+        Apartment ap23 = makeFelineApartment23();
+        Apartment ap31 = makeFelineApartment31();
+        Apartment ap32 = makeFelineApartment32();
+        Apartment ap33 = makeFelineApartment33();
+
+        return Building.builder()
+                .systemName("Feline")
+                .systemLabel("Asset label for Feline building")
+                .address("USA, New York, New York City, Brooklyn, ...")
+                .apartments(Set.of(ap11, ap12, ap13, ap21, ap22, ap23, ap31, ap32, ap33))
+                .build();
+    }
+
+    private Building makeHogurity() {
+        Apartment ap11 = makeHogurityApartment11();
+        Apartment ap12 = makeHogurityApartment12();
+        Apartment ap13 = makeHogurityApartment13();
+        Apartment ap14 = makeHogurityApartment14();
+        Apartment ap15 = makeHogurityApartment15();
+
+        return Building.builder()
+                .systemName("Hogurity")
+                .systemLabel("Asset label for Hogurity building")
+                .address("USA, New York, New York City, Manhattan, ...")
+                .apartments(Set.of(ap11, ap12, ap13, ap14, ap15))
+                .build();
+    }
+
+
+    private Apartment makeAlpireApartment11() {
+        return Apartment.builder()
+                .systemName("Apt 101 in Alpire")
+                .systemLabel("Apartment label")
+                .floor(1)
+                .area(0)
+                .roomNumber(1)
+                .state("")
+                .energyMeter(
+                        EnergyMeter.builder()
+                                .systemName("")
+                                .systemLabel("")
+                                .serialNumber(0L)
+                                .installDate(0L)
+                                .build()
+                )
+                .heatMeter(
+                        HeatMeter.builder()
+                                .systemName("")
+                                .systemLabel("")
+                                .serialNumber(0L)
+                                .installDate(0L)
+                                .build()
+                )
+                .build();
+    }
+
+    private Apartment makeAlpireApartment12() {
+        return Apartment.builder()
+                .systemName("Apt 102 in Alpire")
+                .systemLabel("Apartment label")
+                .floor(1)
+                .area(0)
+                .roomNumber(2)
+                .state("")
+                .energyMeter(
+                        EnergyMeter.builder()
+                                .systemName("")
+                                .systemLabel("")
+                                .serialNumber(0L)
+                                .installDate(0L)
+                                .build()
+                )
+                .heatMeter(
+                        HeatMeter.builder()
+                                .systemName("")
+                                .systemLabel("")
+                                .serialNumber(0L)
+                                .installDate(0L)
+                                .build()
+                )
+                .build();
+    }
+
+    private Apartment makeAlpireApartment21() {
+        return Apartment.builder()
+                .systemName("Apt 201 in Alpire")
+                .systemLabel("Apartment label")
+                .floor(2)
+                .area(0)
+                .roomNumber(3)
+                .state("")
+                .energyMeter(
+                        EnergyMeter.builder()
+                                .systemName("")
+                                .systemLabel("")
+                                .serialNumber(0L)
+                                .installDate(0L)
+                                .build()
+                )
+                .heatMeter(
+                        HeatMeter.builder()
+                                .systemName("")
+                                .systemLabel("")
+                                .serialNumber(0L)
+                                .installDate(0L)
+                                .build()
+                )
+                .build();
+    }
+
+    private Apartment makeAlpireApartment22() {
+        return Apartment.builder()
+                .systemName("Apt 202 in Alpire")
+                .systemLabel("Apartment label")
+                .floor(2)
+                .area(0)
+                .roomNumber(4)
+                .state("")
+                .energyMeter(
+                        EnergyMeter.builder()
+                                .systemName("")
+                                .systemLabel("")
+                                .serialNumber(0L)
+                                .installDate(0L)
+                                .build()
+                )
+                .heatMeter(
+                        HeatMeter.builder()
+                                .systemName("")
+                                .systemLabel("")
+                                .serialNumber(0L)
+                                .installDate(0L)
+                                .build()
+                )
+                .build();
+    }
+
+    private Apartment makeAlpireApartment31() {
+        return Apartment.builder()
+                .systemName("Apt 301 in Alpire")
+                .systemLabel("Apartment label")
+                .floor(3)
+                .area(0)
+                .roomNumber(5)
+                .state("")
+                .energyMeter(
+                        EnergyMeter.builder()
+                                .systemName("")
+                                .systemLabel("")
+                                .serialNumber(0L)
+                                .installDate(0L)
+                                .build()
+                )
+                .heatMeter(
+                        HeatMeter.builder()
+                                .systemName("")
+                                .systemLabel("")
+                                .serialNumber(0L)
+                                .installDate(0L)
+                                .build()
+                )
+                .build();
+    }
+
+    private Apartment makeAlpireApartment32() {
+        return Apartment.builder()
+                .systemName("Apt 302 in Alpire")
+                .systemLabel("Apartment label")
+                .floor(3)
+                .area(0)
+                .roomNumber(6)
+                .state("")
+                .energyMeter(
+                        EnergyMeter.builder()
+                                .systemName("")
+                                .systemLabel("")
+                                .serialNumber(0L)
+                                .installDate(0L)
+                                .build()
+                )
+                .heatMeter(
+                        HeatMeter.builder()
+                                .systemName("")
+                                .systemLabel("")
+                                .serialNumber(0L)
+                                .installDate(0L)
+                                .build()
+                )
+                .build();
+    }
+
+    private Apartment makeAlpireApartment41() {
+        return Apartment.builder()
+                .systemName("Apt 401 in Alpire")
+                .systemLabel("Apartment label")
+                .floor(4)
+                .area(0)
+                .roomNumber(7)
+                .state("")
+                .energyMeter(
+                        EnergyMeter.builder()
+                                .systemName("")
+                                .systemLabel("")
+                                .serialNumber(0L)
+                                .installDate(0L)
+                                .build()
+                )
+                .heatMeter(
+                        HeatMeter.builder()
+                                .systemName("")
+                                .systemLabel("")
+                                .serialNumber(0L)
+                                .installDate(0L)
+                                .build()
+                )
+                .build();
+    }
+
+    private Apartment makeAlpireApartment42() {
+        return Apartment.builder()
+                .systemName("Apt 402 in Alpire")
+                .systemLabel("Apartment label")
+                .floor(4)
+                .area(0)
+                .roomNumber(8)
+                .state("")
+                .energyMeter(
+                        EnergyMeter.builder()
+                                .systemName("")
+                                .systemLabel("")
+                                .serialNumber(0L)
+                                .installDate(0L)
+                                .build()
+                )
+                .heatMeter(
+                        HeatMeter.builder()
+                                .systemName("")
+                                .systemLabel("")
+                                .serialNumber(0L)
+                                .installDate(0L)
+                                .build()
+                )
+                .build();
+    }
+
+    private Apartment makeAlpireApartment51() {
+        return Apartment.builder()
+                .systemName("Apt 501 in Alpire")
+                .systemLabel("Apartment label")
+                .floor(5)
+                .area(0)
+                .roomNumber(9)
+                .state("")
+                .energyMeter(
+                        EnergyMeter.builder()
+                                .systemName("")
+                                .systemLabel("")
+                                .serialNumber(0L)
+                                .installDate(0L)
+                                .build()
+                )
+                .heatMeter(
+                        HeatMeter.builder()
+                                .systemName("")
+                                .systemLabel("")
+                                .serialNumber(0L)
+                                .installDate(0L)
+                                .build()
+                )
+                .build();
+    }
+
+    private Apartment makeAlpireApartment52() {
+        return Apartment.builder()
+                .systemName("Apt 502 in Alpire")
+                .systemLabel("Apartment label")
+                .floor(5)
+                .area(0)
+                .roomNumber(10)
+                .state("")
+                .energyMeter(
+                        EnergyMeter.builder()
+                                .systemName("")
+                                .systemLabel("")
+                                .serialNumber(0L)
+                                .installDate(0L)
+                                .build()
+                )
+                .heatMeter(
+                        HeatMeter.builder()
+                                .systemName("")
+                                .systemLabel("")
+                                .serialNumber(0L)
+                                .installDate(0L)
+                                .build()
+                )
+                .build();
+    }
+
+
+    private Apartment makeFelineApartment11() {
+        return Apartment.builder()
+                .systemName("Apt 101 in Feline")
+                .systemLabel("")
+                .floor(1)
+                .area(0)
+                .roomNumber(1)
+                .state("")
+                .energyMeter(
+                        EnergyMeter.builder()
+                                .systemName("")
+                                .systemLabel("")
+                                .serialNumber(0L)
+                                .installDate(0L)
+                                .build()
+                )
+                .heatMeter(
+                        HeatMeter.builder()
+                                .systemName("")
+                                .systemLabel("")
+                                .serialNumber(0L)
+                                .installDate(0L)
+                                .build()
+                )
+                .build();
+    }
+
+    private Apartment makeFelineApartment12() {
+        return Apartment.builder()
+                .systemName("Apt 102 in Feline")
+                .systemLabel("")
+                .floor(1)
+                .area(0)
+                .roomNumber(2)
+                .state("")
+                .energyMeter(
+                        EnergyMeter.builder()
+                                .systemName("")
+                                .systemLabel("")
+                                .serialNumber(0L)
+                                .installDate(0L)
+                                .build()
+                )
+                .heatMeter(
+                        HeatMeter.builder()
+                                .systemName("")
+                                .systemLabel("")
+                                .serialNumber(0L)
+                                .installDate(0L)
+                                .build()
+                )
+                .build();
+    }
+
+    private Apartment makeFelineApartment13() {
+        return Apartment.builder()
+                .systemName("Apt 103 in Feline")
+                .systemLabel("")
+                .floor(1)
+                .area(0)
+                .roomNumber(3)
+                .state("")
+                .energyMeter(
+                        EnergyMeter.builder()
+                                .systemName("")
+                                .systemLabel("")
+                                .serialNumber(0L)
+                                .installDate(0L)
+                                .build()
+                )
+                .heatMeter(
+                        HeatMeter.builder()
+                                .systemName("")
+                                .systemLabel("")
+                                .serialNumber(0L)
+                                .installDate(0L)
+                                .build()
+                )
+                .build();
+    }
+
+    private Apartment makeFelineApartment21() {
+        return Apartment.builder()
+                .systemName("Apt 201 in Feline")
+                .systemLabel("")
+                .floor(2)
+                .area(0)
+                .roomNumber(4)
+                .state("")
+                .energyMeter(
+                        EnergyMeter.builder()
+                                .systemName("")
+                                .systemLabel("")
+                                .serialNumber(0L)
+                                .installDate(0L)
+                                .build()
+                )
+                .heatMeter(
+                        HeatMeter.builder()
+                                .systemName("")
+                                .systemLabel("")
+                                .serialNumber(0L)
+                                .installDate(0L)
+                                .build()
+                )
+                .build();
+    }
+
+    private Apartment makeFelineApartment22() {
+        return Apartment.builder()
+                .systemName("Apt 202 in Feline")
+                .systemLabel("")
+                .floor(2)
+                .area(0)
+                .roomNumber(5)
+                .state("")
+                .energyMeter(
+                        EnergyMeter.builder()
+                                .systemName("")
+                                .systemLabel("")
+                                .serialNumber(0L)
+                                .installDate(0L)
+                                .build()
+                )
+                .heatMeter(
+                        HeatMeter.builder()
+                                .systemName("")
+                                .systemLabel("")
+                                .serialNumber(0L)
+                                .installDate(0L)
+                                .build()
+                )
+                .build();
+    }
+
+    private Apartment makeFelineApartment23() {
+        return Apartment.builder()
+                .systemName("Apt 203 in Feline")
+                .systemLabel("")
+                .floor(2)
+                .area(0)
+                .roomNumber(6)
+                .state("")
+                .energyMeter(
+                        EnergyMeter.builder()
+                                .systemName("")
+                                .systemLabel("")
+                                .serialNumber(0L)
+                                .installDate(0L)
+                                .build()
+                )
+                .heatMeter(
+                        HeatMeter.builder()
+                                .systemName("")
+                                .systemLabel("")
+                                .serialNumber(0L)
+                                .installDate(0L)
+                                .build()
+                )
+                .build();
+    }
+
+    private Apartment makeFelineApartment31() {
+        return Apartment.builder()
+                .systemName("Apt 301 in Feline")
+                .systemLabel("")
+                .floor(3)
+                .area(0)
+                .roomNumber(7)
+                .state("")
+                .energyMeter(
+                        EnergyMeter.builder()
+                                .systemName("")
+                                .systemLabel("")
+                                .serialNumber(0L)
+                                .installDate(0L)
+                                .build()
+                )
+                .heatMeter(
+                        HeatMeter.builder()
+                                .systemName("")
+                                .systemLabel("")
+                                .serialNumber(0L)
+                                .installDate(0L)
+                                .build()
+                )
+                .build();
+    }
+
+    private Apartment makeFelineApartment32() {
+        return Apartment.builder()
+                .systemName("Apt 301 in Feline")
+                .systemLabel("")
+                .floor(3)
+                .area(0)
+                .roomNumber(8)
+                .state("")
+                .energyMeter(
+                        EnergyMeter.builder()
+                                .systemName("")
+                                .systemLabel("")
+                                .serialNumber(0L)
+                                .installDate(0L)
+                                .build()
+                )
+                .heatMeter(
+                        HeatMeter.builder()
+                                .systemName("")
+                                .systemLabel("")
+                                .serialNumber(0L)
+                                .installDate(0L)
+                                .build()
+                )
+                .build();
+    }
+
+    private Apartment makeFelineApartment33() {
+        return Apartment.builder()
+                .systemName("Apt 303 in Feline")
+                .systemLabel("")
+                .floor(3)
+                .area(0)
+                .roomNumber(9)
+                .state("")
+                .energyMeter(
+                        EnergyMeter.builder()
+                                .systemName("")
+                                .systemLabel("")
+                                .serialNumber(0L)
+                                .installDate(0L)
+                                .build()
+                )
+                .heatMeter(
+                        HeatMeter.builder()
+                                .systemName("")
+                                .systemLabel("")
+                                .serialNumber(0L)
+                                .installDate(0L)
+                                .build()
+                )
+                .build();
+    }
+
+
+    private Apartment makeHogurityApartment11() {
+        return Apartment.builder()
+                .systemName("Apt 101 in Hogurity")
+                .systemLabel("")
+                .floor(1)
+                .area(0)
+                .roomNumber(1)
+                .state("")
+                .energyMeter(
+                        EnergyMeter.builder()
+                                .systemName("")
+                                .systemLabel("")
+                                .serialNumber(0L)
+                                .installDate(0L)
+                                .build()
+                )
+                .heatMeter(
+                        HeatMeter.builder()
+                                .systemName("")
+                                .systemLabel("")
+                                .serialNumber(0L)
+                                .installDate(0L)
+                                .build()
+                )
+                .build();
+    }
+
+    private Apartment makeHogurityApartment12() {
+        return Apartment.builder()
+                .systemName("Apt 102 in Hogurity")
+                .systemLabel("")
+                .floor(1)
+                .area(0)
+                .roomNumber(2)
+                .state("")
+                .energyMeter(
+                        EnergyMeter.builder()
+                                .systemName("")
+                                .systemLabel("")
+                                .serialNumber(0L)
+                                .installDate(0L)
+                                .build()
+                )
+                .heatMeter(
+                        HeatMeter.builder()
+                                .systemName("")
+                                .systemLabel("")
+                                .serialNumber(0L)
+                                .installDate(0L)
+                                .build()
+                )
+                .build();
+    }
+
+    private Apartment makeHogurityApartment13() {
+        return Apartment.builder()
+                .systemName("Apt 103 in Hogurity")
+                .systemLabel("")
+                .floor(1)
+                .area(0)
+                .roomNumber(3)
+                .state("")
+                .energyMeter(
+                        EnergyMeter.builder()
+                                .systemName("")
+                                .systemLabel("")
+                                .serialNumber(0L)
+                                .installDate(0L)
+                                .build()
+                )
+                .heatMeter(
+                        HeatMeter.builder()
+                                .systemName("")
+                                .systemLabel("")
+                                .serialNumber(0L)
+                                .installDate(0L)
+                                .build()
+                )
+                .build();
+    }
+
+    private Apartment makeHogurityApartment14() {
+        return Apartment.builder()
+                .systemName("Apt 104 in Hogurity")
+                .systemLabel("")
+                .floor(1)
+                .area(0)
+                .roomNumber(4)
+                .state("")
+                .energyMeter(
+                        EnergyMeter.builder()
+                                .systemName("")
+                                .systemLabel("")
+                                .serialNumber(0L)
+                                .installDate(0L)
+                                .build()
+                )
+                .heatMeter(
+                        HeatMeter.builder()
+                                .systemName("")
+                                .systemLabel("")
+                                .serialNumber(0L)
+                                .installDate(0L)
+                                .build()
+                )
+                .build();
+    }
+
+    private Apartment makeHogurityApartment15() {
+        return Apartment.builder()
+                .systemName("Apt 105 in Hogurity")
+                .systemLabel("")
+                .floor(1)
+                .area(0)
+                .roomNumber(5)
+                .state("")
+                .energyMeter(
+                        EnergyMeter.builder()
+                                .systemName("")
+                                .systemLabel("")
+                                .serialNumber(0L)
+                                .installDate(0L)
+                                .build()
+                )
+                .heatMeter(
+                        HeatMeter.builder()
+                                .systemName("")
+                                .systemLabel("")
+                                .serialNumber(0L)
+                                .installDate(0L)
+                                .build()
+                )
+                .build();
+    }
+
+
+    private Telemetry<? extends Number> createTelemetryEnergyMeterConsumption(boolean occupied, int level) {
+        Telemetry<Integer> result = new Telemetry<>("energyConsumption");
+        return result;
+    }
+
+    private Telemetry<? extends Number> createTelemetryEnergyMeterConsAbsolute(boolean occupied, int level) {
+        Telemetry<Integer> result = new Telemetry<>("energyConsAbsolute");
+        return result;
+    }
+
+    private Telemetry<? extends Number> createTelemetryHeatMeterConsumption(boolean occupied, int level) {
+        Telemetry<Integer> result = new Telemetry<>("heatConsumption");
+        return result;
+    }
+
+    private Telemetry<? extends Number> createTelemetryHeatMeterTemperature(boolean occupied, int level) {
+        Telemetry<Integer> result = new Telemetry<>("temperature");
+        return result;
     }
 
 
@@ -292,27 +927,5 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
         tbRestClient.pushTelemetry(deviceCredentials.getCredentialsId(), heatMeter.getHeatConsumption());
         tbRestClient.pushTelemetry(deviceCredentials.getCredentialsId(), heatMeter.getTemperature());
         return device;
-    }
-
-
-    private Telemetry<? extends Number> createTelemetryEnergyMeterConsumption(boolean occupied, int level) {
-        Telemetry<Integer> result = new Telemetry<>("");
-        return result;
-    }
-
-    private Telemetry<? extends Number> createTelemetryEnergyMeterConsAbsolute(boolean occupied, int level) {
-        Telemetry<Integer> result = new Telemetry<>("");
-        return result;
-    }
-
-
-    private Telemetry<? extends Number> createTelemetryHeatMeterConsumption(boolean occupied, int level) {
-        Telemetry<Integer> result = new Telemetry<>("");
-        return result;
-    }
-
-    private Telemetry<? extends Number> createTelemetryHeatMeterTemperature(boolean occupied, int level) {
-        Telemetry<Integer> result = new Telemetry<>("");
-        return result;
     }
 }
