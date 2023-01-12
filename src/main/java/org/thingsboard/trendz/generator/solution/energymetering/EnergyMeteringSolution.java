@@ -124,12 +124,10 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
                         Apartment.builder()
                                 .systemName("Apt 101 in Alpire")
                                 .systemLabel("")
-                                .name("")
-                                .localNumber(0)
                                 .floor(0)
                                 .area(0)
-                                .state("")
                                 .roomNumber(0)
+                                .state("")
                                 .energyMeter(
                                         EnergyMeter.builder()
                                                 .systemName("")
@@ -158,12 +156,10 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
                         Apartment.builder()
                                 .systemName("Apt 101 in Feline")
                                 .systemLabel("")
-                                .name("")
-                                .localNumber(0)
                                 .floor(0)
                                 .area(0)
-                                .state("")
                                 .roomNumber(0)
+                                .state("")
                                 .energyMeter(
                                         EnergyMeter.builder()
                                                 .systemName("")
@@ -192,12 +188,10 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
                         Apartment.builder()
                                 .systemName("Apt 101 in Hogurity")
                                 .systemLabel("")
-                                .name("")
-                                .localNumber(0)
                                 .floor(0)
                                 .area(0)
-                                .state("")
                                 .roomNumber(0)
+                                .state("")
                                 .energyMeter(
                                         EnergyMeter.builder()
                                                 .systemName("")
@@ -260,12 +254,10 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
         Asset asset = tbRestClient.createAsset(apartment.getSystemName(), "apartment");
 
         Set<Attribute<?>> attributes = Set.of(
-                new Attribute<>("name", apartment.getName()),
-                new Attribute<>("localNumber", apartment.getLocalNumber()),
                 new Attribute<>("floor", apartment.getFloor()),
                 new Attribute<>("area", apartment.getArea()),
-                new Attribute<>("state", apartment.getState()),
-                new Attribute<>("roomNumber", apartment.getRoomNumber())
+                new Attribute<>("roomNumber", apartment.getRoomNumber()),
+                new Attribute<>("state", apartment.getState())
         );
         tbRestClient.setEntityAttributes(asset.getUuidId(), EntityType.ASSET, Scope.SERVER_SCOPE, attributes);
 
@@ -307,6 +299,7 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
         Telemetry<Integer> result = new Telemetry<>("");
         return result;
     }
+
     private Telemetry<? extends Number> createTelemetryEnergyMeterConsAbsolute(boolean occupied, int level) {
         Telemetry<Integer> result = new Telemetry<>("");
         return result;
@@ -317,6 +310,7 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
         Telemetry<Integer> result = new Telemetry<>("");
         return result;
     }
+
     private Telemetry<? extends Number> createTelemetryHeatMeterTemperature(boolean occupied, int level) {
         Telemetry<Integer> result = new Telemetry<>("");
         return result;

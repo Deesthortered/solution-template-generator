@@ -14,12 +14,11 @@ public class Apartment {
     private String systemName;
     private String systemLabel;
 
-    private String name;
-    private int localNumber;
+
     private int floor;
     private int area;
-    private String state;
     private int roomNumber;
+    private String state;
 
 
     private EnergyMeter energyMeter;
