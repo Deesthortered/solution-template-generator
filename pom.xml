@@ -17,7 +17,7 @@
 
 	<properties>
 		<java.version>11</java.version>
-		<tb.version>3.4.2-SNAPSHOT</tb.version>
+		<tb.version>3.4.4-SNAPSHOT</tb.version>
 		<spring.boot.version>3.0.1</spring.boot.version>
 		<jwt.version>4.2.1</jwt.version>
 		<guava.version>31.1-jre</guava.version>
@@ -60,6 +60,12 @@
 			<groupId>com.google.guava</groupId>
 			<artifactId>guava</artifactId>
 			<version>${guava.version}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>com.github.sh0nk</groupId>
+			<artifactId>matplotlib4j</artifactId>
+			<version>0.5.0</version>
 		</dependency>
 	</dependencies>
 

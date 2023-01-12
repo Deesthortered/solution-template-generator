@@ -9,6 +9,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.thingsboard.trendz.generator.solution.SolutionTemplateGenerator;
 
 import java.util.List;
+import java.util.TimeZone;
 
 @Slf4j
 @SpringBootApplication
@@ -34,6 +35,7 @@ public class SolutionTemplateGeneratorApplication implements CommandLineRunner {
 
 	@Override
 	public void run(String... args) {
+		setDefaultTimezone();
 		boolean modeRemove = MODE_REMOVE.equals(this.mode);
 
 		log.info("There is/are {} solutions found {}", this.currentSolutions.size(), this.currentSolutions);
@@ -53,6 +55,10 @@ public class SolutionTemplateGeneratorApplication implements CommandLineRunner {
 			log.info("Current generator is finished: {}", solutionName);
 		}
 		System.exit(0);
+	}
+
+	private static void setDefaultTimezone() {
+		TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
 	}
 
 	public static void main(String[] args) {

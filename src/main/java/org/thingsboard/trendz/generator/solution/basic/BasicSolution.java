@@ -32,8 +32,12 @@ import org.thingsboard.trendz.generator.model.Timestamp;
 import org.thingsboard.trendz.generator.service.FileService;
 import org.thingsboard.trendz.generator.service.TbRestClient;
 import org.thingsboard.trendz.generator.solution.SolutionTemplateGenerator;
+import org.thingsboard.trendz.generator.utils.DateTimeUtils;
 import org.thingsboard.trendz.generator.utils.JsonUtils;
 
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -125,15 +129,21 @@ public class BasicSolution implements SolutionTemplateGenerator {
             tbRestClient.assignDeviceToCustomer(customer.getUuidId(), device.getUuidId());
 
             Telemetry<Integer> deviceTelemetry = new Telemetry<>("pushed_telemetry");
-            deviceTelemetry.add(new Telemetry.Point<>(Timestamp.of(1672531200000L), 10));
-            deviceTelemetry.add(new Telemetry.Point<>(Timestamp.of(1672617600000L), 20));
-            deviceTelemetry.add(new Telemetry.Point<>(Timestamp.of(1672704000000L), 30));
-            deviceTelemetry.add(new Telemetry.Point<>(Timestamp.of(1672790400000L), 40));
-            deviceTelemetry.add(new Telemetry.Point<>(Timestamp.of(1672876800000L), 50));
+            long now = System.currentTimeMillis();
+            ZonedDateTime startTime = ZonedDateTime.of(2023, 1, 1, 0, 0, 0, 0, ZoneId.of("UTC"));
+            ZonedDateTime today = DateTimeUtils.fromTs(now).truncatedTo(ChronoUnit.DAYS);
+            int valueCounter = 0;
+            while (startTime.isBefore(today)) {
+                long ts = DateTimeUtils.toTs(today);
+                deviceTelemetry.add(new Telemetry.Point<>(Timestamp.of(ts), valueCounter++));
+                startTime = startTime.plus(1, ChronoUnit.DAYS);
+            }
+
             DeviceCredentials credentials = tbRestClient.getCredentials(device.getUuidId());
             tbRestClient.pushTelemetry(credentials.getCredentialsId(), deviceTelemetry);
 
             Set<Attribute<?>> attributes = Set.of(
+                    new Attribute<>("Generator Start Time", now),
                     new Attribute<>("doubleKey", 1.0),
                     new Attribute<>("longKey", 1L),
                     new Attribute<>("intKey", 1),
