@@ -290,6 +290,9 @@ public class TbRestClient {
     }
 
     public <T> void pushTelemetry(String accessToken, Telemetry<T> telemetry) {
+        if (telemetry.getPoints().isEmpty()) {
+            return;
+        }
         if (this.cloud) {
             log.info("Pushing telemetry '{}' to the cloud, batch size = {}, send delay = {}, suppress error count = {}",
                     telemetry.getName(),
