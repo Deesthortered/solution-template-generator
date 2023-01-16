@@ -206,17 +206,25 @@ public class TbRestClient {
     }
 
     public Asset createAsset(String name, String type) {
-        Asset asset = new Asset();
-        asset.setName(name);
-        asset.setType(type);
-        return restTemplate.postForEntity(baseURL + "/api/asset", asset, Asset.class).getBody();
+        try {
+            Asset asset = new Asset();
+            asset.setName(name);
+            asset.setType(type);
+            return restTemplate.postForEntity(baseURL + "/api/asset", asset, Asset.class).getBody();
+        } catch (Exception e) {
+            throw new RuntimeException("", e);
+        }
     }
 
     public Device createDevice(String name, String type) {
-        Device device = new Device();
-        device.setName(name);
-        device.setType(type);
-        return restTemplate.postForEntity(baseURL + "/api/device", device, Device.class).getBody();
+        try {
+            Device device = new Device();
+            device.setName(name);
+            device.setType(type);
+            return restTemplate.postForEntity(baseURL + "/api/device", device, Device.class).getBody();
+        } catch (Exception e) {
+            throw new RuntimeException("", e);
+        }
     }
 
 

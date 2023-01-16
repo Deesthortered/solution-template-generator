@@ -3,10 +3,18 @@ package org.thingsboard.trendz.generator.solution.energymetering;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.thingsboard.rule.engine.debug.TbMsgGeneratorNode;
+import org.thingsboard.rule.engine.debug.TbMsgGeneratorNodeConfiguration;
+import org.thingsboard.rule.engine.telemetry.TbMsgTimeseriesNode;
+import org.thingsboard.rule.engine.telemetry.TbMsgTimeseriesNodeConfiguration;
 import org.thingsboard.server.common.data.Customer;
 import org.thingsboard.server.common.data.Device;
 import org.thingsboard.server.common.data.EntityType;
 import org.thingsboard.server.common.data.asset.Asset;
+import org.thingsboard.server.common.data.rule.NodeConnectionInfo;
+import org.thingsboard.server.common.data.rule.RuleChain;
+import org.thingsboard.server.common.data.rule.RuleChainMetaData;
+import org.thingsboard.server.common.data.rule.RuleNode;
 import org.thingsboard.server.common.data.security.DeviceCredentials;
 import org.thingsboard.trendz.generator.exception.AssetAlreadyExistException;
 import org.thingsboard.trendz.generator.exception.CustomerAlreadyExistException;
@@ -14,7 +22,9 @@ import org.thingsboard.trendz.generator.exception.DeviceAlreadyExistException;
 import org.thingsboard.trendz.generator.exception.RuleChainAlreadyExistException;
 import org.thingsboard.trendz.generator.model.Attribute;
 import org.thingsboard.trendz.generator.model.CustomerUser;
+import org.thingsboard.trendz.generator.model.NodeConnectionType;
 import org.thingsboard.trendz.generator.model.RelationType;
+import org.thingsboard.trendz.generator.model.RuleNodeAdditionalInfo;
 import org.thingsboard.trendz.generator.model.Scope;
 import org.thingsboard.trendz.generator.model.Telemetry;
 import org.thingsboard.trendz.generator.service.FileService;
@@ -22,12 +32,16 @@ import org.thingsboard.trendz.generator.service.TbRestClient;
 import org.thingsboard.trendz.generator.service.VisualizationService;
 import org.thingsboard.trendz.generator.solution.SolutionTemplateGenerator;
 import org.thingsboard.trendz.generator.utils.DateTimeUtils;
+import org.thingsboard.trendz.generator.utils.JsonUtils;
 import org.thingsboard.trendz.generator.utils.RandomUtils;
 
+import java.io.IOException;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -142,6 +156,7 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
             List<Building> data = makeData();
             visualizeData(data);
             applyData(data);
+            createRuleChain(data);
 
             log.info("Energy Metering Solution - generation is completed!");
         } catch (Exception e) {
@@ -212,6 +227,61 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
                 tbRestClient.createRelation(RelationType.CONTAINS.getType(), apartmentAsset.getId(), energyMeterDevice.getId());
                 tbRestClient.createRelation(RelationType.CONTAINS.getType(), apartmentAsset.getId(), heatMeterDevice.getId());
             }
+        }
+    }
+
+    private void createRuleChain(List<Building> buildings) {
+        try {
+            RuleChain ruleChain = tbRestClient.createRuleChain(RULE_CHAIN_NAME);
+            RuleChainMetaData metaData = tbRestClient.getRuleChainMetadataByRuleChainId(ruleChain.getUuidId())
+                    .orElseThrow();
+            
+            List<RuleNode> nodes = metaData.getNodes();
+            List<NodeConnectionInfo> connections = new ArrayList<>();
+            metaData.setConnections(connections);
+
+            RuleNode saveNode = createSaveNode();
+            nodes.add(saveNode);
+
+            int counter = 0;
+            for (Building building : buildings) {
+                for (Apartment apartment : building.getApartments()) {
+
+                    EnergyMeter energyMeter = apartment.getEnergyMeter();
+                    HeatMeter heatMeter = apartment.getHeatMeter();
+
+                    RuleNode energyMeterGeneratorMode = createGeneratorMode(
+                            energyMeter.getSystemName(),
+                            energyMeter.getSystemId(), "level1.js",
+                            RuleNodeAdditionalInfo.CELL_SIZE * 5, (5 + counter) * (RuleNodeAdditionalInfo.CELL_SIZE + 25)
+                    );
+                    NodeConnectionInfo energyMeterConnection = new NodeConnectionInfo();
+                    energyMeterConnection.setType(NodeConnectionType.SUCCESS.getType());
+                    energyMeterConnection.setFromIndex(counter * 2 + 1);
+                    energyMeterConnection.setToIndex(0);
+
+                    RuleNode heatMeterGeneratorMode = createGeneratorMode(
+                            heatMeter.getSystemName(),
+                            heatMeter.getSystemId(), "level1.js",
+                            RuleNodeAdditionalInfo.CELL_SIZE * 25, (5 + counter) * (RuleNodeAdditionalInfo.CELL_SIZE + 25)
+                    );
+                    NodeConnectionInfo heatMeterConnection = new NodeConnectionInfo();
+                    heatMeterConnection.setType(NodeConnectionType.SUCCESS.getType());
+                    heatMeterConnection.setFromIndex(counter * 2 + 2);
+                    heatMeterConnection.setToIndex(0);
+
+                    nodes.add(energyMeterGeneratorMode);
+                    nodes.add(heatMeterGeneratorMode);
+
+                    connections.add(energyMeterConnection);
+                    connections.add(heatMeterConnection);
+                    counter++;
+                }
+            }
+
+            RuleChainMetaData savedMetaData = tbRestClient.saveRuleChainMetadata(metaData);
+        } catch (Exception e) {
+            throw new RuntimeException("", e);
         }
     }
 
@@ -404,7 +474,7 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
         Telemetry<Integer> heatMeterConsAbsolute = createTelemetryHeatMeterConsAbsolute(heatMeterConsumption);
 
         EnergyMeter energyMeter = EnergyMeter.builder()
-                .systemName("Energy Meter A103")
+                .systemName("Energy Meter A201")
                 .systemLabel("")
                 .serialNumber(RandomUtils.getRandomNumber(serialRangeFrom, serialRangeTo))
                 .installDate(startTime)
@@ -413,7 +483,7 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
                 .build();
 
         HeatMeter heatMeter = HeatMeter.builder()
-                .systemName("Heat Meter A103")
+                .systemName("Heat Meter A201")
                 .systemLabel("")
                 .serialNumber(RandomUtils.getRandomNumber(serialRangeFrom, serialRangeTo))
                 .installDate(startTime)
@@ -1084,7 +1154,7 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
                 .build();
 
         return Apartment.builder()
-                .systemName("Apt 301 in Feline")
+                .systemName("Apt 302 in Feline")
                 .systemLabel("")
                 .floor(3)
                 .area(0)
@@ -1351,6 +1421,7 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
         );
         tbRestClient.setEntityAttributes(asset.getUuidId(), EntityType.ASSET, Scope.SERVER_SCOPE, attributes);
 
+        building.setSystemId(asset.getUuidId());
         return asset;
     }
 
@@ -1365,6 +1436,7 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
         );
         tbRestClient.setEntityAttributes(asset.getUuidId(), EntityType.ASSET, Scope.SERVER_SCOPE, attributes);
 
+        apartment.setSystemId(asset.getUuidId());
         return asset;
     }
 
@@ -1380,6 +1452,8 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
 
         tbRestClient.pushTelemetry(deviceCredentials.getCredentialsId(), energyMeter.getEnergyConsumption());
         tbRestClient.pushTelemetry(deviceCredentials.getCredentialsId(), energyMeter.getEnergyConsAbsolute());
+
+        energyMeter.setSystemId(device.getUuidId());
         return device;
     }
 
@@ -1395,6 +1469,55 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
 
         tbRestClient.pushTelemetry(deviceCredentials.getCredentialsId(), heatMeter.getHeatConsumption());
         tbRestClient.pushTelemetry(deviceCredentials.getCredentialsId(), heatMeter.getTemperature());
+
+        heatMeter.setSystemId(device.getUuidId());
         return device;
+    }
+
+
+    private RuleNode createSaveNode() {
+        TbMsgTimeseriesNodeConfiguration saveConfiguration = new TbMsgTimeseriesNodeConfiguration();
+        saveConfiguration.setDefaultTTL(0);
+        saveConfiguration.setUseServerTs(true);
+        saveConfiguration.setSkipLatestPersistence(false);
+
+        RuleNode saveNode = new RuleNode();
+        saveNode.setName("EnergyMetering - save");
+        saveNode.setType(TbMsgTimeseriesNode.class.getName());
+        saveNode.setConfiguration(JsonUtils.makeNodeFromPojo(saveConfiguration));
+        saveNode.setAdditionalInfo(
+                RuleNodeAdditionalInfo.builder()
+                        .description("Basic description")
+                        .layoutX(RuleNodeAdditionalInfo.CELL_SIZE * 15)
+                        .layoutY(RuleNodeAdditionalInfo.CELL_SIZE * 25)
+                        .build()
+                        .toJsonNode()
+        );
+
+        return saveNode;
+    }
+
+    private RuleNode createGeneratorMode(String name, UUID entityId, String fileName, int gridIndexX, int gridIndexY) throws IOException {
+        TbMsgGeneratorNodeConfiguration generatorConfiguration = new TbMsgGeneratorNodeConfiguration();
+        generatorConfiguration.setOriginatorType(EntityType.DEVICE);
+        generatorConfiguration.setOriginatorId(entityId.toString());
+        generatorConfiguration.setMsgCount(0);
+        generatorConfiguration.setPeriodInSeconds(30);
+        generatorConfiguration.setJsScript(this.fileService.getFileContent(getSolutionName(), fileName));
+
+        RuleNode generatorNode = new RuleNode();
+        generatorNode.setName(name);
+        generatorNode.setType(TbMsgGeneratorNode.class.getName());
+        generatorNode.setConfiguration(JsonUtils.makeNodeFromPojo(generatorConfiguration));
+        generatorNode.setAdditionalInfo(
+                RuleNodeAdditionalInfo.builder()
+                        .description("")
+                        .layoutX(gridIndexX)
+                        .layoutY(gridIndexY)
+                        .build()
+                        .toJsonNode()
+        );
+
+        return generatorNode;
     }
 }
