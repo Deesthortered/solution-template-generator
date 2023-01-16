@@ -54,7 +54,10 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
     private static final long TS_2022_MAY = DateTimeUtils.toTs(
             ZonedDateTime.of(2022, 5, 1, 0, 0, 0, 0, ZoneId.systemDefault())
     );
-
+    private static final long dateRangeFrom = 100000;
+    private static final long dateRangeTo   = 10000000;
+    private static final long serialRangeFrom = 10000;
+    private static final long serialRangeTo   = 99999;
 
     private final TbRestClient tbRestClient;
     private final FileService fileService;
@@ -302,7 +305,7 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
     private Apartment makeAlpireApartment11() {
         boolean occupancy = true;
         int level = 2;
-        long startTime = TS_2022_JANUARY;
+        long startTime = TS_2022_JANUARY + RandomUtils.getRandomNumber(dateRangeFrom, dateRangeTo);
         boolean anomaly = false;
 
         Telemetry<Integer> energyMeterConsumption = createTelemetryEnergyMeterConsumption(occupancy, level, startTime, anomaly);
@@ -315,7 +318,7 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
         EnergyMeter energyMeter = EnergyMeter.builder()
                 .systemName("Energy Meter A101")
                 .systemLabel("")
-                .serialNumber(RandomUtils.getRandomNumber(10000, 99999))
+                .serialNumber(RandomUtils.getRandomNumber(serialRangeFrom, serialRangeTo))
                 .installDate(startTime)
                 .energyConsumption(energyMeterConsumption)
                 .energyConsAbsolute(energyMeterConsAbsolute)
@@ -324,7 +327,7 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
         HeatMeter heatMeter = HeatMeter.builder()
                 .systemName("Heat Meter A101")
                 .systemLabel("")
-                .serialNumber(RandomUtils.getRandomNumber(10000, 99999))
+                .serialNumber(RandomUtils.getRandomNumber(serialRangeFrom, serialRangeTo))
                 .installDate(startTime)
                 .temperature(heatMeterTemperature)
                 .heatConsumption(heatMeterConsumption)
@@ -346,9 +349,9 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
     private Apartment makeAlpireApartment12() {
         boolean occupancy = false;
         int level = 0;
-        long startTime = TS_2022_JANUARY;
+        long startTime = TS_2022_JANUARY + RandomUtils.getRandomNumber(dateRangeFrom, dateRangeTo);
         boolean anomaly = false;
-        
+
         Telemetry<Integer> energyMeterConsumption = createTelemetryEnergyMeterConsumption(occupancy, level, startTime, anomaly);
         Telemetry<Integer> energyMeterConsAbsolute = createTelemetryEnergyMeterConsAbsolute(energyMeterConsumption);
 
@@ -359,7 +362,7 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
         EnergyMeter energyMeter = EnergyMeter.builder()
                 .systemName("Energy Meter A102")
                 .systemLabel("")
-                .serialNumber(RandomUtils.getRandomNumber(10000, 99999))
+                .serialNumber(RandomUtils.getRandomNumber(serialRangeFrom, serialRangeTo))
                 .installDate(startTime)
                 .energyConsumption(energyMeterConsumption)
                 .energyConsAbsolute(energyMeterConsAbsolute)
@@ -368,7 +371,7 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
         HeatMeter heatMeter = HeatMeter.builder()
                 .systemName("Heat Meter A102")
                 .systemLabel("")
-                .serialNumber(RandomUtils.getRandomNumber(10000, 99999))
+                .serialNumber(RandomUtils.getRandomNumber(serialRangeFrom, serialRangeTo))
                 .installDate(startTime)
                 .temperature(heatMeterTemperature)
                 .heatConsumption(heatMeterConsumption)
@@ -390,9 +393,9 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
     private Apartment makeAlpireApartment21() {
         boolean occupancy = true;
         int level = 2;
-        long startTime = TS_2022_JANUARY;
+        long startTime = TS_2022_JANUARY + RandomUtils.getRandomNumber(dateRangeFrom, dateRangeTo);
         boolean anomaly = false;
-        
+
         Telemetry<Integer> energyMeterConsumption = createTelemetryEnergyMeterConsumption(occupancy, level, startTime, anomaly);
         Telemetry<Integer> energyMeterConsAbsolute = createTelemetryEnergyMeterConsAbsolute(energyMeterConsumption);
 
@@ -403,7 +406,7 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
         EnergyMeter energyMeter = EnergyMeter.builder()
                 .systemName("Energy Meter A103")
                 .systemLabel("")
-                .serialNumber(RandomUtils.getRandomNumber(10000, 99999))
+                .serialNumber(RandomUtils.getRandomNumber(serialRangeFrom, serialRangeTo))
                 .installDate(startTime)
                 .energyConsumption(energyMeterConsumption)
                 .energyConsAbsolute(energyMeterConsAbsolute)
@@ -412,7 +415,7 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
         HeatMeter heatMeter = HeatMeter.builder()
                 .systemName("Heat Meter A103")
                 .systemLabel("")
-                .serialNumber(RandomUtils.getRandomNumber(10000, 99999))
+                .serialNumber(RandomUtils.getRandomNumber(serialRangeFrom, serialRangeTo))
                 .installDate(startTime)
                 .temperature(heatMeterTemperature)
                 .heatConsumption(heatMeterConsumption)
@@ -434,9 +437,9 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
     private Apartment makeAlpireApartment22() {
         boolean occupancy = true;
         int level = 2;
-        long startTime = TS_2022_JANUARY;
+        long startTime = TS_2022_JANUARY + RandomUtils.getRandomNumber(dateRangeFrom, dateRangeTo);
         boolean anomaly = false;
-        
+
         Telemetry<Integer> energyMeterConsumption = createTelemetryEnergyMeterConsumption(occupancy, level, startTime, anomaly);
         Telemetry<Integer> energyMeterConsAbsolute = createTelemetryEnergyMeterConsAbsolute(energyMeterConsumption);
 
@@ -447,7 +450,7 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
         EnergyMeter energyMeter = EnergyMeter.builder()
                 .systemName("Energy Meter A202")
                 .systemLabel("")
-                .serialNumber(RandomUtils.getRandomNumber(10000, 99999))
+                .serialNumber(RandomUtils.getRandomNumber(serialRangeFrom, serialRangeTo))
                 .installDate(startTime)
                 .energyConsumption(energyMeterConsumption)
                 .energyConsAbsolute(energyMeterConsAbsolute)
@@ -456,7 +459,7 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
         HeatMeter heatMeter = HeatMeter.builder()
                 .systemName("Heat Meter A202")
                 .systemLabel("")
-                .serialNumber(RandomUtils.getRandomNumber(10000, 99999))
+                .serialNumber(RandomUtils.getRandomNumber(serialRangeFrom, serialRangeTo))
                 .installDate(startTime)
                 .temperature(heatMeterTemperature)
                 .heatConsumption(heatMeterConsumption)
@@ -478,9 +481,9 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
     private Apartment makeAlpireApartment31() {
         boolean occupancy = false;
         int level = 0;
-        long startTime = TS_2022_JANUARY;
+        long startTime = TS_2022_JANUARY + RandomUtils.getRandomNumber(dateRangeFrom, dateRangeTo);
         boolean anomaly = false;
-        
+
         Telemetry<Integer> energyMeterConsumption = createTelemetryEnergyMeterConsumption(occupancy, level, startTime, anomaly);
         Telemetry<Integer> energyMeterConsAbsolute = createTelemetryEnergyMeterConsAbsolute(energyMeterConsumption);
 
@@ -491,7 +494,7 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
         EnergyMeter energyMeter = EnergyMeter.builder()
                 .systemName("Energy Meter A301")
                 .systemLabel("")
-                .serialNumber(RandomUtils.getRandomNumber(10000, 99999))
+                .serialNumber(RandomUtils.getRandomNumber(serialRangeFrom, serialRangeTo))
                 .installDate(startTime)
                 .energyConsumption(energyMeterConsumption)
                 .energyConsAbsolute(energyMeterConsAbsolute)
@@ -500,7 +503,7 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
         HeatMeter heatMeter = HeatMeter.builder()
                 .systemName("Heat Meter A301")
                 .systemLabel("")
-                .serialNumber(RandomUtils.getRandomNumber(10000, 99999))
+                .serialNumber(RandomUtils.getRandomNumber(serialRangeFrom, serialRangeTo))
                 .installDate(startTime)
                 .temperature(heatMeterTemperature)
                 .heatConsumption(heatMeterConsumption)
@@ -522,9 +525,9 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
     private Apartment makeAlpireApartment32() {
         boolean occupancy = true;
         int level = 2;
-        long startTime = TS_2022_JANUARY;
+        long startTime = TS_2022_JANUARY + RandomUtils.getRandomNumber(dateRangeFrom, dateRangeTo);
         boolean anomaly = false;
-        
+
         Telemetry<Integer> energyMeterConsumption = createTelemetryEnergyMeterConsumption(occupancy, level, startTime, anomaly);
         Telemetry<Integer> energyMeterConsAbsolute = createTelemetryEnergyMeterConsAbsolute(energyMeterConsumption);
 
@@ -535,7 +538,7 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
         EnergyMeter energyMeter = EnergyMeter.builder()
                 .systemName("Energy Meter A302")
                 .systemLabel("")
-                .serialNumber(RandomUtils.getRandomNumber(10000, 99999))
+                .serialNumber(RandomUtils.getRandomNumber(serialRangeFrom, serialRangeTo))
                 .installDate(startTime)
                 .energyConsumption(energyMeterConsumption)
                 .energyConsAbsolute(energyMeterConsAbsolute)
@@ -544,7 +547,7 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
         HeatMeter heatMeter = HeatMeter.builder()
                 .systemName("Heat Meter A302")
                 .systemLabel("")
-                .serialNumber(RandomUtils.getRandomNumber(10000, 99999))
+                .serialNumber(RandomUtils.getRandomNumber(serialRangeFrom, serialRangeTo))
                 .installDate(startTime)
                 .temperature(heatMeterTemperature)
                 .heatConsumption(heatMeterConsumption)
@@ -566,9 +569,9 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
     private Apartment makeAlpireApartment41() {
         boolean occupancy = true;
         int level = 3;
-        long startTime = TS_2022_JANUARY;
+        long startTime = TS_2022_JANUARY + RandomUtils.getRandomNumber(dateRangeFrom, dateRangeTo);
         boolean anomaly = false;
-        
+
         Telemetry<Integer> energyMeterConsumption = createTelemetryEnergyMeterConsumption(occupancy, level, startTime, anomaly);
         Telemetry<Integer> energyMeterConsAbsolute = createTelemetryEnergyMeterConsAbsolute(energyMeterConsumption);
 
@@ -579,7 +582,7 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
         EnergyMeter energyMeter = EnergyMeter.builder()
                 .systemName("Energy Meter A401")
                 .systemLabel("")
-                .serialNumber(RandomUtils.getRandomNumber(10000, 99999))
+                .serialNumber(RandomUtils.getRandomNumber(serialRangeFrom, serialRangeTo))
                 .installDate(startTime)
                 .energyConsumption(energyMeterConsumption)
                 .energyConsAbsolute(energyMeterConsAbsolute)
@@ -588,7 +591,7 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
         HeatMeter heatMeter = HeatMeter.builder()
                 .systemName("Heat Meter A401")
                 .systemLabel("")
-                .serialNumber(RandomUtils.getRandomNumber(10000, 99999))
+                .serialNumber(RandomUtils.getRandomNumber(serialRangeFrom, serialRangeTo))
                 .installDate(startTime)
                 .temperature(heatMeterTemperature)
                 .heatConsumption(heatMeterConsumption)
@@ -610,9 +613,9 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
     private Apartment makeAlpireApartment42() {
         boolean occupancy = true;
         int level = 3;
-        long startTime = TS_2022_JANUARY;
+        long startTime = TS_2022_JANUARY + RandomUtils.getRandomNumber(dateRangeFrom, dateRangeTo);
         boolean anomaly = false;
-        
+
         Telemetry<Integer> energyMeterConsumption = createTelemetryEnergyMeterConsumption(occupancy, level, startTime, anomaly);
         Telemetry<Integer> energyMeterConsAbsolute = createTelemetryEnergyMeterConsAbsolute(energyMeterConsumption);
 
@@ -623,7 +626,7 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
         EnergyMeter energyMeter = EnergyMeter.builder()
                 .systemName("Energy Meter A402")
                 .systemLabel("")
-                .serialNumber(RandomUtils.getRandomNumber(10000, 99999))
+                .serialNumber(RandomUtils.getRandomNumber(serialRangeFrom, serialRangeTo))
                 .installDate(startTime)
                 .energyConsumption(energyMeterConsumption)
                 .energyConsAbsolute(energyMeterConsAbsolute)
@@ -632,7 +635,7 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
         HeatMeter heatMeter = HeatMeter.builder()
                 .systemName("Heat Meter A402")
                 .systemLabel("")
-                .serialNumber(RandomUtils.getRandomNumber(10000, 99999))
+                .serialNumber(RandomUtils.getRandomNumber(serialRangeFrom, serialRangeTo))
                 .installDate(startTime)
                 .temperature(heatMeterTemperature)
                 .heatConsumption(heatMeterConsumption)
@@ -654,9 +657,9 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
     private Apartment makeAlpireApartment51() {
         boolean occupancy = false;
         int level = 0;
-        long startTime = TS_2022_FEBRUARY;
+        long startTime = TS_2022_FEBRUARY + RandomUtils.getRandomNumber(dateRangeFrom, dateRangeTo);
         boolean anomaly = false;
-        
+
         Telemetry<Integer> energyMeterConsumption = createTelemetryEnergyMeterConsumption(occupancy, level, startTime, anomaly);
         Telemetry<Integer> energyMeterConsAbsolute = createTelemetryEnergyMeterConsAbsolute(energyMeterConsumption);
 
@@ -667,7 +670,7 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
         EnergyMeter energyMeter = EnergyMeter.builder()
                 .systemName("Energy Meter A501")
                 .systemLabel("")
-                .serialNumber(RandomUtils.getRandomNumber(10000, 99999))
+                .serialNumber(RandomUtils.getRandomNumber(serialRangeFrom, serialRangeTo))
                 .installDate(startTime)
                 .energyConsumption(energyMeterConsumption)
                 .energyConsAbsolute(energyMeterConsAbsolute)
@@ -676,7 +679,7 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
         HeatMeter heatMeter = HeatMeter.builder()
                 .systemName("Heat Meter A501")
                 .systemLabel("")
-                .serialNumber(RandomUtils.getRandomNumber(10000, 99999))
+                .serialNumber(RandomUtils.getRandomNumber(serialRangeFrom, serialRangeTo))
                 .installDate(startTime)
                 .temperature(heatMeterTemperature)
                 .heatConsumption(heatMeterConsumption)
@@ -698,9 +701,9 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
     private Apartment makeAlpireApartment52() {
         boolean occupancy = false;
         int level = 0;
-        long startTime = TS_2022_FEBRUARY;
+        long startTime = TS_2022_FEBRUARY + RandomUtils.getRandomNumber(dateRangeFrom, dateRangeTo);
         boolean anomaly = false;
-        
+
         Telemetry<Integer> energyMeterConsumption = createTelemetryEnergyMeterConsumption(occupancy, level, startTime, anomaly);
         Telemetry<Integer> energyMeterConsAbsolute = createTelemetryEnergyMeterConsAbsolute(energyMeterConsumption);
 
@@ -711,7 +714,7 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
         EnergyMeter energyMeter = EnergyMeter.builder()
                 .systemName("Energy Meter A502")
                 .systemLabel("")
-                .serialNumber(RandomUtils.getRandomNumber(10000, 99999))
+                .serialNumber(RandomUtils.getRandomNumber(serialRangeFrom, serialRangeTo))
                 .installDate(startTime)
                 .energyConsumption(energyMeterConsumption)
                 .energyConsAbsolute(energyMeterConsAbsolute)
@@ -720,7 +723,7 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
         HeatMeter heatMeter = HeatMeter.builder()
                 .systemName("Heat Meter A502")
                 .systemLabel("")
-                .serialNumber(RandomUtils.getRandomNumber(10000, 99999))
+                .serialNumber(RandomUtils.getRandomNumber(serialRangeFrom, serialRangeTo))
                 .installDate(startTime)
                 .temperature(heatMeterTemperature)
                 .heatConsumption(heatMeterConsumption)
@@ -743,9 +746,9 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
     private Apartment makeFelineApartment11() {
         boolean occupancy = false;
         int level = 0;
-        long startTime = TS_2022_MAY;
+        long startTime = TS_2022_MAY + RandomUtils.getRandomNumber(dateRangeFrom, dateRangeTo);
         boolean anomaly = true;
-        
+
         Telemetry<Integer> energyMeterConsumption = createTelemetryEnergyMeterConsumption(occupancy, level, startTime, anomaly);
         Telemetry<Integer> energyMeterConsAbsolute = createTelemetryEnergyMeterConsAbsolute(energyMeterConsumption);
 
@@ -756,7 +759,7 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
         EnergyMeter energyMeter = EnergyMeter.builder()
                 .systemName("Energy Meter F101")
                 .systemLabel("")
-                .serialNumber(RandomUtils.getRandomNumber(10000, 99999))
+                .serialNumber(RandomUtils.getRandomNumber(serialRangeFrom, serialRangeTo))
                 .installDate(startTime)
                 .energyConsumption(energyMeterConsumption)
                 .energyConsAbsolute(energyMeterConsAbsolute)
@@ -765,7 +768,7 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
         HeatMeter heatMeter = HeatMeter.builder()
                 .systemName("Heat Meter F101")
                 .systemLabel("")
-                .serialNumber(RandomUtils.getRandomNumber(10000, 99999))
+                .serialNumber(RandomUtils.getRandomNumber(serialRangeFrom, serialRangeTo))
                 .installDate(startTime)
                 .temperature(heatMeterTemperature)
                 .heatConsumption(heatMeterConsumption)
@@ -787,9 +790,9 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
     private Apartment makeFelineApartment12() {
         boolean occupancy = true;
         int level = 1;
-        long startTime = TS_2022_MAY;
+        long startTime = TS_2022_MAY + RandomUtils.getRandomNumber(dateRangeFrom, dateRangeTo);
         boolean anomaly = false;
-        
+
         Telemetry<Integer> energyMeterConsumption = createTelemetryEnergyMeterConsumption(occupancy, level, startTime, anomaly);
         Telemetry<Integer> energyMeterConsAbsolute = createTelemetryEnergyMeterConsAbsolute(energyMeterConsumption);
 
@@ -800,7 +803,7 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
         EnergyMeter energyMeter = EnergyMeter.builder()
                 .systemName("Energy Meter F102")
                 .systemLabel("")
-                .serialNumber(RandomUtils.getRandomNumber(10000, 99999))
+                .serialNumber(RandomUtils.getRandomNumber(serialRangeFrom, serialRangeTo))
                 .installDate(startTime)
                 .energyConsumption(energyMeterConsumption)
                 .energyConsAbsolute(energyMeterConsAbsolute)
@@ -809,7 +812,7 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
         HeatMeter heatMeter = HeatMeter.builder()
                 .systemName("Heat Meter F102")
                 .systemLabel("")
-                .serialNumber(RandomUtils.getRandomNumber(10000, 99999))
+                .serialNumber(RandomUtils.getRandomNumber(serialRangeFrom, serialRangeTo))
                 .installDate(startTime)
                 .temperature(heatMeterTemperature)
                 .heatConsumption(heatMeterConsumption)
@@ -831,9 +834,9 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
     private Apartment makeFelineApartment13() {
         boolean occupancy = true;
         int level = 1;
-        long startTime = TS_2022_MAY;
+        long startTime = TS_2022_MAY + RandomUtils.getRandomNumber(dateRangeFrom, dateRangeTo);
         boolean anomaly = false;
-        
+
         Telemetry<Integer> energyMeterConsumption = createTelemetryEnergyMeterConsumption(occupancy, level, startTime, anomaly);
         Telemetry<Integer> energyMeterConsAbsolute = createTelemetryEnergyMeterConsAbsolute(energyMeterConsumption);
 
@@ -844,7 +847,7 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
         EnergyMeter energyMeter = EnergyMeter.builder()
                 .systemName("Energy Meter F103")
                 .systemLabel("")
-                .serialNumber(RandomUtils.getRandomNumber(10000, 99999))
+                .serialNumber(RandomUtils.getRandomNumber(serialRangeFrom, serialRangeTo))
                 .installDate(startTime)
                 .energyConsumption(energyMeterConsumption)
                 .energyConsAbsolute(energyMeterConsAbsolute)
@@ -853,7 +856,7 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
         HeatMeter heatMeter = HeatMeter.builder()
                 .systemName("Heat Meter F103")
                 .systemLabel("")
-                .serialNumber(RandomUtils.getRandomNumber(10000, 99999))
+                .serialNumber(RandomUtils.getRandomNumber(serialRangeFrom, serialRangeTo))
                 .installDate(startTime)
                 .temperature(heatMeterTemperature)
                 .heatConsumption(heatMeterConsumption)
@@ -875,9 +878,9 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
     private Apartment makeFelineApartment21() {
         boolean occupancy = true;
         int level = 2;
-        long startTime = TS_2022_MAY;
+        long startTime = TS_2022_MAY + RandomUtils.getRandomNumber(dateRangeFrom, dateRangeTo);
         boolean anomaly = false;
-        
+
         Telemetry<Integer> energyMeterConsumption = createTelemetryEnergyMeterConsumption(occupancy, level, startTime, anomaly);
         Telemetry<Integer> energyMeterConsAbsolute = createTelemetryEnergyMeterConsAbsolute(energyMeterConsumption);
 
@@ -888,7 +891,7 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
         EnergyMeter energyMeter = EnergyMeter.builder()
                 .systemName("Energy Meter F201")
                 .systemLabel("")
-                .serialNumber(RandomUtils.getRandomNumber(10000, 99999))
+                .serialNumber(RandomUtils.getRandomNumber(serialRangeFrom, serialRangeTo))
                 .installDate(startTime)
                 .energyConsumption(energyMeterConsumption)
                 .energyConsAbsolute(energyMeterConsAbsolute)
@@ -897,7 +900,7 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
         HeatMeter heatMeter = HeatMeter.builder()
                 .systemName("Heat Meter F201")
                 .systemLabel("")
-                .serialNumber(RandomUtils.getRandomNumber(10000, 99999))
+                .serialNumber(RandomUtils.getRandomNumber(serialRangeFrom, serialRangeTo))
                 .installDate(startTime)
                 .temperature(heatMeterTemperature)
                 .heatConsumption(heatMeterConsumption)
@@ -919,9 +922,9 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
     private Apartment makeFelineApartment22() {
         boolean occupancy = true;
         int level = 2;
-        long startTime = TS_2022_MAY;
+        long startTime = TS_2022_MAY + RandomUtils.getRandomNumber(dateRangeFrom, dateRangeTo);
         boolean anomaly = false;
-        
+
         Telemetry<Integer> energyMeterConsumption = createTelemetryEnergyMeterConsumption(occupancy, level, startTime, anomaly);
         Telemetry<Integer> energyMeterConsAbsolute = createTelemetryEnergyMeterConsAbsolute(energyMeterConsumption);
 
@@ -932,7 +935,7 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
         EnergyMeter energyMeter = EnergyMeter.builder()
                 .systemName("Energy Meter F202")
                 .systemLabel("")
-                .serialNumber(RandomUtils.getRandomNumber(10000, 99999))
+                .serialNumber(RandomUtils.getRandomNumber(serialRangeFrom, serialRangeTo))
                 .installDate(startTime)
                 .energyConsumption(energyMeterConsumption)
                 .energyConsAbsolute(energyMeterConsAbsolute)
@@ -941,7 +944,7 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
         HeatMeter heatMeter = HeatMeter.builder()
                 .systemName("Heat Meter F202")
                 .systemLabel("")
-                .serialNumber(RandomUtils.getRandomNumber(10000, 99999))
+                .serialNumber(RandomUtils.getRandomNumber(serialRangeFrom, serialRangeTo))
                 .installDate(startTime)
                 .temperature(heatMeterTemperature)
                 .heatConsumption(heatMeterConsumption)
@@ -963,9 +966,9 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
     private Apartment makeFelineApartment23() {
         boolean occupancy = true;
         int level = 2;
-        long startTime = TS_2022_MAY;
+        long startTime = TS_2022_MAY + RandomUtils.getRandomNumber(dateRangeFrom, dateRangeTo);
         boolean anomaly = false;
-        
+
         Telemetry<Integer> energyMeterConsumption = createTelemetryEnergyMeterConsumption(occupancy, level, startTime, anomaly);
         Telemetry<Integer> energyMeterConsAbsolute = createTelemetryEnergyMeterConsAbsolute(energyMeterConsumption);
 
@@ -976,7 +979,7 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
         EnergyMeter energyMeter = EnergyMeter.builder()
                 .systemName("Energy Meter F203")
                 .systemLabel("")
-                .serialNumber(RandomUtils.getRandomNumber(10000, 99999))
+                .serialNumber(RandomUtils.getRandomNumber(serialRangeFrom, serialRangeTo))
                 .installDate(startTime)
                 .energyConsumption(energyMeterConsumption)
                 .energyConsAbsolute(energyMeterConsAbsolute)
@@ -985,7 +988,7 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
         HeatMeter heatMeter = HeatMeter.builder()
                 .systemName("Heat Meter F203")
                 .systemLabel("")
-                .serialNumber(RandomUtils.getRandomNumber(10000, 99999))
+                .serialNumber(RandomUtils.getRandomNumber(serialRangeFrom, serialRangeTo))
                 .installDate(startTime)
                 .temperature(heatMeterTemperature)
                 .heatConsumption(heatMeterConsumption)
@@ -1007,9 +1010,9 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
     private Apartment makeFelineApartment31() {
         boolean occupancy = true;
         int level = 3;
-        long startTime = TS_2022_MAY;
+        long startTime = TS_2022_MAY + RandomUtils.getRandomNumber(dateRangeFrom, dateRangeTo);
         boolean anomaly = false;
-        
+
         Telemetry<Integer> energyMeterConsumption = createTelemetryEnergyMeterConsumption(occupancy, level, startTime, anomaly);
         Telemetry<Integer> energyMeterConsAbsolute = createTelemetryEnergyMeterConsAbsolute(energyMeterConsumption);
 
@@ -1020,7 +1023,7 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
         EnergyMeter energyMeter = EnergyMeter.builder()
                 .systemName("Energy Meter F301")
                 .systemLabel("")
-                .serialNumber(RandomUtils.getRandomNumber(10000, 99999))
+                .serialNumber(RandomUtils.getRandomNumber(serialRangeFrom, serialRangeTo))
                 .installDate(startTime)
                 .energyConsumption(energyMeterConsumption)
                 .energyConsAbsolute(energyMeterConsAbsolute)
@@ -1029,7 +1032,7 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
         HeatMeter heatMeter = HeatMeter.builder()
                 .systemName("Heat Meter F301")
                 .systemLabel("")
-                .serialNumber(RandomUtils.getRandomNumber(10000, 99999))
+                .serialNumber(RandomUtils.getRandomNumber(serialRangeFrom, serialRangeTo))
                 .installDate(startTime)
                 .temperature(heatMeterTemperature)
                 .heatConsumption(heatMeterConsumption)
@@ -1051,9 +1054,9 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
     private Apartment makeFelineApartment32() {
         boolean occupancy = true;
         int level = 3;
-        long startTime = TS_2022_MAY;
+        long startTime = TS_2022_MAY + RandomUtils.getRandomNumber(dateRangeFrom, dateRangeTo);
         boolean anomaly = false;
-        
+
         Telemetry<Integer> energyMeterConsumption = createTelemetryEnergyMeterConsumption(occupancy, level, startTime, anomaly);
         Telemetry<Integer> energyMeterConsAbsolute = createTelemetryEnergyMeterConsAbsolute(energyMeterConsumption);
 
@@ -1064,7 +1067,7 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
         EnergyMeter energyMeter = EnergyMeter.builder()
                 .systemName("Energy Meter F302")
                 .systemLabel("")
-                .serialNumber(RandomUtils.getRandomNumber(10000, 99999))
+                .serialNumber(RandomUtils.getRandomNumber(serialRangeFrom, serialRangeTo))
                 .installDate(startTime)
                 .energyConsumption(energyMeterConsumption)
                 .energyConsAbsolute(energyMeterConsAbsolute)
@@ -1073,7 +1076,7 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
         HeatMeter heatMeter = HeatMeter.builder()
                 .systemName("Heat Meter F302")
                 .systemLabel("")
-                .serialNumber(RandomUtils.getRandomNumber(10000, 99999))
+                .serialNumber(RandomUtils.getRandomNumber(serialRangeFrom, serialRangeTo))
                 .installDate(startTime)
                 .temperature(heatMeterTemperature)
                 .heatConsumption(heatMeterConsumption)
@@ -1095,9 +1098,9 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
     private Apartment makeFelineApartment33() {
         boolean occupancy = false;
         int level = 0;
-        long startTime = TS_2022_MAY;
+        long startTime = TS_2022_MAY + RandomUtils.getRandomNumber(dateRangeFrom, dateRangeTo);
         boolean anomaly = false;
-        
+
         Telemetry<Integer> energyMeterConsumption = createTelemetryEnergyMeterConsumption(occupancy, level, startTime, anomaly);
         Telemetry<Integer> energyMeterConsAbsolute = createTelemetryEnergyMeterConsAbsolute(energyMeterConsumption);
 
@@ -1108,7 +1111,7 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
         EnergyMeter energyMeter = EnergyMeter.builder()
                 .systemName("Energy Meter F303")
                 .systemLabel("")
-                .serialNumber(RandomUtils.getRandomNumber(10000, 99999))
+                .serialNumber(RandomUtils.getRandomNumber(serialRangeFrom, serialRangeTo))
                 .installDate(startTime)
                 .energyConsumption(energyMeterConsumption)
                 .energyConsAbsolute(energyMeterConsAbsolute)
@@ -1117,7 +1120,7 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
         HeatMeter heatMeter = HeatMeter.builder()
                 .systemName("Heat Meter F303")
                 .systemLabel("")
-                .serialNumber(RandomUtils.getRandomNumber(10000, 99999))
+                .serialNumber(RandomUtils.getRandomNumber(serialRangeFrom, serialRangeTo))
                 .installDate(startTime)
                 .temperature(heatMeterTemperature)
                 .heatConsumption(heatMeterConsumption)
@@ -1140,9 +1143,9 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
     private Apartment makeHogurityApartment11() {
         boolean occupancy = true;
         int level = 3;
-        long startTime = TS_2022_JANUARY;
+        long startTime = TS_2022_JANUARY + RandomUtils.getRandomNumber(dateRangeFrom, dateRangeTo);
         boolean anomaly = false;
-        
+
         Telemetry<Integer> energyMeterConsumption = createTelemetryEnergyMeterConsumption(occupancy, level, startTime, anomaly);
         Telemetry<Integer> energyMeterConsAbsolute = createTelemetryEnergyMeterConsAbsolute(energyMeterConsumption);
 
@@ -1153,7 +1156,7 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
         EnergyMeter energyMeter = EnergyMeter.builder()
                 .systemName("Energy Meter H101")
                 .systemLabel("")
-                .serialNumber(RandomUtils.getRandomNumber(10000, 99999))
+                .serialNumber(RandomUtils.getRandomNumber(serialRangeFrom, serialRangeTo))
                 .installDate(startTime)
                 .energyConsumption(energyMeterConsumption)
                 .energyConsAbsolute(energyMeterConsAbsolute)
@@ -1162,7 +1165,7 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
         HeatMeter heatMeter = HeatMeter.builder()
                 .systemName("Heat Meter H101")
                 .systemLabel("")
-                .serialNumber(RandomUtils.getRandomNumber(10000, 99999))
+                .serialNumber(RandomUtils.getRandomNumber(serialRangeFrom, serialRangeTo))
                 .installDate(startTime)
                 .temperature(heatMeterTemperature)
                 .heatConsumption(heatMeterConsumption)
@@ -1184,9 +1187,9 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
     private Apartment makeHogurityApartment12() {
         boolean occupancy = true;
         int level = 3;
-        long startTime = TS_2022_JANUARY;
+        long startTime = TS_2022_JANUARY + RandomUtils.getRandomNumber(dateRangeFrom, dateRangeTo);
         boolean anomaly = false;
-        
+
         Telemetry<Integer> energyMeterConsumption = createTelemetryEnergyMeterConsumption(occupancy, level, startTime, anomaly);
         Telemetry<Integer> energyMeterConsAbsolute = createTelemetryEnergyMeterConsAbsolute(energyMeterConsumption);
 
@@ -1197,7 +1200,7 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
         EnergyMeter energyMeter = EnergyMeter.builder()
                 .systemName("Energy Meter H102")
                 .systemLabel("")
-                .serialNumber(RandomUtils.getRandomNumber(10000, 99999))
+                .serialNumber(RandomUtils.getRandomNumber(serialRangeFrom, serialRangeTo))
                 .installDate(startTime)
                 .energyConsumption(energyMeterConsumption)
                 .energyConsAbsolute(energyMeterConsAbsolute)
@@ -1206,7 +1209,7 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
         HeatMeter heatMeter = HeatMeter.builder()
                 .systemName("Heat Meter H102")
                 .systemLabel("")
-                .serialNumber(RandomUtils.getRandomNumber(10000, 99999))
+                .serialNumber(RandomUtils.getRandomNumber(serialRangeFrom, serialRangeTo))
                 .installDate(startTime)
                 .temperature(heatMeterTemperature)
                 .heatConsumption(heatMeterConsumption)
@@ -1230,7 +1233,7 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
         int level = 3;
         long startTime = TS_2022_MARCH;
         boolean anomaly = false;
-        
+
         Telemetry<Integer> energyMeterConsumption = createTelemetryEnergyMeterConsumption(occupancy, level, startTime, anomaly);
         Telemetry<Integer> energyMeterConsAbsolute = createTelemetryEnergyMeterConsAbsolute(energyMeterConsumption);
 
@@ -1241,7 +1244,7 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
         EnergyMeter energyMeter = EnergyMeter.builder()
                 .systemName("Energy Meter H103")
                 .systemLabel("")
-                .serialNumber(RandomUtils.getRandomNumber(10000, 99999))
+                .serialNumber(RandomUtils.getRandomNumber(serialRangeFrom, serialRangeTo))
                 .installDate(startTime)
                 .energyConsumption(energyMeterConsumption)
                 .energyConsAbsolute(energyMeterConsAbsolute)
@@ -1250,7 +1253,7 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
         HeatMeter heatMeter = HeatMeter.builder()
                 .systemName("Heat Meter H103")
                 .systemLabel("")
-                .serialNumber(RandomUtils.getRandomNumber(10000, 99999))
+                .serialNumber(RandomUtils.getRandomNumber(serialRangeFrom, serialRangeTo))
                 .installDate(startTime)
                 .temperature(heatMeterTemperature)
                 .heatConsumption(heatMeterConsumption)
@@ -1272,9 +1275,9 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
     private Apartment makeHogurityApartment14() {
         boolean occupancy = true;
         int level = 3;
-        long startTime = TS_2022_JANUARY;
+        long startTime = TS_2022_JANUARY + RandomUtils.getRandomNumber(dateRangeFrom, dateRangeTo);
         boolean anomaly = false;
-        
+
         Telemetry<Integer> energyMeterConsumption = createTelemetryEnergyMeterConsumption(occupancy, level, startTime, anomaly);
         Telemetry<Integer> energyMeterConsAbsolute = createTelemetryEnergyMeterConsAbsolute(energyMeterConsumption);
 
@@ -1285,7 +1288,7 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
         EnergyMeter energyMeter = EnergyMeter.builder()
                 .systemName("Energy Meter H104")
                 .systemLabel("")
-                .serialNumber(RandomUtils.getRandomNumber(10000, 99999))
+                .serialNumber(RandomUtils.getRandomNumber(serialRangeFrom, serialRangeTo))
                 .installDate(startTime)
                 .energyConsumption(energyMeterConsumption)
                 .energyConsAbsolute(energyMeterConsAbsolute)
@@ -1294,7 +1297,7 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
         HeatMeter heatMeter = HeatMeter.builder()
                 .systemName("Heat Meter H104")
                 .systemLabel("")
-                .serialNumber(RandomUtils.getRandomNumber(10000, 99999))
+                .serialNumber(RandomUtils.getRandomNumber(serialRangeFrom, serialRangeTo))
                 .installDate(startTime)
                 .temperature(heatMeterTemperature)
                 .heatConsumption(heatMeterConsumption)
