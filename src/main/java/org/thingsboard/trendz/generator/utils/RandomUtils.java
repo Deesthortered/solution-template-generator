@@ -5,14 +5,18 @@ import java.util.Random;
 public class RandomUtils {
 
     private static final long seed = 1234567890L;
-    private static final Random random = new Random(seed);
+    private static Random random = new Random(seed);
 
+
+    public static void refreshRandom() {
+        random = new Random(seed);
+    }
     public static Random getRandom() {
         return random;
     }
 
     public static long getRandomNumber(long from, long to) {
-        long i = getRandom().nextLong();
+        long i = Math.abs(getRandom().nextLong());
         return from + (i % (to - from));
     }
 }

@@ -7,6 +7,7 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.thingsboard.trendz.generator.solution.SolutionTemplateGenerator;
+import org.thingsboard.trendz.generator.utils.RandomUtils;
 
 import java.util.List;
 import java.util.TimeZone;
@@ -48,6 +49,7 @@ public class SolutionTemplateGeneratorApplication implements CommandLineRunner {
 				if (modeRemove) {
 					solutionGenerator.remove();
 				} else {
+					RandomUtils.refreshRandom();
 					solutionGenerator.validate();
 					solutionGenerator.generate();
 				}
