@@ -155,7 +155,7 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
 
             List<Building> data = makeData();
             visualizeData(data);
-            applyData(data);
+            applyData(data, customerUser);
             createRuleChain(data);
 
             log.info("Energy Metering Solution - generation is completed!");
@@ -211,19 +211,23 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
 //        visualizationService.visualize();
     }
 
-    private void applyData(List<Building> buildings) {
+    private void applyData(List<Building> buildings, CustomerUser customerUser) {
         for (Building building : buildings) {
             Asset buildingAsset = createBuilding(building);
+            tbRestClient.assignAssetToCustomer(customerUser.getCustomerId().getId(), buildingAsset.getUuidId());
 
             Set<Apartment> apartments = building.getApartments();
             for (Apartment apartment : apartments) {
                 Asset apartmentAsset = createApartment(apartment);
+                tbRestClient.assignAssetToCustomer(customerUser.getCustomerId().getId(), apartmentAsset.getUuidId());
                 tbRestClient.createRelation(RelationType.CONTAINS.getType(), buildingAsset.getId(), apartmentAsset.getId());
 
                 EnergyMeter energyMeter = apartment.getEnergyMeter();
                 HeatMeter heatMeter = apartment.getHeatMeter();
                 Device energyMeterDevice = createEnergyMeter(energyMeter);
                 Device heatMeterDevice = createHeatMeter(heatMeter);
+                tbRestClient.assignDeviceToCustomer(customerUser.getCustomerId().getId(), energyMeterDevice.getUuidId());
+                tbRestClient.assignDeviceToCustomer(customerUser.getCustomerId().getId(), heatMeterDevice.getUuidId());
                 tbRestClient.createRelation(RelationType.CONTAINS.getType(), apartmentAsset.getId(), energyMeterDevice.getId());
                 tbRestClient.createRelation(RelationType.CONTAINS.getType(), apartmentAsset.getId(), heatMeterDevice.getId());
             }
