@@ -11,7 +11,8 @@ public class RandomUtils {
         return random;
     }
 
-    public static int getRandomNumber() {
-        return getRandom().nextInt();
+    public static int getRandomNumber(int from, int to) {
+        int i = getRandom().nextInt();
+        return from + (i % (to - from));
     }
 }
