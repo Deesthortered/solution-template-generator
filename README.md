@@ -10,9 +10,10 @@
 * Password: `password`
 * Title: Solution Template Generator Tenant
 
-***
 
 ## Solutions:
+
+***
 
 * ### Basic Solution
   * Login: `basic@thingsboard.io`
@@ -20,6 +21,7 @@
 
 Data starts at 2023-01-01 00:00.000000
 
+***
 * ### Energy Metering Solution 
   * Login: `energymetering@thingsboard.io`
   * Password: `password`
@@ -63,7 +65,14 @@ It has 3 floors, each floor has 3 apartments.
 It has 4 floors, each floor has 1 apartment.
 Each of them is occupied and has a high level of consumption.
 
-Telemetry starts is on `2023-01-01` and will be consumed `each hour` from all meters.
+Telemetry starts is on `2022-01-01` and will be consumed `each hour` from all meters.
 It can have `gaps` not longer than `1 day`.
+
+All telemetry will be produced by meters since the beginning of the year, except in some cases:
+1. Alpire, 5th floor - since February 2022
+2. Feline, full building - since May 2022
+3. Hogurity, 3-4 floors since March 2022 
+
+***
 
 * ### Water Metering Solution 

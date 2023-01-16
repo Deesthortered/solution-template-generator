@@ -8,7 +8,9 @@ import org.thingsboard.server.common.data.Device;
 import org.thingsboard.server.common.data.EntityType;
 import org.thingsboard.server.common.data.asset.Asset;
 import org.thingsboard.server.common.data.security.DeviceCredentials;
+import org.thingsboard.trendz.generator.exception.AssetAlreadyExistException;
 import org.thingsboard.trendz.generator.exception.CustomerAlreadyExistException;
+import org.thingsboard.trendz.generator.exception.DeviceAlreadyExistException;
 import org.thingsboard.trendz.generator.exception.RuleChainAlreadyExistException;
 import org.thingsboard.trendz.generator.model.Attribute;
 import org.thingsboard.trendz.generator.model.CustomerUser;
@@ -19,9 +21,13 @@ import org.thingsboard.trendz.generator.service.FileService;
 import org.thingsboard.trendz.generator.service.TbRestClient;
 import org.thingsboard.trendz.generator.service.VisualizationService;
 import org.thingsboard.trendz.generator.solution.SolutionTemplateGenerator;
+import org.thingsboard.trendz.generator.utils.DateTimeUtils;
 
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -34,6 +40,20 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
     private static final String CUSTOMER_USER_LAST_NAME = "Doe";
 
     private static final String RULE_CHAIN_NAME = "Energy Metering Rule Chain";
+
+    private static final long TS_2022_JANUARY = DateTimeUtils.toTs(
+            ZonedDateTime.of(2022, 1, 1, 0, 0, 0, 0, ZoneId.systemDefault())
+    );
+    private static final long TS_2022_FEBRUARY = DateTimeUtils.toTs(
+            ZonedDateTime.of(2022, 2, 1, 0, 0, 0, 0, ZoneId.systemDefault())
+    );;
+    private static final long TS_2022_MARCH = DateTimeUtils.toTs(
+            ZonedDateTime.of(2022, 3, 1, 0, 0, 0, 0, ZoneId.systemDefault())
+    );;
+    private static final long TS_2022_MAY = DateTimeUtils.toTs(
+            ZonedDateTime.of(2022, 5, 1, 0, 0, 0, 0, ZoneId.systemDefault())
+    );;
+
 
     private final TbRestClient tbRestClient;
     private final FileService fileService;
@@ -75,6 +95,29 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
                     });
 
 
+            Set<String> allAssetNames = getAllAssetNames();
+            Set<Asset> badAssets = tbRestClient.getAllAssets()
+                    .stream()
+                    .filter(asset -> allAssetNames.contains(asset.getName()))
+                    .collect(Collectors.toSet());
+
+            if (!badAssets.isEmpty()) {
+                log.error("There are assets that already exists: {}", badAssets);
+                throw new AssetAlreadyExistException(badAssets.iterator().next());
+            }
+
+
+            Set<String> allDeviceNames = getAllDeviceNames();
+            Set<Device> badDevices = tbRestClient.getAllDevices()
+                    .stream()
+                    .filter(device -> allDeviceNames.contains(device.getName()))
+                    .collect(Collectors.toSet());
+
+            if (!badDevices.isEmpty()) {
+                log.error("There are devices that already exists: {}", badDevices);
+                throw new DeviceAlreadyExistException(badDevices.iterator().next());
+            }
+
             log.info("Energy Metering Solution - validation is completed!");
         } catch (Exception e) {
             log.error("Energy Metering Solution validation was failed, skipping...", e);
@@ -94,7 +137,7 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
 
             List<Building> data = makeData();
             visualizeData(data);
-//            applyData(data);
+            applyData(data);
 
             log.info("Energy Metering Solution - generation is completed!");
         } catch (Exception e) {
@@ -108,6 +151,27 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
         try {
             tbRestClient.getCustomerByTitle(CUSTOMER_TITLE)
                     .ifPresent(customer -> tbRestClient.deleteCustomer(customer.getUuidId()));
+
+            tbRestClient.getAllRuleChains()
+                    .stream()
+                    .filter(ruleChain -> ruleChain.getName().equals(RULE_CHAIN_NAME))
+                    .findAny()
+                    .flatMap(ruleChain -> tbRestClient.getRuleChainById(ruleChain.getUuidId()))
+                    .ifPresent(ruleChain -> {
+                        tbRestClient.deleteRuleChain(ruleChain.getUuidId());
+                    });
+
+            Set<String> allDeviceNames = getAllDeviceNames();
+            tbRestClient.getAllDevices()
+                    .stream()
+                    .filter(device -> allDeviceNames.contains(device.getName()))
+                    .forEach(device -> tbRestClient.deleteDevice(device.getUuidId()));
+
+            Set<String> allAssetNames = getAllAssetNames();
+            tbRestClient.getAllAssets()
+                    .stream()
+                    .filter(asset -> allAssetNames.contains(asset.getName()))
+                    .forEach(asset -> tbRestClient.deleteAsset(asset.getUuidId()));
 
             log.info("Energy Metering Solution - removal is completed!");
         } catch (Exception e) {
@@ -148,12 +212,12 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
     }
 
 
-    private List<String> getAllAssetNames() {
-        return List.of(
+    private Set<String> getAllAssetNames() {
+        return Set.of(
                 // Buildings
                 "Alpire", "Feline", "Hogurity",
                 // Apartments
-                "Apt 101 in Alpire", "Apt 101 in Alpire", "Apt 201 in Alpire", "Apt 202 in Alpire", "Apt 301 in Alpire",
+                "Apt 101 in Alpire", "Apt 102 in Alpire", "Apt 201 in Alpire", "Apt 202 in Alpire", "Apt 301 in Alpire",
                 "Apt 302 in Alpire", "Apt 401 in Alpire", "Apt 402 in Alpire", "Apt 501 in Alpire", "Apt 502 in Alpire",
                 "Apt 101 in Feline", "Apt 102 in Feline", "Apt 103 in Feline", "Apt 201 in Feline", "Apt 202 in Feline",
                 "Apt 203 in Feline", "Apt 301 in Feline", "Apt 302 in Feline", "Apt 303 in Feline",
@@ -161,17 +225,17 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
         );
     }
 
-    private List<String> getAllDeviceNames() {
-        return List.of(
+    private Set<String> getAllDeviceNames() {
+        return Set.of(
                 // Energy Meters
-                "Energy Meter A101", "Energy Meter A101", "Energy Meter A201", "Energy Meter A202", "Energy Meter A301",
+                "Energy Meter A101", "Energy Meter A102", "Energy Meter A201", "Energy Meter A202", "Energy Meter A301",
                 "Energy Meter A302", "Energy Meter A401", "Energy Meter A402", "Energy Meter A501", "Energy Meter A502",
                 "Energy Meter F101", "Energy Meter F102", "Energy Meter F103", "Energy Meter F201", "Energy Meter F202",
                 "Energy Meter F203", "Energy Meter F301", "Energy Meter F302", "Energy Meter F303",
                 "Energy Meter H101", "Energy Meter H102", "Energy Meter H103", "Energy Meter H104",
 
                 // Heat Meters
-                "Heat Meter A101", "Heat Meter A101", "Heat Meter A201", "Heat Meter A202", "Heat Meter A301",
+                "Heat Meter A101", "Heat Meter A102", "Heat Meter A201", "Heat Meter A202", "Heat Meter A301",
                 "Heat Meter A302", "Heat Meter A401", "Heat Meter A402", "Heat Meter A501", "Heat Meter A502",
                 "Heat Meter F101", "Heat Meter F102", "Heat Meter F103", "Heat Meter F201", "Heat Meter F202",
                 "Heat Meter F203", "Heat Meter F301", "Heat Meter F302", "Heat Meter F303",
@@ -235,11 +299,20 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
 
 
     private Apartment makeAlpireApartment11() {
+        Telemetry<Integer> energyMeterConsumption = createTelemetryEnergyMeterConsumption(true, 2, TS_2022_JANUARY);
+        Telemetry<Integer> energyMeterConsAbsolute = createTelemetryEnergyMeterConsAbsolute(energyMeterConsumption);
+
+        Telemetry<Integer> heatMeterTemperature = createTelemetryHeatMeterTemperature(true, 2, TS_2022_JANUARY);
+        Telemetry<Integer> heatMeterConsumption = createTelemetryHeatMeterConsumption(heatMeterTemperature);
+        Telemetry<Integer> heatMeterConsAbsolute = createTelemetryHeatMeterConsAbsolute(heatMeterConsumption);
+
         EnergyMeter energyMeter = EnergyMeter.builder()
                 .systemName("Energy Meter A101")
                 .systemLabel("")
                 .serialNumber(0L)
                 .installDate(0L)
+                .energyConsumption(energyMeterConsumption)
+                .energyConsAbsolute(energyMeterConsAbsolute)
                 .build();
 
         HeatMeter heatMeter = HeatMeter.builder()
@@ -247,6 +320,9 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
                 .systemLabel("")
                 .serialNumber(0L)
                 .installDate(0L)
+                .temperature(heatMeterTemperature)
+                .heatConsumption(heatMeterConsumption)
+                .heatConsAbsolute(heatMeterConsAbsolute)
                 .build();
 
         return Apartment.builder()
@@ -262,11 +338,20 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
     }
 
     private Apartment makeAlpireApartment12() {
+        Telemetry<Integer> energyMeterConsumption = createTelemetryEnergyMeterConsumption(false, 0, TS_2022_JANUARY);
+        Telemetry<Integer> energyMeterConsAbsolute = createTelemetryEnergyMeterConsAbsolute(energyMeterConsumption);
+
+        Telemetry<Integer> heatMeterTemperature = createTelemetryHeatMeterTemperature(false, 0, TS_2022_JANUARY);;
+        Telemetry<Integer> heatMeterConsumption = createTelemetryHeatMeterConsumption(heatMeterTemperature);
+        Telemetry<Integer> heatMeterConsAbsolute = createTelemetryHeatMeterConsAbsolute(heatMeterConsumption);
+
         EnergyMeter energyMeter = EnergyMeter.builder()
                 .systemName("Energy Meter A102")
                 .systemLabel("")
                 .serialNumber(0L)
                 .installDate(0L)
+                .energyConsumption(energyMeterConsumption)
+                .energyConsAbsolute(energyMeterConsAbsolute)
                 .build();
 
         HeatMeter heatMeter = HeatMeter.builder()
@@ -274,6 +359,9 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
                 .systemLabel("")
                 .serialNumber(0L)
                 .installDate(0L)
+                .temperature(heatMeterTemperature)
+                .heatConsumption(heatMeterConsumption)
+                .heatConsAbsolute(heatMeterConsAbsolute)
                 .build();
 
         return Apartment.builder()
@@ -289,11 +377,20 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
     }
 
     private Apartment makeAlpireApartment21() {
+        Telemetry<Integer> energyMeterConsumption = createTelemetryEnergyMeterConsumption(true, 2, TS_2022_JANUARY);
+        Telemetry<Integer> energyMeterConsAbsolute = createTelemetryEnergyMeterConsAbsolute(energyMeterConsumption);
+
+        Telemetry<Integer> heatMeterTemperature = createTelemetryHeatMeterTemperature(true, 2, TS_2022_JANUARY);;
+        Telemetry<Integer> heatMeterConsumption = createTelemetryHeatMeterConsumption(heatMeterTemperature);
+        Telemetry<Integer> heatMeterConsAbsolute = createTelemetryHeatMeterConsAbsolute(heatMeterConsumption);
+
         EnergyMeter energyMeter = EnergyMeter.builder()
                 .systemName("Energy Meter A103")
                 .systemLabel("")
                 .serialNumber(0L)
                 .installDate(0L)
+                .energyConsumption(energyMeterConsumption)
+                .energyConsAbsolute(energyMeterConsAbsolute)
                 .build();
 
         HeatMeter heatMeter = HeatMeter.builder()
@@ -301,6 +398,9 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
                 .systemLabel("")
                 .serialNumber(0L)
                 .installDate(0L)
+                .temperature(heatMeterTemperature)
+                .heatConsumption(heatMeterConsumption)
+                .heatConsAbsolute(heatMeterConsAbsolute)
                 .build();
 
         return Apartment.builder()
@@ -316,11 +416,20 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
     }
 
     private Apartment makeAlpireApartment22() {
+        Telemetry<Integer> energyMeterConsumption = createTelemetryEnergyMeterConsumption(true, 2, TS_2022_JANUARY);
+        Telemetry<Integer> energyMeterConsAbsolute = createTelemetryEnergyMeterConsAbsolute(energyMeterConsumption);
+
+        Telemetry<Integer> heatMeterTemperature = createTelemetryHeatMeterTemperature(true, 2, TS_2022_JANUARY);;
+        Telemetry<Integer> heatMeterConsumption = createTelemetryHeatMeterConsumption(heatMeterTemperature);
+        Telemetry<Integer> heatMeterConsAbsolute = createTelemetryHeatMeterConsAbsolute(heatMeterConsumption);
+
         EnergyMeter energyMeter = EnergyMeter.builder()
                 .systemName("Energy Meter A202")
                 .systemLabel("")
                 .serialNumber(0L)
                 .installDate(0L)
+                .energyConsumption(energyMeterConsumption)
+                .energyConsAbsolute(energyMeterConsAbsolute)
                 .build();
 
         HeatMeter heatMeter = HeatMeter.builder()
@@ -328,6 +437,9 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
                 .systemLabel("")
                 .serialNumber(0L)
                 .installDate(0L)
+                .temperature(heatMeterTemperature)
+                .heatConsumption(heatMeterConsumption)
+                .heatConsAbsolute(heatMeterConsAbsolute)
                 .build();
 
         return Apartment.builder()
@@ -343,11 +455,20 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
     }
 
     private Apartment makeAlpireApartment31() {
+        Telemetry<Integer> energyMeterConsumption = createTelemetryEnergyMeterConsumption(false, 0, TS_2022_JANUARY);
+        Telemetry<Integer> energyMeterConsAbsolute = createTelemetryEnergyMeterConsAbsolute(energyMeterConsumption);
+
+        Telemetry<Integer> heatMeterTemperature = createTelemetryHeatMeterTemperature(false, 0, TS_2022_JANUARY);;
+        Telemetry<Integer> heatMeterConsumption = createTelemetryHeatMeterConsumption(heatMeterTemperature);
+        Telemetry<Integer> heatMeterConsAbsolute = createTelemetryHeatMeterConsAbsolute(heatMeterConsumption);
+
         EnergyMeter energyMeter = EnergyMeter.builder()
                 .systemName("Energy Meter A301")
                 .systemLabel("")
                 .serialNumber(0L)
                 .installDate(0L)
+                .energyConsumption(energyMeterConsumption)
+                .energyConsAbsolute(energyMeterConsAbsolute)
                 .build();
 
         HeatMeter heatMeter = HeatMeter.builder()
@@ -355,6 +476,9 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
                 .systemLabel("")
                 .serialNumber(0L)
                 .installDate(0L)
+                .temperature(heatMeterTemperature)
+                .heatConsumption(heatMeterConsumption)
+                .heatConsAbsolute(heatMeterConsAbsolute)
                 .build();
 
         return Apartment.builder()
@@ -370,11 +494,20 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
     }
 
     private Apartment makeAlpireApartment32() {
+        Telemetry<Integer> energyMeterConsumption = createTelemetryEnergyMeterConsumption(true, 2, TS_2022_JANUARY);
+        Telemetry<Integer> energyMeterConsAbsolute = createTelemetryEnergyMeterConsAbsolute(energyMeterConsumption);
+
+        Telemetry<Integer> heatMeterTemperature = createTelemetryHeatMeterTemperature(true, 2, TS_2022_JANUARY);;
+        Telemetry<Integer> heatMeterConsumption = createTelemetryHeatMeterConsumption(heatMeterTemperature);
+        Telemetry<Integer> heatMeterConsAbsolute = createTelemetryHeatMeterConsAbsolute(heatMeterConsumption);
+
         EnergyMeter energyMeter = EnergyMeter.builder()
                 .systemName("Energy Meter A302")
                 .systemLabel("")
                 .serialNumber(0L)
                 .installDate(0L)
+                .energyConsumption(energyMeterConsumption)
+                .energyConsAbsolute(energyMeterConsAbsolute)
                 .build();
 
         HeatMeter heatMeter = HeatMeter.builder()
@@ -382,6 +515,9 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
                 .systemLabel("")
                 .serialNumber(0L)
                 .installDate(0L)
+                .temperature(heatMeterTemperature)
+                .heatConsumption(heatMeterConsumption)
+                .heatConsAbsolute(heatMeterConsAbsolute)
                 .build();
 
         return Apartment.builder()
@@ -397,11 +533,20 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
     }
 
     private Apartment makeAlpireApartment41() {
+        Telemetry<Integer> energyMeterConsumption = createTelemetryEnergyMeterConsumption(true, 3, TS_2022_JANUARY);
+        Telemetry<Integer> energyMeterConsAbsolute = createTelemetryEnergyMeterConsAbsolute(energyMeterConsumption);
+
+        Telemetry<Integer> heatMeterTemperature = createTelemetryHeatMeterTemperature(true, 3, TS_2022_JANUARY);;
+        Telemetry<Integer> heatMeterConsumption = createTelemetryHeatMeterConsumption(heatMeterTemperature);
+        Telemetry<Integer> heatMeterConsAbsolute = createTelemetryHeatMeterConsAbsolute(heatMeterConsumption);
+
         EnergyMeter energyMeter = EnergyMeter.builder()
                 .systemName("Energy Meter A401")
                 .systemLabel("")
                 .serialNumber(0L)
                 .installDate(0L)
+                .energyConsumption(energyMeterConsumption)
+                .energyConsAbsolute(energyMeterConsAbsolute)
                 .build();
 
         HeatMeter heatMeter = HeatMeter.builder()
@@ -409,6 +554,9 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
                 .systemLabel("")
                 .serialNumber(0L)
                 .installDate(0L)
+                .temperature(heatMeterTemperature)
+                .heatConsumption(heatMeterConsumption)
+                .heatConsAbsolute(heatMeterConsAbsolute)
                 .build();
 
         return Apartment.builder()
@@ -424,11 +572,20 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
     }
 
     private Apartment makeAlpireApartment42() {
+        Telemetry<Integer> energyMeterConsumption = createTelemetryEnergyMeterConsumption(true, 3, TS_2022_JANUARY);
+        Telemetry<Integer> energyMeterConsAbsolute = createTelemetryEnergyMeterConsAbsolute(energyMeterConsumption);
+
+        Telemetry<Integer> heatMeterTemperature = createTelemetryHeatMeterTemperature(true, 3, TS_2022_JANUARY);;
+        Telemetry<Integer> heatMeterConsumption = createTelemetryHeatMeterConsumption(heatMeterTemperature);
+        Telemetry<Integer> heatMeterConsAbsolute = createTelemetryHeatMeterConsAbsolute(heatMeterConsumption);
+
         EnergyMeter energyMeter = EnergyMeter.builder()
                 .systemName("Energy Meter A402")
                 .systemLabel("")
                 .serialNumber(0L)
                 .installDate(0L)
+                .energyConsumption(energyMeterConsumption)
+                .energyConsAbsolute(energyMeterConsAbsolute)
                 .build();
 
         HeatMeter heatMeter = HeatMeter.builder()
@@ -436,6 +593,9 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
                 .systemLabel("")
                 .serialNumber(0L)
                 .installDate(0L)
+                .temperature(heatMeterTemperature)
+                .heatConsumption(heatMeterConsumption)
+                .heatConsAbsolute(heatMeterConsAbsolute)
                 .build();
 
         return Apartment.builder()
@@ -451,11 +611,20 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
     }
 
     private Apartment makeAlpireApartment51() {
+        Telemetry<Integer> energyMeterConsumption = createTelemetryEnergyMeterConsumption(false, 0, TS_2022_FEBRUARY);
+        Telemetry<Integer> energyMeterConsAbsolute = createTelemetryEnergyMeterConsAbsolute(energyMeterConsumption);
+
+        Telemetry<Integer> heatMeterTemperature = createTelemetryHeatMeterTemperature(false, 0, TS_2022_FEBRUARY);;
+        Telemetry<Integer> heatMeterConsumption = createTelemetryHeatMeterConsumption(heatMeterTemperature);
+        Telemetry<Integer> heatMeterConsAbsolute = createTelemetryHeatMeterConsAbsolute(heatMeterConsumption);
+
         EnergyMeter energyMeter = EnergyMeter.builder()
                 .systemName("Energy Meter A501")
                 .systemLabel("")
                 .serialNumber(0L)
                 .installDate(0L)
+                .energyConsumption(energyMeterConsumption)
+                .energyConsAbsolute(energyMeterConsAbsolute)
                 .build();
 
         HeatMeter heatMeter = HeatMeter.builder()
@@ -463,6 +632,9 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
                 .systemLabel("")
                 .serialNumber(0L)
                 .installDate(0L)
+                .temperature(heatMeterTemperature)
+                .heatConsumption(heatMeterConsumption)
+                .heatConsAbsolute(heatMeterConsAbsolute)
                 .build();
 
         return Apartment.builder()
@@ -478,11 +650,20 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
     }
 
     private Apartment makeAlpireApartment52() {
+        Telemetry<Integer> energyMeterConsumption = createTelemetryEnergyMeterConsumption(false, 0, TS_2022_FEBRUARY);
+        Telemetry<Integer> energyMeterConsAbsolute = createTelemetryEnergyMeterConsAbsolute(energyMeterConsumption);
+
+        Telemetry<Integer> heatMeterTemperature = createTelemetryHeatMeterTemperature(false, 0, TS_2022_FEBRUARY);;
+        Telemetry<Integer> heatMeterConsumption = createTelemetryHeatMeterConsumption(heatMeterTemperature);
+        Telemetry<Integer> heatMeterConsAbsolute = createTelemetryHeatMeterConsAbsolute(heatMeterConsumption);
+
         EnergyMeter energyMeter = EnergyMeter.builder()
                 .systemName("Energy Meter A502")
                 .systemLabel("")
                 .serialNumber(0L)
                 .installDate(0L)
+                .energyConsumption(energyMeterConsumption)
+                .energyConsAbsolute(energyMeterConsAbsolute)
                 .build();
 
         HeatMeter heatMeter = HeatMeter.builder()
@@ -490,6 +671,9 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
                 .systemLabel("")
                 .serialNumber(0L)
                 .installDate(0L)
+                .temperature(heatMeterTemperature)
+                .heatConsumption(heatMeterConsumption)
+                .heatConsAbsolute(heatMeterConsAbsolute)
                 .build();
 
         return Apartment.builder()
@@ -506,11 +690,20 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
 
 
     private Apartment makeFelineApartment11() {
+        Telemetry<Integer> energyMeterConsumption = createTelemetryEnergyMeterConsumption(false, 0, TS_2022_MAY);
+        Telemetry<Integer> energyMeterConsAbsolute = createTelemetryEnergyMeterConsAbsolute(energyMeterConsumption);
+
+        Telemetry<Integer> heatMeterTemperature = createTelemetryHeatMeterTemperature(false, 0, TS_2022_MAY);;
+        Telemetry<Integer> heatMeterConsumption = createTelemetryHeatMeterConsumption(heatMeterTemperature);
+        Telemetry<Integer> heatMeterConsAbsolute = createTelemetryHeatMeterConsAbsolute(heatMeterConsumption);
+
         EnergyMeter energyMeter = EnergyMeter.builder()
                 .systemName("Energy Meter F101")
                 .systemLabel("")
                 .serialNumber(0L)
                 .installDate(0L)
+                .energyConsumption(energyMeterConsumption)
+                .energyConsAbsolute(energyMeterConsAbsolute)
                 .build();
 
         HeatMeter heatMeter = HeatMeter.builder()
@@ -518,6 +711,9 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
                 .systemLabel("")
                 .serialNumber(0L)
                 .installDate(0L)
+                .temperature(heatMeterTemperature)
+                .heatConsumption(heatMeterConsumption)
+                .heatConsAbsolute(heatMeterConsAbsolute)
                 .build();
 
         return Apartment.builder()
@@ -533,11 +729,20 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
     }
 
     private Apartment makeFelineApartment12() {
+        Telemetry<Integer> energyMeterConsumption = createTelemetryEnergyMeterConsumption(true, 1, TS_2022_MAY);
+        Telemetry<Integer> energyMeterConsAbsolute = createTelemetryEnergyMeterConsAbsolute(energyMeterConsumption);
+
+        Telemetry<Integer> heatMeterTemperature = createTelemetryHeatMeterTemperature(true, 1, TS_2022_MAY);;
+        Telemetry<Integer> heatMeterConsumption = createTelemetryHeatMeterConsumption(heatMeterTemperature);
+        Telemetry<Integer> heatMeterConsAbsolute = createTelemetryHeatMeterConsAbsolute(heatMeterConsumption);
+
         EnergyMeter energyMeter = EnergyMeter.builder()
                 .systemName("Energy Meter F102")
                 .systemLabel("")
                 .serialNumber(0L)
                 .installDate(0L)
+                .energyConsumption(energyMeterConsumption)
+                .energyConsAbsolute(energyMeterConsAbsolute)
                 .build();
 
         HeatMeter heatMeter = HeatMeter.builder()
@@ -545,6 +750,9 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
                 .systemLabel("")
                 .serialNumber(0L)
                 .installDate(0L)
+                .temperature(heatMeterTemperature)
+                .heatConsumption(heatMeterConsumption)
+                .heatConsAbsolute(heatMeterConsAbsolute)
                 .build();
 
         return Apartment.builder()
@@ -560,11 +768,20 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
     }
 
     private Apartment makeFelineApartment13() {
+        Telemetry<Integer> energyMeterConsumption = createTelemetryEnergyMeterConsumption(true, 1, TS_2022_MAY);
+        Telemetry<Integer> energyMeterConsAbsolute = createTelemetryEnergyMeterConsAbsolute(energyMeterConsumption);
+
+        Telemetry<Integer> heatMeterTemperature = createTelemetryHeatMeterTemperature(true, 1, TS_2022_MAY);;
+        Telemetry<Integer> heatMeterConsumption = createTelemetryHeatMeterConsumption(heatMeterTemperature);
+        Telemetry<Integer> heatMeterConsAbsolute = createTelemetryHeatMeterConsAbsolute(heatMeterConsumption);
+
         EnergyMeter energyMeter = EnergyMeter.builder()
                 .systemName("Energy Meter F103")
                 .systemLabel("")
                 .serialNumber(0L)
                 .installDate(0L)
+                .energyConsumption(energyMeterConsumption)
+                .energyConsAbsolute(energyMeterConsAbsolute)
                 .build();
 
         HeatMeter heatMeter = HeatMeter.builder()
@@ -572,6 +789,9 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
                 .systemLabel("")
                 .serialNumber(0L)
                 .installDate(0L)
+                .temperature(heatMeterTemperature)
+                .heatConsumption(heatMeterConsumption)
+                .heatConsAbsolute(heatMeterConsAbsolute)
                 .build();
 
         return Apartment.builder()
@@ -587,11 +807,20 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
     }
 
     private Apartment makeFelineApartment21() {
+        Telemetry<Integer> energyMeterConsumption = createTelemetryEnergyMeterConsumption(true, 2, TS_2022_MAY);
+        Telemetry<Integer> energyMeterConsAbsolute = createTelemetryEnergyMeterConsAbsolute(energyMeterConsumption);
+
+        Telemetry<Integer> heatMeterTemperature = createTelemetryHeatMeterTemperature(true, 2, TS_2022_MAY);;
+        Telemetry<Integer> heatMeterConsumption = createTelemetryHeatMeterConsumption(heatMeterTemperature);
+        Telemetry<Integer> heatMeterConsAbsolute = createTelemetryHeatMeterConsAbsolute(heatMeterConsumption);
+
         EnergyMeter energyMeter = EnergyMeter.builder()
                 .systemName("Energy Meter F201")
                 .systemLabel("")
                 .serialNumber(0L)
                 .installDate(0L)
+                .energyConsumption(energyMeterConsumption)
+                .energyConsAbsolute(energyMeterConsAbsolute)
                 .build();
 
         HeatMeter heatMeter = HeatMeter.builder()
@@ -599,6 +828,9 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
                 .systemLabel("")
                 .serialNumber(0L)
                 .installDate(0L)
+                .temperature(heatMeterTemperature)
+                .heatConsumption(heatMeterConsumption)
+                .heatConsAbsolute(heatMeterConsAbsolute)
                 .build();
 
         return Apartment.builder()
@@ -614,11 +846,20 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
     }
 
     private Apartment makeFelineApartment22() {
+        Telemetry<Integer> energyMeterConsumption = createTelemetryEnergyMeterConsumption(true, 2, TS_2022_MAY);
+        Telemetry<Integer> energyMeterConsAbsolute = createTelemetryEnergyMeterConsAbsolute(energyMeterConsumption);
+
+        Telemetry<Integer> heatMeterTemperature = createTelemetryHeatMeterTemperature(true, 2, TS_2022_MAY);;
+        Telemetry<Integer> heatMeterConsumption = createTelemetryHeatMeterConsumption(heatMeterTemperature);
+        Telemetry<Integer> heatMeterConsAbsolute = createTelemetryHeatMeterConsAbsolute(heatMeterConsumption);
+
         EnergyMeter energyMeter = EnergyMeter.builder()
                 .systemName("Energy Meter F202")
                 .systemLabel("")
                 .serialNumber(0L)
                 .installDate(0L)
+                .energyConsumption(energyMeterConsumption)
+                .energyConsAbsolute(energyMeterConsAbsolute)
                 .build();
 
         HeatMeter heatMeter = HeatMeter.builder()
@@ -626,6 +867,9 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
                 .systemLabel("")
                 .serialNumber(0L)
                 .installDate(0L)
+                .temperature(heatMeterTemperature)
+                .heatConsumption(heatMeterConsumption)
+                .heatConsAbsolute(heatMeterConsAbsolute)
                 .build();
 
         return Apartment.builder()
@@ -641,11 +885,20 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
     }
 
     private Apartment makeFelineApartment23() {
+        Telemetry<Integer> energyMeterConsumption = createTelemetryEnergyMeterConsumption(true, 2, TS_2022_MAY);
+        Telemetry<Integer> energyMeterConsAbsolute = createTelemetryEnergyMeterConsAbsolute(energyMeterConsumption);
+
+        Telemetry<Integer> heatMeterTemperature = createTelemetryHeatMeterTemperature(true, 2, TS_2022_MAY);;
+        Telemetry<Integer> heatMeterConsumption = createTelemetryHeatMeterConsumption(heatMeterTemperature);
+        Telemetry<Integer> heatMeterConsAbsolute = createTelemetryHeatMeterConsAbsolute(heatMeterConsumption);
+
         EnergyMeter energyMeter = EnergyMeter.builder()
                 .systemName("Energy Meter F203")
                 .systemLabel("")
                 .serialNumber(0L)
                 .installDate(0L)
+                .energyConsumption(energyMeterConsumption)
+                .energyConsAbsolute(energyMeterConsAbsolute)
                 .build();
 
         HeatMeter heatMeter = HeatMeter.builder()
@@ -653,6 +906,9 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
                 .systemLabel("")
                 .serialNumber(0L)
                 .installDate(0L)
+                .temperature(heatMeterTemperature)
+                .heatConsumption(heatMeterConsumption)
+                .heatConsAbsolute(heatMeterConsAbsolute)
                 .build();
 
         return Apartment.builder()
@@ -668,11 +924,20 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
     }
 
     private Apartment makeFelineApartment31() {
+        Telemetry<Integer> energyMeterConsumption = createTelemetryEnergyMeterConsumption(true, 3, TS_2022_MAY);
+        Telemetry<Integer> energyMeterConsAbsolute = createTelemetryEnergyMeterConsAbsolute(energyMeterConsumption);
+
+        Telemetry<Integer> heatMeterTemperature = createTelemetryHeatMeterTemperature(true, 3, TS_2022_MAY);;
+        Telemetry<Integer> heatMeterConsumption = createTelemetryHeatMeterConsumption(heatMeterTemperature);
+        Telemetry<Integer> heatMeterConsAbsolute = createTelemetryHeatMeterConsAbsolute(heatMeterConsumption);
+
         EnergyMeter energyMeter = EnergyMeter.builder()
                 .systemName("Energy Meter F301")
                 .systemLabel("")
                 .serialNumber(0L)
                 .installDate(0L)
+                .energyConsumption(energyMeterConsumption)
+                .energyConsAbsolute(energyMeterConsAbsolute)
                 .build();
 
         HeatMeter heatMeter = HeatMeter.builder()
@@ -680,6 +945,9 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
                 .systemLabel("")
                 .serialNumber(0L)
                 .installDate(0L)
+                .temperature(heatMeterTemperature)
+                .heatConsumption(heatMeterConsumption)
+                .heatConsAbsolute(heatMeterConsAbsolute)
                 .build();
 
         return Apartment.builder()
@@ -695,11 +963,20 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
     }
 
     private Apartment makeFelineApartment32() {
+        Telemetry<Integer> energyMeterConsumption = createTelemetryEnergyMeterConsumption(true, 3, TS_2022_MAY);
+        Telemetry<Integer> energyMeterConsAbsolute = createTelemetryEnergyMeterConsAbsolute(energyMeterConsumption);
+
+        Telemetry<Integer> heatMeterTemperature = createTelemetryHeatMeterTemperature(true, 3, TS_2022_MAY);;
+        Telemetry<Integer> heatMeterConsumption = createTelemetryHeatMeterConsumption(heatMeterTemperature);
+        Telemetry<Integer> heatMeterConsAbsolute = createTelemetryHeatMeterConsAbsolute(heatMeterConsumption);
+
         EnergyMeter energyMeter = EnergyMeter.builder()
                 .systemName("Energy Meter F302")
                 .systemLabel("")
                 .serialNumber(0L)
                 .installDate(0L)
+                .energyConsumption(energyMeterConsumption)
+                .energyConsAbsolute(energyMeterConsAbsolute)
                 .build();
 
         HeatMeter heatMeter = HeatMeter.builder()
@@ -707,6 +984,9 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
                 .systemLabel("")
                 .serialNumber(0L)
                 .installDate(0L)
+                .temperature(heatMeterTemperature)
+                .heatConsumption(heatMeterConsumption)
+                .heatConsAbsolute(heatMeterConsAbsolute)
                 .build();
 
         return Apartment.builder()
@@ -722,11 +1002,20 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
     }
 
     private Apartment makeFelineApartment33() {
+        Telemetry<Integer> energyMeterConsumption = createTelemetryEnergyMeterConsumption(false, 0, TS_2022_MAY);
+        Telemetry<Integer> energyMeterConsAbsolute = createTelemetryEnergyMeterConsAbsolute(energyMeterConsumption);
+
+        Telemetry<Integer> heatMeterTemperature = createTelemetryHeatMeterTemperature(false, 0, TS_2022_MAY);;
+        Telemetry<Integer> heatMeterConsumption = createTelemetryHeatMeterConsumption(heatMeterTemperature);
+        Telemetry<Integer> heatMeterConsAbsolute = createTelemetryHeatMeterConsAbsolute(heatMeterConsumption);
+
         EnergyMeter energyMeter = EnergyMeter.builder()
                 .systemName("Energy Meter F303")
                 .systemLabel("")
                 .serialNumber(0L)
                 .installDate(0L)
+                .energyConsumption(energyMeterConsumption)
+                .energyConsAbsolute(energyMeterConsAbsolute)
                 .build();
 
         HeatMeter heatMeter = HeatMeter.builder()
@@ -734,6 +1023,9 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
                 .systemLabel("")
                 .serialNumber(0L)
                 .installDate(0L)
+                .temperature(heatMeterTemperature)
+                .heatConsumption(heatMeterConsumption)
+                .heatConsAbsolute(heatMeterConsAbsolute)
                 .build();
 
         return Apartment.builder()
@@ -750,11 +1042,20 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
 
 
     private Apartment makeHogurityApartment11() {
+        Telemetry<Integer> energyMeterConsumption = createTelemetryEnergyMeterConsumption(true, 3, TS_2022_JANUARY);
+        Telemetry<Integer> energyMeterConsAbsolute = createTelemetryEnergyMeterConsAbsolute(energyMeterConsumption);
+
+        Telemetry<Integer> heatMeterTemperature = createTelemetryHeatMeterTemperature(true, 3, TS_2022_JANUARY);;
+        Telemetry<Integer> heatMeterConsumption = createTelemetryHeatMeterConsumption(heatMeterTemperature);
+        Telemetry<Integer> heatMeterConsAbsolute = createTelemetryHeatMeterConsAbsolute(heatMeterConsumption);
+
         EnergyMeter energyMeter = EnergyMeter.builder()
                 .systemName("Energy Meter H101")
                 .systemLabel("")
                 .serialNumber(0L)
                 .installDate(0L)
+                .energyConsumption(energyMeterConsumption)
+                .energyConsAbsolute(energyMeterConsAbsolute)
                 .build();
 
         HeatMeter heatMeter = HeatMeter.builder()
@@ -762,6 +1063,9 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
                 .systemLabel("")
                 .serialNumber(0L)
                 .installDate(0L)
+                .temperature(heatMeterTemperature)
+                .heatConsumption(heatMeterConsumption)
+                .heatConsAbsolute(heatMeterConsAbsolute)
                 .build();
 
         return Apartment.builder()
@@ -777,11 +1081,20 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
     }
 
     private Apartment makeHogurityApartment12() {
+        Telemetry<Integer> energyMeterConsumption = createTelemetryEnergyMeterConsumption(true, 3, TS_2022_JANUARY);
+        Telemetry<Integer> energyMeterConsAbsolute = createTelemetryEnergyMeterConsAbsolute(energyMeterConsumption);
+
+        Telemetry<Integer> heatMeterTemperature = createTelemetryHeatMeterTemperature(true, 3, TS_2022_JANUARY);;
+        Telemetry<Integer> heatMeterConsumption = createTelemetryHeatMeterConsumption(heatMeterTemperature);
+        Telemetry<Integer> heatMeterConsAbsolute = createTelemetryHeatMeterConsAbsolute(heatMeterConsumption);
+
         EnergyMeter energyMeter = EnergyMeter.builder()
                 .systemName("Energy Meter H102")
                 .systemLabel("")
                 .serialNumber(0L)
                 .installDate(0L)
+                .energyConsumption(energyMeterConsumption)
+                .energyConsAbsolute(energyMeterConsAbsolute)
                 .build();
 
         HeatMeter heatMeter = HeatMeter.builder()
@@ -789,6 +1102,9 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
                 .systemLabel("")
                 .serialNumber(0L)
                 .installDate(0L)
+                .temperature(heatMeterTemperature)
+                .heatConsumption(heatMeterConsumption)
+                .heatConsAbsolute(heatMeterConsAbsolute)
                 .build();
 
         return Apartment.builder()
@@ -804,11 +1120,20 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
     }
 
     private Apartment makeHogurityApartment13() {
+        Telemetry<Integer> energyMeterConsumption = createTelemetryEnergyMeterConsumption(true, 3, TS_2022_MARCH);
+        Telemetry<Integer> energyMeterConsAbsolute = createTelemetryEnergyMeterConsAbsolute(energyMeterConsumption);
+
+        Telemetry<Integer> heatMeterTemperature = createTelemetryHeatMeterTemperature(true, 3, TS_2022_MARCH);;
+        Telemetry<Integer> heatMeterConsumption = createTelemetryHeatMeterConsumption(heatMeterTemperature);
+        Telemetry<Integer> heatMeterConsAbsolute = createTelemetryHeatMeterConsAbsolute(heatMeterConsumption);
+
         EnergyMeter energyMeter = EnergyMeter.builder()
                 .systemName("Energy Meter H103")
                 .systemLabel("")
                 .serialNumber(0L)
                 .installDate(0L)
+                .energyConsumption(energyMeterConsumption)
+                .energyConsAbsolute(energyMeterConsAbsolute)
                 .build();
 
         HeatMeter heatMeter = HeatMeter.builder()
@@ -816,6 +1141,9 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
                 .systemLabel("")
                 .serialNumber(0L)
                 .installDate(0L)
+                .temperature(heatMeterTemperature)
+                .heatConsumption(heatMeterConsumption)
+                .heatConsAbsolute(heatMeterConsAbsolute)
                 .build();
 
         return Apartment.builder()
@@ -831,11 +1159,20 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
     }
 
     private Apartment makeHogurityApartment14() {
+        Telemetry<Integer> energyMeterConsumption = createTelemetryEnergyMeterConsumption(true, 3, TS_2022_JANUARY);
+        Telemetry<Integer> energyMeterConsAbsolute = createTelemetryEnergyMeterConsAbsolute(energyMeterConsumption);
+
+        Telemetry<Integer> heatMeterTemperature = createTelemetryHeatMeterTemperature(true, 3, TS_2022_JANUARY);;
+        Telemetry<Integer> heatMeterConsumption = createTelemetryHeatMeterConsumption(heatMeterTemperature);
+        Telemetry<Integer> heatMeterConsAbsolute = createTelemetryHeatMeterConsAbsolute(heatMeterConsumption);
+
         EnergyMeter energyMeter = EnergyMeter.builder()
                 .systemName("Energy Meter H104")
                 .systemLabel("")
                 .serialNumber(0L)
                 .installDate(0L)
+                .energyConsumption(energyMeterConsumption)
+                .energyConsAbsolute(energyMeterConsAbsolute)
                 .build();
 
         HeatMeter heatMeter = HeatMeter.builder()
@@ -843,6 +1180,9 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
                 .systemLabel("")
                 .serialNumber(0L)
                 .installDate(0L)
+                .temperature(heatMeterTemperature)
+                .heatConsumption(heatMeterConsumption)
+                .heatConsAbsolute(heatMeterConsAbsolute)
                 .build();
 
         return Apartment.builder()
@@ -858,23 +1198,28 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
     }
 
 
-    private Telemetry<? extends Number> createTelemetryEnergyMeterConsumption(boolean occupied, int level) {
+    private Telemetry<Integer> createTelemetryEnergyMeterConsumption(boolean occupied, int level, long startTs) {
         Telemetry<Integer> result = new Telemetry<>("energyConsumption");
         return result;
     }
 
-    private Telemetry<? extends Number> createTelemetryEnergyMeterConsAbsolute(boolean occupied, int level) {
+    private Telemetry<Integer> createTelemetryEnergyMeterConsAbsolute(Telemetry<Integer> energyConsumptionTelemetry) {
         Telemetry<Integer> result = new Telemetry<>("energyConsAbsolute");
         return result;
     }
 
-    private Telemetry<? extends Number> createTelemetryHeatMeterConsumption(boolean occupied, int level) {
+    private Telemetry<Integer> createTelemetryHeatMeterTemperature(boolean occupied, int level, long startTs) {
+        Telemetry<Integer> result = new Telemetry<>("temperature");
+        return result;
+    }
+
+    private Telemetry<Integer> createTelemetryHeatMeterConsumption(Telemetry<Integer> heatConsumptionTelemetry) {
         Telemetry<Integer> result = new Telemetry<>("heatConsumption");
         return result;
     }
 
-    private Telemetry<? extends Number> createTelemetryHeatMeterTemperature(boolean occupied, int level) {
-        Telemetry<Integer> result = new Telemetry<>("temperature");
+    private Telemetry<Integer> createTelemetryHeatMeterConsAbsolute(Telemetry<Integer> heatConsumptionTelemetry) {
+        Telemetry<Integer> result = new Telemetry<>("heatConsumption");
         return result;
     }
 
