@@ -1,5 +1,6 @@
 package org.thingsboard.trendz.generator.solution.energymetering;
 
+import com.google.common.collect.Sets;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -114,8 +115,9 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
                         throw new RuleChainAlreadyExistException(ruleChain);
                     });
 
+            List<Building> data = makeData(true);
 
-            Set<String> allAssetNames = getAllAssetNames();
+            Set<String> allAssetNames = getAllAssetNames(data);
             Set<Asset> badAssets = tbRestClient.getAllAssets()
                     .stream()
                     .filter(asset -> allAssetNames.contains(asset.getName()))
@@ -127,7 +129,7 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
             }
 
 
-            Set<String> allDeviceNames = getAllDeviceNames();
+            Set<String> allDeviceNames = getAllDeviceNames(data);
             Set<Device> badDevices = tbRestClient.getAllDevices()
                     .stream()
                     .filter(device -> allDeviceNames.contains(device.getName()))
@@ -155,7 +157,7 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
                     CUSTOMER_USER_FIRST_NAME, CUSTOMER_USER_LAST_NAME
             );
 
-            List<Building> data = makeData();
+            List<Building> data = makeData(false);
             visualizeData(data);
             applyData(data, customerUser);
             createRuleChain(data);
@@ -182,13 +184,15 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
                         tbRestClient.deleteRuleChain(ruleChain.getUuidId());
                     });
 
-            Set<String> allDeviceNames = getAllDeviceNames();
+            List<Building> data = makeData(true);
+
+            Set<String> allDeviceNames = getAllDeviceNames(data);
             tbRestClient.getAllDevices()
                     .stream()
                     .filter(device -> allDeviceNames.contains(device.getName()))
                     .forEach(device -> tbRestClient.deleteDevice(device.getUuidId()));
 
-            Set<String> allAssetNames = getAllAssetNames();
+            Set<String> allAssetNames = getAllAssetNames(data);
             tbRestClient.getAllAssets()
                     .stream()
                     .filter(asset -> allAssetNames.contains(asset.getName()))
@@ -201,15 +205,15 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
     }
 
 
-    private List<Building> makeData() {
-        Building alpire = makeAlpire();
-        Building feline = makeFeline();
-        Building hogurity = makeHogurity();
+    private List<Building> makeData(boolean skipTelemetry) {
+        Building alpire = makeAlpire(skipTelemetry);
+        Building feline = makeFeline(skipTelemetry);
+        Building hogurity = makeHogurity(skipTelemetry);
 
         return List.of(alpire, feline, hogurity);
     }
 
-    private void visualizeData(List<Building> buildings) {
+    private void visualizeData(List<Building> data) {
 //        visualizationService.visualize();
     }
 
@@ -295,39 +299,40 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
     }
 
 
-    private Set<String> getAllAssetNames() {
-        return Set.of(
-                // Buildings
-                "Alpire", "Feline", "Hogurity",
-                // Apartments
-                "Apt 101 in Alpire", "Apt 102 in Alpire", "Apt 201 in Alpire", "Apt 202 in Alpire", "Apt 301 in Alpire",
-                "Apt 302 in Alpire", "Apt 401 in Alpire", "Apt 402 in Alpire", "Apt 501 in Alpire", "Apt 502 in Alpire",
-                "Apt 101 in Feline", "Apt 102 in Feline", "Apt 103 in Feline", "Apt 201 in Feline", "Apt 202 in Feline",
-                "Apt 203 in Feline", "Apt 301 in Feline", "Apt 302 in Feline", "Apt 303 in Feline",
-                "Apt 101 in Hogurity", "Apt 102 in Hogurity", "Apt 103 in Hogurity", "Apt 104 in Hogurity"
-        );
+    private Set<String> getAllAssetNames(List<Building> data) {
+        Set<String> building = data.stream()
+                .map(Building::getSystemName)
+                .collect(Collectors.toSet());
+
+        Set<String> apartments = data.stream()
+                .map(Building::getApartments)
+                .flatMap(Collection::stream)
+                .map(Apartment::getSystemName)
+                .collect(Collectors.toSet());
+
+        return Sets.union(building, apartments);
     }
 
-    private Set<String> getAllDeviceNames() {
-        return Set.of(
-                // Energy Meters
-                "Energy Meter A101", "Energy Meter A102", "Energy Meter A201", "Energy Meter A202", "Energy Meter A301",
-                "Energy Meter A302", "Energy Meter A401", "Energy Meter A402", "Energy Meter A501", "Energy Meter A502",
-                "Energy Meter F101", "Energy Meter F102", "Energy Meter F103", "Energy Meter F201", "Energy Meter F202",
-                "Energy Meter F203", "Energy Meter F301", "Energy Meter F302", "Energy Meter F303",
-                "Energy Meter H101", "Energy Meter H102", "Energy Meter H103", "Energy Meter H104",
+    private Set<String> getAllDeviceNames(List<Building> data) {
+        Set<String> energyMeters = data.stream()
+                .map(Building::getApartments)
+                .flatMap(Collection::stream)
+                .map(Apartment::getEnergyMeter)
+                .map(EnergyMeter::getSystemName)
+                .collect(Collectors.toSet());
 
-                // Heat Meters
-                "Heat Meter A101", "Heat Meter A102", "Heat Meter A201", "Heat Meter A202", "Heat Meter A301",
-                "Heat Meter A302", "Heat Meter A401", "Heat Meter A402", "Heat Meter A501", "Heat Meter A502",
-                "Heat Meter F101", "Heat Meter F102", "Heat Meter F103", "Heat Meter F201", "Heat Meter F202",
-                "Heat Meter F203", "Heat Meter F301", "Heat Meter F302", "Heat Meter F303",
-                "Heat Meter H101", "Heat Meter H102", "Heat Meter H103", "Heat Meter H104"
-        );
+        Set<String> heatMeters = data.stream()
+                .map(Building::getApartments)
+                .flatMap(Collection::stream)
+                .map(Apartment::getHeatMeter)
+                .map(HeatMeter::getSystemName)
+                .collect(Collectors.toSet());
+
+        return Sets.union(energyMeters, heatMeters);
     }
 
 
-    private Building makeAlpire() {
+    private Building makeAlpire(boolean skipTelemetry) {
         BuildingConfiguration configuration = BuildingConfiguration.builder()
                 .name("Alpire")
                 .label("Asset label for Alpire building")
@@ -404,10 +409,10 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
                         .build()
         );
 
-        return makeBuildingByConfiguration(configuration);
+        return makeBuildingByConfiguration(configuration, skipTelemetry);
     }
 
-    private Building makeFeline() {
+    private Building makeFeline(boolean skipTelemetry) {
         BuildingConfiguration configuration = BuildingConfiguration.builder()
                 .name("Feline")
                 .label("Asset label for Feline building")
@@ -484,16 +489,16 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
                         .build()
         );
 
-        return makeBuildingByConfiguration(configuration);
+        return makeBuildingByConfiguration(configuration, skipTelemetry);
     }
 
-    private Building makeHogurity() {
+    private Building makeHogurity(boolean skipTelemetry) {
         BuildingConfiguration configuration = BuildingConfiguration.builder()
                 .name("Hogurity")
                 .label("Asset label for Hogurity building")
                 .address("USA, New York, New York City, Manhattan, ...")
-                .floorCount(4)
-                .apartmentsByFloorCount(1)
+                .floorCount(1)
+                .apartmentsByFloorCount(4)
                 .defaultApartmentConfiguration(
                         ApartmentConfiguration.builder()
                                 .occupied(true)
@@ -504,16 +509,16 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
                 )
                 .build();
 
-        return makeBuildingByConfiguration(configuration);
+        return makeBuildingByConfiguration(configuration, skipTelemetry);
     }
 
 
-    private Building makeBuildingByConfiguration(BuildingConfiguration configuration) {
+    private Building makeBuildingByConfiguration(BuildingConfiguration configuration, boolean skipTelemetry) {
         Set<Apartment> apartments = new HashSet<>();
-        for (int floor = 0; floor < configuration.getFloorCount(); floor++) {
-            for (int number = 0; number < configuration.getApartmentsByFloorCount(); number++) {
+        for (int floor = 1; floor <= configuration.getFloorCount(); floor++) {
+            for (int number = 1; number <= configuration.getApartmentsByFloorCount(); number++) {
                 ApartmentConfiguration apartmentConfiguration = configuration.getApartmentConfiguration(floor, number);
-                Apartment apartment = createApartmentByConfiguration(apartmentConfiguration, configuration.getName(), floor + "0" + number);
+                Apartment apartment = createApartmentByConfiguration(apartmentConfiguration, configuration.getName(), floor + "0" + number, skipTelemetry);
                 apartments.add(apartment);
             }
         }
@@ -526,16 +531,16 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
                 .build();
     }
 
-    private Apartment createApartmentByConfiguration(ApartmentConfiguration configuration, String buildingName, String number) {
+    private Apartment createApartmentByConfiguration(ApartmentConfiguration configuration, String buildingName, String number, boolean skipTelemetry) {
         String letter = buildingName.substring(0, 1);
         long startDate = configuration.getStartDate() + createRandomDateBias();
 
-        Telemetry<Integer> energyMeterConsumption = createTelemetryEnergyMeterConsumption(configuration);
-        Telemetry<Integer> energyMeterConsAbsolute = createTelemetryEnergyMeterConsAbsolute(energyMeterConsumption);
+        Telemetry<Integer> energyMeterConsumption = createTelemetryEnergyMeterConsumption(configuration, skipTelemetry);
+        Telemetry<Integer> energyMeterConsAbsolute = createTelemetryEnergyMeterConsAbsolute(energyMeterConsumption, skipTelemetry);
 
-        Telemetry<Integer> heatMeterTemperature = createTelemetryHeatMeterTemperature(configuration);
-        Telemetry<Integer> heatMeterConsumption = createTelemetryHeatMeterConsumption(heatMeterTemperature);
-        Telemetry<Integer> heatMeterConsAbsolute = createTelemetryHeatMeterConsAbsolute(heatMeterConsumption);
+        Telemetry<Integer> heatMeterTemperature = createTelemetryHeatMeterTemperature(configuration, skipTelemetry);
+        Telemetry<Integer> heatMeterConsumption = createTelemetryHeatMeterConsumption(heatMeterTemperature, skipTelemetry);
+        Telemetry<Integer> heatMeterConsAbsolute = createTelemetryHeatMeterConsAbsolute(heatMeterConsumption, skipTelemetry);
 
         EnergyMeter energyMeter = EnergyMeter.builder()
                 .systemName("Energy Meter " + letter + number)
@@ -579,27 +584,47 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
         return RandomUtils.getRandomNumber(serialRangeFrom, serialRangeTo);
     }
 
-    private Telemetry<Integer> createTelemetryEnergyMeterConsumption(ApartmentConfiguration configuration) {
+    private Telemetry<Integer> createTelemetryEnergyMeterConsumption(ApartmentConfiguration configuration, boolean skipTelemetry) {
+        if (skipTelemetry) {
+            return new Telemetry<>("skip");
+        }
+
         Telemetry<Integer> result = new Telemetry<>("energyConsumption");
         return result;
     }
 
-    private Telemetry<Integer> createTelemetryEnergyMeterConsAbsolute(Telemetry<Integer> energyConsumptionTelemetry) {
+    private Telemetry<Integer> createTelemetryEnergyMeterConsAbsolute(Telemetry<Integer> energyConsumptionTelemetry, boolean skipTelemetry) {
+        if (skipTelemetry) {
+            return new Telemetry<>("skip");
+        }
+
         Telemetry<Integer> result = new Telemetry<>("energyConsAbsolute");
         return result;
     }
 
-    private Telemetry<Integer> createTelemetryHeatMeterTemperature(ApartmentConfiguration configuration) {
+    private Telemetry<Integer> createTelemetryHeatMeterTemperature(ApartmentConfiguration configuration, boolean skipTelemetry) {
+        if (skipTelemetry) {
+            return new Telemetry<>("skip");
+        }
+
         Telemetry<Integer> result = new Telemetry<>("temperature");
         return result;
     }
 
-    private Telemetry<Integer> createTelemetryHeatMeterConsumption(Telemetry<Integer> heatConsumptionTelemetry) {
+    private Telemetry<Integer> createTelemetryHeatMeterConsumption(Telemetry<Integer> heatConsumptionTelemetry, boolean skipTelemetry) {
+        if (skipTelemetry) {
+            return new Telemetry<>("skip");
+        }
+
         Telemetry<Integer> result = new Telemetry<>("heatConsumption");
         return result;
     }
 
-    private Telemetry<Integer> createTelemetryHeatMeterConsAbsolute(Telemetry<Integer> heatConsumptionTelemetry) {
+    private Telemetry<Integer> createTelemetryHeatMeterConsAbsolute(Telemetry<Integer> heatConsumptionTelemetry, boolean skipTelemetry) {
+        if (skipTelemetry) {
+            return new Telemetry<>("skip");
+        }
+
         Telemetry<Integer> result = new Telemetry<>("heatConsumption");
         return result;
     }

@@ -20,15 +20,23 @@ public class BuildingConfiguration {
     private int floorCount;
     private int apartmentsByFloorCount;
     private ApartmentConfiguration defaultApartmentConfiguration;
-    private Map<Integer, Map<Integer, ApartmentConfiguration>> floorApartmentToConfigurationMap = new HashMap<>();
+    private Map<Integer, Map<Integer, ApartmentConfiguration>> floorApartmentToConfigurationMap;
 
     public ApartmentConfiguration getApartmentConfiguration(int floor, int number) {
+        if (this.floorApartmentToConfigurationMap == null) {
+            this.floorApartmentToConfigurationMap = new HashMap<>();
+        }
+
         return this.floorApartmentToConfigurationMap
                 .computeIfAbsent(floor, (key) -> new HashMap<>())
                 .computeIfAbsent(number, (key) -> defaultApartmentConfiguration);
     }
 
     public void setApartmentConfiguration(int floor, int number, ApartmentConfiguration apartmentConfiguration) {
+        if (this.floorApartmentToConfigurationMap == null) {
+            this.floorApartmentToConfigurationMap = new HashMap<>();
+        }
+
         this.floorApartmentToConfigurationMap
                 .computeIfAbsent(floor, (key) -> new HashMap<>())
                 .put(number, apartmentConfiguration);
