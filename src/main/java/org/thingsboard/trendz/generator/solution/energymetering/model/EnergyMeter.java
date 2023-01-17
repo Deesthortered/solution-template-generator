@@ -14,7 +14,6 @@ import java.util.UUID;
 @AllArgsConstructor
 public class EnergyMeter {
 
-    private UUID systemId;
     private String systemName;
     private String systemLabel;
 

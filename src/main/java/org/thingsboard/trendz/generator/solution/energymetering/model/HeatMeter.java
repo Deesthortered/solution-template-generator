@@ -14,7 +14,6 @@ import java.util.UUID;
 @AllArgsConstructor
 public class HeatMeter {
 
-    private UUID systemId;
     private String systemName;
     private String systemLabel;
 

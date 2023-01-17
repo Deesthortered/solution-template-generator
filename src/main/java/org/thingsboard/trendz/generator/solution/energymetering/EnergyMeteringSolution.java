@@ -80,6 +80,8 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
     private final VisualizationService visualizationService;
 
     private final Map<Apartment, ApartmentConfiguration> apartmentConfigurationMap = new HashMap<>();
+    private final Map<EnergyMeter, UUID> energyMeterIdMap = new HashMap<>();
+    private final Map<HeatMeter, UUID> heatMeterIdMap = new HashMap<>();
 
     @Autowired
     public EnergyMeteringSolution(
@@ -265,7 +267,7 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
 
                     RuleNode energyMeterGeneratorMode = createGeneratorMode(
                             energyMeter.getSystemName(),
-                            energyMeter.getSystemId(), energyMeterFile,
+                            this.energyMeterIdMap.get(energyMeter), energyMeterFile,
                             RuleNodeAdditionalInfo.CELL_SIZE * 5, (5 + counter) * (RuleNodeAdditionalInfo.CELL_SIZE + 25)
                     );
                     NodeConnectionInfo energyMeterConnection = new NodeConnectionInfo();
@@ -275,7 +277,7 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
 
                     RuleNode heatMeterGeneratorMode = createGeneratorMode(
                             heatMeter.getSystemName(),
-                            heatMeter.getSystemId(), heatMeterFile,
+                            this.heatMeterIdMap.get(heatMeter), heatMeterFile,
                             RuleNodeAdditionalInfo.CELL_SIZE * 25, (5 + counter) * (RuleNodeAdditionalInfo.CELL_SIZE + 25)
                     );
                     NodeConnectionInfo heatMeterConnection = new NodeConnectionInfo();
@@ -584,6 +586,7 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
         return RandomUtils.getRandomNumber(serialRangeFrom, serialRangeTo);
     }
 
+
     private Telemetry<Integer> createTelemetryEnergyMeterConsumption(ApartmentConfiguration configuration, boolean skipTelemetry) {
         if (skipTelemetry) {
             return new Telemetry<>("skip");
@@ -637,8 +640,6 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
                 new Attribute<>("address", building.getAddress())
         );
         tbRestClient.setEntityAttributes(asset.getUuidId(), EntityType.ASSET, Scope.SERVER_SCOPE, attributes);
-
-        building.setSystemId(asset.getUuidId());
         return asset;
     }
 
@@ -652,8 +653,6 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
                 new Attribute<>("state", apartment.getState())
         );
         tbRestClient.setEntityAttributes(asset.getUuidId(), EntityType.ASSET, Scope.SERVER_SCOPE, attributes);
-
-        apartment.setSystemId(asset.getUuidId());
         return asset;
     }
 
@@ -670,7 +669,7 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
         tbRestClient.pushTelemetry(deviceCredentials.getCredentialsId(), energyMeter.getEnergyConsumption());
         tbRestClient.pushTelemetry(deviceCredentials.getCredentialsId(), energyMeter.getEnergyConsAbsolute());
 
-        energyMeter.setSystemId(device.getUuidId());
+        this.energyMeterIdMap.put(energyMeter, device.getUuidId());
         return device;
     }
 
@@ -687,7 +686,7 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
         tbRestClient.pushTelemetry(deviceCredentials.getCredentialsId(), heatMeter.getHeatConsumption());
         tbRestClient.pushTelemetry(deviceCredentials.getCredentialsId(), heatMeter.getTemperature());
 
-        heatMeter.setSystemId(device.getUuidId());
+        this.heatMeterIdMap.put(heatMeter, device.getUuidId());
         return device;
     }
 

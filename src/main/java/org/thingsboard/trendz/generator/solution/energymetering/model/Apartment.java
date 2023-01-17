@@ -13,7 +13,6 @@ import java.util.UUID;
 @AllArgsConstructor
 public class Apartment {
 
-    private UUID systemId;
     private String systemName;
     private String systemLabel;
 
