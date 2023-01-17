@@ -1,4 +1,4 @@
-package org.thingsboard.trendz.generator.solution.energymetering;
+package org.thingsboard.trendz.generator.solution.energymetering.model;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

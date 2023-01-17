@@ -31,6 +31,10 @@ import org.thingsboard.trendz.generator.service.FileService;
 import org.thingsboard.trendz.generator.service.TbRestClient;
 import org.thingsboard.trendz.generator.service.VisualizationService;
 import org.thingsboard.trendz.generator.solution.SolutionTemplateGenerator;
+import org.thingsboard.trendz.generator.solution.energymetering.model.Apartment;
+import org.thingsboard.trendz.generator.solution.energymetering.model.Building;
+import org.thingsboard.trendz.generator.solution.energymetering.model.EnergyMeter;
+import org.thingsboard.trendz.generator.solution.energymetering.model.HeatMeter;
 import org.thingsboard.trendz.generator.utils.DateTimeUtils;
 import org.thingsboard.trendz.generator.utils.JsonUtils;
 import org.thingsboard.trendz.generator.utils.RandomUtils;
@@ -38,10 +42,7 @@ import org.thingsboard.trendz.generator.utils.RandomUtils;
 import java.io.IOException;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -77,6 +78,7 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
     private final FileService fileService;
     private final VisualizationService visualizationService;
 
+    private final Map<Apartment, ApartmentConfiguration> apartmentConfigurationMap = new HashMap<>();
 
     @Autowired
     public EnergyMeteringSolution(
@@ -377,1021 +379,360 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
 
 
     private Apartment makeAlpireApartment11() {
-        boolean occupancy = true;
-        int level = 2;
-        long startTime = TS_2022_JANUARY + RandomUtils.getRandomNumber(dateRangeFrom, dateRangeTo);
-        boolean anomaly = false;
+        long bias = createRandomDateBias();
 
-        Telemetry<Integer> energyMeterConsumption = createTelemetryEnergyMeterConsumption(occupancy, level, startTime, anomaly);
-        Telemetry<Integer> energyMeterConsAbsolute = createTelemetryEnergyMeterConsAbsolute(energyMeterConsumption);
-
-        Telemetry<Integer> heatMeterTemperature = createTelemetryHeatMeterTemperature(occupancy, level, startTime, anomaly);
-        Telemetry<Integer> heatMeterConsumption = createTelemetryHeatMeterConsumption(heatMeterTemperature);
-        Telemetry<Integer> heatMeterConsAbsolute = createTelemetryHeatMeterConsAbsolute(heatMeterConsumption);
-
-        EnergyMeter energyMeter = EnergyMeter.builder()
-                .systemName("Energy Meter A101")
-                .systemLabel("")
-                .serialNumber(RandomUtils.getRandomNumber(serialRangeFrom, serialRangeTo))
-                .installDate(startTime)
-                .energyConsumption(energyMeterConsumption)
-                .energyConsAbsolute(energyMeterConsAbsolute)
+        ApartmentConfiguration configuration = ApartmentConfiguration.builder()
+                .occupied(true)
+                .level(2)
+                .startDate(TS_2022_JANUARY + bias)
+                .anomaly(false)
                 .build();
 
-        HeatMeter heatMeter = HeatMeter.builder()
-                .systemName("Heat Meter A101")
-                .systemLabel("")
-                .serialNumber(RandomUtils.getRandomNumber(serialRangeFrom, serialRangeTo))
-                .installDate(startTime)
-                .temperature(heatMeterTemperature)
-                .heatConsumption(heatMeterConsumption)
-                .heatConsAbsolute(heatMeterConsAbsolute)
-                .build();
-
-        return Apartment.builder()
-                .systemName("Apt 101 in Alpire")
-                .systemLabel("Apartment label")
-                .floor(1)
-                .area(0)
-                .roomNumber(1)
-                .state("occupied")
-                .energyMeter(energyMeter)
-                .heatMeter(heatMeter)
-                .build();
+        return createApartmentByConfiguration(configuration, "Alpire", "101");
     }
 
     private Apartment makeAlpireApartment12() {
-        boolean occupancy = false;
-        int level = 0;
-        long startTime = TS_2022_JANUARY + RandomUtils.getRandomNumber(dateRangeFrom, dateRangeTo);
-        boolean anomaly = false;
+        long bias = createRandomDateBias();
 
-        Telemetry<Integer> energyMeterConsumption = createTelemetryEnergyMeterConsumption(occupancy, level, startTime, anomaly);
-        Telemetry<Integer> energyMeterConsAbsolute = createTelemetryEnergyMeterConsAbsolute(energyMeterConsumption);
-
-        Telemetry<Integer> heatMeterTemperature = createTelemetryHeatMeterTemperature(occupancy, level, startTime, anomaly);
-        Telemetry<Integer> heatMeterConsumption = createTelemetryHeatMeterConsumption(heatMeterTemperature);
-        Telemetry<Integer> heatMeterConsAbsolute = createTelemetryHeatMeterConsAbsolute(heatMeterConsumption);
-
-        EnergyMeter energyMeter = EnergyMeter.builder()
-                .systemName("Energy Meter A102")
-                .systemLabel("")
-                .serialNumber(RandomUtils.getRandomNumber(serialRangeFrom, serialRangeTo))
-                .installDate(startTime)
-                .energyConsumption(energyMeterConsumption)
-                .energyConsAbsolute(energyMeterConsAbsolute)
+        ApartmentConfiguration configuration = ApartmentConfiguration.builder()
+                .occupied(false)
+                .level(0)
+                .startDate(TS_2022_JANUARY + bias)
+                .anomaly(false)
                 .build();
 
-        HeatMeter heatMeter = HeatMeter.builder()
-                .systemName("Heat Meter A102")
-                .systemLabel("")
-                .serialNumber(RandomUtils.getRandomNumber(serialRangeFrom, serialRangeTo))
-                .installDate(startTime)
-                .temperature(heatMeterTemperature)
-                .heatConsumption(heatMeterConsumption)
-                .heatConsAbsolute(heatMeterConsAbsolute)
-                .build();
-
-        return Apartment.builder()
-                .systemName("Apt 102 in Alpire")
-                .systemLabel("Apartment label")
-                .floor(1)
-                .area(0)
-                .roomNumber(2)
-                .state("free")
-                .energyMeter(energyMeter)
-                .heatMeter(heatMeter)
-                .build();
+        return createApartmentByConfiguration(configuration, "Alpire", "102");
     }
 
     private Apartment makeAlpireApartment21() {
-        boolean occupancy = true;
-        int level = 2;
-        long startTime = TS_2022_JANUARY + RandomUtils.getRandomNumber(dateRangeFrom, dateRangeTo);
-        boolean anomaly = false;
+        long bias = createRandomDateBias();
 
-        Telemetry<Integer> energyMeterConsumption = createTelemetryEnergyMeterConsumption(occupancy, level, startTime, anomaly);
-        Telemetry<Integer> energyMeterConsAbsolute = createTelemetryEnergyMeterConsAbsolute(energyMeterConsumption);
-
-        Telemetry<Integer> heatMeterTemperature = createTelemetryHeatMeterTemperature(occupancy, level, startTime, anomaly);
-        Telemetry<Integer> heatMeterConsumption = createTelemetryHeatMeterConsumption(heatMeterTemperature);
-        Telemetry<Integer> heatMeterConsAbsolute = createTelemetryHeatMeterConsAbsolute(heatMeterConsumption);
-
-        EnergyMeter energyMeter = EnergyMeter.builder()
-                .systemName("Energy Meter A201")
-                .systemLabel("")
-                .serialNumber(RandomUtils.getRandomNumber(serialRangeFrom, serialRangeTo))
-                .installDate(startTime)
-                .energyConsumption(energyMeterConsumption)
-                .energyConsAbsolute(energyMeterConsAbsolute)
+        ApartmentConfiguration configuration = ApartmentConfiguration.builder()
+                .occupied(true)
+                .level(2)
+                .startDate(TS_2022_JANUARY + bias)
+                .anomaly(false)
                 .build();
 
-        HeatMeter heatMeter = HeatMeter.builder()
-                .systemName("Heat Meter A201")
-                .systemLabel("")
-                .serialNumber(RandomUtils.getRandomNumber(serialRangeFrom, serialRangeTo))
-                .installDate(startTime)
-                .temperature(heatMeterTemperature)
-                .heatConsumption(heatMeterConsumption)
-                .heatConsAbsolute(heatMeterConsAbsolute)
-                .build();
-
-        return Apartment.builder()
-                .systemName("Apt 201 in Alpire")
-                .systemLabel("Apartment label")
-                .floor(2)
-                .area(0)
-                .roomNumber(3)
-                .state("occupied")
-                .energyMeter(energyMeter)
-                .heatMeter(heatMeter)
-                .build();
+        return createApartmentByConfiguration(configuration, "Alpire", "201");
     }
 
     private Apartment makeAlpireApartment22() {
-        boolean occupancy = true;
-        int level = 2;
-        long startTime = TS_2022_JANUARY + RandomUtils.getRandomNumber(dateRangeFrom, dateRangeTo);
-        boolean anomaly = false;
+        long bias = createRandomDateBias();
 
-        Telemetry<Integer> energyMeterConsumption = createTelemetryEnergyMeterConsumption(occupancy, level, startTime, anomaly);
-        Telemetry<Integer> energyMeterConsAbsolute = createTelemetryEnergyMeterConsAbsolute(energyMeterConsumption);
-
-        Telemetry<Integer> heatMeterTemperature = createTelemetryHeatMeterTemperature(occupancy, level, startTime, anomaly);
-        Telemetry<Integer> heatMeterConsumption = createTelemetryHeatMeterConsumption(heatMeterTemperature);
-        Telemetry<Integer> heatMeterConsAbsolute = createTelemetryHeatMeterConsAbsolute(heatMeterConsumption);
-
-        EnergyMeter energyMeter = EnergyMeter.builder()
-                .systemName("Energy Meter A202")
-                .systemLabel("")
-                .serialNumber(RandomUtils.getRandomNumber(serialRangeFrom, serialRangeTo))
-                .installDate(startTime)
-                .energyConsumption(energyMeterConsumption)
-                .energyConsAbsolute(energyMeterConsAbsolute)
+        ApartmentConfiguration configuration = ApartmentConfiguration.builder()
+                .occupied(false)
+                .level(2)
+                .startDate(TS_2022_JANUARY + bias)
+                .anomaly(false)
                 .build();
 
-        HeatMeter heatMeter = HeatMeter.builder()
-                .systemName("Heat Meter A202")
-                .systemLabel("")
-                .serialNumber(RandomUtils.getRandomNumber(serialRangeFrom, serialRangeTo))
-                .installDate(startTime)
-                .temperature(heatMeterTemperature)
-                .heatConsumption(heatMeterConsumption)
-                .heatConsAbsolute(heatMeterConsAbsolute)
-                .build();
-
-        return Apartment.builder()
-                .systemName("Apt 202 in Alpire")
-                .systemLabel("Apartment label")
-                .floor(2)
-                .area(0)
-                .roomNumber(4)
-                .state("occupied")
-                .energyMeter(energyMeter)
-                .heatMeter(heatMeter)
-                .build();
+        return createApartmentByConfiguration(configuration, "Alpire", "202");
     }
 
     private Apartment makeAlpireApartment31() {
-        boolean occupancy = false;
-        int level = 0;
-        long startTime = TS_2022_JANUARY + RandomUtils.getRandomNumber(dateRangeFrom, dateRangeTo);
-        boolean anomaly = false;
+        long bias = createRandomDateBias();
 
-        Telemetry<Integer> energyMeterConsumption = createTelemetryEnergyMeterConsumption(occupancy, level, startTime, anomaly);
-        Telemetry<Integer> energyMeterConsAbsolute = createTelemetryEnergyMeterConsAbsolute(energyMeterConsumption);
-
-        Telemetry<Integer> heatMeterTemperature = createTelemetryHeatMeterTemperature(occupancy, level, startTime, anomaly);
-        Telemetry<Integer> heatMeterConsumption = createTelemetryHeatMeterConsumption(heatMeterTemperature);
-        Telemetry<Integer> heatMeterConsAbsolute = createTelemetryHeatMeterConsAbsolute(heatMeterConsumption);
-
-        EnergyMeter energyMeter = EnergyMeter.builder()
-                .systemName("Energy Meter A301")
-                .systemLabel("")
-                .serialNumber(RandomUtils.getRandomNumber(serialRangeFrom, serialRangeTo))
-                .installDate(startTime)
-                .energyConsumption(energyMeterConsumption)
-                .energyConsAbsolute(energyMeterConsAbsolute)
+        ApartmentConfiguration configuration = ApartmentConfiguration.builder()
+                .occupied(false)
+                .level(0)
+                .startDate(TS_2022_JANUARY + bias)
+                .anomaly(false)
                 .build();
 
-        HeatMeter heatMeter = HeatMeter.builder()
-                .systemName("Heat Meter A301")
-                .systemLabel("")
-                .serialNumber(RandomUtils.getRandomNumber(serialRangeFrom, serialRangeTo))
-                .installDate(startTime)
-                .temperature(heatMeterTemperature)
-                .heatConsumption(heatMeterConsumption)
-                .heatConsAbsolute(heatMeterConsAbsolute)
-                .build();
-
-        return Apartment.builder()
-                .systemName("Apt 301 in Alpire")
-                .systemLabel("Apartment label")
-                .floor(3)
-                .area(0)
-                .roomNumber(5)
-                .state("free")
-                .energyMeter(energyMeter)
-                .heatMeter(heatMeter)
-                .build();
+        return createApartmentByConfiguration(configuration, "Alpire", "301");
     }
 
     private Apartment makeAlpireApartment32() {
-        boolean occupancy = true;
-        int level = 2;
-        long startTime = TS_2022_JANUARY + RandomUtils.getRandomNumber(dateRangeFrom, dateRangeTo);
-        boolean anomaly = false;
+        long bias = createRandomDateBias();
 
-        Telemetry<Integer> energyMeterConsumption = createTelemetryEnergyMeterConsumption(occupancy, level, startTime, anomaly);
-        Telemetry<Integer> energyMeterConsAbsolute = createTelemetryEnergyMeterConsAbsolute(energyMeterConsumption);
-
-        Telemetry<Integer> heatMeterTemperature = createTelemetryHeatMeterTemperature(occupancy, level, startTime, anomaly);
-        Telemetry<Integer> heatMeterConsumption = createTelemetryHeatMeterConsumption(heatMeterTemperature);
-        Telemetry<Integer> heatMeterConsAbsolute = createTelemetryHeatMeterConsAbsolute(heatMeterConsumption);
-
-        EnergyMeter energyMeter = EnergyMeter.builder()
-                .systemName("Energy Meter A302")
-                .systemLabel("")
-                .serialNumber(RandomUtils.getRandomNumber(serialRangeFrom, serialRangeTo))
-                .installDate(startTime)
-                .energyConsumption(energyMeterConsumption)
-                .energyConsAbsolute(energyMeterConsAbsolute)
+        ApartmentConfiguration configuration = ApartmentConfiguration.builder()
+                .occupied(true)
+                .level(2)
+                .startDate(TS_2022_JANUARY + bias)
+                .anomaly(false)
                 .build();
 
-        HeatMeter heatMeter = HeatMeter.builder()
-                .systemName("Heat Meter A302")
-                .systemLabel("")
-                .serialNumber(RandomUtils.getRandomNumber(serialRangeFrom, serialRangeTo))
-                .installDate(startTime)
-                .temperature(heatMeterTemperature)
-                .heatConsumption(heatMeterConsumption)
-                .heatConsAbsolute(heatMeterConsAbsolute)
-                .build();
-
-        return Apartment.builder()
-                .systemName("Apt 302 in Alpire")
-                .systemLabel("Apartment label")
-                .floor(3)
-                .area(0)
-                .roomNumber(6)
-                .state("occupied")
-                .energyMeter(energyMeter)
-                .heatMeter(heatMeter)
-                .build();
+        return createApartmentByConfiguration(configuration, "Alpire", "302");
     }
 
     private Apartment makeAlpireApartment41() {
-        boolean occupancy = true;
-        int level = 3;
-        long startTime = TS_2022_JANUARY + RandomUtils.getRandomNumber(dateRangeFrom, dateRangeTo);
-        boolean anomaly = false;
+        long bias = createRandomDateBias();
 
-        Telemetry<Integer> energyMeterConsumption = createTelemetryEnergyMeterConsumption(occupancy, level, startTime, anomaly);
-        Telemetry<Integer> energyMeterConsAbsolute = createTelemetryEnergyMeterConsAbsolute(energyMeterConsumption);
-
-        Telemetry<Integer> heatMeterTemperature = createTelemetryHeatMeterTemperature(occupancy, level, startTime, anomaly);
-        Telemetry<Integer> heatMeterConsumption = createTelemetryHeatMeterConsumption(heatMeterTemperature);
-        Telemetry<Integer> heatMeterConsAbsolute = createTelemetryHeatMeterConsAbsolute(heatMeterConsumption);
-
-        EnergyMeter energyMeter = EnergyMeter.builder()
-                .systemName("Energy Meter A401")
-                .systemLabel("")
-                .serialNumber(RandomUtils.getRandomNumber(serialRangeFrom, serialRangeTo))
-                .installDate(startTime)
-                .energyConsumption(energyMeterConsumption)
-                .energyConsAbsolute(energyMeterConsAbsolute)
+        ApartmentConfiguration configuration = ApartmentConfiguration.builder()
+                .occupied(true)
+                .level(3)
+                .startDate(TS_2022_JANUARY + bias)
+                .anomaly(false)
                 .build();
 
-        HeatMeter heatMeter = HeatMeter.builder()
-                .systemName("Heat Meter A401")
-                .systemLabel("")
-                .serialNumber(RandomUtils.getRandomNumber(serialRangeFrom, serialRangeTo))
-                .installDate(startTime)
-                .temperature(heatMeterTemperature)
-                .heatConsumption(heatMeterConsumption)
-                .heatConsAbsolute(heatMeterConsAbsolute)
-                .build();
-
-        return Apartment.builder()
-                .systemName("Apt 401 in Alpire")
-                .systemLabel("Apartment label")
-                .floor(4)
-                .area(0)
-                .roomNumber(7)
-                .state("occupied")
-                .energyMeter(energyMeter)
-                .heatMeter(heatMeter)
-                .build();
+        return createApartmentByConfiguration(configuration, "Alpire", "401");
     }
 
     private Apartment makeAlpireApartment42() {
-        boolean occupancy = true;
-        int level = 3;
-        long startTime = TS_2022_JANUARY + RandomUtils.getRandomNumber(dateRangeFrom, dateRangeTo);
-        boolean anomaly = false;
+        long bias = createRandomDateBias();
 
-        Telemetry<Integer> energyMeterConsumption = createTelemetryEnergyMeterConsumption(occupancy, level, startTime, anomaly);
-        Telemetry<Integer> energyMeterConsAbsolute = createTelemetryEnergyMeterConsAbsolute(energyMeterConsumption);
-
-        Telemetry<Integer> heatMeterTemperature = createTelemetryHeatMeterTemperature(occupancy, level, startTime, anomaly);
-        Telemetry<Integer> heatMeterConsumption = createTelemetryHeatMeterConsumption(heatMeterTemperature);
-        Telemetry<Integer> heatMeterConsAbsolute = createTelemetryHeatMeterConsAbsolute(heatMeterConsumption);
-
-        EnergyMeter energyMeter = EnergyMeter.builder()
-                .systemName("Energy Meter A402")
-                .systemLabel("")
-                .serialNumber(RandomUtils.getRandomNumber(serialRangeFrom, serialRangeTo))
-                .installDate(startTime)
-                .energyConsumption(energyMeterConsumption)
-                .energyConsAbsolute(energyMeterConsAbsolute)
+        ApartmentConfiguration configuration = ApartmentConfiguration.builder()
+                .occupied(true)
+                .level(3)
+                .startDate(TS_2022_JANUARY + bias)
+                .anomaly(false)
                 .build();
 
-        HeatMeter heatMeter = HeatMeter.builder()
-                .systemName("Heat Meter A402")
-                .systemLabel("")
-                .serialNumber(RandomUtils.getRandomNumber(serialRangeFrom, serialRangeTo))
-                .installDate(startTime)
-                .temperature(heatMeterTemperature)
-                .heatConsumption(heatMeterConsumption)
-                .heatConsAbsolute(heatMeterConsAbsolute)
-                .build();
-
-        return Apartment.builder()
-                .systemName("Apt 402 in Alpire")
-                .systemLabel("Apartment label")
-                .floor(4)
-                .area(0)
-                .roomNumber(8)
-                .state("occupied")
-                .energyMeter(energyMeter)
-                .heatMeter(heatMeter)
-                .build();
+        return createApartmentByConfiguration(configuration, "Alpire", "402");
     }
 
     private Apartment makeAlpireApartment51() {
-        boolean occupancy = false;
-        int level = 0;
-        long startTime = TS_2022_FEBRUARY + RandomUtils.getRandomNumber(dateRangeFrom, dateRangeTo);
-        boolean anomaly = false;
+        long bias = createRandomDateBias();
 
-        Telemetry<Integer> energyMeterConsumption = createTelemetryEnergyMeterConsumption(occupancy, level, startTime, anomaly);
-        Telemetry<Integer> energyMeterConsAbsolute = createTelemetryEnergyMeterConsAbsolute(energyMeterConsumption);
-
-        Telemetry<Integer> heatMeterTemperature = createTelemetryHeatMeterTemperature(occupancy, level, startTime, anomaly);
-        Telemetry<Integer> heatMeterConsumption = createTelemetryHeatMeterConsumption(heatMeterTemperature);
-        Telemetry<Integer> heatMeterConsAbsolute = createTelemetryHeatMeterConsAbsolute(heatMeterConsumption);
-
-        EnergyMeter energyMeter = EnergyMeter.builder()
-                .systemName("Energy Meter A501")
-                .systemLabel("")
-                .serialNumber(RandomUtils.getRandomNumber(serialRangeFrom, serialRangeTo))
-                .installDate(startTime)
-                .energyConsumption(energyMeterConsumption)
-                .energyConsAbsolute(energyMeterConsAbsolute)
+        ApartmentConfiguration configuration = ApartmentConfiguration.builder()
+                .occupied(false)
+                .level(0)
+                .startDate(TS_2022_FEBRUARY + bias)
+                .anomaly(false)
                 .build();
 
-        HeatMeter heatMeter = HeatMeter.builder()
-                .systemName("Heat Meter A501")
-                .systemLabel("")
-                .serialNumber(RandomUtils.getRandomNumber(serialRangeFrom, serialRangeTo))
-                .installDate(startTime)
-                .temperature(heatMeterTemperature)
-                .heatConsumption(heatMeterConsumption)
-                .heatConsAbsolute(heatMeterConsAbsolute)
-                .build();
-
-        return Apartment.builder()
-                .systemName("Apt 501 in Alpire")
-                .systemLabel("Apartment label")
-                .floor(5)
-                .area(0)
-                .roomNumber(9)
-                .state("free")
-                .energyMeter(energyMeter)
-                .heatMeter(heatMeter)
-                .build();
+        return createApartmentByConfiguration(configuration, "Alpire", "501");
     }
 
     private Apartment makeAlpireApartment52() {
-        boolean occupancy = false;
-        int level = 0;
-        long startTime = TS_2022_FEBRUARY + RandomUtils.getRandomNumber(dateRangeFrom, dateRangeTo);
-        boolean anomaly = false;
+        long bias = createRandomDateBias();
 
-        Telemetry<Integer> energyMeterConsumption = createTelemetryEnergyMeterConsumption(occupancy, level, startTime, anomaly);
-        Telemetry<Integer> energyMeterConsAbsolute = createTelemetryEnergyMeterConsAbsolute(energyMeterConsumption);
-
-        Telemetry<Integer> heatMeterTemperature = createTelemetryHeatMeterTemperature(occupancy, level, startTime, anomaly);
-        Telemetry<Integer> heatMeterConsumption = createTelemetryHeatMeterConsumption(heatMeterTemperature);
-        Telemetry<Integer> heatMeterConsAbsolute = createTelemetryHeatMeterConsAbsolute(heatMeterConsumption);
-
-        EnergyMeter energyMeter = EnergyMeter.builder()
-                .systemName("Energy Meter A502")
-                .systemLabel("")
-                .serialNumber(RandomUtils.getRandomNumber(serialRangeFrom, serialRangeTo))
-                .installDate(startTime)
-                .energyConsumption(energyMeterConsumption)
-                .energyConsAbsolute(energyMeterConsAbsolute)
+        ApartmentConfiguration configuration = ApartmentConfiguration.builder()
+                .occupied(false)
+                .level(0)
+                .startDate(TS_2022_FEBRUARY + bias)
+                .anomaly(false)
                 .build();
 
-        HeatMeter heatMeter = HeatMeter.builder()
-                .systemName("Heat Meter A502")
-                .systemLabel("")
-                .serialNumber(RandomUtils.getRandomNumber(serialRangeFrom, serialRangeTo))
-                .installDate(startTime)
-                .temperature(heatMeterTemperature)
-                .heatConsumption(heatMeterConsumption)
-                .heatConsAbsolute(heatMeterConsAbsolute)
-                .build();
-
-        return Apartment.builder()
-                .systemName("Apt 502 in Alpire")
-                .systemLabel("Apartment label")
-                .floor(5)
-                .area(0)
-                .roomNumber(10)
-                .state("free")
-                .energyMeter(energyMeter)
-                .heatMeter(heatMeter)
-                .build();
+        return createApartmentByConfiguration(configuration, "Alpire", "502");
     }
 
 
     private Apartment makeFelineApartment11() {
-        boolean occupancy = false;
-        int level = 0;
-        long startTime = TS_2022_MAY + RandomUtils.getRandomNumber(dateRangeFrom, dateRangeTo);
-        boolean anomaly = true;
+        long bias = createRandomDateBias();
 
-        Telemetry<Integer> energyMeterConsumption = createTelemetryEnergyMeterConsumption(occupancy, level, startTime, anomaly);
-        Telemetry<Integer> energyMeterConsAbsolute = createTelemetryEnergyMeterConsAbsolute(energyMeterConsumption);
-
-        Telemetry<Integer> heatMeterTemperature = createTelemetryHeatMeterTemperature(occupancy, level, startTime, anomaly);
-        Telemetry<Integer> heatMeterConsumption = createTelemetryHeatMeterConsumption(heatMeterTemperature);
-        Telemetry<Integer> heatMeterConsAbsolute = createTelemetryHeatMeterConsAbsolute(heatMeterConsumption);
-
-        EnergyMeter energyMeter = EnergyMeter.builder()
-                .systemName("Energy Meter F101")
-                .systemLabel("")
-                .serialNumber(RandomUtils.getRandomNumber(serialRangeFrom, serialRangeTo))
-                .installDate(startTime)
-                .energyConsumption(energyMeterConsumption)
-                .energyConsAbsolute(energyMeterConsAbsolute)
+        ApartmentConfiguration configuration = ApartmentConfiguration.builder()
+                .occupied(false)
+                .level(0)
+                .startDate(TS_2022_MAY + bias)
+                .anomaly(true)
                 .build();
 
-        HeatMeter heatMeter = HeatMeter.builder()
-                .systemName("Heat Meter F101")
-                .systemLabel("")
-                .serialNumber(RandomUtils.getRandomNumber(serialRangeFrom, serialRangeTo))
-                .installDate(startTime)
-                .temperature(heatMeterTemperature)
-                .heatConsumption(heatMeterConsumption)
-                .heatConsAbsolute(heatMeterConsAbsolute)
-                .build();
-
-        return Apartment.builder()
-                .systemName("Apt 101 in Feline")
-                .systemLabel("")
-                .floor(1)
-                .area(0)
-                .roomNumber(1)
-                .state("free")
-                .energyMeter(energyMeter)
-                .heatMeter(heatMeter)
-                .build();
+        return createApartmentByConfiguration(configuration, "Feline", "101");
     }
 
     private Apartment makeFelineApartment12() {
-        boolean occupancy = true;
-        int level = 1;
-        long startTime = TS_2022_MAY + RandomUtils.getRandomNumber(dateRangeFrom, dateRangeTo);
-        boolean anomaly = false;
+        long bias = createRandomDateBias();
 
-        Telemetry<Integer> energyMeterConsumption = createTelemetryEnergyMeterConsumption(occupancy, level, startTime, anomaly);
-        Telemetry<Integer> energyMeterConsAbsolute = createTelemetryEnergyMeterConsAbsolute(energyMeterConsumption);
-
-        Telemetry<Integer> heatMeterTemperature = createTelemetryHeatMeterTemperature(occupancy, level, startTime, anomaly);
-        Telemetry<Integer> heatMeterConsumption = createTelemetryHeatMeterConsumption(heatMeterTemperature);
-        Telemetry<Integer> heatMeterConsAbsolute = createTelemetryHeatMeterConsAbsolute(heatMeterConsumption);
-
-        EnergyMeter energyMeter = EnergyMeter.builder()
-                .systemName("Energy Meter F102")
-                .systemLabel("")
-                .serialNumber(RandomUtils.getRandomNumber(serialRangeFrom, serialRangeTo))
-                .installDate(startTime)
-                .energyConsumption(energyMeterConsumption)
-                .energyConsAbsolute(energyMeterConsAbsolute)
+        ApartmentConfiguration configuration = ApartmentConfiguration.builder()
+                .occupied(true)
+                .level(1)
+                .startDate(TS_2022_MAY + bias)
+                .anomaly(false)
                 .build();
 
-        HeatMeter heatMeter = HeatMeter.builder()
-                .systemName("Heat Meter F102")
-                .systemLabel("")
-                .serialNumber(RandomUtils.getRandomNumber(serialRangeFrom, serialRangeTo))
-                .installDate(startTime)
-                .temperature(heatMeterTemperature)
-                .heatConsumption(heatMeterConsumption)
-                .heatConsAbsolute(heatMeterConsAbsolute)
-                .build();
-
-        return Apartment.builder()
-                .systemName("Apt 102 in Feline")
-                .systemLabel("")
-                .floor(1)
-                .area(0)
-                .roomNumber(2)
-                .state("occupied")
-                .energyMeter(energyMeter)
-                .heatMeter(heatMeter)
-                .build();
+        return createApartmentByConfiguration(configuration, "Feline", "102");
     }
 
     private Apartment makeFelineApartment13() {
-        boolean occupancy = true;
-        int level = 1;
-        long startTime = TS_2022_MAY + RandomUtils.getRandomNumber(dateRangeFrom, dateRangeTo);
-        boolean anomaly = false;
+        long bias = createRandomDateBias();
 
-        Telemetry<Integer> energyMeterConsumption = createTelemetryEnergyMeterConsumption(occupancy, level, startTime, anomaly);
-        Telemetry<Integer> energyMeterConsAbsolute = createTelemetryEnergyMeterConsAbsolute(energyMeterConsumption);
-
-        Telemetry<Integer> heatMeterTemperature = createTelemetryHeatMeterTemperature(occupancy, level, startTime, anomaly);
-        Telemetry<Integer> heatMeterConsumption = createTelemetryHeatMeterConsumption(heatMeterTemperature);
-        Telemetry<Integer> heatMeterConsAbsolute = createTelemetryHeatMeterConsAbsolute(heatMeterConsumption);
-
-        EnergyMeter energyMeter = EnergyMeter.builder()
-                .systemName("Energy Meter F103")
-                .systemLabel("")
-                .serialNumber(RandomUtils.getRandomNumber(serialRangeFrom, serialRangeTo))
-                .installDate(startTime)
-                .energyConsumption(energyMeterConsumption)
-                .energyConsAbsolute(energyMeterConsAbsolute)
+        ApartmentConfiguration configuration = ApartmentConfiguration.builder()
+                .occupied(true)
+                .level(1)
+                .startDate(TS_2022_MAY + bias)
+                .anomaly(false)
                 .build();
 
-        HeatMeter heatMeter = HeatMeter.builder()
-                .systemName("Heat Meter F103")
-                .systemLabel("")
-                .serialNumber(RandomUtils.getRandomNumber(serialRangeFrom, serialRangeTo))
-                .installDate(startTime)
-                .temperature(heatMeterTemperature)
-                .heatConsumption(heatMeterConsumption)
-                .heatConsAbsolute(heatMeterConsAbsolute)
-                .build();
-
-        return Apartment.builder()
-                .systemName("Apt 103 in Feline")
-                .systemLabel("")
-                .floor(1)
-                .area(0)
-                .roomNumber(3)
-                .state("occupied")
-                .energyMeter(energyMeter)
-                .heatMeter(heatMeter)
-                .build();
+        return createApartmentByConfiguration(configuration, "Feline", "103");
     }
 
     private Apartment makeFelineApartment21() {
-        boolean occupancy = true;
-        int level = 2;
-        long startTime = TS_2022_MAY + RandomUtils.getRandomNumber(dateRangeFrom, dateRangeTo);
-        boolean anomaly = false;
+        long bias = createRandomDateBias();
 
-        Telemetry<Integer> energyMeterConsumption = createTelemetryEnergyMeterConsumption(occupancy, level, startTime, anomaly);
-        Telemetry<Integer> energyMeterConsAbsolute = createTelemetryEnergyMeterConsAbsolute(energyMeterConsumption);
-
-        Telemetry<Integer> heatMeterTemperature = createTelemetryHeatMeterTemperature(occupancy, level, startTime, anomaly);
-        Telemetry<Integer> heatMeterConsumption = createTelemetryHeatMeterConsumption(heatMeterTemperature);
-        Telemetry<Integer> heatMeterConsAbsolute = createTelemetryHeatMeterConsAbsolute(heatMeterConsumption);
-
-        EnergyMeter energyMeter = EnergyMeter.builder()
-                .systemName("Energy Meter F201")
-                .systemLabel("")
-                .serialNumber(RandomUtils.getRandomNumber(serialRangeFrom, serialRangeTo))
-                .installDate(startTime)
-                .energyConsumption(energyMeterConsumption)
-                .energyConsAbsolute(energyMeterConsAbsolute)
+        ApartmentConfiguration configuration = ApartmentConfiguration.builder()
+                .occupied(true)
+                .level(2)
+                .startDate(TS_2022_MAY + bias)
+                .anomaly(false)
                 .build();
 
-        HeatMeter heatMeter = HeatMeter.builder()
-                .systemName("Heat Meter F201")
-                .systemLabel("")
-                .serialNumber(RandomUtils.getRandomNumber(serialRangeFrom, serialRangeTo))
-                .installDate(startTime)
-                .temperature(heatMeterTemperature)
-                .heatConsumption(heatMeterConsumption)
-                .heatConsAbsolute(heatMeterConsAbsolute)
-                .build();
-
-        return Apartment.builder()
-                .systemName("Apt 201 in Feline")
-                .systemLabel("")
-                .floor(2)
-                .area(0)
-                .roomNumber(4)
-                .state("occupied")
-                .energyMeter(energyMeter)
-                .heatMeter(heatMeter)
-                .build();
+        return createApartmentByConfiguration(configuration, "Feline", "201");
     }
 
     private Apartment makeFelineApartment22() {
-        boolean occupancy = true;
-        int level = 2;
-        long startTime = TS_2022_MAY + RandomUtils.getRandomNumber(dateRangeFrom, dateRangeTo);
-        boolean anomaly = false;
+        long bias = createRandomDateBias();
 
-        Telemetry<Integer> energyMeterConsumption = createTelemetryEnergyMeterConsumption(occupancy, level, startTime, anomaly);
-        Telemetry<Integer> energyMeterConsAbsolute = createTelemetryEnergyMeterConsAbsolute(energyMeterConsumption);
-
-        Telemetry<Integer> heatMeterTemperature = createTelemetryHeatMeterTemperature(occupancy, level, startTime, anomaly);
-        Telemetry<Integer> heatMeterConsumption = createTelemetryHeatMeterConsumption(heatMeterTemperature);
-        Telemetry<Integer> heatMeterConsAbsolute = createTelemetryHeatMeterConsAbsolute(heatMeterConsumption);
-
-        EnergyMeter energyMeter = EnergyMeter.builder()
-                .systemName("Energy Meter F202")
-                .systemLabel("")
-                .serialNumber(RandomUtils.getRandomNumber(serialRangeFrom, serialRangeTo))
-                .installDate(startTime)
-                .energyConsumption(energyMeterConsumption)
-                .energyConsAbsolute(energyMeterConsAbsolute)
+        ApartmentConfiguration configuration = ApartmentConfiguration.builder()
+                .occupied(true)
+                .level(2)
+                .startDate(TS_2022_MAY + bias)
+                .anomaly(false)
                 .build();
 
-        HeatMeter heatMeter = HeatMeter.builder()
-                .systemName("Heat Meter F202")
-                .systemLabel("")
-                .serialNumber(RandomUtils.getRandomNumber(serialRangeFrom, serialRangeTo))
-                .installDate(startTime)
-                .temperature(heatMeterTemperature)
-                .heatConsumption(heatMeterConsumption)
-                .heatConsAbsolute(heatMeterConsAbsolute)
-                .build();
-
-        return Apartment.builder()
-                .systemName("Apt 202 in Feline")
-                .systemLabel("")
-                .floor(2)
-                .area(0)
-                .roomNumber(5)
-                .state("occupied")
-                .energyMeter(energyMeter)
-                .heatMeter(heatMeter)
-                .build();
+        return createApartmentByConfiguration(configuration, "Feline", "202");
     }
 
     private Apartment makeFelineApartment23() {
-        boolean occupancy = true;
-        int level = 2;
-        long startTime = TS_2022_MAY + RandomUtils.getRandomNumber(dateRangeFrom, dateRangeTo);
-        boolean anomaly = false;
+        long bias = createRandomDateBias();
 
-        Telemetry<Integer> energyMeterConsumption = createTelemetryEnergyMeterConsumption(occupancy, level, startTime, anomaly);
-        Telemetry<Integer> energyMeterConsAbsolute = createTelemetryEnergyMeterConsAbsolute(energyMeterConsumption);
-
-        Telemetry<Integer> heatMeterTemperature = createTelemetryHeatMeterTemperature(occupancy, level, startTime, anomaly);
-        Telemetry<Integer> heatMeterConsumption = createTelemetryHeatMeterConsumption(heatMeterTemperature);
-        Telemetry<Integer> heatMeterConsAbsolute = createTelemetryHeatMeterConsAbsolute(heatMeterConsumption);
-
-        EnergyMeter energyMeter = EnergyMeter.builder()
-                .systemName("Energy Meter F203")
-                .systemLabel("")
-                .serialNumber(RandomUtils.getRandomNumber(serialRangeFrom, serialRangeTo))
-                .installDate(startTime)
-                .energyConsumption(energyMeterConsumption)
-                .energyConsAbsolute(energyMeterConsAbsolute)
+        ApartmentConfiguration configuration = ApartmentConfiguration.builder()
+                .occupied(true)
+                .level(2)
+                .startDate(TS_2022_MAY + bias)
+                .anomaly(false)
                 .build();
 
-        HeatMeter heatMeter = HeatMeter.builder()
-                .systemName("Heat Meter F203")
-                .systemLabel("")
-                .serialNumber(RandomUtils.getRandomNumber(serialRangeFrom, serialRangeTo))
-                .installDate(startTime)
-                .temperature(heatMeterTemperature)
-                .heatConsumption(heatMeterConsumption)
-                .heatConsAbsolute(heatMeterConsAbsolute)
-                .build();
-
-        return Apartment.builder()
-                .systemName("Apt 203 in Feline")
-                .systemLabel("")
-                .floor(2)
-                .area(0)
-                .roomNumber(6)
-                .state("occupied")
-                .energyMeter(energyMeter)
-                .heatMeter(heatMeter)
-                .build();
+        return createApartmentByConfiguration(configuration, "Feline", "203");
     }
 
     private Apartment makeFelineApartment31() {
-        boolean occupancy = true;
-        int level = 3;
-        long startTime = TS_2022_MAY + RandomUtils.getRandomNumber(dateRangeFrom, dateRangeTo);
-        boolean anomaly = false;
+        long bias = createRandomDateBias();
 
-        Telemetry<Integer> energyMeterConsumption = createTelemetryEnergyMeterConsumption(occupancy, level, startTime, anomaly);
-        Telemetry<Integer> energyMeterConsAbsolute = createTelemetryEnergyMeterConsAbsolute(energyMeterConsumption);
-
-        Telemetry<Integer> heatMeterTemperature = createTelemetryHeatMeterTemperature(occupancy, level, startTime, anomaly);
-        Telemetry<Integer> heatMeterConsumption = createTelemetryHeatMeterConsumption(heatMeterTemperature);
-        Telemetry<Integer> heatMeterConsAbsolute = createTelemetryHeatMeterConsAbsolute(heatMeterConsumption);
-
-        EnergyMeter energyMeter = EnergyMeter.builder()
-                .systemName("Energy Meter F301")
-                .systemLabel("")
-                .serialNumber(RandomUtils.getRandomNumber(serialRangeFrom, serialRangeTo))
-                .installDate(startTime)
-                .energyConsumption(energyMeterConsumption)
-                .energyConsAbsolute(energyMeterConsAbsolute)
+        ApartmentConfiguration configuration = ApartmentConfiguration.builder()
+                .occupied(true)
+                .level(3)
+                .startDate(TS_2022_MAY + bias)
+                .anomaly(false)
                 .build();
 
-        HeatMeter heatMeter = HeatMeter.builder()
-                .systemName("Heat Meter F301")
-                .systemLabel("")
-                .serialNumber(RandomUtils.getRandomNumber(serialRangeFrom, serialRangeTo))
-                .installDate(startTime)
-                .temperature(heatMeterTemperature)
-                .heatConsumption(heatMeterConsumption)
-                .heatConsAbsolute(heatMeterConsAbsolute)
-                .build();
-
-        return Apartment.builder()
-                .systemName("Apt 301 in Feline")
-                .systemLabel("")
-                .floor(3)
-                .area(0)
-                .roomNumber(7)
-                .state("occupied")
-                .energyMeter(energyMeter)
-                .heatMeter(heatMeter)
-                .build();
+        return createApartmentByConfiguration(configuration, "Feline", "301");
     }
 
     private Apartment makeFelineApartment32() {
-        boolean occupancy = true;
-        int level = 3;
-        long startTime = TS_2022_MAY + RandomUtils.getRandomNumber(dateRangeFrom, dateRangeTo);
-        boolean anomaly = false;
+        long bias = createRandomDateBias();
 
-        Telemetry<Integer> energyMeterConsumption = createTelemetryEnergyMeterConsumption(occupancy, level, startTime, anomaly);
-        Telemetry<Integer> energyMeterConsAbsolute = createTelemetryEnergyMeterConsAbsolute(energyMeterConsumption);
-
-        Telemetry<Integer> heatMeterTemperature = createTelemetryHeatMeterTemperature(occupancy, level, startTime, anomaly);
-        Telemetry<Integer> heatMeterConsumption = createTelemetryHeatMeterConsumption(heatMeterTemperature);
-        Telemetry<Integer> heatMeterConsAbsolute = createTelemetryHeatMeterConsAbsolute(heatMeterConsumption);
-
-        EnergyMeter energyMeter = EnergyMeter.builder()
-                .systemName("Energy Meter F302")
-                .systemLabel("")
-                .serialNumber(RandomUtils.getRandomNumber(serialRangeFrom, serialRangeTo))
-                .installDate(startTime)
-                .energyConsumption(energyMeterConsumption)
-                .energyConsAbsolute(energyMeterConsAbsolute)
+        ApartmentConfiguration configuration = ApartmentConfiguration.builder()
+                .occupied(true)
+                .level(3)
+                .startDate(TS_2022_MAY + bias)
+                .anomaly(false)
                 .build();
 
-        HeatMeter heatMeter = HeatMeter.builder()
-                .systemName("Heat Meter F302")
-                .systemLabel("")
-                .serialNumber(RandomUtils.getRandomNumber(serialRangeFrom, serialRangeTo))
-                .installDate(startTime)
-                .temperature(heatMeterTemperature)
-                .heatConsumption(heatMeterConsumption)
-                .heatConsAbsolute(heatMeterConsAbsolute)
-                .build();
-
-        return Apartment.builder()
-                .systemName("Apt 302 in Feline")
-                .systemLabel("")
-                .floor(3)
-                .area(0)
-                .roomNumber(8)
-                .state("occupied")
-                .energyMeter(energyMeter)
-                .heatMeter(heatMeter)
-                .build();
+        return createApartmentByConfiguration(configuration, "Feline", "302");
     }
 
     private Apartment makeFelineApartment33() {
-        boolean occupancy = false;
-        int level = 0;
-        long startTime = TS_2022_MAY + RandomUtils.getRandomNumber(dateRangeFrom, dateRangeTo);
-        boolean anomaly = false;
+        long bias = createRandomDateBias();
 
-        Telemetry<Integer> energyMeterConsumption = createTelemetryEnergyMeterConsumption(occupancy, level, startTime, anomaly);
-        Telemetry<Integer> energyMeterConsAbsolute = createTelemetryEnergyMeterConsAbsolute(energyMeterConsumption);
-
-        Telemetry<Integer> heatMeterTemperature = createTelemetryHeatMeterTemperature(occupancy, level, startTime, anomaly);
-        Telemetry<Integer> heatMeterConsumption = createTelemetryHeatMeterConsumption(heatMeterTemperature);
-        Telemetry<Integer> heatMeterConsAbsolute = createTelemetryHeatMeterConsAbsolute(heatMeterConsumption);
-
-        EnergyMeter energyMeter = EnergyMeter.builder()
-                .systemName("Energy Meter F303")
-                .systemLabel("")
-                .serialNumber(RandomUtils.getRandomNumber(serialRangeFrom, serialRangeTo))
-                .installDate(startTime)
-                .energyConsumption(energyMeterConsumption)
-                .energyConsAbsolute(energyMeterConsAbsolute)
+        ApartmentConfiguration configuration = ApartmentConfiguration.builder()
+                .occupied(false)
+                .level(0)
+                .startDate(TS_2022_MAY + bias)
+                .anomaly(false)
                 .build();
 
-        HeatMeter heatMeter = HeatMeter.builder()
-                .systemName("Heat Meter F303")
-                .systemLabel("")
-                .serialNumber(RandomUtils.getRandomNumber(serialRangeFrom, serialRangeTo))
-                .installDate(startTime)
-                .temperature(heatMeterTemperature)
-                .heatConsumption(heatMeterConsumption)
-                .heatConsAbsolute(heatMeterConsAbsolute)
-                .build();
-
-        return Apartment.builder()
-                .systemName("Apt 303 in Feline")
-                .systemLabel("")
-                .floor(3)
-                .area(0)
-                .roomNumber(9)
-                .state("free")
-                .energyMeter(energyMeter)
-                .heatMeter(heatMeter)
-                .build();
+        return createApartmentByConfiguration(configuration, "Feline", "303");
     }
 
 
     private Apartment makeHogurityApartment11() {
-        boolean occupancy = true;
-        int level = 3;
-        long startTime = TS_2022_JANUARY + RandomUtils.getRandomNumber(dateRangeFrom, dateRangeTo);
-        boolean anomaly = false;
+        long bias = createRandomDateBias();
 
-        Telemetry<Integer> energyMeterConsumption = createTelemetryEnergyMeterConsumption(occupancy, level, startTime, anomaly);
-        Telemetry<Integer> energyMeterConsAbsolute = createTelemetryEnergyMeterConsAbsolute(energyMeterConsumption);
-
-        Telemetry<Integer> heatMeterTemperature = createTelemetryHeatMeterTemperature(occupancy, level, startTime, anomaly);
-        Telemetry<Integer> heatMeterConsumption = createTelemetryHeatMeterConsumption(heatMeterTemperature);
-        Telemetry<Integer> heatMeterConsAbsolute = createTelemetryHeatMeterConsAbsolute(heatMeterConsumption);
-
-        EnergyMeter energyMeter = EnergyMeter.builder()
-                .systemName("Energy Meter H101")
-                .systemLabel("")
-                .serialNumber(RandomUtils.getRandomNumber(serialRangeFrom, serialRangeTo))
-                .installDate(startTime)
-                .energyConsumption(energyMeterConsumption)
-                .energyConsAbsolute(energyMeterConsAbsolute)
+        ApartmentConfiguration configuration = ApartmentConfiguration.builder()
+                .occupied(true)
+                .level(3)
+                .startDate(TS_2022_JANUARY + bias)
+                .anomaly(false)
                 .build();
 
-        HeatMeter heatMeter = HeatMeter.builder()
-                .systemName("Heat Meter H101")
-                .systemLabel("")
-                .serialNumber(RandomUtils.getRandomNumber(serialRangeFrom, serialRangeTo))
-                .installDate(startTime)
-                .temperature(heatMeterTemperature)
-                .heatConsumption(heatMeterConsumption)
-                .heatConsAbsolute(heatMeterConsAbsolute)
-                .build();
-
-        return Apartment.builder()
-                .systemName("Apt 101 in Hogurity")
-                .systemLabel("")
-                .floor(1)
-                .area(0)
-                .roomNumber(1)
-                .state("occupied")
-                .energyMeter(energyMeter)
-                .heatMeter(heatMeter)
-                .build();
+        return createApartmentByConfiguration(configuration, "Hogurity", "101");
     }
 
     private Apartment makeHogurityApartment12() {
-        boolean occupancy = true;
-        int level = 3;
-        long startTime = TS_2022_JANUARY + RandomUtils.getRandomNumber(dateRangeFrom, dateRangeTo);
-        boolean anomaly = false;
+        long bias = createRandomDateBias();
 
-        Telemetry<Integer> energyMeterConsumption = createTelemetryEnergyMeterConsumption(occupancy, level, startTime, anomaly);
-        Telemetry<Integer> energyMeterConsAbsolute = createTelemetryEnergyMeterConsAbsolute(energyMeterConsumption);
-
-        Telemetry<Integer> heatMeterTemperature = createTelemetryHeatMeterTemperature(occupancy, level, startTime, anomaly);
-        Telemetry<Integer> heatMeterConsumption = createTelemetryHeatMeterConsumption(heatMeterTemperature);
-        Telemetry<Integer> heatMeterConsAbsolute = createTelemetryHeatMeterConsAbsolute(heatMeterConsumption);
-
-        EnergyMeter energyMeter = EnergyMeter.builder()
-                .systemName("Energy Meter H102")
-                .systemLabel("")
-                .serialNumber(RandomUtils.getRandomNumber(serialRangeFrom, serialRangeTo))
-                .installDate(startTime)
-                .energyConsumption(energyMeterConsumption)
-                .energyConsAbsolute(energyMeterConsAbsolute)
+        ApartmentConfiguration configuration = ApartmentConfiguration.builder()
+                .occupied(true)
+                .level(3)
+                .startDate(TS_2022_JANUARY + bias)
+                .anomaly(false)
                 .build();
 
-        HeatMeter heatMeter = HeatMeter.builder()
-                .systemName("Heat Meter H102")
-                .systemLabel("")
-                .serialNumber(RandomUtils.getRandomNumber(serialRangeFrom, serialRangeTo))
-                .installDate(startTime)
-                .temperature(heatMeterTemperature)
-                .heatConsumption(heatMeterConsumption)
-                .heatConsAbsolute(heatMeterConsAbsolute)
-                .build();
-
-        return Apartment.builder()
-                .systemName("Apt 102 in Hogurity")
-                .systemLabel("")
-                .floor(1)
-                .area(0)
-                .roomNumber(2)
-                .state("occupied")
-                .energyMeter(energyMeter)
-                .heatMeter(heatMeter)
-                .build();
+        return createApartmentByConfiguration(configuration, "Hogurity", "102");
     }
 
     private Apartment makeHogurityApartment13() {
-        boolean occupancy = true;
-        int level = 3;
-        long startTime = TS_2022_MARCH;
-        boolean anomaly = false;
+        long bias = createRandomDateBias();
 
-        Telemetry<Integer> energyMeterConsumption = createTelemetryEnergyMeterConsumption(occupancy, level, startTime, anomaly);
-        Telemetry<Integer> energyMeterConsAbsolute = createTelemetryEnergyMeterConsAbsolute(energyMeterConsumption);
-
-        Telemetry<Integer> heatMeterTemperature = createTelemetryHeatMeterTemperature(occupancy, level, startTime, anomaly);
-        Telemetry<Integer> heatMeterConsumption = createTelemetryHeatMeterConsumption(heatMeterTemperature);
-        Telemetry<Integer> heatMeterConsAbsolute = createTelemetryHeatMeterConsAbsolute(heatMeterConsumption);
-
-        EnergyMeter energyMeter = EnergyMeter.builder()
-                .systemName("Energy Meter H103")
-                .systemLabel("")
-                .serialNumber(RandomUtils.getRandomNumber(serialRangeFrom, serialRangeTo))
-                .installDate(startTime)
-                .energyConsumption(energyMeterConsumption)
-                .energyConsAbsolute(energyMeterConsAbsolute)
+        ApartmentConfiguration configuration = ApartmentConfiguration.builder()
+                .occupied(true)
+                .level(3)
+                .startDate(TS_2022_MARCH + bias)
+                .anomaly(false)
                 .build();
 
-        HeatMeter heatMeter = HeatMeter.builder()
-                .systemName("Heat Meter H103")
-                .systemLabel("")
-                .serialNumber(RandomUtils.getRandomNumber(serialRangeFrom, serialRangeTo))
-                .installDate(startTime)
-                .temperature(heatMeterTemperature)
-                .heatConsumption(heatMeterConsumption)
-                .heatConsAbsolute(heatMeterConsAbsolute)
-                .build();
-
-        return Apartment.builder()
-                .systemName("Apt 103 in Hogurity")
-                .systemLabel("")
-                .floor(1)
-                .area(0)
-                .roomNumber(3)
-                .state("occupied")
-                .energyMeter(energyMeter)
-                .heatMeter(heatMeter)
-                .build();
+        return createApartmentByConfiguration(configuration, "Hogurity", "103");
     }
 
     private Apartment makeHogurityApartment14() {
-        boolean occupancy = true;
-        int level = 3;
-        long startTime = TS_2022_JANUARY + RandomUtils.getRandomNumber(dateRangeFrom, dateRangeTo);
-        boolean anomaly = false;
+        long bias = createRandomDateBias();
 
-        Telemetry<Integer> energyMeterConsumption = createTelemetryEnergyMeterConsumption(occupancy, level, startTime, anomaly);
+        ApartmentConfiguration configuration = ApartmentConfiguration.builder()
+                .occupied(true)
+                .level(3)
+                .startDate(TS_2022_JANUARY + bias)
+                .anomaly(false)
+                .build();
+
+        return createApartmentByConfiguration(configuration, "Hogurity", "104");
+    }
+
+
+    private Apartment createApartmentByConfiguration(ApartmentConfiguration configuration, String buildingName, String number) {
+        String letter = buildingName.substring(0, 1);
+
+        Telemetry<Integer> energyMeterConsumption = createTelemetryEnergyMeterConsumption(configuration);
         Telemetry<Integer> energyMeterConsAbsolute = createTelemetryEnergyMeterConsAbsolute(energyMeterConsumption);
 
-        Telemetry<Integer> heatMeterTemperature = createTelemetryHeatMeterTemperature(occupancy, level, startTime, anomaly);
+        Telemetry<Integer> heatMeterTemperature = createTelemetryHeatMeterTemperature(configuration);
         Telemetry<Integer> heatMeterConsumption = createTelemetryHeatMeterConsumption(heatMeterTemperature);
         Telemetry<Integer> heatMeterConsAbsolute = createTelemetryHeatMeterConsAbsolute(heatMeterConsumption);
 
         EnergyMeter energyMeter = EnergyMeter.builder()
-                .systemName("Energy Meter H104")
+                .systemName("Energy Meter " + letter + number)
                 .systemLabel("")
-                .serialNumber(RandomUtils.getRandomNumber(serialRangeFrom, serialRangeTo))
-                .installDate(startTime)
+                .serialNumber(createRandomSerialNumber())
+                .installDate(configuration.getStartDate())
                 .energyConsumption(energyMeterConsumption)
                 .energyConsAbsolute(energyMeterConsAbsolute)
                 .build();
 
         HeatMeter heatMeter = HeatMeter.builder()
-                .systemName("Heat Meter H104")
+                .systemName("Heat Meter " + letter + number)
                 .systemLabel("")
-                .serialNumber(RandomUtils.getRandomNumber(serialRangeFrom, serialRangeTo))
-                .installDate(startTime)
+                .serialNumber(createRandomSerialNumber())
+                .installDate(configuration.getStartDate())
                 .temperature(heatMeterTemperature)
                 .heatConsumption(heatMeterConsumption)
                 .heatConsAbsolute(heatMeterConsAbsolute)
                 .build();
 
-        return Apartment.builder()
-                .systemName("Apt 104 in Hogurity")
+        Apartment apartment = Apartment.builder()
+                .systemName("Apt " + number + " in " + buildingName)
                 .systemLabel("")
-                .floor(1)
-                .area(0)
-                .roomNumber(4)
-                .state("occupied")
+                .floor(configuration.getFloor())
+                .area(configuration.getArea())
+                .roomNumber(configuration.getRoomNumber())
+                .state(configuration.isOccupied() ? "occupied" : "free")
                 .energyMeter(energyMeter)
                 .heatMeter(heatMeter)
                 .build();
+
+        this.apartmentConfigurationMap.put(apartment, configuration);
+        return apartment;
     }
 
+    private long createRandomDateBias() {
+        return RandomUtils.getRandomNumber(dateRangeFrom, dateRangeTo);
+    }
+    
+    private long createRandomSerialNumber() {
+        return RandomUtils.getRandomNumber(serialRangeFrom, serialRangeTo);
+    }
 
-    private Telemetry<Integer> createTelemetryEnergyMeterConsumption(boolean occupied, int level, long startTs, boolean hasAnomaly) {
+    private Telemetry<Integer> createTelemetryEnergyMeterConsumption(ApartmentConfiguration configuration) {
         Telemetry<Integer> result = new Telemetry<>("energyConsumption");
         return result;
     }
@@ -1401,7 +742,7 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
         return result;
     }
 
-    private Telemetry<Integer> createTelemetryHeatMeterTemperature(boolean occupied, int level, long startTs, boolean hasAnomaly) {
+    private Telemetry<Integer> createTelemetryHeatMeterTemperature(ApartmentConfiguration configuration) {
         Telemetry<Integer> result = new Telemetry<>("temperature");
         return result;
     }

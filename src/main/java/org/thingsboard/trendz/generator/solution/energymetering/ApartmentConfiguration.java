@@ -5,20 +5,17 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.util.Set;
-import java.util.UUID;
-
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class Building {
+public class ApartmentConfiguration {
 
-    private UUID systemId;
-    private String systemName;
-    private String systemLabel;
-
-    private String address;
-
-    private Set<Apartment> apartments;
+    private int floor;
+    private int area;
+    private int roomNumber;
+    private boolean occupied;
+    private int level;
+    private long startDate;
+    private boolean anomaly;
 }
