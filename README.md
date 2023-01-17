@@ -50,7 +50,7 @@ Energy Meter and Heat Meter do not make affect each other.
 `Alpire` building located in the `USA, California, San Francisco, ...`.
 It has 5 floors, each floor has 2 apartments.
 Apartments on the 5th floor is free and do not have anomalies.
-1st one on the 3rd floor is free, 2nd on the 1st floor too.
+1st one on the 3rd floor is free, 2nd on the 1st floor too (no anomalies).
 Others are occupied.
 4th-floor apartments have a high level of consumption. 
 The other 3 floors have the medium level.

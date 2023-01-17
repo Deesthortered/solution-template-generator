@@ -252,13 +252,16 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
             int counter = 0;
             for (Building building : buildings) {
                 for (Apartment apartment : building.getApartments()) {
+                    ApartmentConfiguration configuration = this.apartmentConfigurationMap.get(apartment);
+                    String energyMeterFile = defineEnergyMeterJsFile(configuration.getLevel());
+                    String heatMeterFile = defineHeatMeterJsFile(configuration.getLevel());
 
                     EnergyMeter energyMeter = apartment.getEnergyMeter();
                     HeatMeter heatMeter = apartment.getHeatMeter();
 
                     RuleNode energyMeterGeneratorMode = createGeneratorMode(
                             energyMeter.getSystemName(),
-                            energyMeter.getSystemId(), "level1.js",
+                            energyMeter.getSystemId(), energyMeterFile,
                             RuleNodeAdditionalInfo.CELL_SIZE * 5, (5 + counter) * (RuleNodeAdditionalInfo.CELL_SIZE + 25)
                     );
                     NodeConnectionInfo energyMeterConnection = new NodeConnectionInfo();
@@ -268,7 +271,7 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
 
                     RuleNode heatMeterGeneratorMode = createGeneratorMode(
                             heatMeter.getSystemName(),
-                            heatMeter.getSystemId(), "level1.js",
+                            heatMeter.getSystemId(), heatMeterFile,
                             RuleNodeAdditionalInfo.CELL_SIZE * 25, (5 + counter) * (RuleNodeAdditionalInfo.CELL_SIZE + 25)
                     );
                     NodeConnectionInfo heatMeterConnection = new NodeConnectionInfo();
@@ -325,363 +328,207 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
 
 
     private Building makeAlpire() {
-        Apartment ap11 = makeAlpireApartment11();
-        Apartment ap12 = makeAlpireApartment12();
-        Apartment ap21 = makeAlpireApartment21();
-        Apartment ap22 = makeAlpireApartment22();
-        Apartment ap31 = makeAlpireApartment31();
-        Apartment ap32 = makeAlpireApartment32();
-        Apartment ap41 = makeAlpireApartment41();
-        Apartment ap42 = makeAlpireApartment42();
-        Apartment ap51 = makeAlpireApartment51();
-        Apartment ap52 = makeAlpireApartment52();
-
-        return Building.builder()
-                .systemName("Alpire")
-                .systemLabel("Asset label for Alpire building")
+        BuildingConfiguration configuration = BuildingConfiguration.builder()
+                .name("Alpire")
+                .label("Asset label for Alpire building")
                 .address("USA, California, San Francisco, ...")
-                .apartments(Set.of(ap11, ap12, ap21, ap22, ap31, ap32, ap41, ap42, ap51, ap52))
+                .floorCount(5)
+                .apartmentsByFloorCount(2)
+                .defaultApartmentConfiguration(
+                        ApartmentConfiguration.builder()
+                                .occupied(true)
+                                .level(2)
+                                .startDate(TS_2022_JANUARY)
+                                .anomaly(false)
+                                .build()
+                )
                 .build();
+
+        configuration.setApartmentConfiguration(
+                1, 2,
+                ApartmentConfiguration.builder()
+                        .occupied(false)
+                        .level(0)
+                        .startDate(TS_2022_JANUARY)
+                        .anomaly(false)
+                        .build()
+        );
+
+        configuration.setApartmentConfiguration(
+                3, 1,
+                ApartmentConfiguration.builder()
+                        .occupied(false)
+                        .level(0)
+                        .startDate(TS_2022_JANUARY)
+                        .anomaly(false)
+                        .build()
+        );
+
+        configuration.setApartmentConfiguration(
+                4, 1,
+                ApartmentConfiguration.builder()
+                        .occupied(true)
+                        .level(3)
+                        .startDate(TS_2022_JANUARY)
+                        .anomaly(false)
+                        .build()
+        );
+
+        configuration.setApartmentConfiguration(
+                4, 2,
+                ApartmentConfiguration.builder()
+                        .occupied(true)
+                        .level(3)
+                        .startDate(TS_2022_JANUARY)
+                        .anomaly(false)
+                        .build()
+        );
+
+        configuration.setApartmentConfiguration(
+                5, 1,
+                ApartmentConfiguration.builder()
+                        .occupied(false)
+                        .level(0)
+                        .startDate(TS_2022_FEBRUARY)
+                        .anomaly(false)
+                        .build()
+        );
+
+        configuration.setApartmentConfiguration(
+                5, 2,
+                ApartmentConfiguration.builder()
+                        .occupied(false)
+                        .level(0)
+                        .startDate(TS_2022_FEBRUARY)
+                        .anomaly(false)
+                        .build()
+        );
+
+        return makeBuildingByConfiguration(configuration);
     }
 
     private Building makeFeline() {
-        Apartment ap11 = makeFelineApartment11();
-        Apartment ap12 = makeFelineApartment12();
-        Apartment ap13 = makeFelineApartment13();
-        Apartment ap21 = makeFelineApartment21();
-        Apartment ap22 = makeFelineApartment22();
-        Apartment ap23 = makeFelineApartment23();
-        Apartment ap31 = makeFelineApartment31();
-        Apartment ap32 = makeFelineApartment32();
-        Apartment ap33 = makeFelineApartment33();
-
-        return Building.builder()
-                .systemName("Feline")
-                .systemLabel("Asset label for Feline building")
+        BuildingConfiguration configuration = BuildingConfiguration.builder()
+                .name("Feline")
+                .label("Asset label for Feline building")
                 .address("USA, New York, New York City, Brooklyn, ...")
-                .apartments(Set.of(ap11, ap12, ap13, ap21, ap22, ap23, ap31, ap32, ap33))
+                .floorCount(3)
+                .apartmentsByFloorCount(3)
+                .defaultApartmentConfiguration(
+                        ApartmentConfiguration.builder()
+                                .occupied(true)
+                                .level(3)
+                                .startDate(TS_2022_MAY)
+                                .anomaly(false)
+                                .build()
+                )
                 .build();
+
+        configuration.setApartmentConfiguration(
+                1, 1,
+                ApartmentConfiguration.builder()
+                        .occupied(false)
+                        .level(0)
+                        .startDate(TS_2022_MAY)
+                        .anomaly(true)
+                        .build()
+        );
+
+        configuration.setApartmentConfiguration(
+                1, 2,
+                ApartmentConfiguration.builder()
+                        .occupied(true)
+                        .level(1)
+                        .startDate(TS_2022_MAY)
+                        .anomaly(false)
+                        .build()
+        );
+
+        configuration.setApartmentConfiguration(
+                1, 3,
+                ApartmentConfiguration.builder()
+                        .occupied(true)
+                        .level(1)
+                        .startDate(TS_2022_MAY)
+                        .anomaly(false)
+                        .build()
+        );
+
+        configuration.setApartmentConfiguration(
+                2, 1,
+                ApartmentConfiguration.builder()
+                        .occupied(true)
+                        .level(2)
+                        .startDate(TS_2022_MAY)
+                        .anomaly(false)
+                        .build()
+        );
+
+        configuration.setApartmentConfiguration(
+                2, 2,
+                ApartmentConfiguration.builder()
+                        .occupied(true)
+                        .level(2)
+                        .startDate(TS_2022_MAY)
+                        .anomaly(false)
+                        .build()
+        );
+
+        configuration.setApartmentConfiguration(
+                2, 3,
+                ApartmentConfiguration.builder()
+                        .occupied(true)
+                        .level(2)
+                        .startDate(TS_2022_MAY)
+                        .anomaly(false)
+                        .build()
+        );
+
+        return makeBuildingByConfiguration(configuration);
     }
 
     private Building makeHogurity() {
-        Apartment ap11 = makeHogurityApartment11();
-        Apartment ap12 = makeHogurityApartment12();
-        Apartment ap13 = makeHogurityApartment13();
-        Apartment ap14 = makeHogurityApartment14();
+        BuildingConfiguration configuration = BuildingConfiguration.builder()
+                .name("Hogurity")
+                .label("Asset label for Hogurity building")
+                .address("USA, New York, New York City, Manhattan, ...")
+                .floorCount(4)
+                .apartmentsByFloorCount(1)
+                .defaultApartmentConfiguration(
+                        ApartmentConfiguration.builder()
+                                .occupied(true)
+                                .level(3)
+                                .startDate(TS_2022_JANUARY)
+                                .anomaly(false)
+                                .build()
+                )
+                .build();
+
+        return makeBuildingByConfiguration(configuration);
+    }
+
+
+    private Building makeBuildingByConfiguration(BuildingConfiguration configuration) {
+        Set<Apartment> apartments = new HashSet<>();
+        for (int floor = 0; floor < configuration.getFloorCount(); floor++) {
+            for (int number = 0; number < configuration.getApartmentsByFloorCount(); number++) {
+                ApartmentConfiguration apartmentConfiguration = configuration.getApartmentConfiguration(floor, number);
+                Apartment apartment = createApartmentByConfiguration(apartmentConfiguration, configuration.getName(), floor + "0" + number);
+                apartments.add(apartment);
+            }
+        }
 
         return Building.builder()
-                .systemName("Hogurity")
-                .systemLabel("Asset label for Hogurity building")
-                .address("USA, New York, New York City, Manhattan, ...")
-                .apartments(Set.of(ap11, ap12, ap13, ap14))
+                .systemName(configuration.getName())
+                .systemLabel(configuration.getLabel())
+                .address(configuration.getAddress())
+                .apartments(apartments)
                 .build();
     }
-
-
-    private Apartment makeAlpireApartment11() {
-        long bias = createRandomDateBias();
-
-        ApartmentConfiguration configuration = ApartmentConfiguration.builder()
-                .occupied(true)
-                .level(2)
-                .startDate(TS_2022_JANUARY + bias)
-                .anomaly(false)
-                .build();
-
-        return createApartmentByConfiguration(configuration, "Alpire", "101");
-    }
-
-    private Apartment makeAlpireApartment12() {
-        long bias = createRandomDateBias();
-
-        ApartmentConfiguration configuration = ApartmentConfiguration.builder()
-                .occupied(false)
-                .level(0)
-                .startDate(TS_2022_JANUARY + bias)
-                .anomaly(false)
-                .build();
-
-        return createApartmentByConfiguration(configuration, "Alpire", "102");
-    }
-
-    private Apartment makeAlpireApartment21() {
-        long bias = createRandomDateBias();
-
-        ApartmentConfiguration configuration = ApartmentConfiguration.builder()
-                .occupied(true)
-                .level(2)
-                .startDate(TS_2022_JANUARY + bias)
-                .anomaly(false)
-                .build();
-
-        return createApartmentByConfiguration(configuration, "Alpire", "201");
-    }
-
-    private Apartment makeAlpireApartment22() {
-        long bias = createRandomDateBias();
-
-        ApartmentConfiguration configuration = ApartmentConfiguration.builder()
-                .occupied(false)
-                .level(2)
-                .startDate(TS_2022_JANUARY + bias)
-                .anomaly(false)
-                .build();
-
-        return createApartmentByConfiguration(configuration, "Alpire", "202");
-    }
-
-    private Apartment makeAlpireApartment31() {
-        long bias = createRandomDateBias();
-
-        ApartmentConfiguration configuration = ApartmentConfiguration.builder()
-                .occupied(false)
-                .level(0)
-                .startDate(TS_2022_JANUARY + bias)
-                .anomaly(false)
-                .build();
-
-        return createApartmentByConfiguration(configuration, "Alpire", "301");
-    }
-
-    private Apartment makeAlpireApartment32() {
-        long bias = createRandomDateBias();
-
-        ApartmentConfiguration configuration = ApartmentConfiguration.builder()
-                .occupied(true)
-                .level(2)
-                .startDate(TS_2022_JANUARY + bias)
-                .anomaly(false)
-                .build();
-
-        return createApartmentByConfiguration(configuration, "Alpire", "302");
-    }
-
-    private Apartment makeAlpireApartment41() {
-        long bias = createRandomDateBias();
-
-        ApartmentConfiguration configuration = ApartmentConfiguration.builder()
-                .occupied(true)
-                .level(3)
-                .startDate(TS_2022_JANUARY + bias)
-                .anomaly(false)
-                .build();
-
-        return createApartmentByConfiguration(configuration, "Alpire", "401");
-    }
-
-    private Apartment makeAlpireApartment42() {
-        long bias = createRandomDateBias();
-
-        ApartmentConfiguration configuration = ApartmentConfiguration.builder()
-                .occupied(true)
-                .level(3)
-                .startDate(TS_2022_JANUARY + bias)
-                .anomaly(false)
-                .build();
-
-        return createApartmentByConfiguration(configuration, "Alpire", "402");
-    }
-
-    private Apartment makeAlpireApartment51() {
-        long bias = createRandomDateBias();
-
-        ApartmentConfiguration configuration = ApartmentConfiguration.builder()
-                .occupied(false)
-                .level(0)
-                .startDate(TS_2022_FEBRUARY + bias)
-                .anomaly(false)
-                .build();
-
-        return createApartmentByConfiguration(configuration, "Alpire", "501");
-    }
-
-    private Apartment makeAlpireApartment52() {
-        long bias = createRandomDateBias();
-
-        ApartmentConfiguration configuration = ApartmentConfiguration.builder()
-                .occupied(false)
-                .level(0)
-                .startDate(TS_2022_FEBRUARY + bias)
-                .anomaly(false)
-                .build();
-
-        return createApartmentByConfiguration(configuration, "Alpire", "502");
-    }
-
-
-    private Apartment makeFelineApartment11() {
-        long bias = createRandomDateBias();
-
-        ApartmentConfiguration configuration = ApartmentConfiguration.builder()
-                .occupied(false)
-                .level(0)
-                .startDate(TS_2022_MAY + bias)
-                .anomaly(true)
-                .build();
-
-        return createApartmentByConfiguration(configuration, "Feline", "101");
-    }
-
-    private Apartment makeFelineApartment12() {
-        long bias = createRandomDateBias();
-
-        ApartmentConfiguration configuration = ApartmentConfiguration.builder()
-                .occupied(true)
-                .level(1)
-                .startDate(TS_2022_MAY + bias)
-                .anomaly(false)
-                .build();
-
-        return createApartmentByConfiguration(configuration, "Feline", "102");
-    }
-
-    private Apartment makeFelineApartment13() {
-        long bias = createRandomDateBias();
-
-        ApartmentConfiguration configuration = ApartmentConfiguration.builder()
-                .occupied(true)
-                .level(1)
-                .startDate(TS_2022_MAY + bias)
-                .anomaly(false)
-                .build();
-
-        return createApartmentByConfiguration(configuration, "Feline", "103");
-    }
-
-    private Apartment makeFelineApartment21() {
-        long bias = createRandomDateBias();
-
-        ApartmentConfiguration configuration = ApartmentConfiguration.builder()
-                .occupied(true)
-                .level(2)
-                .startDate(TS_2022_MAY + bias)
-                .anomaly(false)
-                .build();
-
-        return createApartmentByConfiguration(configuration, "Feline", "201");
-    }
-
-    private Apartment makeFelineApartment22() {
-        long bias = createRandomDateBias();
-
-        ApartmentConfiguration configuration = ApartmentConfiguration.builder()
-                .occupied(true)
-                .level(2)
-                .startDate(TS_2022_MAY + bias)
-                .anomaly(false)
-                .build();
-
-        return createApartmentByConfiguration(configuration, "Feline", "202");
-    }
-
-    private Apartment makeFelineApartment23() {
-        long bias = createRandomDateBias();
-
-        ApartmentConfiguration configuration = ApartmentConfiguration.builder()
-                .occupied(true)
-                .level(2)
-                .startDate(TS_2022_MAY + bias)
-                .anomaly(false)
-                .build();
-
-        return createApartmentByConfiguration(configuration, "Feline", "203");
-    }
-
-    private Apartment makeFelineApartment31() {
-        long bias = createRandomDateBias();
-
-        ApartmentConfiguration configuration = ApartmentConfiguration.builder()
-                .occupied(true)
-                .level(3)
-                .startDate(TS_2022_MAY + bias)
-                .anomaly(false)
-                .build();
-
-        return createApartmentByConfiguration(configuration, "Feline", "301");
-    }
-
-    private Apartment makeFelineApartment32() {
-        long bias = createRandomDateBias();
-
-        ApartmentConfiguration configuration = ApartmentConfiguration.builder()
-                .occupied(true)
-                .level(3)
-                .startDate(TS_2022_MAY + bias)
-                .anomaly(false)
-                .build();
-
-        return createApartmentByConfiguration(configuration, "Feline", "302");
-    }
-
-    private Apartment makeFelineApartment33() {
-        long bias = createRandomDateBias();
-
-        ApartmentConfiguration configuration = ApartmentConfiguration.builder()
-                .occupied(false)
-                .level(0)
-                .startDate(TS_2022_MAY + bias)
-                .anomaly(false)
-                .build();
-
-        return createApartmentByConfiguration(configuration, "Feline", "303");
-    }
-
-
-    private Apartment makeHogurityApartment11() {
-        long bias = createRandomDateBias();
-
-        ApartmentConfiguration configuration = ApartmentConfiguration.builder()
-                .occupied(true)
-                .level(3)
-                .startDate(TS_2022_JANUARY + bias)
-                .anomaly(false)
-                .build();
-
-        return createApartmentByConfiguration(configuration, "Hogurity", "101");
-    }
-
-    private Apartment makeHogurityApartment12() {
-        long bias = createRandomDateBias();
-
-        ApartmentConfiguration configuration = ApartmentConfiguration.builder()
-                .occupied(true)
-                .level(3)
-                .startDate(TS_2022_JANUARY + bias)
-                .anomaly(false)
-                .build();
-
-        return createApartmentByConfiguration(configuration, "Hogurity", "102");
-    }
-
-    private Apartment makeHogurityApartment13() {
-        long bias = createRandomDateBias();
-
-        ApartmentConfiguration configuration = ApartmentConfiguration.builder()
-                .occupied(true)
-                .level(3)
-                .startDate(TS_2022_MARCH + bias)
-                .anomaly(false)
-                .build();
-
-        return createApartmentByConfiguration(configuration, "Hogurity", "103");
-    }
-
-    private Apartment makeHogurityApartment14() {
-        long bias = createRandomDateBias();
-
-        ApartmentConfiguration configuration = ApartmentConfiguration.builder()
-                .occupied(true)
-                .level(3)
-                .startDate(TS_2022_JANUARY + bias)
-                .anomaly(false)
-                .build();
-
-        return createApartmentByConfiguration(configuration, "Hogurity", "104");
-    }
-
 
     private Apartment createApartmentByConfiguration(ApartmentConfiguration configuration, String buildingName, String number) {
         String letter = buildingName.substring(0, 1);
+        long startDate = configuration.getStartDate() + createRandomDateBias();
 
         Telemetry<Integer> energyMeterConsumption = createTelemetryEnergyMeterConsumption(configuration);
         Telemetry<Integer> energyMeterConsAbsolute = createTelemetryEnergyMeterConsAbsolute(energyMeterConsumption);
@@ -694,7 +541,7 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
                 .systemName("Energy Meter " + letter + number)
                 .systemLabel("")
                 .serialNumber(createRandomSerialNumber())
-                .installDate(configuration.getStartDate())
+                .installDate(startDate)
                 .energyConsumption(energyMeterConsumption)
                 .energyConsAbsolute(energyMeterConsAbsolute)
                 .build();
@@ -703,7 +550,7 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
                 .systemName("Heat Meter " + letter + number)
                 .systemLabel("")
                 .serialNumber(createRandomSerialNumber())
-                .installDate(configuration.getStartDate())
+                .installDate(startDate)
                 .temperature(heatMeterTemperature)
                 .heatConsumption(heatMeterConsumption)
                 .heatConsAbsolute(heatMeterConsAbsolute)
@@ -819,6 +666,14 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
         return device;
     }
 
+
+    private String defineEnergyMeterJsFile(int level) {
+        return "energy_level" + level + ".js";
+    }
+
+    private String defineHeatMeterJsFile(int level) {
+        return "heat_level" + level + ".js";
+    }
 
     private RuleNode createSaveNode() {
         TbMsgTimeseriesNodeConfiguration saveConfiguration = new TbMsgTimeseriesNodeConfiguration();
