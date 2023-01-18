@@ -615,8 +615,8 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
                     long minValue = 5_000;
                     long amplitude = 2_000;
                     long noiseWidth = 500;
-                    long noiseAmplitude = (amplitude / noiseWidth) / 3;
-                    double phase = (3.14 * 3) / 24;
+                    long noiseAmplitude = (amplitude / noiseWidth);
+                    double phase = (3.14 * 1) / 12;
                     double koeff = 3.14 / 24;
 
                     ZonedDateTime startDate = DateTimeUtils.fromTs(startTs).truncatedTo(ChronoUnit.HOURS);
@@ -635,9 +635,9 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
                 }
                 case 2: {
                     long minValue = 15_000;
-                    long amplitude = 5_000;
+                    long amplitude = 2_000;
                     long noiseWidth = 500;
-                    long noiseAmplitude = (amplitude / noiseWidth) / 2;
+                    long noiseAmplitude = (amplitude / noiseWidth) * 3  ;
                     double phase = (3.14 * 3) / 12;
                     double koeff = 3.14 / 12;
 
