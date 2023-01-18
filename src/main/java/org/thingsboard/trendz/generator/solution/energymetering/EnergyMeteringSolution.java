@@ -600,33 +600,109 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
         if (skipTelemetry) {
             return new Telemetry<>("skip");
         }
-        Telemetry<Long> result = new Telemetry<>("energyConsumption");
 
+        Telemetry<Long> result = new Telemetry<>("energyConsumption");
         long now = System.currentTimeMillis();
+
         long startTs = configuration.getStartDate();
         boolean occupied = configuration.isOccupied();
         int level = configuration.getLevel();
+        boolean anomaly = configuration.isAnomaly();
 
-        long minValue = 10_000;
-        long amplitude = 20_000;
-        long noiseAmplitude = amplitude / 10;
-        double phase = (3.14 * 3) / 12;
-        double koeff = 3.14 / 12;
+        if (occupied) {
+            switch (level) {
+                case 1: {
+                    long minValue = 5_000;
+                    long amplitude = 2_000;
+                    long noiseWidth = 500;
+                    long noiseAmplitude = (amplitude / noiseWidth) / 3;
+                    double phase = (3.14 * 3) / 24;
+                    double koeff = 3.14 / 24;
 
-        ZonedDateTime startDate = DateTimeUtils.fromTs(startTs).truncatedTo(ChronoUnit.HOURS);
-        ZonedDateTime nowDate = DateTimeUtils.fromTs(now).truncatedTo(ChronoUnit.HOURS);
-        ZonedDateTime iteratedDate = startDate;
-        while (iteratedDate.isBefore(nowDate)) {
-            long iteratedTs = DateTimeUtils.toTs(iteratedDate);
-            long argument = iteratedDate.getHour() - 12;
-            long noise = RandomUtils.getRandomNumber(-noiseAmplitude, noiseAmplitude);
-            long value = minValue + noise + Math.round(amplitude * Math.sin(phase + koeff * argument));
+                    ZonedDateTime startDate = DateTimeUtils.fromTs(startTs).truncatedTo(ChronoUnit.HOURS);
+                    ZonedDateTime nowDate = DateTimeUtils.fromTs(now).truncatedTo(ChronoUnit.HOURS);
+                    ZonedDateTime iteratedDate = startDate;
+                    while (iteratedDate.isBefore(nowDate)) {
+                        long iteratedTs = DateTimeUtils.toTs(iteratedDate);
+                        long argument = iteratedDate.getHour() - 12;
+                        long noise = RandomUtils.getRandomNumber(-noiseAmplitude, noiseAmplitude) * noiseWidth;
+                        long value = minValue + noise + Math.round(amplitude * Math.sin(phase + koeff * argument));
 
-            result.add(iteratedTs, value);
-            iteratedDate = iteratedDate.plus(1, ChronoUnit.HOURS);
+                        result.add(iteratedTs, value);
+                        iteratedDate = iteratedDate.plus(1, ChronoUnit.HOURS);
+                    }
+                    return result;
+                }
+                case 2: {
+                    long minValue = 15_000;
+                    long amplitude = 5_000;
+                    long noiseWidth = 500;
+                    long noiseAmplitude = (amplitude / noiseWidth) / 2;
+                    double phase = (3.14 * 3) / 12;
+                    double koeff = 3.14 / 12;
+
+                    ZonedDateTime startDate = DateTimeUtils.fromTs(startTs).truncatedTo(ChronoUnit.HOURS);
+                    ZonedDateTime nowDate = DateTimeUtils.fromTs(now).truncatedTo(ChronoUnit.HOURS);
+                    ZonedDateTime iteratedDate = startDate;
+                    while (iteratedDate.isBefore(nowDate)) {
+                        long iteratedTs = DateTimeUtils.toTs(iteratedDate);
+                        long argument = iteratedDate.getHour() - 12;
+                        long noise = RandomUtils.getRandomNumber(-noiseAmplitude, noiseAmplitude) * noiseWidth;
+                        long value = minValue + noise + Math.round(amplitude * Math.sin(phase + koeff * argument));
+
+                        result.add(iteratedTs, value);
+                        iteratedDate = iteratedDate.plus(1, ChronoUnit.HOURS);
+                    }
+                    return result;
+                }
+                case 3: {
+                    long minValue = 30_000;
+                    long amplitude = 5_000;
+                    long noiseWidth = 3000;
+                    long noiseAmplitude = (amplitude / noiseWidth) * 3;
+                    double phase = (3.14 * 0.3) / 14;
+                    double koeffDay = 3.14 / 14;
+                    double koeffHour = 3.14 / 6;
+
+                    ZonedDateTime startDate = DateTimeUtils.fromTs(startTs).truncatedTo(ChronoUnit.HOURS);
+                    ZonedDateTime nowDate = DateTimeUtils.fromTs(now).truncatedTo(ChronoUnit.HOURS);
+                    ZonedDateTime iteratedDate = startDate;
+                    while (iteratedDate.isBefore(nowDate)) {
+                        long iteratedTs = DateTimeUtils.toTs(iteratedDate);
+                        long argumentDay = iteratedDate.getDayOfWeek().getValue() * 2L - 7;
+                        long argumentHour = iteratedDate.getHour() - 12;
+                        long noise = RandomUtils.getRandomNumber(-noiseAmplitude, noiseAmplitude) * noiseWidth;
+                        long value = minValue + noise + Math.round(amplitude * Math.sin(phase + koeffDay * argumentDay + koeffHour * argumentHour));
+
+                        result.add(iteratedTs, value);
+                        iteratedDate = iteratedDate.plus(1, ChronoUnit.HOURS);
+                    }
+                    return result;
+                }
+                default: throw new IllegalStateException("Unsupported level: " + level);
+            }
+        } else {
+            long minValue = 15;
+            long amplitude = 10;
+            long noiseWidth = 3;
+            long noiseAmplitude = (amplitude / noiseWidth);
+            double phase = (3.14 * 3) / 128;
+            double koeff = 3.14 / 128;
+
+            ZonedDateTime startDate = DateTimeUtils.fromTs(startTs).truncatedTo(ChronoUnit.HOURS);
+            ZonedDateTime nowDate = DateTimeUtils.fromTs(now).truncatedTo(ChronoUnit.HOURS);
+            ZonedDateTime iteratedDate = startDate;
+            while (iteratedDate.isBefore(nowDate)) {
+                long iteratedTs = DateTimeUtils.toTs(iteratedDate);
+                long argument = iteratedDate.getHour() - 12;
+                long noise = RandomUtils.getRandomNumber(-noiseAmplitude, noiseAmplitude) * noiseWidth;
+                long value = minValue + noise + Math.round(amplitude * Math.sin(phase + koeff * argument));
+
+                result.add(iteratedTs, value);
+                iteratedDate = iteratedDate.plus(1, ChronoUnit.HOURS);
+            }
+            return result;
         }
-
-        return result;
     }
 
     private Telemetry<Long> createTelemetryEnergyMeterConsAbsolute(Telemetry<Long> energyConsumptionTelemetry, boolean skipTelemetry) {
