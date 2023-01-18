@@ -19,6 +19,6 @@ public class EnergyMeter {
 
     private long installDate;
     private long serialNumber;
-    private Telemetry<Integer> energyConsumption;
-    private Telemetry<Integer> energyConsAbsolute;
+    private Telemetry<Long> energyConsumption;
+    private Telemetry<Long> energyConsAbsolute;
 }

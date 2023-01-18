@@ -43,7 +43,16 @@ import org.thingsboard.trendz.generator.utils.RandomUtils;
 import java.io.IOException;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
-import java.util.*;
+import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -71,9 +80,9 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
             ZonedDateTime.of(2022, 5, 1, 0, 0, 0, 0, ZoneId.systemDefault())
     );
     private static final long dateRangeFrom = 100000;
-    private static final long dateRangeTo   = 10000000;
+    private static final long dateRangeTo = 10000000;
     private static final long serialRangeFrom = 10000;
-    private static final long serialRangeTo   = 99999;
+    private static final long serialRangeTo = 99999;
 
     private final TbRestClient tbRestClient;
     private final FileService fileService;
@@ -247,7 +256,7 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
             RuleChain ruleChain = tbRestClient.createRuleChain(RULE_CHAIN_NAME);
             RuleChainMetaData metaData = tbRestClient.getRuleChainMetadataByRuleChainId(ruleChain.getUuidId())
                     .orElseThrow();
-            
+
             List<RuleNode> nodes = metaData.getNodes();
             List<NodeConnectionInfo> connections = new ArrayList<>();
             metaData.setConnections(connections);
@@ -537,12 +546,12 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
         String letter = buildingName.substring(0, 1);
         long startDate = configuration.getStartDate() + createRandomDateBias();
 
-        Telemetry<Integer> energyMeterConsumption = createTelemetryEnergyMeterConsumption(configuration, skipTelemetry);
-        Telemetry<Integer> energyMeterConsAbsolute = createTelemetryEnergyMeterConsAbsolute(energyMeterConsumption, skipTelemetry);
+        Telemetry<Long> energyMeterConsumption = createTelemetryEnergyMeterConsumption(configuration, skipTelemetry);
+        Telemetry<Long> energyMeterConsAbsolute = createTelemetryEnergyMeterConsAbsolute(energyMeterConsumption, skipTelemetry);
 
-        Telemetry<Integer> heatMeterTemperature = createTelemetryHeatMeterTemperature(configuration, skipTelemetry);
-        Telemetry<Integer> heatMeterConsumption = createTelemetryHeatMeterConsumption(heatMeterTemperature, skipTelemetry);
-        Telemetry<Integer> heatMeterConsAbsolute = createTelemetryHeatMeterConsAbsolute(heatMeterConsumption, skipTelemetry);
+        Telemetry<Long> heatMeterTemperature = createTelemetryHeatMeterTemperature(configuration, skipTelemetry);
+        Telemetry<Long> heatMeterConsumption = createTelemetryHeatMeterConsumption(heatMeterTemperature, skipTelemetry);
+        Telemetry<Long> heatMeterConsAbsolute = createTelemetryHeatMeterConsAbsolute(heatMeterConsumption, skipTelemetry);
 
         EnergyMeter energyMeter = EnergyMeter.builder()
                 .systemName("Energy Meter " + letter + number)
@@ -581,54 +590,89 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
     private long createRandomDateBias() {
         return RandomUtils.getRandomNumber(dateRangeFrom, dateRangeTo);
     }
-    
+
     private long createRandomSerialNumber() {
         return RandomUtils.getRandomNumber(serialRangeFrom, serialRangeTo);
     }
 
 
-    private Telemetry<Integer> createTelemetryEnergyMeterConsumption(ApartmentConfiguration configuration, boolean skipTelemetry) {
+    private Telemetry<Long> createTelemetryEnergyMeterConsumption(ApartmentConfiguration configuration, boolean skipTelemetry) {
         if (skipTelemetry) {
             return new Telemetry<>("skip");
         }
+        Telemetry<Long> result = new Telemetry<>("energyConsumption");
 
-        Telemetry<Integer> result = new Telemetry<>("energyConsumption");
+        long now = System.currentTimeMillis();
+        long startTs = configuration.getStartDate();
+        boolean occupied = configuration.isOccupied();
+        int level = configuration.getLevel();
+
+        long minValue = 10_000;
+        long amplitude = 20_000;
+        long noiseAmplitude = amplitude / 10;
+        double phase = (3.14 * 3) / 12;
+        double koeff = 3.14 / 12;
+
+        ZonedDateTime startDate = DateTimeUtils.fromTs(startTs).truncatedTo(ChronoUnit.HOURS);
+        ZonedDateTime nowDate = DateTimeUtils.fromTs(now).truncatedTo(ChronoUnit.HOURS);
+        ZonedDateTime iteratedDate = startDate;
+        while (iteratedDate.isBefore(nowDate)) {
+            long iteratedTs = DateTimeUtils.toTs(iteratedDate);
+            long argument = iteratedDate.getHour() - 12;
+            long noise = RandomUtils.getRandomNumber(-noiseAmplitude, noiseAmplitude);
+            long value = minValue + noise + Math.round(amplitude * Math.sin(phase + koeff * argument));
+
+            result.add(iteratedTs, value);
+            iteratedDate = iteratedDate.plus(1, ChronoUnit.HOURS);
+        }
+
         return result;
     }
 
-    private Telemetry<Integer> createTelemetryEnergyMeterConsAbsolute(Telemetry<Integer> energyConsumptionTelemetry, boolean skipTelemetry) {
+    private Telemetry<Long> createTelemetryEnergyMeterConsAbsolute(Telemetry<Long> energyConsumptionTelemetry, boolean skipTelemetry) {
         if (skipTelemetry) {
             return new Telemetry<>("skip");
         }
 
-        Telemetry<Integer> result = new Telemetry<>("energyConsAbsolute");
+        long now = System.currentTimeMillis();
+        Telemetry<Long> result = new Telemetry<>("energyConsAbsolute");
+
         return result;
     }
 
-    private Telemetry<Integer> createTelemetryHeatMeterTemperature(ApartmentConfiguration configuration, boolean skipTelemetry) {
+    private Telemetry<Long> createTelemetryHeatMeterTemperature(ApartmentConfiguration configuration, boolean skipTelemetry) {
         if (skipTelemetry) {
             return new Telemetry<>("skip");
         }
 
-        Telemetry<Integer> result = new Telemetry<>("temperature");
+        long now = System.currentTimeMillis();
+        long startDate = configuration.getStartDate();
+        boolean occupied = configuration.isOccupied();
+        int level = configuration.getLevel();
+        Telemetry<Long> result = new Telemetry<>("temperature");
+
         return result;
     }
 
-    private Telemetry<Integer> createTelemetryHeatMeterConsumption(Telemetry<Integer> heatConsumptionTelemetry, boolean skipTelemetry) {
+    private Telemetry<Long> createTelemetryHeatMeterConsumption(Telemetry<Long> heatConsumptionTelemetry, boolean skipTelemetry) {
         if (skipTelemetry) {
             return new Telemetry<>("skip");
         }
 
-        Telemetry<Integer> result = new Telemetry<>("heatConsumption");
+        long now = System.currentTimeMillis();
+        Telemetry<Long> result = new Telemetry<>("heatConsumption");
+
         return result;
     }
 
-    private Telemetry<Integer> createTelemetryHeatMeterConsAbsolute(Telemetry<Integer> heatConsumptionTelemetry, boolean skipTelemetry) {
+    private Telemetry<Long> createTelemetryHeatMeterConsAbsolute(Telemetry<Long> heatConsumptionTelemetry, boolean skipTelemetry) {
         if (skipTelemetry) {
             return new Telemetry<>("skip");
         }
 
-        Telemetry<Integer> result = new Telemetry<>("heatConsumption");
+        long now = System.currentTimeMillis();
+        Telemetry<Long> result = new Telemetry<>("heatConsumption");
+
         return result;
     }
 
@@ -744,4 +788,19 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
 
         return generatorNode;
     }
+
+
+//    public static void main(String[] args) {
+//        ApartmentConfiguration configuration = ApartmentConfiguration.builder()
+//                .occupied(true)
+//                .level(2)
+//                .startDate(TS_2022_JANUARY)
+//                .anomaly(false)
+//                .build();
+//
+//        Telemetry<Long> telemetry = new EnergyMeteringSolution(null, null, null)
+//                .createTelemetryEnergyMeterConsumption(configuration, false);
+//
+//        new VisualizationService().visualize("Telemetry", List.of(telemetry));
+//    }
 }

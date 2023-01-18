@@ -19,7 +19,7 @@ public class HeatMeter {
 
     private long installDate;
     private long serialNumber;
-    private Telemetry<Integer> temperature;
-    private Telemetry<Integer> heatConsumption;
-    private Telemetry<Integer> heatConsAbsolute;
+    private Telemetry<Long> temperature;
+    private Telemetry<Long> heatConsumption;
+    private Telemetry<Long> heatConsAbsolute;
 }

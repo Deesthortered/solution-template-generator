@@ -50,6 +50,10 @@ public class Telemetry<T> {
         this.points.add(point);
     }
 
+    public void add(long ts, T value) {
+        this.points.add(new Point<T>(Timestamp.of(ts), value));
+    }
+
     public List<Telemetry<T>> partition(int size) {
         return Lists.partition(new ArrayList<>(this.points), size)
                 .stream()
