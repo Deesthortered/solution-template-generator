@@ -1,4 +1,4 @@
-let getRandomInt = function (min, max) {
+var getRandomInt = function (min, max) {
     if (min === max) {
         return min;
     }
@@ -7,23 +7,23 @@ let getRandomInt = function (min, max) {
     return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
-let energyConsumption = function () {
-    let currentDate = new Date();
+var energyConsumption = function () {
+    var currentDate = new Date();
     currentDate.setMinutes(0, 0, 0);
 
-    let ts = currentDate.getMilliseconds();
-    let hours = currentDate.getHours();
+    var ts = currentDate.getTime();
+    var hours = currentDate.getHours();
 
-    let minValue = 15;
-    let amplitude = 10;
-    let noiseWidth = 3;
-    let noiseAmplitude = (amplitude / noiseWidth);
-    let phase = (3.14 * 3) / 128;
-    let koeff = 3.14 / 128;
+    var minValue = 15;
+    var amplitude = 10;
+    var noiseWidth = 3;
+    var noiseAmplitude = (amplitude / noiseWidth);
+    var phase = (3.14 * 3) / 128;
+    var koeff = 3.14 / 128;
 
-    let argument = hours - 12;
-    let noise = getRandomInt(-noiseAmplitude, noiseAmplitude) * noiseWidth;
-    let value = minValue + noise + Math.round(amplitude * Math.sin(phase + koeff * argument));
+    var argument = hours - 12;
+    var noise = getRandomInt(-noiseAmplitude, noiseAmplitude) * noiseWidth;
+    var value = minValue + noise + Math.round(amplitude * Math.sin(phase + koeff * argument));
 
     return {
         ts: ts,
@@ -33,7 +33,7 @@ let energyConsumption = function () {
     }
 }
 
-let consumption = energyConsumption();
+var consumption = energyConsumption();
 
 var msg = consumption;
 var metadata = {};

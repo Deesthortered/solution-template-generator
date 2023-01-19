@@ -1,4 +1,4 @@
-let getRandomInt = function (min, max) {
+var getRandomInt = function (min, max) {
     if (min === max) {
         return min;
     }
@@ -7,13 +7,13 @@ let getRandomInt = function (min, max) {
     return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
-let temperature = function () {
-    let currentDate = new Date();
+var temperature = function () {
+    var currentDate = new Date();
     currentDate.setMinutes(0, 0, 0);
 
-    let ts = currentDate.getMilliseconds();
-    let noiseAmplitude = 3;
-    let value = 15 + getRandomInt(-noiseAmplitude, noiseAmplitude);
+    var ts = currentDate.getTime();
+    var noiseAmplitude = 3;
+    var value = 15 + getRandomInt(-noiseAmplitude, noiseAmplitude);
 
     return {
         ts: ts,

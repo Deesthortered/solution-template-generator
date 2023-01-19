@@ -1,4 +1,4 @@
-let getRandomInt = function (min, max) {
+var getRandomInt = function (min, max) {
     if (min === max) {
         return min;
     }
@@ -7,26 +7,26 @@ let getRandomInt = function (min, max) {
     return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
-let energyConsumption = function () {
-    let currentDate = new Date();
+var energyConsumption = function () {
+    var currentDate = new Date();
     currentDate.setMinutes(0, 0, 0);
 
-    let ts = currentDate.getMilliseconds();
-    let day = currentDate.getDay() % 7;
-    let hours = currentDate.getHours();
+    var ts = currentDate.getTime();
+    var day = currentDate.getDay() % 7;
+    var hours = currentDate.getHours();
 
-    let minValue = 30_000;
-    let amplitude = 5_000;
-    let noiseWidth = 3000;
-    let noiseAmplitude = (amplitude / noiseWidth) * 3;
-    let phase = (3.14 * 0.3) / 14;
-    let koeffDay = 3.14 / 14;
-    let koeffHour = 3.14 / 6;
+    var minValue = 30000;
+    var amplitude = 5000;
+    var noiseWidth = 3000;
+    var noiseAmplitude = (amplitude / noiseWidth) * 3;
+    var phase = (3.14 * 0.3) / 14;
+    var koeffDay = 3.14 / 14;
+    var koeffHour = 3.14 / 6;
 
-    let argumentDay = day * 2 - 7;
-    let argumentHour = hours - 12;
-    let noise = getRandomInt(-noiseAmplitude, noiseAmplitude) * noiseWidth;
-    let value = minValue + noise + Math.round(amplitude * Math.sin(phase + koeffDay * argumentDay + koeffHour * argumentHour));
+    var argumentDay = day * 2 - 7;
+    var argumentHour = hours - 12;
+    var noise = getRandomInt(-noiseAmplitude, noiseAmplitude) * noiseWidth;
+    var value = minValue + noise + Math.round(amplitude * Math.sin(phase + koeffDay * argumentDay + koeffHour * argumentHour));
 
     return {
         ts: ts,
@@ -36,12 +36,12 @@ let energyConsumption = function () {
     }
 }
 
-let energyConsAbsolute = function (consumption) {
-    let currentDate = new Date();
+var energyConsAbsolute = function (consumption) {
+    var currentDate = new Date();
     currentDate.setMinutes(0, 0, 0);
 
-    let ts = currentDate.getMilliseconds();
-    let value = 0;
+    var ts = currentDate.getTime();
+    var value = 0;
 
     return {
         ts: ts,
@@ -51,8 +51,8 @@ let energyConsAbsolute = function (consumption) {
     }
 }
 
-let consumption = energyConsumption();
-let consAbsolute = energyConsAbsolute(consumption);
+var consumption = energyConsumption();
+var consAbsolute = energyConsAbsolute(consumption);
 
 var msg = consAbsolute;
 var metadata = {};

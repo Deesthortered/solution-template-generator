@@ -1,4 +1,4 @@
-let getRandomInt = function (min, max) {
+var getRandomInt = function (min, max) {
     if (min === max) {
         return min;
     }
@@ -7,34 +7,34 @@ let getRandomInt = function (min, max) {
     return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
-let heatConsumption = function () {
-    let currentDate = new Date();
+var heatConsumption = function () {
+    var currentDate = new Date();
     currentDate.setMinutes(0, 0, 0);
 
-    let ts = currentDate.getMilliseconds();
-    let day = currentDate.getDay();
+    var ts = currentDate.getTime();
+    var day = currentDate.getDay();
 
-    let valueWarmTime = 0;
-    let valueColdTime = 6_000;
-    let noiseAmplitude = 800;
-    let noiseWidth = 400;
+    var valueWarmTime = 0;
+    var valueColdTime = 6000;
+    var noiseAmplitude = 800;
+    var noiseWidth = 400;
 
-    let dayColdTimeEnd = 80;
-    let dayWarmTimeStart = 120;
-    let dayWarmTimeEnd = 230;
-    let dayColdTimeStart = 290;
+    var dayColdTimeEnd = 80;
+    var dayWarmTimeStart = 120;
+    var dayWarmTimeEnd = 230;
+    var dayColdTimeStart = 290;
 
-    let shiftedNoiseAmplitude = noiseAmplitude / noiseWidth;
-    let value;
-    let noise = getRandomInt(-shiftedNoiseAmplitude, shiftedNoiseAmplitude) * noiseWidth;
+    var shiftedNoiseAmplitude = noiseAmplitude / noiseWidth;
+    var value;
+    var noise = getRandomInt(-shiftedNoiseAmplitude, shiftedNoiseAmplitude) * noiseWidth;
     if (day <= dayColdTimeEnd || day > dayColdTimeStart) {
         // Cold Time
         value = valueColdTime;
         value += noise;
     } else if (day <= dayWarmTimeStart) {
         // Cold To Warm
-        let diff = dayWarmTimeStart - dayColdTimeEnd;
-        let current = dayWarmTimeStart - day;
+        var diff = dayWarmTimeStart - dayColdTimeEnd;
+        var current = dayWarmTimeStart - day;
         value = valueWarmTime + Math.round((current * (valueColdTime - valueWarmTime)) / diff);
         value += noise;
     } else if (day <= dayWarmTimeEnd) {
@@ -42,8 +42,8 @@ let heatConsumption = function () {
         value = valueWarmTime;
     } else {
         // Warm To Cold
-        let diff = dayColdTimeStart - dayWarmTimeEnd;
-        let current = -(dayWarmTimeEnd - day);
+        var diff = dayColdTimeStart - dayWarmTimeEnd;
+        var current = -(dayWarmTimeEnd - day);
         value = valueWarmTime + Math.round((current * (valueColdTime - valueWarmTime)) / diff);
         value += noise;
     }
@@ -58,12 +58,12 @@ let heatConsumption = function () {
     }
 }
 
-let heatConsAbsolute = function (consumption) {
-    let currentDate = new Date();
+var heatConsAbsolute = function (consumption) {
+    var currentDate = new Date();
     currentDate.setMinutes(0, 0, 0);
 
-    let ts = currentDate.getMilliseconds();
-    let value = 0;
+    var ts = currentDate.getTime();
+    var value = 0;
 
     return {
         ts: ts,
@@ -73,8 +73,8 @@ let heatConsAbsolute = function (consumption) {
     }
 }
 
-let consumption = heatConsumption();
-let consAbsolute = heatConsAbsolute(consumption);
+var consumption = heatConsumption();
+var consAbsolute = heatConsAbsolute(consumption);
 
 var msg = consAbsolute;
 var metadata = {};
