@@ -1052,17 +1052,4 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
                 ? "heat_cons_absolute_level" + level + ".js"
                 : "heat_cons_absolute_level0.js";
     }
-//    public static void main(String[] args) {
-//        ApartmentConfiguration configuration = ApartmentConfiguration.builder()
-//                .occupied(true)
-//                .level(2)
-//                .startDate(TS_2022_JANUARY)
-//                .anomaly(false)
-//                .build();
-//
-//        Telemetry<Long> telemetry = new EnergyMeteringSolution(null, null, null)
-//                .createTelemetryEnergyMeterConsumption(configuration, false);
-//
-//        new VisualizationService().visualize("Telemetry", List.of(telemetry));
-//    }
 }

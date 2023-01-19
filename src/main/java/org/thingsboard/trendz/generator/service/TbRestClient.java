@@ -353,8 +353,18 @@ public class TbRestClient {
         ObjectNode node = JsonUtils.getObjectMapper().createObjectNode();
         for (Attribute<?> attribute : attributes) {
             Object value = attribute.getValue();
-            if (value instanceof Number) {
-                node.put(attribute.getKey(), Double.parseDouble(value.toString()));
+            if (value instanceof Integer) {
+                node.put(attribute.getKey(), ((Integer) value));
+            } else if (value instanceof Byte) {
+                node.put(attribute.getKey(), ((Byte) value));
+            } else if (value instanceof Short) {
+                node.put(attribute.getKey(), ((Short) value));
+            } else if (value instanceof Long) {
+                node.put(attribute.getKey(), ((Long) value));
+            } else if (value instanceof Float) {
+                node.put(attribute.getKey(), ((Float) value));
+            } else if (value instanceof Double) {
+                node.put(attribute.getKey(), ((Double) value));
             } else {
                 node.put(attribute.getKey(), value.toString());
             }
