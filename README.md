@@ -34,7 +34,7 @@ They have an `address` attribute and all of them are located in the USA in Calif
 
 Each building has apartments with different `floor`, `area`, and `localNumber`.
 Apartments have a `state` attribute that determines apartment is rented or empty.
-Rented apartments consume more energy and heating, and empty has no energy and no heating.
+Rented apartments consume energy and heating, and empty has no energy consumption and no heating.
 Sometimes we can observe anomalies in energy consumption because of accidents: 
 stolen energy and forgotten home devices, heating anomaly: empty apartment is heated.
 To simplify the solution, there are defined 3 levels of consumption: low, medium, and high.
@@ -43,7 +43,7 @@ Levels are not represented explicitly, it just makes a difference between apartm
 Each apartment has energy and meters with attributes `installDate` and `serialNumber`.
 They provide telemetry only after `installDate` date.
 Energy Meter provides `energyConsumption` telemetry and `energyConsAbsolute` that summing that data.
-Heat Meter provides `heatConsumption` and `temperature` telemetries.
+Heat Meter provides `temperature`, `heatConsumption` and `heatConsAbsolute` telemetries.
 Energy Meter and Heat Meter do not make affect each other.
 
 

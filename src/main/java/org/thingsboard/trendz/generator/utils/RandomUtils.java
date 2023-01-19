@@ -16,6 +16,9 @@ public class RandomUtils {
     }
 
     public static long getRandomNumber(long from, long to) {
+        if (from == to) {
+            return to;
+        }
         long i = Math.abs(getRandom().nextLong());
         return from + (i % (to - from));
     }

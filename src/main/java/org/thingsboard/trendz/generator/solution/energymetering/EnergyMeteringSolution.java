@@ -52,7 +52,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -550,7 +549,7 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
         Telemetry<Long> energyMeterConsAbsolute = createTelemetryEnergyMeterConsAbsolute(energyMeterConsumption, skipTelemetry);
 
         Telemetry<Long> heatMeterTemperature = createTelemetryHeatMeterTemperature(configuration, skipTelemetry);
-        Telemetry<Long> heatMeterConsumption = createTelemetryHeatMeterConsumption(heatMeterTemperature, skipTelemetry);
+        Telemetry<Long> heatMeterConsumption = createTelemetryHeatMeterConsumption(configuration, skipTelemetry);
         Telemetry<Long> heatMeterConsAbsolute = createTelemetryHeatMeterConsAbsolute(heatMeterConsumption, skipTelemetry);
 
         EnergyMeter energyMeter = EnergyMeter.builder()
@@ -710,9 +709,12 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
             return new Telemetry<>("skip");
         }
 
-        long now = System.currentTimeMillis();
         Telemetry<Long> result = new Telemetry<>("energyConsAbsolute");
-
+        long sum = 0;
+        for (Telemetry.Point<Long> point : energyConsumptionTelemetry.getPoints()) {
+            sum += point.getValue();
+            result.add(new Telemetry.Point<>(point.getTs(), sum));
+        }
         return result;
     }
 
@@ -721,23 +723,109 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
             return new Telemetry<>("skip");
         }
 
+        Telemetry<Long> result = new Telemetry<>("temperature");
         long now = System.currentTimeMillis();
-        long startDate = configuration.getStartDate();
+
+        long startTs = configuration.getStartDate();
         boolean occupied = configuration.isOccupied();
         int level = configuration.getLevel();
-        Telemetry<Long> result = new Telemetry<>("temperature");
+        boolean anomaly = configuration.isAnomaly();
+
+        long noiseAmplitude = 3;
+
+        ZonedDateTime startDate = DateTimeUtils.fromTs(startTs).truncatedTo(ChronoUnit.HOURS);
+        ZonedDateTime nowDate = DateTimeUtils.fromTs(now).truncatedTo(ChronoUnit.HOURS);
+        ZonedDateTime iteratedDate = startDate;
+        while (iteratedDate.isBefore(nowDate)) {
+            long iteratedTs = DateTimeUtils.toTs(iteratedDate);
+            long value = 20 + RandomUtils.getRandomNumber(-noiseAmplitude, noiseAmplitude);
+
+            result.add(iteratedTs, value);
+            iteratedDate = iteratedDate.plus(1, ChronoUnit.HOURS);
+        }
 
         return result;
     }
 
-    private Telemetry<Long> createTelemetryHeatMeterConsumption(Telemetry<Long> heatConsumptionTelemetry, boolean skipTelemetry) {
+    private Telemetry<Long> createTelemetryHeatMeterConsumption(ApartmentConfiguration configuration, boolean skipTelemetry) {
         if (skipTelemetry) {
             return new Telemetry<>("skip");
         }
 
         long now = System.currentTimeMillis();
-        Telemetry<Long> result = new Telemetry<>("heatConsumption");
 
+        long startTs = configuration.getStartDate();
+        boolean occupied = configuration.isOccupied();
+        int level = configuration.getLevel();
+        boolean anomaly = configuration.isAnomaly();
+
+        if (occupied) {
+            switch (level) {
+                case 1: {
+                    long valueWarmTime = 0;
+                    long valueColdTime = 3_000;
+                    long noiseAmplitude = 100;
+
+                    return makeConsumption(now, startTs, valueWarmTime, valueColdTime, noiseAmplitude);
+                }
+                case 2: {
+                    long valueWarmTime = 0;
+                    long valueColdTime = 6_000;
+                    long noiseAmplitude = 500;
+
+                    return makeConsumption(now, startTs, valueWarmTime, valueColdTime, noiseAmplitude);
+                }
+                case 3: {
+                    long valueWarmTime = 0;
+                    long valueColdTime = 10_000;
+                    long noiseAmplitude = 1_000;
+
+                    return makeConsumption(now, startTs, valueWarmTime, valueColdTime, noiseAmplitude);
+                }
+                default: throw new IllegalStateException("Unsupported level: " + level);
+            }
+        } else {
+            long valueWarmTime = 0;
+            long valueColdTime = 0;
+            long noiseAmplitude = 0;
+
+            return makeConsumption(now, startTs, valueWarmTime, valueColdTime, noiseAmplitude);
+        }
+    }
+
+    private Telemetry<Long> makeConsumption(long now, long startTs, long valueWarmTime, long valueColdTime, long noiseAmplitude) {
+        Telemetry<Long> result = new Telemetry<>("heatConsumption");
+        int dayWarmTimeEnd = 80;
+        int dayColdTimeStart = 120;
+        int dayColdTimeEnd = 230;
+        int dayWarmTimeStart = 290;
+
+        ZonedDateTime startDate = DateTimeUtils.fromTs(startTs).truncatedTo(ChronoUnit.HOURS);
+        ZonedDateTime nowDate = DateTimeUtils.fromTs(now).truncatedTo(ChronoUnit.HOURS);
+        ZonedDateTime iteratedDate = startDate;
+        while (iteratedDate.isBefore(nowDate)) {
+            long iteratedTs = DateTimeUtils.toTs(iteratedDate);
+            int day = iteratedDate.getDayOfYear();
+
+            long value;
+            if (day <= dayWarmTimeEnd || day > dayWarmTimeStart) {
+                value = valueWarmTime;
+            } else if (day <= dayColdTimeStart) {
+                int diff = dayColdTimeStart - dayWarmTimeEnd;
+                int current = dayColdTimeStart - day;
+                value = valueWarmTime + Math.round((1.0 * current * (valueColdTime - valueWarmTime)) / diff);
+            } else if (day <= dayColdTimeEnd) {
+                int diff = dayWarmTimeStart - dayColdTimeEnd;
+                int current = dayWarmTimeStart - day;
+                value = valueWarmTime + Math.round((1.0 * current * (valueColdTime - valueWarmTime)) / diff);
+            } else {
+                value = valueColdTime;
+            }
+            value += RandomUtils.getRandomNumber(-noiseAmplitude, noiseAmplitude);
+
+            result.add(iteratedTs, value);
+            iteratedDate = iteratedDate.plus(1, ChronoUnit.HOURS);
+        }
         return result;
     }
 
@@ -746,9 +834,12 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
             return new Telemetry<>("skip");
         }
 
-        long now = System.currentTimeMillis();
-        Telemetry<Long> result = new Telemetry<>("heatConsumption");
-
+        Telemetry<Long> result = new Telemetry<>("heatConsAbsolute");
+        long sum = 0;
+        for (Telemetry.Point<Long> point : heatConsumptionTelemetry.getPoints()) {
+            sum += point.getValue();
+            result.add(new Telemetry.Point<>(point.getTs(), sum));
+        }
         return result;
     }
 
@@ -803,8 +894,9 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
         );
         tbRestClient.setEntityAttributes(device.getUuidId(), EntityType.DEVICE, Scope.SERVER_SCOPE, attributes);
 
-        tbRestClient.pushTelemetry(deviceCredentials.getCredentialsId(), heatMeter.getHeatConsumption());
         tbRestClient.pushTelemetry(deviceCredentials.getCredentialsId(), heatMeter.getTemperature());
+        tbRestClient.pushTelemetry(deviceCredentials.getCredentialsId(), heatMeter.getHeatConsumption());
+        tbRestClient.pushTelemetry(deviceCredentials.getCredentialsId(), heatMeter.getHeatConsAbsolute());
 
         this.heatMeterIdMap.put(heatMeter, device.getUuidId());
         return device;
