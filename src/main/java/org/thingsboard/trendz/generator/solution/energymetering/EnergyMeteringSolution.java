@@ -783,8 +783,6 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
 
         long startTs = configuration.getStartDate();
         boolean occupied = configuration.isOccupied();
-        int level = configuration.getLevel();
-        boolean anomaly = configuration.isAnomaly();
 
         long noiseAmplitude = 3;
 
@@ -793,7 +791,13 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
         ZonedDateTime iteratedDate = startDate;
         while (iteratedDate.isBefore(nowDate)) {
             long iteratedTs = DateTimeUtils.toTs(iteratedDate);
-            long value = 20 + RandomUtils.getRandomNumber(-noiseAmplitude, noiseAmplitude);
+            long value;
+            if (occupied) {
+                value = 20;
+            } else {
+                value = 15;
+            }
+            value += RandomUtils.getRandomNumber(-noiseAmplitude, noiseAmplitude);
 
             result.add(iteratedTs, value);
             iteratedDate = iteratedDate.plus(1, ChronoUnit.HOURS);
