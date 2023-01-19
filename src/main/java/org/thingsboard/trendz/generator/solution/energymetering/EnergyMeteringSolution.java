@@ -44,14 +44,7 @@ import java.io.IOException;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -585,7 +578,7 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
 
 
     private Building makeBuildingByConfiguration(BuildingConfiguration configuration, boolean skipTelemetry) {
-        Set<Apartment> apartments = new HashSet<>();
+        Set<Apartment> apartments = new TreeSet<>();
         for (int floor = 1; floor <= configuration.getFloorCount(); floor++) {
             for (int number = 1; number <= configuration.getApartmentsByFloorCount(); number++) {
                 ApartmentConfiguration apartmentConfiguration = configuration.getApartmentConfiguration(floor, number);
