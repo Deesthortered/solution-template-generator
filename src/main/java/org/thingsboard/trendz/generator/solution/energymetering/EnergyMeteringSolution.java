@@ -260,45 +260,106 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
             List<NodeConnectionInfo> connections = new ArrayList<>();
             metaData.setConnections(connections);
 
-            RuleNode saveNode = createSaveNode();
-            nodes.add(saveNode);
 
-            int counter = 0;
             for (Building building : buildings) {
                 for (Apartment apartment : building.getApartments()) {
                     ApartmentConfiguration configuration = this.apartmentConfigurationMap.get(apartment);
-                    String energyMeterFile = defineEnergyMeterJsFile(configuration.getLevel());
-                    String heatMeterFile = defineHeatMeterJsFile(configuration.getLevel());
+                    boolean occupied = configuration.isOccupied();
+                    int level = configuration.getLevel();
 
                     EnergyMeter energyMeter = apartment.getEnergyMeter();
                     HeatMeter heatMeter = apartment.getHeatMeter();
+                    UUID energyMeterId = this.energyMeterIdMap.get(energyMeter);
+                    UUID heatMeterId = this.heatMeterIdMap.get(heatMeter);
 
-                    RuleNode energyMeterGeneratorMode = createGeneratorMode(
-                            energyMeter.getSystemName(),
-                            this.energyMeterIdMap.get(energyMeter), energyMeterFile,
-                            RuleNodeAdditionalInfo.CELL_SIZE * 5, (5 + counter) * (RuleNodeAdditionalInfo.CELL_SIZE + 25)
+                    int index = nodes.size();
+
+                    RuleNode saveNode = createSaveNode(
+                            "Save: " + apartment.getSystemName(),
+                            RuleNodeAdditionalInfo.CELL_SIZE * 20,
+                            RuleNodeAdditionalInfo.CELL_SIZE * (index * 1.7 + 10)
                     );
-                    NodeConnectionInfo energyMeterConnection = new NodeConnectionInfo();
-                    energyMeterConnection.setType(NodeConnectionType.SUCCESS.getType());
-                    energyMeterConnection.setFromIndex(counter * 2 + 1);
-                    energyMeterConnection.setToIndex(0);
+                    nodes.add(saveNode);
 
-                    RuleNode heatMeterGeneratorMode = createGeneratorMode(
-                            heatMeter.getSystemName(),
-                            this.heatMeterIdMap.get(heatMeter), heatMeterFile,
-                            RuleNodeAdditionalInfo.CELL_SIZE * 25, (5 + counter) * (RuleNodeAdditionalInfo.CELL_SIZE + 25)
+
+                    RuleNode energyMeterConsumptionGeneratorNode = createGeneratorMode(
+                            energyMeter.getSystemName() + " : energyConsumption",
+                            energyMeterId,
+                            getEnergyMeterConsumptionFile(occupied, level),
+                            RuleNodeAdditionalInfo.CELL_SIZE * 20,
+                            RuleNodeAdditionalInfo.CELL_SIZE * (index * 1.7 + 13)
                     );
-                    NodeConnectionInfo heatMeterConnection = new NodeConnectionInfo();
-                    heatMeterConnection.setType(NodeConnectionType.SUCCESS.getType());
-                    heatMeterConnection.setFromIndex(counter * 2 + 2);
-                    heatMeterConnection.setToIndex(0);
+                    nodes.add(energyMeterConsumptionGeneratorNode);
 
-                    nodes.add(energyMeterGeneratorMode);
-                    nodes.add(heatMeterGeneratorMode);
+                    NodeConnectionInfo energyMeterConsumptionConnection = new NodeConnectionInfo();
+                    energyMeterConsumptionConnection.setType(NodeConnectionType.SUCCESS.getType());
+                    energyMeterConsumptionConnection.setFromIndex(index + 1);
+                    energyMeterConsumptionConnection.setToIndex(index);
+                    connections.add(energyMeterConsumptionConnection);
 
-                    connections.add(energyMeterConnection);
-                    connections.add(heatMeterConnection);
-                    counter++;
+
+                    RuleNode energyMeterConsAbsoluteGeneratorNode = createGeneratorMode(
+                            energyMeter.getSystemName() + " : energyConsAbsolute",
+                            energyMeterId,
+                            getEnergyMeterConsAbsoluteFile(occupied, level),
+                            RuleNodeAdditionalInfo.CELL_SIZE * 20,
+                            RuleNodeAdditionalInfo.CELL_SIZE * (index * 1.7 + 16)
+                    );
+                    nodes.add(energyMeterConsAbsoluteGeneratorNode);
+
+                    NodeConnectionInfo energyMeterConsAbsoluteConnection = new NodeConnectionInfo();
+                    energyMeterConsAbsoluteConnection.setType(NodeConnectionType.SUCCESS.getType());
+                    energyMeterConsAbsoluteConnection.setFromIndex(index + 2);
+                    energyMeterConsAbsoluteConnection.setToIndex(index);
+                    connections.add(energyMeterConsAbsoluteConnection);
+
+
+                    RuleNode heatMeterTemperatureGeneratorNode = createGeneratorMode(
+                            heatMeter.getSystemName() + " : temperature",
+                            heatMeterId,
+                            getHeatMeterTemperatureFile(occupied),
+                            RuleNodeAdditionalInfo.CELL_SIZE * 5,
+                            RuleNodeAdditionalInfo.CELL_SIZE * (index * 1.7 + 10)
+                    );
+                    nodes.add(heatMeterTemperatureGeneratorNode);
+
+                    NodeConnectionInfo heatMeterTemperatureConnection = new NodeConnectionInfo();
+                    heatMeterTemperatureConnection.setType(NodeConnectionType.SUCCESS.getType());
+                    heatMeterTemperatureConnection.setFromIndex(index + 3);
+                    heatMeterTemperatureConnection.setToIndex(index);
+                    connections.add(heatMeterTemperatureConnection);
+
+
+                    RuleNode heatMeterConsumptionGeneratorNode = createGeneratorMode(
+                            heatMeter.getSystemName() + " : heatConsumption",
+                            heatMeterId,
+                            getHeatMeterConsumptionFile(occupied, level),
+                            RuleNodeAdditionalInfo.CELL_SIZE * 5,
+                            RuleNodeAdditionalInfo.CELL_SIZE * (index * 1.7 + 13)
+                    );
+                    nodes.add(heatMeterConsumptionGeneratorNode);
+
+                    NodeConnectionInfo heatMeterConsumptionConnection = new NodeConnectionInfo();
+                    heatMeterConsumptionConnection.setType(NodeConnectionType.SUCCESS.getType());
+                    heatMeterConsumptionConnection.setFromIndex(index + 4);
+                    heatMeterConsumptionConnection.setToIndex(index);
+                    connections.add(heatMeterConsumptionConnection);
+
+
+                    RuleNode heatMeterConsAbsoluteGeneratorNode = createGeneratorMode(
+                            heatMeter.getSystemName() + " : heatConsAbsolute",
+                            heatMeterId,
+                            getHeatMeterConsAbsoluteFile(occupied, level),
+                            RuleNodeAdditionalInfo.CELL_SIZE * 5,
+                            RuleNodeAdditionalInfo.CELL_SIZE * (index * 1.7 + 16)
+                    );
+                    nodes.add(heatMeterConsAbsoluteGeneratorNode);
+
+                    NodeConnectionInfo heatMeterConsAbsoluteConnection = new NodeConnectionInfo();
+                    heatMeterConsAbsoluteConnection.setType(NodeConnectionType.SUCCESS.getType());
+                    heatMeterConsAbsoluteConnection.setFromIndex(index + 5);
+                    heatMeterConsAbsoluteConnection.setToIndex(index);
+                    connections.add(heatMeterConsAbsoluteConnection);
                 }
             }
 
@@ -636,7 +697,7 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
                     long minValue = 15_000;
                     long amplitude = 2_000;
                     long noiseWidth = 500;
-                    long noiseAmplitude = (amplitude / noiseWidth) * 3  ;
+                    long noiseAmplitude = (amplitude / noiseWidth) * 3;
                     double phase = (3.14 * 3) / 12;
                     double koeff = 3.14 / 12;
 
@@ -678,7 +739,8 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
                     }
                     return result;
                 }
-                default: throw new IllegalStateException("Unsupported level: " + level);
+                default:
+                    throw new IllegalStateException("Unsupported level: " + level);
             }
         } else {
             long minValue = 15;
@@ -785,7 +847,8 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
 
                     return makeHeatConsumption(now, startTs, valueWarmTime, valueColdTime, noiseAmplitude, noiseWidth);
                 }
-                default: throw new IllegalStateException("Unsupported level: " + level);
+                default:
+                    throw new IllegalStateException("Unsupported level: " + level);
             }
         } else {
             long valueWarmTime = 0;
@@ -916,29 +979,21 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
     }
 
 
-    private String defineEnergyMeterJsFile(int level) {
-        return "energy_level" + level + ".js";
-    }
-
-    private String defineHeatMeterJsFile(int level) {
-        return "heat_level" + level + ".js";
-    }
-
-    private RuleNode createSaveNode() {
+    private RuleNode createSaveNode(String name, double gridIndexX, double gridIndexY) {
         TbMsgTimeseriesNodeConfiguration saveConfiguration = new TbMsgTimeseriesNodeConfiguration();
         saveConfiguration.setDefaultTTL(0);
-        saveConfiguration.setUseServerTs(true);
+        saveConfiguration.setUseServerTs(false);
         saveConfiguration.setSkipLatestPersistence(false);
 
         RuleNode saveNode = new RuleNode();
-        saveNode.setName("EnergyMetering - save");
+        saveNode.setName(name);
         saveNode.setType(TbMsgTimeseriesNode.class.getName());
         saveNode.setConfiguration(JsonUtils.makeNodeFromPojo(saveConfiguration));
         saveNode.setAdditionalInfo(
                 RuleNodeAdditionalInfo.builder()
                         .description("Basic description")
-                        .layoutX(RuleNodeAdditionalInfo.CELL_SIZE * 15)
-                        .layoutY(RuleNodeAdditionalInfo.CELL_SIZE * 25)
+                        .layoutX((int) Math.round(gridIndexX))
+                        .layoutY((int) Math.round(gridIndexY))
                         .build()
                         .toJsonNode()
         );
@@ -946,12 +1001,12 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
         return saveNode;
     }
 
-    private RuleNode createGeneratorMode(String name, UUID entityId, String fileName, int gridIndexX, int gridIndexY) throws IOException {
+    private RuleNode createGeneratorMode(String name, UUID entityId, String fileName, double gridIndexX, double gridIndexY) throws IOException {
         TbMsgGeneratorNodeConfiguration generatorConfiguration = new TbMsgGeneratorNodeConfiguration();
         generatorConfiguration.setOriginatorType(EntityType.DEVICE);
         generatorConfiguration.setOriginatorId(entityId.toString());
         generatorConfiguration.setMsgCount(0);
-        generatorConfiguration.setPeriodInSeconds(30);
+        generatorConfiguration.setPeriodInSeconds(3600);
         generatorConfiguration.setJsScript(this.fileService.getFileContent(getSolutionName(), fileName));
 
         RuleNode generatorNode = new RuleNode();
@@ -961,8 +1016,8 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
         generatorNode.setAdditionalInfo(
                 RuleNodeAdditionalInfo.builder()
                         .description("")
-                        .layoutX(gridIndexX)
-                        .layoutY(gridIndexY)
+                        .layoutX((int) Math.round(gridIndexX))
+                        .layoutY((int) Math.round(gridIndexY))
                         .build()
                         .toJsonNode()
         );
@@ -971,6 +1026,35 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
     }
 
 
+    private String getEnergyMeterConsumptionFile(boolean occupied, int level) {
+        return occupied
+                ? "energy_consumption_level" + level + ".js"
+                : "energy_consumption_level0.js";
+    }
+
+    private String getEnergyMeterConsAbsoluteFile(boolean occupied, int level) {
+        return occupied
+                ? "energy_cons_absolute_level" + level + ".js"
+                : "energy_cons_absolute_level0.js";
+    }
+
+    private String getHeatMeterTemperatureFile(boolean occupied) {
+        return occupied
+                ? "heat_temperature_level1.js"
+                : "heat_temperature_level0.js";
+    }
+
+    private String getHeatMeterConsumptionFile(boolean occupied, int level) {
+        return occupied
+                ? "heat_consumption_level" + level + ".js"
+                : "heat_consumption_level0.js";
+    }
+
+    private String getHeatMeterConsAbsoluteFile(boolean occupied, int level) {
+        return occupied
+                ? "heat_cons_absolute_level" + level + ".js"
+                : "heat_cons_absolute_level0.js";
+    }
 //    public static void main(String[] args) {
 //        ApartmentConfiguration configuration = ApartmentConfiguration.builder()
 //                .occupied(true)
