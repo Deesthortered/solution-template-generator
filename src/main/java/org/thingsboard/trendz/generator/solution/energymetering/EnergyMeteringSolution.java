@@ -764,23 +764,26 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
                 case 1: {
                     long valueWarmTime = 0;
                     long valueColdTime = 3_000;
-                    long noiseAmplitude = 100;
+                    long noiseAmplitude = 300;
+                    long noiseWidth = 100;
 
-                    return makeConsumption(now, startTs, valueWarmTime, valueColdTime, noiseAmplitude);
+                    return makeHeatConsumption(now, startTs, valueWarmTime, valueColdTime, noiseAmplitude, noiseWidth);
                 }
                 case 2: {
                     long valueWarmTime = 0;
                     long valueColdTime = 6_000;
-                    long noiseAmplitude = 500;
+                    long noiseAmplitude = 800;
+                    long noiseWidth = 400;
 
-                    return makeConsumption(now, startTs, valueWarmTime, valueColdTime, noiseAmplitude);
+                    return makeHeatConsumption(now, startTs, valueWarmTime, valueColdTime, noiseAmplitude, noiseWidth);
                 }
                 case 3: {
                     long valueWarmTime = 0;
                     long valueColdTime = 10_000;
-                    long noiseAmplitude = 1_000;
+                    long noiseAmplitude = 2_000;
+                    long noiseWidth = 800;
 
-                    return makeConsumption(now, startTs, valueWarmTime, valueColdTime, noiseAmplitude);
+                    return makeHeatConsumption(now, startTs, valueWarmTime, valueColdTime, noiseAmplitude, noiseWidth);
                 }
                 default: throw new IllegalStateException("Unsupported level: " + level);
             }
@@ -788,18 +791,20 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
             long valueWarmTime = 0;
             long valueColdTime = 0;
             long noiseAmplitude = 0;
+            long noiseWidth = 1;
 
-            return makeConsumption(now, startTs, valueWarmTime, valueColdTime, noiseAmplitude);
+            return makeHeatConsumption(now, startTs, valueWarmTime, valueColdTime, noiseAmplitude, noiseWidth);
         }
     }
 
-    private Telemetry<Long> makeConsumption(long now, long startTs, long valueWarmTime, long valueColdTime, long noiseAmplitude) {
+    private Telemetry<Long> makeHeatConsumption(long now, long startTs, long valueWarmTime, long valueColdTime, long noiseAmplitude, long noiseWidth) {
         Telemetry<Long> result = new Telemetry<>("heatConsumption");
-        int dayWarmTimeEnd = 80;
-        int dayColdTimeStart = 120;
-        int dayColdTimeEnd = 230;
-        int dayWarmTimeStart = 290;
+        int dayColdTimeEnd = 80;
+        int dayWarmTimeStart = 120;
+        int dayWarmTimeEnd = 230;
+        int dayColdTimeStart = 290;
 
+        long shiftedNoiseAmplitude = noiseAmplitude / noiseWidth;
         ZonedDateTime startDate = DateTimeUtils.fromTs(startTs).truncatedTo(ChronoUnit.HOURS);
         ZonedDateTime nowDate = DateTimeUtils.fromTs(now).truncatedTo(ChronoUnit.HOURS);
         ZonedDateTime iteratedDate = startDate;
@@ -808,21 +813,29 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
             int day = iteratedDate.getDayOfYear();
 
             long value;
-            if (day <= dayWarmTimeEnd || day > dayWarmTimeStart) {
-                value = valueWarmTime;
-            } else if (day <= dayColdTimeStart) {
-                int diff = dayColdTimeStart - dayWarmTimeEnd;
-                int current = dayColdTimeStart - day;
-                value = valueWarmTime + Math.round((1.0 * current * (valueColdTime - valueWarmTime)) / diff);
-            } else if (day <= dayColdTimeEnd) {
+            long noise = RandomUtils.getRandomNumber(-shiftedNoiseAmplitude, shiftedNoiseAmplitude) * noiseWidth;
+            if (day <= dayColdTimeEnd || day > dayColdTimeStart) {
+                // Cold Time
+                value = valueColdTime;
+                value += noise;
+            } else if (day <= dayWarmTimeStart) {
+                // Cold To Warm
                 int diff = dayWarmTimeStart - dayColdTimeEnd;
                 int current = dayWarmTimeStart - day;
                 value = valueWarmTime + Math.round((1.0 * current * (valueColdTime - valueWarmTime)) / diff);
+                value += noise;
+            } else if (day <= dayWarmTimeEnd) {
+                // Warm
+                value = valueWarmTime;
             } else {
-                value = valueColdTime;
+                // Warm To Cold
+                int diff = dayColdTimeStart - dayWarmTimeEnd;
+                int current = -(dayWarmTimeEnd - day);
+                value = valueWarmTime + Math.round((1.0 * current * (valueColdTime - valueWarmTime)) / diff);
+                value += noise;
             }
-            value += RandomUtils.getRandomNumber(-noiseAmplitude, noiseAmplitude);
 
+            value = Math.max(0, value);
             result.add(iteratedTs, value);
             iteratedDate = iteratedDate.plus(1, ChronoUnit.HOURS);
         }
