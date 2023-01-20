@@ -233,13 +233,13 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
 
 
                     RuleNode energyMeterGetLatestConsumptionNode = createLatestTelemetryLoadNode(
-                            energyMeter.getSystemName() + ": Get latest consumption",
+                            energyMeter.getSystemName() + ": energyConsAbsolute (1/2)",
                             "energyConsumption",
                             getNodePositionX(false),
                             getNodePositionY(index, 2)
                     );
                     RuleNode energyMeterConsumptionTransformationNode = createTransformationNode(
-                            energyMeter.getSystemName() + ": transformation to ConsAbsolute",
+                            energyMeter.getSystemName() + ": energyConsAbsolute (2/2)",
                             getEnergyMeterConsAbsoluteFile(),
                             getNodePositionX(false),
                             getNodePositionY(index, 3)
@@ -259,7 +259,7 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
                             getNodePositionY(index, 0)
                     );
                     nodes.add(heatMeterTemperatureGeneratorNode);
-                    connections.add(createRuleConnection(index + 3, index));
+                    connections.add(createRuleConnection(index + 4, index));
 
 
                     RuleNode heatMeterConsumptionGeneratorNode = createGeneratorNode(
@@ -270,17 +270,17 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
                             getNodePositionY(index, 1)
                     );
                     nodes.add(heatMeterConsumptionGeneratorNode);
-                    connections.add(createRuleConnection(index + 4, index));
+                    connections.add(createRuleConnection(index + 5, index));
 
 
                     RuleNode heatMeterGetLatestConsumptionNode = createLatestTelemetryLoadNode(
-                            heatMeter.getSystemName() + ": Get latest consumption",
+                            heatMeter.getSystemName() + ": heatConsAbsolute (1/2)",
                             "heatConsumption",
                             getNodePositionX(true),
                             getNodePositionY(index, 2)
                     );
                     RuleNode heatMeterConsumptionTransformationNode = createTransformationNode(
-                            heatMeter.getSystemName() + ": transformation to ConsAbsolute",
+                            heatMeter.getSystemName() + ": heatConsAbsolute (2/2)",
                             getHeatMeterConsAbsoluteFile(),
                             getNodePositionX(true),
                             getNodePositionY(index, 3)
@@ -1066,7 +1066,7 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
         generatorConfiguration.setOriginatorType(EntityType.DEVICE);
         generatorConfiguration.setOriginatorId(entityId.toString());
         generatorConfiguration.setMsgCount(0);
-        generatorConfiguration.setPeriodInSeconds(3600);
+        generatorConfiguration.setPeriodInSeconds(3);
         generatorConfiguration.setJsScript(fileContent);
 
         return createRuleNode(name, TbMsgGeneratorNode.class, generatorConfiguration, (int) gridX, (int) gridY);
@@ -1076,7 +1076,7 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
         TbGetAttributesNodeConfiguration configuration = new TbGetAttributesNodeConfiguration();
         configuration.setLatestTsKeyNames(List.of(telemetryName));
 
-        return createRuleNode(name, TbMsgAttributesNode.class, configuration, (int) gridX, (int) gridY);
+        return createRuleNode(name, TbGetAttributesNodeConfiguration.class, configuration, (int) gridX, (int) gridY);
     }
 
     private RuleNode createTransformationNode(String name, String scriptFileName, double gridX, double gridY) throws IOException {
@@ -1097,11 +1097,12 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
     }
 
     private double getNodePositionY(int index, int i) {
-        double koeff = 2.3;
+        double shift = 5;
+        double koeff = 1.7;
         double startShift = 10;
         double step = 3;
 
-        return RuleNodeAdditionalInfo.CELL_SIZE * (index * koeff + startShift + step * i);
+        return (RuleNodeAdditionalInfo.CELL_SIZE + shift) * (index * koeff + startShift + step * i);
     }
 
     private RuleNode createRuleNode(String name, Class<?> typeClass, NodeConfiguration<?> configuration, int x, int y) {
