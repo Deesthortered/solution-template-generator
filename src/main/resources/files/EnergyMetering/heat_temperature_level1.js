@@ -7,7 +7,7 @@ var getRandomInt = function (min, max) {
     return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
-var temperature = function () {
+var temperature1 = function () {
     var currentDate = new Date();
     currentDate.setMinutes(0, 0, 0);
 
@@ -23,7 +23,7 @@ var temperature = function () {
     }
 }
 
-var msg = temperature();
+var msg = temperature1();
 var metadata = {};
 var msgType = "POST_TELEMETRY_REQUEST";
 return {msg: msg, metadata: metadata, msgType: msgType};

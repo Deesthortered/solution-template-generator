@@ -1,6 +1,6 @@
-var energyConsumption = parseInt(metadata.energyConsumption);
+var heatConsAbsolute = parseInt(metadata.heatConsAbsolute);
 var newMsg = {
-    energyConsAbsolute: energyConsumption + msg.energyConsAbsolute
+    energyConsAbsolute: heatConsAbsolute + msg.values.energyConsumption
 }
 return {
     msg: newMsg,

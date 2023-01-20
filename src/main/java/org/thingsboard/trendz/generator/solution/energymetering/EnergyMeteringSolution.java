@@ -236,7 +236,7 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
 
                     RuleNode energyMeterGetLatestConsumptionNode = createLatestTelemetryLoadNode(
                             energyMeter.getSystemName() + ": energyConsAbsolute (1/2)",
-                            "energyConsumption",
+                            "energyConsAbsolute",
                             getNodePositionX(false),
                             getNodePositionY(index, 2)
                     );
@@ -277,7 +277,7 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
 
                     RuleNode heatMeterGetLatestConsumptionNode = createLatestTelemetryLoadNode(
                             heatMeter.getSystemName() + ": heatConsAbsolute (1/2)",
-                            "heatConsumption",
+                            "heatConsAbsolute",
                             getNodePositionX(true),
                             getNodePositionY(index, 2)
                     );

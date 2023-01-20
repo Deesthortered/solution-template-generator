@@ -7,7 +7,7 @@ var getRandomInt = function (min, max) {
     return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
-var energyConsumption = function () {
+var energyConsumption0 = function () {
     var currentDate = new Date();
     currentDate.setMinutes(0, 0, 0);
 
@@ -33,7 +33,7 @@ var energyConsumption = function () {
     }
 }
 
-var consumption = energyConsumption();
+var consumption = energyConsumption0();
 
 var msg = consumption;
 var metadata = {};
