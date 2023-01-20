@@ -11,9 +11,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class ApartmentConfiguration {
 
-    private int floor;
     private int area;
-    private int roomNumber;
     private boolean occupied;
     private int level;
     private long startDate;

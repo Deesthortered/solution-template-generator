@@ -221,22 +221,22 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
     }
 
     private void applyData(List<Building> buildings, CustomerUser customerUser) {
+        UUID ownerId = customerUser.getCustomerId().getId();
         for (Building building : buildings) {
-            Asset buildingAsset = createBuilding(building);
-            tbRestClient.assignAssetToCustomer(customerUser.getCustomerId().getId(), buildingAsset.getUuidId());
+            Asset buildingAsset = createBuilding(building, ownerId);
 
             Set<Apartment> apartments = building.getApartments();
             for (Apartment apartment : apartments) {
-                Asset apartmentAsset = createApartment(apartment);
-                tbRestClient.assignAssetToCustomer(customerUser.getCustomerId().getId(), apartmentAsset.getUuidId());
+                Asset apartmentAsset = createApartment(apartment, ownerId);
+                tbRestClient.assignAssetToCustomer(ownerId, apartmentAsset.getUuidId());
                 tbRestClient.createRelation(RelationType.CONTAINS.getType(), buildingAsset.getId(), apartmentAsset.getId());
 
                 EnergyMeter energyMeter = apartment.getEnergyMeter();
                 HeatMeter heatMeter = apartment.getHeatMeter();
-                Device energyMeterDevice = createEnergyMeter(energyMeter);
-                Device heatMeterDevice = createHeatMeter(heatMeter);
-                tbRestClient.assignDeviceToCustomer(customerUser.getCustomerId().getId(), energyMeterDevice.getUuidId());
-                tbRestClient.assignDeviceToCustomer(customerUser.getCustomerId().getId(), heatMeterDevice.getUuidId());
+                Device energyMeterDevice = createEnergyMeter(energyMeter, ownerId);
+                Device heatMeterDevice = createHeatMeter(heatMeter, ownerId);
+                tbRestClient.assignDeviceToCustomer(ownerId, energyMeterDevice.getUuidId());
+                tbRestClient.assignDeviceToCustomer(ownerId, heatMeterDevice.getUuidId());
                 tbRestClient.createRelation(RelationType.CONTAINS.getType(), apartmentAsset.getId(), energyMeterDevice.getId());
                 tbRestClient.createRelation(RelationType.CONTAINS.getType(), apartmentAsset.getId(), heatMeterDevice.getId());
             }
@@ -409,6 +409,7 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
                                 .level(2)
                                 .startDate(TS_2022_JANUARY)
                                 .anomaly(false)
+                                .area(2)
                                 .build()
                 )
                 .build();
@@ -420,6 +421,7 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
                         .level(0)
                         .startDate(TS_2022_JANUARY)
                         .anomaly(false)
+                        .area(0)
                         .build()
         );
 
@@ -430,6 +432,7 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
                         .level(0)
                         .startDate(TS_2022_JANUARY)
                         .anomaly(false)
+                        .area(0)
                         .build()
         );
 
@@ -440,6 +443,7 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
                         .level(3)
                         .startDate(TS_2022_JANUARY)
                         .anomaly(false)
+                        .area(3)
                         .build()
         );
 
@@ -450,6 +454,7 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
                         .level(3)
                         .startDate(TS_2022_JANUARY)
                         .anomaly(false)
+                        .area(3)
                         .build()
         );
 
@@ -460,6 +465,7 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
                         .level(0)
                         .startDate(TS_2022_FEBRUARY)
                         .anomaly(false)
+                        .area(0)
                         .build()
         );
 
@@ -470,6 +476,7 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
                         .level(0)
                         .startDate(TS_2022_FEBRUARY)
                         .anomaly(false)
+                        .area(0)
                         .build()
         );
 
@@ -489,6 +496,7 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
                                 .level(3)
                                 .startDate(TS_2022_MAY)
                                 .anomaly(false)
+                                .area(3)
                                 .build()
                 )
                 .build();
@@ -500,6 +508,7 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
                         .level(0)
                         .startDate(TS_2022_MAY)
                         .anomaly(true)
+                        .area(0)
                         .build()
         );
 
@@ -510,6 +519,7 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
                         .level(1)
                         .startDate(TS_2022_MAY)
                         .anomaly(false)
+                        .area(1)
                         .build()
         );
 
@@ -520,6 +530,7 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
                         .level(1)
                         .startDate(TS_2022_MAY)
                         .anomaly(false)
+                        .area(1)
                         .build()
         );
 
@@ -530,6 +541,7 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
                         .level(2)
                         .startDate(TS_2022_MAY)
                         .anomaly(false)
+                        .area(2)
                         .build()
         );
 
@@ -540,6 +552,7 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
                         .level(2)
                         .startDate(TS_2022_MAY)
                         .anomaly(false)
+                        .area(2)
                         .build()
         );
 
@@ -550,6 +563,7 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
                         .level(2)
                         .startDate(TS_2022_MAY)
                         .anomaly(false)
+                        .area(2)
                         .build()
         );
 
@@ -569,6 +583,7 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
                                 .level(3)
                                 .startDate(TS_2022_JANUARY)
                                 .anomaly(false)
+                                .area(3)
                                 .build()
                 )
                 .build();
@@ -582,7 +597,7 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
         for (int floor = 1; floor <= configuration.getFloorCount(); floor++) {
             for (int number = 1; number <= configuration.getApartmentsByFloorCount(); number++) {
                 ApartmentConfiguration apartmentConfiguration = configuration.getApartmentConfiguration(floor, number);
-                Apartment apartment = createApartmentByConfiguration(apartmentConfiguration, configuration.getName(), floor + "0" + number, skipTelemetry);
+                Apartment apartment = createApartmentByConfiguration(apartmentConfiguration, configuration.getName(), floor, number, configuration.getApartmentsByFloorCount(), skipTelemetry);
                 apartments.add(apartment);
             }
         }
@@ -595,8 +610,9 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
                 .build();
     }
 
-    private Apartment createApartmentByConfiguration(ApartmentConfiguration configuration, String buildingName, String number, boolean skipTelemetry) {
-        String letter = buildingName.substring(0, 1);
+    private Apartment createApartmentByConfiguration(ApartmentConfiguration configuration, String buildingName, int floor, int number, int apartmentByFloorCount, boolean skipTelemetry) {
+        String titleNumber = floor + "0" + number;
+        String letterAndNumber = buildingName.charAt(0) + titleNumber;
         long startDate = configuration.getStartDate() + createRandomDateBias();
 
         Telemetry<Long> energyMeterConsumption = createTelemetryEnergyMeterConsumption(configuration, skipTelemetry);
@@ -607,7 +623,7 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
         Telemetry<Long> heatMeterConsAbsolute = createTelemetryHeatMeterConsAbsolute(heatMeterConsumption, skipTelemetry);
 
         EnergyMeter energyMeter = EnergyMeter.builder()
-                .systemName("Energy Meter " + letter + number)
+                .systemName("Energy Meter " + letterAndNumber)
                 .systemLabel("")
                 .serialNumber(createRandomSerialNumber())
                 .installDate(startDate)
@@ -616,7 +632,7 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
                 .build();
 
         HeatMeter heatMeter = HeatMeter.builder()
-                .systemName("Heat Meter " + letter + number)
+                .systemName("Heat Meter " + letterAndNumber)
                 .systemLabel("")
                 .serialNumber(createRandomSerialNumber())
                 .installDate(startDate)
@@ -626,11 +642,11 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
                 .build();
 
         Apartment apartment = Apartment.builder()
-                .systemName("Apt " + number + " in " + buildingName)
+                .systemName("Apt " + titleNumber + " in " + buildingName)
                 .systemLabel("")
-                .floor(configuration.getFloor())
-                .area(configuration.getArea())
-                .roomNumber(configuration.getRoomNumber())
+                .floor(floor)
+                .area(createRandomAreaByLevel(configuration.getArea()))
+                .roomNumber((floor - 1) * apartmentByFloorCount + number)
                 .state(configuration.isOccupied() ? "occupied" : "free")
                 .energyMeter(energyMeter)
                 .heatMeter(heatMeter)
@@ -646,6 +662,16 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
 
     private long createRandomSerialNumber() {
         return RandomUtils.getRandomNumber(serialRangeFrom, serialRangeTo);
+    }
+
+    private int createRandomAreaByLevel(int level) {
+        switch (level) {
+            case 0: return (int) RandomUtils.getRandomNumber(30, 300);
+            case 1: return (int) RandomUtils.getRandomNumber(30, 60);
+            case 2: return (int) RandomUtils.getRandomNumber(60, 150);
+            case 3: return (int) RandomUtils.getRandomNumber(150, 300);
+            default: throw new IllegalArgumentException("Unsupported level: " + level);
+        }
     }
 
 
@@ -917,8 +943,9 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
     }
 
 
-    private Asset createBuilding(Building building) {
+    private Asset createBuilding(Building building, UUID ownerId) {
         Asset asset = tbRestClient.createAsset(building.getSystemName(), "building");
+        tbRestClient.assignAssetToCustomer(ownerId, asset.getUuidId());
 
         Set<Attribute<?>> attributes = Set.of(
                 new Attribute<>("address", building.getAddress())
@@ -927,8 +954,9 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
         return asset;
     }
 
-    private Asset createApartment(Apartment apartment) {
+    private Asset createApartment(Apartment apartment, UUID ownerId) {
         Asset asset = tbRestClient.createAsset(apartment.getSystemName(), "apartment");
+        tbRestClient.assignAssetToCustomer(ownerId, asset.getUuidId());
 
         Set<Attribute<?>> attributes = Set.of(
                 new Attribute<>("floor", apartment.getFloor()),
@@ -940,9 +968,10 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
         return asset;
     }
 
-    private Device createEnergyMeter(EnergyMeter energyMeter) {
+    private Device createEnergyMeter(EnergyMeter energyMeter, UUID ownerId) {
         Device device = tbRestClient.createDevice(energyMeter.getSystemName(), "energyMeter");
         DeviceCredentials deviceCredentials = tbRestClient.getDeviceCredentials(device.getUuidId());
+        tbRestClient.assignDeviceToCustomer(ownerId, device.getUuidId());
 
         Set<Attribute<?>> attributes = Set.of(
                 new Attribute<>("installDate", energyMeter.getInstallDate()),
@@ -957,9 +986,10 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
         return device;
     }
 
-    private Device createHeatMeter(HeatMeter heatMeter) {
+    private Device createHeatMeter(HeatMeter heatMeter, UUID ownerId) {
         Device device = tbRestClient.createDevice(heatMeter.getSystemName(), "heatMeter");
         DeviceCredentials deviceCredentials = tbRestClient.getDeviceCredentials(device.getUuidId());
+        tbRestClient.assignDeviceToCustomer(ownerId, device.getUuidId());
 
         Set<Attribute<?>> attributes = Set.of(
                 new Attribute<>("installDate", heatMeter.getInstallDate()),
