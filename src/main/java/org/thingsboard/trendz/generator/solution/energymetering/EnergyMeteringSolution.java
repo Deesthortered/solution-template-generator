@@ -200,7 +200,6 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
             List<NodeConnectionInfo> connections = new ArrayList<>();
             metaData.setConnections(connections);
 
-
             for (Building building : buildings) {
                 for (Apartment apartment : building.getApartments()) {
                     ApartmentConfiguration configuration = this.apartmentConfigurationMap.get(apartment);
@@ -230,18 +229,26 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
                             getNodePositionY(index, 1)
                     );
                     nodes.add(energyMeterConsumptionGeneratorNode);
-                    connections.add(createRuleConnection(index, 1));
+                    connections.add(createRuleConnection(index + 1, index));
 
 
-                    RuleNode energyMeterConsAbsoluteGeneratorNode = createGeneratorNode(
-                            energyMeter.getSystemName() + ": energyConsAbsolute",
-                            energyMeterId,
-                            getEnergyMeterConsAbsoluteFile(occupied, level),
+                    RuleNode energyMeterGetLatestConsumptionNode = createLatestTelemetryLoadNode(
+                            energyMeter.getSystemName() + ": Get latest consumption",
+                            "energyConsumption",
                             getNodePositionX(false),
                             getNodePositionY(index, 2)
                     );
-                    nodes.add(energyMeterConsAbsoluteGeneratorNode);
-                    connections.add(createRuleConnection(index, 2));
+                    RuleNode energyMeterConsumptionTransformationNode = createTransformationNode(
+                            energyMeter.getSystemName() + ": transformation to ConsAbsolute",
+                            getEnergyMeterConsAbsoluteFile(),
+                            getNodePositionX(false),
+                            getNodePositionY(index, 3)
+                    );
+                    nodes.add(energyMeterGetLatestConsumptionNode);
+                    nodes.add(energyMeterConsumptionTransformationNode);
+                    connections.add(createRuleConnection(index + 1, index + 2));
+                    connections.add(createRuleConnection(index + 2, index + 3));
+                    connections.add(createRuleConnection(index + 3, index));
 
 
                     RuleNode heatMeterTemperatureGeneratorNode = createGeneratorNode(
@@ -252,7 +259,7 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
                             getNodePositionY(index, 0)
                     );
                     nodes.add(heatMeterTemperatureGeneratorNode);
-                    connections.add(createRuleConnection(index, 3));
+                    connections.add(createRuleConnection(index + 3, index));
 
 
                     RuleNode heatMeterConsumptionGeneratorNode = createGeneratorNode(
@@ -263,18 +270,26 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
                             getNodePositionY(index, 1)
                     );
                     nodes.add(heatMeterConsumptionGeneratorNode);
-                    connections.add(createRuleConnection(index, 4));
+                    connections.add(createRuleConnection(index + 4, index));
 
 
-                    RuleNode heatMeterConsAbsoluteGeneratorNode = createGeneratorNode(
-                            heatMeter.getSystemName() + ": heatConsAbsolute",
-                            heatMeterId,
-                            getHeatMeterConsAbsoluteFile(occupied, level),
+                    RuleNode heatMeterGetLatestConsumptionNode = createLatestTelemetryLoadNode(
+                            heatMeter.getSystemName() + ": Get latest consumption",
+                            "heatConsumption",
                             getNodePositionX(true),
                             getNodePositionY(index, 2)
                     );
-                    nodes.add(heatMeterConsAbsoluteGeneratorNode);
-                    connections.add(createRuleConnection(index, 5));
+                    RuleNode heatMeterConsumptionTransformationNode = createTransformationNode(
+                            heatMeter.getSystemName() + ": transformation to ConsAbsolute",
+                            getHeatMeterConsAbsoluteFile(),
+                            getNodePositionX(true),
+                            getNodePositionY(index, 3)
+                    );
+                    nodes.add(heatMeterGetLatestConsumptionNode);
+                    nodes.add(heatMeterConsumptionTransformationNode);
+                    connections.add(createRuleConnection(index + 5, index + 6));
+                    connections.add(createRuleConnection(index + 6, index + 7));
+                    connections.add(createRuleConnection(index + 7, index));
                 }
             }
 
@@ -1035,20 +1050,6 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
     }
 
 
-    private double getNodePositionX(boolean left) {
-        return left
-                ? RuleNodeAdditionalInfo.CELL_SIZE * 5
-                : RuleNodeAdditionalInfo.CELL_SIZE * 20;
-    }
-
-    private double getNodePositionY(int index, int i) {
-        double koeff = 2.3;
-        double startShift = 10;
-        double step = 3;
-
-        return RuleNodeAdditionalInfo.CELL_SIZE * (index * koeff + startShift + step * i);
-    }
-
     private RuleNode createSaveNode(String name, double gridX, double gridY) {
         TbMsgTimeseriesNodeConfiguration saveConfiguration = new TbMsgTimeseriesNodeConfiguration();
         saveConfiguration.setDefaultTTL(0);
@@ -1088,6 +1089,21 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
         return createRuleNode(name, TbTransformMsgNodeConfiguration.class, configuration, (int) gridX, (int) gridY);
     }
 
+
+    private double getNodePositionX(boolean left) {
+        return left
+                ? RuleNodeAdditionalInfo.CELL_SIZE * 5
+                : RuleNodeAdditionalInfo.CELL_SIZE * 20;
+    }
+
+    private double getNodePositionY(int index, int i) {
+        double koeff = 2.3;
+        double startShift = 10;
+        double step = 3;
+
+        return RuleNodeAdditionalInfo.CELL_SIZE * (index * koeff + startShift + step * i);
+    }
+
     private RuleNode createRuleNode(String name, Class<?> typeClass, NodeConfiguration<?> configuration, int x, int y) {
         RuleNode generatorNode = new RuleNode();
         generatorNode.setName(name);
@@ -1105,11 +1121,11 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
         return generatorNode;
     }
 
-    private NodeConnectionInfo createRuleConnection(int index, int shift) {
+    private NodeConnectionInfo createRuleConnection(int from, int to) {
         NodeConnectionInfo connection = new NodeConnectionInfo();
         connection.setType(NodeConnectionType.SUCCESS.toString());
-        connection.setFromIndex(index + shift);
-        connection.setToIndex(index);
+        connection.setFromIndex(from);
+        connection.setToIndex(to);
         return connection;
     }
 
@@ -1120,10 +1136,8 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
                 : "energy_consumption_level0.js";
     }
 
-    private String getEnergyMeterConsAbsoluteFile(boolean occupied, int level) {
-        return occupied
-                ? "energy_cons_absolute_level" + level + ".js"
-                : "energy_cons_absolute_level0.js";
+    private String getEnergyMeterConsAbsoluteFile() {
+        return "energy_cons_absolute.js";
     }
 
     private String getHeatMeterTemperatureFile(boolean occupied) {
@@ -1138,9 +1152,7 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
                 : "heat_consumption_level0.js";
     }
 
-    private String getHeatMeterConsAbsoluteFile(boolean occupied, int level) {
-        return occupied
-                ? "heat_cons_absolute_level" + level + ".js"
-                : "heat_cons_absolute_level0.js";
+    private String getHeatMeterConsAbsoluteFile() {
+        return "heat_cons_absolute.js";
     }
 }
