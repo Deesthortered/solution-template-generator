@@ -4,14 +4,14 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.thingsboard.server.common.data.Customer;
 
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class ActivationAuthToken {
+public class CustomerData {
 
-    private String token;
-    private String refreshToken;
-    private String scope;
+    private Customer customer;
+    private CustomerUser user;
 }

@@ -11,7 +11,8 @@ public enum NodeConnectionType {
         this.type = type;
     }
 
-    public String getType() {
+    @Override
+    public String toString() {
         return this.type;
     }
 }

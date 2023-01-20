@@ -1,4 +1,4 @@
-package org.thingsboard.trendz.generator.model;
+package org.thingsboard.trendz.generator.model.rest;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;

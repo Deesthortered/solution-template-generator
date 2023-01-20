@@ -26,7 +26,6 @@ import org.thingsboard.trendz.generator.model.CustomerUser;
 import org.thingsboard.trendz.generator.model.NodeConnectionType;
 import org.thingsboard.trendz.generator.model.RelationType;
 import org.thingsboard.trendz.generator.model.RuleNodeAdditionalInfo;
-import org.thingsboard.trendz.generator.model.Scope;
 import org.thingsboard.trendz.generator.model.Telemetry;
 import org.thingsboard.trendz.generator.model.Timestamp;
 import org.thingsboard.trendz.generator.service.FileService;
@@ -151,10 +150,10 @@ public class BasicSolution implements SolutionTemplateGenerator {
                     new Attribute<>("StringKey", "qwerty")
             );
             tbRestClient.setEntityAttributes(
-                    device.getUuidId(), EntityType.DEVICE, Scope.SERVER_SCOPE, attributes
+                    device.getUuidId(), EntityType.DEVICE, Attribute.Scope.SERVER_SCOPE, attributes
             );
             tbRestClient.setEntityAttributes(
-                    asset.getUuidId(), EntityType.ASSET, Scope.SERVER_SCOPE, attributes
+                    asset.getUuidId(), EntityType.ASSET, Attribute.Scope.SERVER_SCOPE, attributes
             );
 
             TbMsgGeneratorNodeConfiguration generatorConfiguration = new TbMsgGeneratorNodeConfiguration();
@@ -204,7 +203,7 @@ public class BasicSolution implements SolutionTemplateGenerator {
             nodes.add(saveNode);
 
             NodeConnectionInfo connection = new NodeConnectionInfo();
-            connection.setType(NodeConnectionType.SUCCESS.getType());
+            connection.setType(NodeConnectionType.SUCCESS.toString());
             connection.setFromIndex(0);
             connection.setToIndex(1);
 

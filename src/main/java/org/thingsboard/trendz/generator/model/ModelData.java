@@ -5,12 +5,13 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.Set;
+
 @Data
 @Builder
-@AllArgsConstructor
 @NoArgsConstructor
-public class AuthToken {
+@AllArgsConstructor
+public class ModelData {
 
-    private String token;
-    private String refreshToken;
+    private Set<ModelEntity> data;
 }

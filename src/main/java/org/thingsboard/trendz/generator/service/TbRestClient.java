@@ -22,6 +22,7 @@ import org.thingsboard.server.common.data.security.Authority;
 import org.thingsboard.server.common.data.security.DeviceCredentials;
 import org.thingsboard.trendz.generator.exception.PushTelemetryException;
 import org.thingsboard.trendz.generator.model.*;
+import org.thingsboard.trendz.generator.model.rest.*;
 import org.thingsboard.trendz.generator.utils.JsonUtils;
 
 import java.util.*;
@@ -344,7 +345,7 @@ public class TbRestClient {
     }
 
 
-    public void setEntityAttributes(UUID entityId, EntityType entityType, Scope scope, Set<Attribute<?>> attributes) {
+    public void setEntityAttributes(UUID entityId, EntityType entityType, Attribute.Scope scope, Set<Attribute<?>> attributes) {
         Map<String, Object> params = new HashMap<>();
         params.put("entityId", entityId);
         params.put("entityType", entityType);

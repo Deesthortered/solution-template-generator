@@ -1,4 +1,4 @@
-package org.thingsboard.trendz.generator.solution.energymetering.model;
+package org.thingsboard.trendz.generator.model;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -8,7 +8,7 @@ public interface ModelEntity extends Comparable<ModelEntity> {
     void setSystemName(String systemName);
 
     String getSystemLabel();
-    void setSystemLabel(String systemName);
+    void setSystemLabel(String systemLabel);
 
     @Override
     default int compareTo(@NotNull ModelEntity that) {

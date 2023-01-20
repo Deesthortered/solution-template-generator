@@ -26,21 +26,12 @@ import org.thingsboard.trendz.generator.exception.AssetAlreadyExistException;
 import org.thingsboard.trendz.generator.exception.CustomerAlreadyExistException;
 import org.thingsboard.trendz.generator.exception.DeviceAlreadyExistException;
 import org.thingsboard.trendz.generator.exception.RuleChainAlreadyExistException;
-import org.thingsboard.trendz.generator.model.Attribute;
-import org.thingsboard.trendz.generator.model.CustomerUser;
-import org.thingsboard.trendz.generator.model.NodeConnectionType;
-import org.thingsboard.trendz.generator.model.RelationType;
-import org.thingsboard.trendz.generator.model.RuleNodeAdditionalInfo;
-import org.thingsboard.trendz.generator.model.Scope;
-import org.thingsboard.trendz.generator.model.Telemetry;
+import org.thingsboard.trendz.generator.model.*;
 import org.thingsboard.trendz.generator.service.FileService;
 import org.thingsboard.trendz.generator.service.TbRestClient;
 import org.thingsboard.trendz.generator.service.VisualizationService;
 import org.thingsboard.trendz.generator.solution.SolutionTemplateGenerator;
-import org.thingsboard.trendz.generator.solution.energymetering.model.Apartment;
-import org.thingsboard.trendz.generator.solution.energymetering.model.Building;
-import org.thingsboard.trendz.generator.solution.energymetering.model.EnergyMeter;
-import org.thingsboard.trendz.generator.solution.energymetering.model.HeatMeter;
+import org.thingsboard.trendz.generator.solution.energymetering.model.*;
 import org.thingsboard.trendz.generator.utils.DateTimeUtils;
 import org.thingsboard.trendz.generator.utils.JsonUtils;
 import org.thingsboard.trendz.generator.utils.RandomUtils;
@@ -117,43 +108,10 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
         try {
             log.info("Energy Metering Solution - start validation");
 
-            tbRestClient.getCustomerByTitle(CUSTOMER_TITLE)
-                    .ifPresent(customer -> {
-                        throw new CustomerAlreadyExistException(customer);
-                    });
-
-            tbRestClient.getAllRuleChains()
-                    .stream()
-                    .filter(ruleChain -> ruleChain.getName().equals(RULE_CHAIN_NAME))
-                    .findAny()
-                    .ifPresent(ruleChain -> {
-                        throw new RuleChainAlreadyExistException(ruleChain);
-                    });
-
-            List<Building> data = makeData(true);
-
-            Set<String> allAssetNames = getAllAssetNames(data);
-            Set<Asset> badAssets = tbRestClient.getAllAssets()
-                    .stream()
-                    .filter(asset -> allAssetNames.contains(asset.getName()))
-                    .collect(Collectors.toSet());
-
-            if (!badAssets.isEmpty()) {
-                log.error("There are assets that already exists: {}", badAssets);
-                throw new AssetAlreadyExistException(badAssets.iterator().next());
-            }
-
-
-            Set<String> allDeviceNames = getAllDeviceNames(data);
-            Set<Device> badDevices = tbRestClient.getAllDevices()
-                    .stream()
-                    .filter(device -> allDeviceNames.contains(device.getName()))
-                    .collect(Collectors.toSet());
-
-            if (!badDevices.isEmpty()) {
-                log.error("There are devices that already exists: {}", badDevices);
-                throw new DeviceAlreadyExistException(badDevices.iterator().next());
-            }
+            validateCustomerData();
+            validateRuleChain();
+            ModelData data = makeData(true);
+            validateData(data);
 
             log.info("Energy Metering Solution - validation is completed!");
         } catch (Exception e) {
@@ -165,16 +123,9 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
     public void generate(boolean skipTelemetry) {
         log.info("Energy Metering Solution - start generation");
         try {
-
-            Customer customer = tbRestClient.createCustomer(CUSTOMER_TITLE);
-            CustomerUser customerUser = tbRestClient.createCustomerUser(
-                    customer, CUSTOMER_USER_EMAIL, CUSTOMER_USER_PASSWORD,
-                    CUSTOMER_USER_FIRST_NAME, CUSTOMER_USER_LAST_NAME
-            );
-
-            List<Building> data = makeData(false);
-            visualizeData(data);
-            applyData(data, customerUser);
+            CustomerData customerData = createCustomerData();
+            ModelData data = makeData(skipTelemetry);
+            applyData(data, customerData);
             createRuleChain(data);
 
             log.info("Energy Metering Solution - generation is completed!");
@@ -187,31 +138,10 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
     public void remove() {
         log.info("Energy Metering Solution - start removal");
         try {
-            tbRestClient.getCustomerByTitle(CUSTOMER_TITLE)
-                    .ifPresent(customer -> tbRestClient.deleteCustomer(customer.getUuidId()));
-
-            tbRestClient.getAllRuleChains()
-                    .stream()
-                    .filter(ruleChain -> ruleChain.getName().equals(RULE_CHAIN_NAME))
-                    .findAny()
-                    .flatMap(ruleChain -> tbRestClient.getRuleChainById(ruleChain.getUuidId()))
-                    .ifPresent(ruleChain -> {
-                        tbRestClient.deleteRuleChain(ruleChain.getUuidId());
-                    });
-
-            List<Building> data = makeData(true);
-
-            Set<String> allDeviceNames = getAllDeviceNames(data);
-            tbRestClient.getAllDevices()
-                    .stream()
-                    .filter(device -> allDeviceNames.contains(device.getName()))
-                    .forEach(device -> tbRestClient.deleteDevice(device.getUuidId()));
-
-            Set<String> allAssetNames = getAllAssetNames(data);
-            tbRestClient.getAllAssets()
-                    .stream()
-                    .filter(asset -> allAssetNames.contains(asset.getName()))
-                    .forEach(asset -> tbRestClient.deleteAsset(asset.getUuidId()));
+            deleteCustomerData();
+            deleteRuleChain();
+            ModelData data = makeData(true);
+            deleteData(data);
 
             log.info("Energy Metering Solution - removal is completed!");
         } catch (Exception e) {
@@ -220,42 +150,39 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
     }
 
 
-    private List<Building> makeData(boolean skipTelemetry) {
-        Building alpire = makeAlpire(skipTelemetry);
-        Building feline = makeFeline(skipTelemetry);
-        Building hogurity = makeHogurity(skipTelemetry);
-
-        return List.of(alpire, feline, hogurity);
+    private Set<Building> mapToBuildings(ModelData data) {
+        return data.getData().stream()
+                .map(modelEntity -> (Building) modelEntity)
+                .collect(Collectors.toSet());
     }
 
-    private void visualizeData(List<Building> data) {
-//        visualizationService.visualize();
+
+    private CustomerData createCustomerData() {
+        Customer customer = tbRestClient.createCustomer(CUSTOMER_TITLE);
+        CustomerUser customerUser = tbRestClient.createCustomerUser(
+                customer, CUSTOMER_USER_EMAIL, CUSTOMER_USER_PASSWORD,
+                CUSTOMER_USER_FIRST_NAME, CUSTOMER_USER_LAST_NAME
+        );
+
+        return new CustomerData(customer, customerUser);
     }
 
-    private void applyData(List<Building> buildings, CustomerUser customerUser) {
-        UUID ownerId = customerUser.getCustomerId().getId();
-        for (Building building : buildings) {
-            Asset buildingAsset = createBuilding(building, ownerId);
-
-            Set<Apartment> apartments = building.getApartments();
-            for (Apartment apartment : apartments) {
-                Asset apartmentAsset = createApartment(apartment, ownerId);
-                tbRestClient.assignAssetToCustomer(ownerId, apartmentAsset.getUuidId());
-                tbRestClient.createRelation(RelationType.CONTAINS.getType(), buildingAsset.getId(), apartmentAsset.getId());
-
-                EnergyMeter energyMeter = apartment.getEnergyMeter();
-                HeatMeter heatMeter = apartment.getHeatMeter();
-                Device energyMeterDevice = createEnergyMeter(energyMeter, ownerId);
-                Device heatMeterDevice = createHeatMeter(heatMeter, ownerId);
-                tbRestClient.assignDeviceToCustomer(ownerId, energyMeterDevice.getUuidId());
-                tbRestClient.assignDeviceToCustomer(ownerId, heatMeterDevice.getUuidId());
-                tbRestClient.createRelation(RelationType.CONTAINS.getType(), apartmentAsset.getId(), energyMeterDevice.getId());
-                tbRestClient.createRelation(RelationType.CONTAINS.getType(), apartmentAsset.getId(), heatMeterDevice.getId());
-            }
-        }
+    private void validateCustomerData() {
+        tbRestClient.getCustomerByTitle(CUSTOMER_TITLE)
+                .ifPresent(customer -> {
+                    throw new CustomerAlreadyExistException(customer);
+                });
     }
 
-    private void createRuleChain(List<Building> buildings) {
+    private void deleteCustomerData() {
+        tbRestClient.getCustomerByTitle(CUSTOMER_TITLE)
+                .ifPresent(customer -> tbRestClient.deleteCustomer(customer.getUuidId()));
+    }
+
+
+    private void createRuleChain(ModelData data) {
+        Set<Building> buildings = mapToBuildings(data);
+
         try {
             RuleChain ruleChain = tbRestClient.createRuleChain(RULE_CHAIN_NAME);
             RuleChainMetaData metaData = tbRestClient.getRuleChainMetadataByRuleChainId(ruleChain.getUuidId())
@@ -349,37 +276,145 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
         }
     }
 
-
-    private Set<String> getAllAssetNames(List<Building> data) {
-        Set<String> building = data.stream()
-                .map(Building::getSystemName)
-                .collect(Collectors.toSet());
-
-        Set<String> apartments = data.stream()
-                .map(Building::getApartments)
-                .flatMap(Collection::stream)
-                .map(Apartment::getSystemName)
-                .collect(Collectors.toSet());
-
-        return Sets.union(building, apartments);
+    private void validateRuleChain() {
+        tbRestClient.getAllRuleChains()
+                .stream()
+                .filter(ruleChain -> ruleChain.getName().equals(RULE_CHAIN_NAME))
+                .findAny()
+                .ifPresent(ruleChain -> {
+                    throw new RuleChainAlreadyExistException(ruleChain);
+                });
     }
 
-    private Set<String> getAllDeviceNames(List<Building> data) {
-        Set<String> energyMeters = data.stream()
+    private void deleteRuleChain() {
+        tbRestClient.getAllRuleChains()
+                .stream()
+                .filter(ruleChain -> ruleChain.getName().equals(RULE_CHAIN_NAME))
+                .findAny()
+                .ifPresent(ruleChain -> {
+                    throw new RuleChainAlreadyExistException(ruleChain);
+                });
+    }
+
+
+    private ModelData makeData(boolean skipTelemetry) {
+        Building alpire = makeAlpire(skipTelemetry);
+        Building feline = makeFeline(skipTelemetry);
+        Building hogurity = makeHogurity(skipTelemetry);
+
+        return ModelData.builder()
+                .data(Set.of(alpire, feline, hogurity))
+                .build();
+    }
+
+    private void applyData(ModelData data, CustomerData customerData) {
+        CustomerUser customerUser = customerData.getUser();
+        Set<Building> buildings = mapToBuildings(data);
+
+        UUID ownerId = customerUser.getCustomerId().getId();
+        for (Building building : buildings) {
+            Asset buildingAsset = createBuilding(building, ownerId);
+
+            Set<Apartment> apartments = building.getApartments();
+            for (Apartment apartment : apartments) {
+                Asset apartmentAsset = createApartment(apartment, ownerId);
+                tbRestClient.assignAssetToCustomer(ownerId, apartmentAsset.getUuidId());
+                tbRestClient.createRelation(RelationType.CONTAINS.getType(), buildingAsset.getId(), apartmentAsset.getId());
+
+                EnergyMeter energyMeter = apartment.getEnergyMeter();
+                HeatMeter heatMeter = apartment.getHeatMeter();
+                Device energyMeterDevice = createEnergyMeter(energyMeter, ownerId);
+                Device heatMeterDevice = createHeatMeter(heatMeter, ownerId);
+                tbRestClient.assignDeviceToCustomer(ownerId, energyMeterDevice.getUuidId());
+                tbRestClient.assignDeviceToCustomer(ownerId, heatMeterDevice.getUuidId());
+                tbRestClient.createRelation(RelationType.CONTAINS.getType(), apartmentAsset.getId(), energyMeterDevice.getId());
+                tbRestClient.createRelation(RelationType.CONTAINS.getType(), apartmentAsset.getId(), heatMeterDevice.getId());
+            }
+        }
+    }
+
+    private void validateData(ModelData data) {
+        Set<Building> buildings = mapToBuildings(data);
+
+        Set<Apartment> apartments = buildings.stream()
                 .map(Building::getApartments)
                 .flatMap(Collection::stream)
+                .collect(Collectors.toSet());
+
+        Set<EnergyMeter> energyMeters = apartments.stream()
                 .map(Apartment::getEnergyMeter)
-                .map(EnergyMeter::getSystemName)
                 .collect(Collectors.toSet());
 
-        Set<String> heatMeters = data.stream()
+        Set<HeatMeter> heatMeters = apartments.stream()
+                .map(Apartment::getHeatMeter)
+                .collect(Collectors.toSet());
+
+        Set<String> assets = Sets.union(buildings, apartments)
+                .stream()
+                .map(ModelEntity::getSystemName)
+                .collect(Collectors.toSet());
+
+        Set<String> devices = Sets.union(energyMeters, heatMeters)
+                .stream()
+                .map(ModelEntity::getSystemName)
+                .collect(Collectors.toSet());
+
+        Set<Asset> badAssets = tbRestClient.getAllAssets()
+                .stream()
+                .filter(asset -> assets.contains(asset.getName()))
+                .collect(Collectors.toSet());
+
+        if (!badAssets.isEmpty()) {
+            log.error("There are assets that already exists: {}", badAssets);
+            throw new AssetAlreadyExistException(badAssets.iterator().next());
+        }
+
+        Set<Device> badDevices = tbRestClient.getAllDevices()
+                .stream()
+                .filter(device -> devices.contains(device.getName()))
+                .collect(Collectors.toSet());
+
+        if (!badDevices.isEmpty()) {
+            log.error("There are devices that already exists: {}", badDevices);
+            throw new DeviceAlreadyExistException(badDevices.iterator().next());
+        }
+    }
+
+    private void deleteData(ModelData data) {
+        Set<Building> buildings = mapToBuildings(data);
+
+        Set<Apartment> apartments = buildings.stream()
                 .map(Building::getApartments)
                 .flatMap(Collection::stream)
-                .map(Apartment::getHeatMeter)
-                .map(HeatMeter::getSystemName)
                 .collect(Collectors.toSet());
 
-        return Sets.union(energyMeters, heatMeters);
+        Set<EnergyMeter> energyMeters = apartments.stream()
+                .map(Apartment::getEnergyMeter)
+                .collect(Collectors.toSet());
+
+        Set<HeatMeter> heatMeters = apartments.stream()
+                .map(Apartment::getHeatMeter)
+                .collect(Collectors.toSet());
+
+        Set<String> assets = Sets.union(buildings, apartments)
+                .stream()
+                .map(ModelEntity::getSystemName)
+                .collect(Collectors.toSet());
+
+        Set<String> devices = Sets.union(energyMeters, heatMeters)
+                .stream()
+                .map(ModelEntity::getSystemName)
+                .collect(Collectors.toSet());
+
+        tbRestClient.getAllDevices()
+                .stream()
+                .filter(device -> devices.contains(device.getName()))
+                .forEach(device -> tbRestClient.deleteDevice(device.getUuidId()));
+
+        tbRestClient.getAllAssets()
+                .stream()
+                .filter(asset -> assets.contains(asset.getName()))
+                .forEach(asset -> tbRestClient.deleteAsset(asset.getUuidId()));
     }
 
 
@@ -938,7 +973,7 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
         Set<Attribute<?>> attributes = Set.of(
                 new Attribute<>("address", building.getAddress())
         );
-        tbRestClient.setEntityAttributes(asset.getUuidId(), EntityType.ASSET, Scope.SERVER_SCOPE, attributes);
+        tbRestClient.setEntityAttributes(asset.getUuidId(), EntityType.ASSET, Attribute.Scope.SERVER_SCOPE, attributes);
         return asset;
     }
 
@@ -952,7 +987,7 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
                 new Attribute<>("roomNumber", apartment.getRoomNumber()),
                 new Attribute<>("state", apartment.getState())
         );
-        tbRestClient.setEntityAttributes(asset.getUuidId(), EntityType.ASSET, Scope.SERVER_SCOPE, attributes);
+        tbRestClient.setEntityAttributes(asset.getUuidId(), EntityType.ASSET, Attribute.Scope.SERVER_SCOPE, attributes);
         return asset;
     }
 
@@ -965,7 +1000,7 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
                 new Attribute<>("installDate", energyMeter.getInstallDate()),
                 new Attribute<>("serialNumber", energyMeter.getSerialNumber())
         );
-        tbRestClient.setEntityAttributes(device.getUuidId(), EntityType.DEVICE, Scope.SERVER_SCOPE, attributes);
+        tbRestClient.setEntityAttributes(device.getUuidId(), EntityType.DEVICE, Attribute.Scope.SERVER_SCOPE, attributes);
 
         tbRestClient.pushTelemetry(deviceCredentials.getCredentialsId(), energyMeter.getEnergyConsumption());
         tbRestClient.pushTelemetry(deviceCredentials.getCredentialsId(), energyMeter.getEnergyConsAbsolute());
@@ -983,7 +1018,7 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
                 new Attribute<>("installDate", heatMeter.getInstallDate()),
                 new Attribute<>("serialNumber", heatMeter.getSerialNumber())
         );
-        tbRestClient.setEntityAttributes(device.getUuidId(), EntityType.DEVICE, Scope.SERVER_SCOPE, attributes);
+        tbRestClient.setEntityAttributes(device.getUuidId(), EntityType.DEVICE, Attribute.Scope.SERVER_SCOPE, attributes);
 
         tbRestClient.pushTelemetry(deviceCredentials.getCredentialsId(), heatMeter.getTemperature());
         tbRestClient.pushTelemetry(deviceCredentials.getCredentialsId(), heatMeter.getHeatConsumption());
@@ -1066,7 +1101,7 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
 
     private NodeConnectionInfo createRuleConnection(int index, int shift) {
         NodeConnectionInfo connection = new NodeConnectionInfo();
-        connection.setType(NodeConnectionType.SUCCESS.getType());
+        connection.setType(NodeConnectionType.SUCCESS.toString());
         connection.setFromIndex(index + shift);
         connection.setToIndex(index);
         return connection;

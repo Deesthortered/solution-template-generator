@@ -5,6 +5,7 @@ public interface SolutionTemplateGenerator {
     String getSolutionName();
 
     void validate();
+
     void generate(boolean skipTelemetry);
 
     void remove();
