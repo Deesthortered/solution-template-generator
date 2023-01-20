@@ -7,10 +7,12 @@ import org.springframework.stereotype.Service;
 import org.thingsboard.rule.engine.api.NodeConfiguration;
 import org.thingsboard.rule.engine.debug.TbMsgGeneratorNode;
 import org.thingsboard.rule.engine.debug.TbMsgGeneratorNodeConfiguration;
+import org.thingsboard.rule.engine.metadata.TbGetAttributesNode;
 import org.thingsboard.rule.engine.metadata.TbGetAttributesNodeConfiguration;
 import org.thingsboard.rule.engine.telemetry.TbMsgAttributesNode;
 import org.thingsboard.rule.engine.telemetry.TbMsgTimeseriesNode;
 import org.thingsboard.rule.engine.telemetry.TbMsgTimeseriesNodeConfiguration;
+import org.thingsboard.rule.engine.transform.TbTransformMsgNode;
 import org.thingsboard.rule.engine.transform.TbTransformMsgNodeConfiguration;
 import org.thingsboard.server.common.data.Customer;
 import org.thingsboard.server.common.data.Device;
@@ -1066,7 +1068,7 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
         generatorConfiguration.setOriginatorType(EntityType.DEVICE);
         generatorConfiguration.setOriginatorId(entityId.toString());
         generatorConfiguration.setMsgCount(0);
-        generatorConfiguration.setPeriodInSeconds(3);
+        generatorConfiguration.setPeriodInSeconds(3600);
         generatorConfiguration.setJsScript(fileContent);
 
         return createRuleNode(name, TbMsgGeneratorNode.class, generatorConfiguration, (int) gridX, (int) gridY);
@@ -1076,7 +1078,7 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
         TbGetAttributesNodeConfiguration configuration = new TbGetAttributesNodeConfiguration();
         configuration.setLatestTsKeyNames(List.of(telemetryName));
 
-        return createRuleNode(name, TbGetAttributesNodeConfiguration.class, configuration, (int) gridX, (int) gridY);
+        return createRuleNode(name, TbGetAttributesNode.class, configuration, (int) gridX, (int) gridY);
     }
 
     private RuleNode createTransformationNode(String name, String scriptFileName, double gridX, double gridY) throws IOException {
@@ -1086,7 +1088,7 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
         configuration.setScriptLang(ScriptLanguage.JS);
         configuration.setJsScript(fileContent);
 
-        return createRuleNode(name, TbTransformMsgNodeConfiguration.class, configuration, (int) gridX, (int) gridY);
+        return createRuleNode(name, TbTransformMsgNode.class, configuration, (int) gridX, (int) gridY);
     }
 
 
