@@ -111,7 +111,7 @@ public class BasicSolution implements SolutionTemplateGenerator {
     }
 
     @Override
-    public void generate() {
+    public void generate(boolean skipTelemetry) {
         log.info("Basic Solution - start generation");
         try {
 

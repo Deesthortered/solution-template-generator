@@ -19,7 +19,7 @@ public class WaterMeteringSolution implements SolutionTemplateGenerator {
     }
 
     @Override
-    public void generate() {
+    public void generate(boolean skipTelemetry) {
         log.info("WaterMeteringSolution - generate");
     }
 

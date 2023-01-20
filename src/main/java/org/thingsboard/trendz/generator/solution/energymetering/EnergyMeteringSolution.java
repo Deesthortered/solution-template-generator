@@ -4,10 +4,14 @@ import com.google.common.collect.Sets;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.thingsboard.rule.engine.api.NodeConfiguration;
 import org.thingsboard.rule.engine.debug.TbMsgGeneratorNode;
 import org.thingsboard.rule.engine.debug.TbMsgGeneratorNodeConfiguration;
+import org.thingsboard.rule.engine.metadata.TbGetAttributesNodeConfiguration;
+import org.thingsboard.rule.engine.telemetry.TbMsgAttributesNode;
 import org.thingsboard.rule.engine.telemetry.TbMsgTimeseriesNode;
 import org.thingsboard.rule.engine.telemetry.TbMsgTimeseriesNodeConfiguration;
+import org.thingsboard.rule.engine.transform.TbTransformMsgNodeConfiguration;
 import org.thingsboard.server.common.data.Customer;
 import org.thingsboard.server.common.data.Device;
 import org.thingsboard.server.common.data.EntityType;
@@ -16,6 +20,7 @@ import org.thingsboard.server.common.data.rule.NodeConnectionInfo;
 import org.thingsboard.server.common.data.rule.RuleChain;
 import org.thingsboard.server.common.data.rule.RuleChainMetaData;
 import org.thingsboard.server.common.data.rule.RuleNode;
+import org.thingsboard.server.common.data.script.ScriptLanguage;
 import org.thingsboard.server.common.data.security.DeviceCredentials;
 import org.thingsboard.trendz.generator.exception.AssetAlreadyExistException;
 import org.thingsboard.trendz.generator.exception.CustomerAlreadyExistException;
@@ -44,7 +49,14 @@ import java.io.IOException;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.TreeSet;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -150,7 +162,7 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
     }
 
     @Override
-    public void generate() {
+    public void generate(boolean skipTelemetry) {
         log.info("Energy Metering Solution - start generation");
         try {
 
@@ -269,96 +281,71 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
 
                     RuleNode saveNode = createSaveNode(
                             "Save: " + apartment.getSystemName(),
-                            RuleNodeAdditionalInfo.CELL_SIZE * 20,
-                            RuleNodeAdditionalInfo.CELL_SIZE * (index * 1.7 + 10)
+                            getNodePositionX(false),
+                            getNodePositionY(index, 0)
                     );
                     nodes.add(saveNode);
 
 
-                    RuleNode energyMeterConsumptionGeneratorNode = createGeneratorMode(
-                            energyMeter.getSystemName() + " : energyConsumption",
+                    RuleNode energyMeterConsumptionGeneratorNode = createGeneratorNode(
+                            energyMeter.getSystemName() + ": energyConsumption",
                             energyMeterId,
                             getEnergyMeterConsumptionFile(occupied, level),
-                            RuleNodeAdditionalInfo.CELL_SIZE * 20,
-                            RuleNodeAdditionalInfo.CELL_SIZE * (index * 1.7 + 13)
+                            getNodePositionX(false),
+                            getNodePositionY(index, 1)
                     );
                     nodes.add(energyMeterConsumptionGeneratorNode);
-
-                    NodeConnectionInfo energyMeterConsumptionConnection = new NodeConnectionInfo();
-                    energyMeterConsumptionConnection.setType(NodeConnectionType.SUCCESS.getType());
-                    energyMeterConsumptionConnection.setFromIndex(index + 1);
-                    energyMeterConsumptionConnection.setToIndex(index);
-                    connections.add(energyMeterConsumptionConnection);
+                    connections.add(createRuleConnection(index, 1));
 
 
-                    RuleNode energyMeterConsAbsoluteGeneratorNode = createGeneratorMode(
-                            energyMeter.getSystemName() + " : energyConsAbsolute",
+                    RuleNode energyMeterConsAbsoluteGeneratorNode = createGeneratorNode(
+                            energyMeter.getSystemName() + ": energyConsAbsolute",
                             energyMeterId,
                             getEnergyMeterConsAbsoluteFile(occupied, level),
-                            RuleNodeAdditionalInfo.CELL_SIZE * 20,
-                            RuleNodeAdditionalInfo.CELL_SIZE * (index * 1.7 + 16)
+                            getNodePositionX(false),
+                            getNodePositionY(index, 2)
                     );
                     nodes.add(energyMeterConsAbsoluteGeneratorNode);
-
-                    NodeConnectionInfo energyMeterConsAbsoluteConnection = new NodeConnectionInfo();
-                    energyMeterConsAbsoluteConnection.setType(NodeConnectionType.SUCCESS.getType());
-                    energyMeterConsAbsoluteConnection.setFromIndex(index + 2);
-                    energyMeterConsAbsoluteConnection.setToIndex(index);
-                    connections.add(energyMeterConsAbsoluteConnection);
+                    connections.add(createRuleConnection(index, 2));
 
 
-                    RuleNode heatMeterTemperatureGeneratorNode = createGeneratorMode(
-                            heatMeter.getSystemName() + " : temperature",
+                    RuleNode heatMeterTemperatureGeneratorNode = createGeneratorNode(
+                            heatMeter.getSystemName() + ": temperature",
                             heatMeterId,
                             getHeatMeterTemperatureFile(occupied),
-                            RuleNodeAdditionalInfo.CELL_SIZE * 5,
-                            RuleNodeAdditionalInfo.CELL_SIZE * (index * 1.7 + 10)
+                            getNodePositionX(true),
+                            getNodePositionY(index, 0)
                     );
                     nodes.add(heatMeterTemperatureGeneratorNode);
-
-                    NodeConnectionInfo heatMeterTemperatureConnection = new NodeConnectionInfo();
-                    heatMeterTemperatureConnection.setType(NodeConnectionType.SUCCESS.getType());
-                    heatMeterTemperatureConnection.setFromIndex(index + 3);
-                    heatMeterTemperatureConnection.setToIndex(index);
-                    connections.add(heatMeterTemperatureConnection);
+                    connections.add(createRuleConnection(index, 3));
 
 
-                    RuleNode heatMeterConsumptionGeneratorNode = createGeneratorMode(
-                            heatMeter.getSystemName() + " : heatConsumption",
+                    RuleNode heatMeterConsumptionGeneratorNode = createGeneratorNode(
+                            heatMeter.getSystemName() + ": heatConsumption",
                             heatMeterId,
                             getHeatMeterConsumptionFile(occupied, level),
-                            RuleNodeAdditionalInfo.CELL_SIZE * 5,
-                            RuleNodeAdditionalInfo.CELL_SIZE * (index * 1.7 + 13)
+                            getNodePositionX(true),
+                            getNodePositionY(index, 1)
                     );
                     nodes.add(heatMeterConsumptionGeneratorNode);
-
-                    NodeConnectionInfo heatMeterConsumptionConnection = new NodeConnectionInfo();
-                    heatMeterConsumptionConnection.setType(NodeConnectionType.SUCCESS.getType());
-                    heatMeterConsumptionConnection.setFromIndex(index + 4);
-                    heatMeterConsumptionConnection.setToIndex(index);
-                    connections.add(heatMeterConsumptionConnection);
+                    connections.add(createRuleConnection(index, 4));
 
 
-                    RuleNode heatMeterConsAbsoluteGeneratorNode = createGeneratorMode(
-                            heatMeter.getSystemName() + " : heatConsAbsolute",
+                    RuleNode heatMeterConsAbsoluteGeneratorNode = createGeneratorNode(
+                            heatMeter.getSystemName() + ": heatConsAbsolute",
                             heatMeterId,
                             getHeatMeterConsAbsoluteFile(occupied, level),
-                            RuleNodeAdditionalInfo.CELL_SIZE * 5,
-                            RuleNodeAdditionalInfo.CELL_SIZE * (index * 1.7 + 16)
+                            getNodePositionX(true),
+                            getNodePositionY(index, 2)
                     );
                     nodes.add(heatMeterConsAbsoluteGeneratorNode);
-
-                    NodeConnectionInfo heatMeterConsAbsoluteConnection = new NodeConnectionInfo();
-                    heatMeterConsAbsoluteConnection.setType(NodeConnectionType.SUCCESS.getType());
-                    heatMeterConsAbsoluteConnection.setFromIndex(index + 5);
-                    heatMeterConsAbsoluteConnection.setToIndex(index);
-                    connections.add(heatMeterConsAbsoluteConnection);
+                    connections.add(createRuleConnection(index, 5));
                 }
             }
 
             RuleChainMetaData savedMetaData = tbRestClient.saveRuleChainMetadata(metaData);
         } catch (Exception e) {
-            throw new RuntimeException("", e);
+            throw new RuntimeException("Exception during rule chain creation", e);
         }
     }
 
@@ -655,6 +642,7 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
         this.apartmentConfigurationMap.put(apartment, configuration);
         return apartment;
     }
+
 
     private long createRandomDateBias() {
         return RandomUtils.getRandomNumber(dateRangeFrom, dateRangeTo);
@@ -1006,50 +994,82 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
     }
 
 
-    private RuleNode createSaveNode(String name, double gridIndexX, double gridIndexY) {
+    private double getNodePositionX(boolean left) {
+        return left
+                ? RuleNodeAdditionalInfo.CELL_SIZE * 5
+                : RuleNodeAdditionalInfo.CELL_SIZE * 20;
+    }
+
+    private double getNodePositionY(int index, int i) {
+        double koeff = 2.3;
+        double startShift = 10;
+        double step = 3;
+
+        return RuleNodeAdditionalInfo.CELL_SIZE * (index * koeff + startShift + step * i);
+    }
+
+    private RuleNode createSaveNode(String name, double gridX, double gridY) {
         TbMsgTimeseriesNodeConfiguration saveConfiguration = new TbMsgTimeseriesNodeConfiguration();
         saveConfiguration.setDefaultTTL(0);
         saveConfiguration.setUseServerTs(false);
         saveConfiguration.setSkipLatestPersistence(false);
 
-        RuleNode saveNode = new RuleNode();
-        saveNode.setName(name);
-        saveNode.setType(TbMsgTimeseriesNode.class.getName());
-        saveNode.setConfiguration(JsonUtils.makeNodeFromPojo(saveConfiguration));
-        saveNode.setAdditionalInfo(
-                RuleNodeAdditionalInfo.builder()
-                        .description("Basic description")
-                        .layoutX((int) Math.round(gridIndexX))
-                        .layoutY((int) Math.round(gridIndexY))
-                        .build()
-                        .toJsonNode()
-        );
-
-        return saveNode;
+        return createRuleNode(name, TbMsgTimeseriesNode.class, saveConfiguration, (int) gridX, (int) gridY);
     }
 
-    private RuleNode createGeneratorMode(String name, UUID entityId, String fileName, double gridIndexX, double gridIndexY) throws IOException {
+    private RuleNode createGeneratorNode(String name, UUID entityId, String fileName, double gridX, double gridY) throws IOException {
+        String fileContent = this.fileService.getFileContent(getSolutionName(), fileName);
+
         TbMsgGeneratorNodeConfiguration generatorConfiguration = new TbMsgGeneratorNodeConfiguration();
         generatorConfiguration.setOriginatorType(EntityType.DEVICE);
         generatorConfiguration.setOriginatorId(entityId.toString());
         generatorConfiguration.setMsgCount(0);
         generatorConfiguration.setPeriodInSeconds(3600);
-        generatorConfiguration.setJsScript(this.fileService.getFileContent(getSolutionName(), fileName));
+        generatorConfiguration.setJsScript(fileContent);
 
+        return createRuleNode(name, TbMsgGeneratorNode.class, generatorConfiguration, (int) gridX, (int) gridY);
+    }
+
+    private RuleNode createLatestTelemetryLoadNode(String name, String telemetryName, double gridX, double gridY) {
+        TbGetAttributesNodeConfiguration configuration = new TbGetAttributesNodeConfiguration();
+        configuration.setLatestTsKeyNames(List.of(telemetryName));
+
+        return createRuleNode(name, TbMsgAttributesNode.class, configuration, (int) gridX, (int) gridY);
+    }
+
+    private RuleNode createTransformationNode(String name, String scriptFileName, double gridX, double gridY) throws IOException {
+        String fileContent = this.fileService.getFileContent(getSolutionName(), scriptFileName);
+
+        TbTransformMsgNodeConfiguration configuration = new TbTransformMsgNodeConfiguration();
+        configuration.setScriptLang(ScriptLanguage.JS);
+        configuration.setJsScript(fileContent);
+
+        return createRuleNode(name, TbTransformMsgNodeConfiguration.class, configuration, (int) gridX, (int) gridY);
+    }
+
+    private RuleNode createRuleNode(String name, Class<?> typeClass, NodeConfiguration<?> configuration, int x, int y) {
         RuleNode generatorNode = new RuleNode();
         generatorNode.setName(name);
-        generatorNode.setType(TbMsgGeneratorNode.class.getName());
-        generatorNode.setConfiguration(JsonUtils.makeNodeFromPojo(generatorConfiguration));
+        generatorNode.setType(typeClass.getName());
+        generatorNode.setConfiguration(JsonUtils.makeNodeFromPojo(configuration));
         generatorNode.setAdditionalInfo(
                 RuleNodeAdditionalInfo.builder()
-                        .description("")
-                        .layoutX((int) Math.round(gridIndexX))
-                        .layoutY((int) Math.round(gridIndexY))
+                        .description("Description for " + name)
+                        .layoutX(x)
+                        .layoutY(y)
                         .build()
                         .toJsonNode()
         );
 
         return generatorNode;
+    }
+
+    private NodeConnectionInfo createRuleConnection(int index, int shift) {
+        NodeConnectionInfo connection = new NodeConnectionInfo();
+        connection.setType(NodeConnectionType.SUCCESS.getType());
+        connection.setFromIndex(index + shift);
+        connection.setToIndex(index);
+        return connection;
     }
 
 
