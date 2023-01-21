@@ -13,3 +13,4 @@ generator:
   mode: "${GENERATOR_MODE:generate}"  # generate, remove
   solutions: EnergyMetering
   skipTelemetry: false
+  startYear: 2022

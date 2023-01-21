@@ -42,13 +42,15 @@ import org.thingsboard.trendz.generator.service.VisualizationService;
 import org.thingsboard.trendz.generator.solution.SolutionTemplateGenerator;
 import org.thingsboard.trendz.generator.solution.energymetering.configuration.ApartmentConfiguration;
 import org.thingsboard.trendz.generator.solution.energymetering.configuration.BuildingConfiguration;
-import org.thingsboard.trendz.generator.solution.energymetering.model.*;
+import org.thingsboard.trendz.generator.solution.energymetering.model.Apartment;
+import org.thingsboard.trendz.generator.solution.energymetering.model.Building;
+import org.thingsboard.trendz.generator.solution.energymetering.model.EnergyMeter;
+import org.thingsboard.trendz.generator.solution.energymetering.model.HeatMeter;
 import org.thingsboard.trendz.generator.utils.DateTimeUtils;
 import org.thingsboard.trendz.generator.utils.JsonUtils;
 import org.thingsboard.trendz.generator.utils.RandomUtils;
 
 import java.io.IOException;
-import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
@@ -73,18 +75,6 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
 
     private static final String RULE_CHAIN_NAME = "Energy Metering Rule Chain";
 
-    private static final long TS_2022_JANUARY = DateTimeUtils.toTs(
-            ZonedDateTime.of(2022, 1, 1, 0, 0, 0, 0, ZoneId.systemDefault())
-    );
-    private static final long TS_2022_FEBRUARY = DateTimeUtils.toTs(
-            ZonedDateTime.of(2022, 2, 1, 0, 0, 0, 0, ZoneId.systemDefault())
-    );
-    private static final long TS_2022_MARCH = DateTimeUtils.toTs(
-            ZonedDateTime.of(2022, 3, 1, 0, 0, 0, 0, ZoneId.systemDefault())
-    );
-    private static final long TS_2022_MAY = DateTimeUtils.toTs(
-            ZonedDateTime.of(2022, 5, 1, 0, 0, 0, 0, ZoneId.systemDefault())
-    );
     private static final long dateRangeFrom = 100000;
     private static final long dateRangeTo = 10000000;
     private static final long serialRangeFrom = 10000;
@@ -121,7 +111,7 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
 
             validateCustomerData();
             validateRuleChain();
-            ModelData data = makeData(true);
+            ModelData data = makeData(true, ZonedDateTime.now());
             validateData(data);
 
             log.info("Energy Metering Solution - validation is completed!");
@@ -131,11 +121,11 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
     }
 
     @Override
-    public void generate(boolean skipTelemetry) {
+    public void generate(boolean skipTelemetry, ZonedDateTime startYear) {
         log.info("Energy Metering Solution - start generation");
         try {
             CustomerData customerData = createCustomerData();
-            ModelData data = makeData(skipTelemetry);
+            ModelData data = makeData(skipTelemetry, startYear);
             applyData(data, customerData);
             createRuleChain(data);
 
@@ -151,7 +141,7 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
         try {
             deleteCustomerData();
             deleteRuleChain();
-            ModelData data = makeData(true);
+            ModelData data = makeData(true, ZonedDateTime.now());
             deleteData(data);
 
             log.info("Energy Metering Solution - removal is completed!");
@@ -321,10 +311,10 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
     }
 
 
-    private ModelData makeData(boolean skipTelemetry) {
-        Building alpire = makeAlpire(skipTelemetry);
-        Building feline = makeFeline(skipTelemetry);
-        Building hogurity = makeHogurity(skipTelemetry);
+    private ModelData makeData(boolean skipTelemetry, ZonedDateTime startYear) {
+        Building alpire = makeAlpire(skipTelemetry, startYear);
+        Building feline = makeFeline(skipTelemetry, startYear);
+        Building hogurity = makeHogurity(skipTelemetry, startYear);
 
         return ModelData.builder()
                 .data(new TreeSet<>(Set.of(alpire, feline, hogurity)))
@@ -442,7 +432,12 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
     }
 
 
-    private Building makeAlpire(boolean skipTelemetry) {
+    private Building makeAlpire(boolean skipTelemetry, ZonedDateTime startYear) {
+        long TS_JANUARY = DateTimeUtils.toTs(startYear);
+        long TS_FEBRUARY = DateTimeUtils.toTs(startYear.plusMonths(1));
+        long TS_MARCH = DateTimeUtils.toTs(startYear.plusMonths(2));
+        long TS_MAY = DateTimeUtils.toTs(startYear.plusMonths(4));
+
         BuildingConfiguration configuration = BuildingConfiguration.builder()
                 .name("Alpire")
                 .label("Asset label for Alpire building")
@@ -453,7 +448,7 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
                         ApartmentConfiguration.builder()
                                 .occupied(true)
                                 .level(2)
-                                .startDate(TS_2022_JANUARY)
+                                .startDate(TS_JANUARY)
                                 .anomaly(false)
                                 .area(2)
                                 .build()
@@ -465,7 +460,7 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
                 ApartmentConfiguration.builder()
                         .occupied(false)
                         .level(0)
-                        .startDate(TS_2022_JANUARY)
+                        .startDate(TS_JANUARY)
                         .anomaly(false)
                         .area(0)
                         .build()
@@ -476,7 +471,7 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
                 ApartmentConfiguration.builder()
                         .occupied(false)
                         .level(0)
-                        .startDate(TS_2022_JANUARY)
+                        .startDate(TS_JANUARY)
                         .anomaly(false)
                         .area(0)
                         .build()
@@ -487,7 +482,7 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
                 ApartmentConfiguration.builder()
                         .occupied(true)
                         .level(3)
-                        .startDate(TS_2022_JANUARY)
+                        .startDate(TS_JANUARY)
                         .anomaly(false)
                         .area(3)
                         .build()
@@ -498,7 +493,7 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
                 ApartmentConfiguration.builder()
                         .occupied(true)
                         .level(3)
-                        .startDate(TS_2022_JANUARY)
+                        .startDate(TS_JANUARY)
                         .anomaly(false)
                         .area(3)
                         .build()
@@ -509,7 +504,7 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
                 ApartmentConfiguration.builder()
                         .occupied(false)
                         .level(0)
-                        .startDate(TS_2022_FEBRUARY)
+                        .startDate(TS_FEBRUARY)
                         .anomaly(false)
                         .area(0)
                         .build()
@@ -520,7 +515,7 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
                 ApartmentConfiguration.builder()
                         .occupied(false)
                         .level(0)
-                        .startDate(TS_2022_FEBRUARY)
+                        .startDate(TS_FEBRUARY)
                         .anomaly(false)
                         .area(0)
                         .build()
@@ -529,7 +524,12 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
         return makeBuildingByConfiguration(configuration, skipTelemetry);
     }
 
-    private Building makeFeline(boolean skipTelemetry) {
+    private Building makeFeline(boolean skipTelemetry, ZonedDateTime startYear) {
+        long TS_JANUARY = DateTimeUtils.toTs(startYear);
+        long TS_FEBRUARY = DateTimeUtils.toTs(startYear.plusMonths(1));
+        long TS_MARCH = DateTimeUtils.toTs(startYear.plusMonths(2));
+        long TS_MAY = DateTimeUtils.toTs(startYear.plusMonths(4));
+
         BuildingConfiguration configuration = BuildingConfiguration.builder()
                 .name("Feline")
                 .label("Asset label for Feline building")
@@ -540,7 +540,7 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
                         ApartmentConfiguration.builder()
                                 .occupied(true)
                                 .level(3)
-                                .startDate(TS_2022_MAY)
+                                .startDate(TS_MAY)
                                 .anomaly(false)
                                 .area(3)
                                 .build()
@@ -552,7 +552,7 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
                 ApartmentConfiguration.builder()
                         .occupied(false)
                         .level(0)
-                        .startDate(TS_2022_MAY)
+                        .startDate(TS_MAY)
                         .anomaly(true)
                         .area(0)
                         .build()
@@ -563,7 +563,7 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
                 ApartmentConfiguration.builder()
                         .occupied(true)
                         .level(1)
-                        .startDate(TS_2022_MAY)
+                        .startDate(TS_MAY)
                         .anomaly(false)
                         .area(1)
                         .build()
@@ -574,7 +574,7 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
                 ApartmentConfiguration.builder()
                         .occupied(true)
                         .level(1)
-                        .startDate(TS_2022_MAY)
+                        .startDate(TS_MAY)
                         .anomaly(false)
                         .area(1)
                         .build()
@@ -585,7 +585,7 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
                 ApartmentConfiguration.builder()
                         .occupied(true)
                         .level(2)
-                        .startDate(TS_2022_MAY)
+                        .startDate(TS_MAY)
                         .anomaly(false)
                         .area(2)
                         .build()
@@ -596,7 +596,7 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
                 ApartmentConfiguration.builder()
                         .occupied(true)
                         .level(2)
-                        .startDate(TS_2022_MAY)
+                        .startDate(TS_MAY)
                         .anomaly(false)
                         .area(2)
                         .build()
@@ -607,7 +607,7 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
                 ApartmentConfiguration.builder()
                         .occupied(true)
                         .level(2)
-                        .startDate(TS_2022_MAY)
+                        .startDate(TS_MAY)
                         .anomaly(false)
                         .area(2)
                         .build()
@@ -616,7 +616,12 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
         return makeBuildingByConfiguration(configuration, skipTelemetry);
     }
 
-    private Building makeHogurity(boolean skipTelemetry) {
+    private Building makeHogurity(boolean skipTelemetry, ZonedDateTime startYear) {
+        long TS_JANUARY = DateTimeUtils.toTs(startYear);
+        long TS_FEBRUARY = DateTimeUtils.toTs(startYear.plusMonths(1));
+        long TS_MARCH = DateTimeUtils.toTs(startYear.plusMonths(2));
+        long TS_MAY = DateTimeUtils.toTs(startYear.plusMonths(4));
+
         BuildingConfiguration configuration = BuildingConfiguration.builder()
                 .name("Hogurity")
                 .label("Asset label for Hogurity building")
@@ -627,12 +632,34 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
                         ApartmentConfiguration.builder()
                                 .occupied(true)
                                 .level(3)
-                                .startDate(TS_2022_JANUARY)
+                                .startDate(TS_JANUARY)
                                 .anomaly(false)
                                 .area(3)
                                 .build()
                 )
                 .build();
+
+        configuration.setApartmentConfiguration(
+                3, 1,
+                ApartmentConfiguration.builder()
+                        .occupied(true)
+                        .level(3)
+                        .startDate(TS_MARCH)
+                        .anomaly(false)
+                        .area(3)
+                        .build()
+        );
+
+        configuration.setApartmentConfiguration(
+                4, 1,
+                ApartmentConfiguration.builder()
+                        .occupied(true)
+                        .level(3)
+                        .startDate(TS_MARCH)
+                        .anomaly(false)
+                        .area(3)
+                        .build()
+        );
 
         return makeBuildingByConfiguration(configuration, skipTelemetry);
     }
@@ -713,11 +740,16 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
 
     private int createRandomAreaByLevel(int level) {
         switch (level) {
-            case 0: return (int) RandomUtils.getRandomNumber(30, 300);
-            case 1: return (int) RandomUtils.getRandomNumber(30, 60);
-            case 2: return (int) RandomUtils.getRandomNumber(60, 150);
-            case 3: return (int) RandomUtils.getRandomNumber(150, 300);
-            default: throw new IllegalArgumentException("Unsupported level: " + level);
+            case 0:
+                return (int) RandomUtils.getRandomNumber(30, 300);
+            case 1:
+                return (int) RandomUtils.getRandomNumber(30, 60);
+            case 2:
+                return (int) RandomUtils.getRandomNumber(60, 150);
+            case 3:
+                return (int) RandomUtils.getRandomNumber(150, 300);
+            default:
+                throw new IllegalArgumentException("Unsupported level: " + level);
         }
     }
 

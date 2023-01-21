@@ -4,6 +4,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.thingsboard.trendz.generator.solution.SolutionTemplateGenerator;
 
+import java.time.ZonedDateTime;
+
 @Slf4j
 @Service
 public class WaterMeteringSolution implements SolutionTemplateGenerator {
@@ -19,7 +21,7 @@ public class WaterMeteringSolution implements SolutionTemplateGenerator {
     }
 
     @Override
-    public void generate(boolean skipTelemetry) {
+    public void generate(boolean skipTelemetry, ZonedDateTime startYear) {
         log.info("WaterMeteringSolution - generate");
     }
 

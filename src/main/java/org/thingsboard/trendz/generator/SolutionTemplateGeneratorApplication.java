@@ -8,6 +8,8 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.thingsboard.trendz.generator.solution.SolutionTemplateGenerator;
 import org.thingsboard.trendz.generator.utils.RandomUtils;
 
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.TimeZone;
 
@@ -17,22 +19,26 @@ public class SolutionTemplateGeneratorApplication implements CommandLineRunner {
 
 	private final static String MODE_GENERATE = "generate";
 	private final static String MODE_REMOVE = "remove";
+	private final static DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss z");
 
 	private final String mode;
 	private final List<String> currentSolutions;
 	private final boolean skipTelemetry;
+	private final ZonedDateTime startYear;
 	private final SolutionTemplateDispatcher solutionTemplateDispatcher;
 
 	public SolutionTemplateGeneratorApplication(
 			SolutionTemplateDispatcher solutionTemplateDispatcher,
 			@Value("${generator.mode}") String mode,
 			@Value("${generator.solutions}") List<String> currentSolutions,
-			@Value("${generator.skipTelemetry}") boolean skipTelemetry
+			@Value("${generator.skipTelemetry}") boolean skipTelemetry,
+			@Value("${generator.startYear}") String startYear
 	) {
 		this.solutionTemplateDispatcher = solutionTemplateDispatcher;
 		this.mode = mode;
 		this.currentSolutions = currentSolutions;
 		this.skipTelemetry = skipTelemetry;
+		this.startYear = ZonedDateTime.parse(startYear + "-01-01 00:00:00 UTC", formatter);
 	}
 
 	@Override
@@ -51,7 +57,7 @@ public class SolutionTemplateGeneratorApplication implements CommandLineRunner {
 				if (modeGenerate) {
 					RandomUtils.refreshRandom();
 					solutionGenerator.validate();
-					solutionGenerator.generate(this.skipTelemetry);
+					solutionGenerator.generate(this.skipTelemetry, this.startYear);
 				} else if (modeRemove) {
 					solutionGenerator.remove();
 				} else {
