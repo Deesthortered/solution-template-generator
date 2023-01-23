@@ -1,7 +1,6 @@
 package org.thingsboard.trendz.generator.service.anomaly;
 
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.stereotype.Service;
 import org.thingsboard.trendz.generator.model.anomaly.AnomalyInfo;
 import org.thingsboard.trendz.generator.model.anomaly.AnomalyType;
@@ -14,19 +13,17 @@ import java.util.stream.Collectors;
 
 @Slf4j
 @Service
-public class ZeroValueAnomalyCreator implements AnomalyCreator {
+public class ShiftedDataAnomalyCreator implements AnomalyCreator {
 
     @Override
     public AnomalyType type() {
-        return AnomalyType.ZERO_VALUES;
+        return AnomalyType.SHIFTED_DATA;
     }
 
     @Override
     public <T> void create(Telemetry<T> telemetry, AnomalyInfo anomalyInfo) {
         ZonedDateTime startDate = DateTimeUtils.fromTs(anomalyInfo.getStartTs());
         ZonedDateTime endDate = DateTimeUtils.fromTs(anomalyInfo.getEndTs());
-        ParameterizedTypeReference<T> reference = new ParameterizedTypeReference<>() {
-        };
 
         Set<Telemetry.Point<T>> oldPoints = telemetry.getPoints().stream()
                 .filter(point -> DateTimeUtils.toTs(startDate) <= point.getTs().get())
@@ -34,7 +31,7 @@ public class ZeroValueAnomalyCreator implements AnomalyCreator {
                 .collect(Collectors.toSet());
 
         Set<Telemetry.Point<T>> newPoints = oldPoints.stream()
-                .map(point -> new Telemetry.Point<T>(point.getTs(), getZeroValue(point.getValue())))
+                .map(point -> new Telemetry.Point<T>(point.getTs(), getShiftedValue(point.getValue(), anomalyInfo.getValue())))
                 .collect(Collectors.toSet());
 
         telemetry.getPoints().removeAll(oldPoints);
@@ -42,27 +39,24 @@ public class ZeroValueAnomalyCreator implements AnomalyCreator {
     }
 
 
-    private <T> T getZeroValue(T oldValue) {
+    private <T> T getShiftedValue(T oldValue, long shift) {
         if (oldValue instanceof Byte) {
-            return (T) Byte.valueOf((byte) 0);
+            return (T) Byte.valueOf((byte) (((byte) oldValue) + ((byte) shift)));
         }
         if (oldValue instanceof Short) {
-            return (T) Short.valueOf((short) 0);
+            return (T) Short.valueOf((short) (((short) oldValue) + ((short) shift)));
         }
         if (oldValue instanceof Integer) {
-            return (T) Integer.valueOf(0);
+            return (T) Integer.valueOf((int) (((int) oldValue) + ((int) shift)));
         }
         if (oldValue instanceof Long) {
-            return (T) Long.valueOf(0);
+            return (T) Long.valueOf((long) (((long) oldValue) + ((long) shift)));
         }
         if (oldValue instanceof Float) {
-            return (T) Float.valueOf(0);
+            return (T) Float.valueOf((float) (((float) oldValue) + ((float) shift)));
         }
         if (oldValue instanceof Double) {
-            return (T) Double.valueOf(0);
-        }
-        if (oldValue instanceof String) {
-            return ((T) "");
+            return (T) Double.valueOf((double) (((double) oldValue) + ((double) shift)));
         }
         throw new IllegalArgumentException("Value class is not supported: " + oldValue.getClass());
     }

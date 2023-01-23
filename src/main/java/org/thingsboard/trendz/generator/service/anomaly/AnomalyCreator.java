@@ -8,5 +8,5 @@ public interface AnomalyCreator {
 
     AnomalyType type();
 
-    void create(Telemetry<?> telemetry, AnomalyInfo anomalyInfo);
+    <T> void create(Telemetry<T> telemetry, AnomalyInfo anomalyInfo);
 }
