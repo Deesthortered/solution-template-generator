@@ -1,4 +1,4 @@
-package org.thingsboard.trendz.generator.model;
+package org.thingsboard.trendz.generator.model.tb;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import lombok.AllArgsConstructor;

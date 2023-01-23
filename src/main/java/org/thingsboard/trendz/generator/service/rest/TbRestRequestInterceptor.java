@@ -1,4 +1,4 @@
-package org.thingsboard.trendz.generator.service;
+package org.thingsboard.trendz.generator.service.rest;
 
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.interfaces.DecodedJWT;

@@ -3,8 +3,8 @@ package org.thingsboard.trendz.generator.service;
 import com.github.sh0nk.matplotlib4j.Plot;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import org.thingsboard.trendz.generator.model.Telemetry;
-import org.thingsboard.trendz.generator.model.Timestamp;
+import org.thingsboard.trendz.generator.model.tb.Telemetry;
+import org.thingsboard.trendz.generator.model.tb.Timestamp;
 
 import java.util.List;
 import java.util.stream.Collectors;

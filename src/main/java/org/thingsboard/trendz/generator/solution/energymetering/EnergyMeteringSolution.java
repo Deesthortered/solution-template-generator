@@ -27,18 +27,19 @@ import org.thingsboard.trendz.generator.exception.AssetAlreadyExistException;
 import org.thingsboard.trendz.generator.exception.CustomerAlreadyExistException;
 import org.thingsboard.trendz.generator.exception.DeviceAlreadyExistException;
 import org.thingsboard.trendz.generator.exception.RuleChainAlreadyExistException;
-import org.thingsboard.trendz.generator.model.Attribute;
-import org.thingsboard.trendz.generator.model.CustomerData;
-import org.thingsboard.trendz.generator.model.CustomerUser;
 import org.thingsboard.trendz.generator.model.ModelData;
 import org.thingsboard.trendz.generator.model.ModelEntity;
-import org.thingsboard.trendz.generator.model.NodeConnectionType;
-import org.thingsboard.trendz.generator.model.RelationType;
-import org.thingsboard.trendz.generator.model.RuleNodeAdditionalInfo;
-import org.thingsboard.trendz.generator.model.Telemetry;
+import org.thingsboard.trendz.generator.model.tb.Attribute;
+import org.thingsboard.trendz.generator.model.tb.CustomerData;
+import org.thingsboard.trendz.generator.model.tb.CustomerUser;
+import org.thingsboard.trendz.generator.model.tb.NodeConnectionType;
+import org.thingsboard.trendz.generator.model.tb.RelationType;
+import org.thingsboard.trendz.generator.model.tb.RuleNodeAdditionalInfo;
+import org.thingsboard.trendz.generator.model.tb.Telemetry;
 import org.thingsboard.trendz.generator.service.FileService;
-import org.thingsboard.trendz.generator.service.TbRestClient;
 import org.thingsboard.trendz.generator.service.VisualizationService;
+import org.thingsboard.trendz.generator.service.anomaly.AnomalyService;
+import org.thingsboard.trendz.generator.service.rest.TbRestClient;
 import org.thingsboard.trendz.generator.solution.SolutionTemplateGenerator;
 import org.thingsboard.trendz.generator.solution.energymetering.configuration.ApartmentConfiguration;
 import org.thingsboard.trendz.generator.solution.energymetering.configuration.BuildingConfiguration;
@@ -82,6 +83,7 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
 
     private final TbRestClient tbRestClient;
     private final FileService fileService;
+    private final AnomalyService anomalyService;
     private final VisualizationService visualizationService;
 
     private final Map<Apartment, ApartmentConfiguration> apartmentConfigurationMap = new HashMap<>();
@@ -92,10 +94,12 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
     public EnergyMeteringSolution(
             TbRestClient tbRestClient,
             FileService fileService,
+            AnomalyService anomalyService,
             VisualizationService visualizationService
     ) {
         this.tbRestClient = tbRestClient;
         this.fileService = fileService;
+        this.anomalyService = anomalyService;
         this.visualizationService = visualizationService;
     }
 
@@ -449,7 +453,9 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
                                 .occupied(true)
                                 .level(2)
                                 .startDate(TS_JANUARY)
-                                .anomaly(false)
+                                .anomalies(List.of(
+
+                                ))
                                 .area(2)
                                 .build()
                 )
@@ -461,7 +467,9 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
                         .occupied(false)
                         .level(0)
                         .startDate(TS_JANUARY)
-                        .anomaly(false)
+                        .anomalies(List.of(
+
+                        ))
                         .area(0)
                         .build()
         );
@@ -472,7 +480,9 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
                         .occupied(false)
                         .level(0)
                         .startDate(TS_JANUARY)
-                        .anomaly(false)
+                        .anomalies(List.of(
+
+                        ))
                         .area(0)
                         .build()
         );
@@ -483,7 +493,9 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
                         .occupied(true)
                         .level(3)
                         .startDate(TS_JANUARY)
-                        .anomaly(false)
+                        .anomalies(List.of(
+
+                        ))
                         .area(3)
                         .build()
         );
@@ -494,7 +506,9 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
                         .occupied(true)
                         .level(3)
                         .startDate(TS_JANUARY)
-                        .anomaly(false)
+                        .anomalies(List.of(
+
+                        ))
                         .area(3)
                         .build()
         );
@@ -505,7 +519,9 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
                         .occupied(false)
                         .level(0)
                         .startDate(TS_FEBRUARY)
-                        .anomaly(false)
+                        .anomalies(List.of(
+
+                        ))
                         .area(0)
                         .build()
         );
@@ -516,7 +532,9 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
                         .occupied(false)
                         .level(0)
                         .startDate(TS_FEBRUARY)
-                        .anomaly(false)
+                        .anomalies(List.of(
+
+                        ))
                         .area(0)
                         .build()
         );
@@ -541,7 +559,9 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
                                 .occupied(true)
                                 .level(3)
                                 .startDate(TS_MAY)
-                                .anomaly(false)
+                                .anomalies(List.of(
+
+                                ))
                                 .area(3)
                                 .build()
                 )
@@ -553,7 +573,9 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
                         .occupied(false)
                         .level(0)
                         .startDate(TS_MAY)
-                        .anomaly(true)
+                        .anomalies(List.of(
+
+                        ))
                         .area(0)
                         .build()
         );
@@ -564,7 +586,9 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
                         .occupied(true)
                         .level(1)
                         .startDate(TS_MAY)
-                        .anomaly(false)
+                        .anomalies(List.of(
+
+                        ))
                         .area(1)
                         .build()
         );
@@ -575,7 +599,9 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
                         .occupied(true)
                         .level(1)
                         .startDate(TS_MAY)
-                        .anomaly(false)
+                        .anomalies(List.of(
+
+                        ))
                         .area(1)
                         .build()
         );
@@ -586,7 +612,9 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
                         .occupied(true)
                         .level(2)
                         .startDate(TS_MAY)
-                        .anomaly(false)
+                        .anomalies(List.of(
+
+                        ))
                         .area(2)
                         .build()
         );
@@ -597,7 +625,9 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
                         .occupied(true)
                         .level(2)
                         .startDate(TS_MAY)
-                        .anomaly(false)
+                        .anomalies(List.of(
+
+                        ))
                         .area(2)
                         .build()
         );
@@ -608,7 +638,9 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
                         .occupied(true)
                         .level(2)
                         .startDate(TS_MAY)
-                        .anomaly(false)
+                        .anomalies(List.of(
+
+                        ))
                         .area(2)
                         .build()
         );
@@ -633,7 +665,9 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
                                 .occupied(true)
                                 .level(3)
                                 .startDate(TS_JANUARY)
-                                .anomaly(false)
+                                .anomalies(List.of(
+
+                                ))
                                 .area(3)
                                 .build()
                 )
@@ -645,7 +679,9 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
                         .occupied(true)
                         .level(3)
                         .startDate(TS_MARCH)
-                        .anomaly(false)
+                        .anomalies(List.of(
+
+                        ))
                         .area(3)
                         .build()
         );
@@ -656,7 +692,9 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
                         .occupied(true)
                         .level(3)
                         .startDate(TS_MARCH)
-                        .anomaly(false)
+                        .anomalies(List.of(
+
+                        ))
                         .area(3)
                         .build()
         );
@@ -689,10 +727,13 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
         long startDate = configuration.getStartDate() + createRandomDateBias();
 
         Telemetry<Long> energyMeterConsumption = createTelemetryEnergyMeterConsumption(configuration, skipTelemetry);
+        this.anomalyService.applyAnomaly(energyMeterConsumption, configuration.getAnomalies());
         Telemetry<Long> energyMeterConsAbsolute = createTelemetryEnergyMeterConsAbsolute(energyMeterConsumption, skipTelemetry);
 
         Telemetry<Long> heatMeterTemperature = createTelemetryHeatMeterTemperature(configuration, skipTelemetry);
         Telemetry<Long> heatMeterConsumption = createTelemetryHeatMeterConsumption(configuration, skipTelemetry);
+        this.anomalyService.applyAnomaly(heatMeterTemperature, configuration.getAnomalies());
+        this.anomalyService.applyAnomaly(heatMeterConsumption, configuration.getAnomalies());
         Telemetry<Long> heatMeterConsAbsolute = createTelemetryHeatMeterConsAbsolute(heatMeterConsumption, skipTelemetry);
 
         EnergyMeter energyMeter = EnergyMeter.builder()
@@ -765,7 +806,6 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
         long startTs = configuration.getStartDate();
         boolean occupied = configuration.isOccupied();
         int level = configuration.getLevel();
-        boolean anomaly = configuration.isAnomaly();
 
         if (occupied) {
             switch (level) {
@@ -921,7 +961,6 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
         long startTs = configuration.getStartDate();
         boolean occupied = configuration.isOccupied();
         int level = configuration.getLevel();
-        boolean anomaly = configuration.isAnomaly();
 
         if (occupied) {
             switch (level) {

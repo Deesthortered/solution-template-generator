@@ -1,4 +1,4 @@
-package org.thingsboard.trendz.generator.model;
+package org.thingsboard.trendz.generator.model.tb;
 
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;

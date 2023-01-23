@@ -1,4 +1,4 @@
-package org.thingsboard.trendz.generator.model;
+package org.thingsboard.trendz.generator.model.tb;
 
 public enum RelationType {
     CONTAINS("Contains"),

@@ -1,4 +1,4 @@
-package org.thingsboard.trendz.generator.service;
+package org.thingsboard.trendz.generator.service.rest;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import lombok.extern.slf4j.Slf4j;
@@ -21,11 +21,26 @@ import org.thingsboard.server.common.data.rule.RuleChainMetaData;
 import org.thingsboard.server.common.data.security.Authority;
 import org.thingsboard.server.common.data.security.DeviceCredentials;
 import org.thingsboard.trendz.generator.exception.PushTelemetryException;
-import org.thingsboard.trendz.generator.model.*;
-import org.thingsboard.trendz.generator.model.rest.*;
+import org.thingsboard.trendz.generator.model.rest.ActivationAuthToken;
+import org.thingsboard.trendz.generator.model.rest.ActivationRequest;
+import org.thingsboard.trendz.generator.model.rest.AuthToken;
+import org.thingsboard.trendz.generator.model.rest.LoginRequest;
+import org.thingsboard.trendz.generator.model.rest.PageData;
+import org.thingsboard.trendz.generator.model.tb.Attribute;
+import org.thingsboard.trendz.generator.model.tb.CustomerUser;
+import org.thingsboard.trendz.generator.model.tb.CustomerUserAdditionalInfo;
+import org.thingsboard.trendz.generator.model.tb.RelationType;
+import org.thingsboard.trendz.generator.model.tb.Telemetry;
 import org.thingsboard.trendz.generator.utils.JsonUtils;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.Set;
+import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 @Slf4j

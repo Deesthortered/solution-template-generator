@@ -1,6 +1,6 @@
 package org.thingsboard.trendz.generator.utils;
 
-import org.thingsboard.trendz.generator.model.Timestamp;
+import org.thingsboard.trendz.generator.model.tb.Timestamp;
 
 import java.time.Instant;
 import java.time.ZoneId;

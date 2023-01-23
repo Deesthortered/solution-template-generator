@@ -1,7 +1,7 @@
 package org.thingsboard.trendz.generator.exception;
 
 
-import org.thingsboard.trendz.generator.model.Telemetry;
+import org.thingsboard.trendz.generator.model.tb.Telemetry;
 
 public class PushTelemetryException extends SolutionTemplateGeneratorException {
 

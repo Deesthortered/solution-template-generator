@@ -1,4 +1,4 @@
-package org.thingsboard.trendz.generator.model;
+package org.thingsboard.trendz.generator.model.tb;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
