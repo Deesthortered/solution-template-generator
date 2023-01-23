@@ -16,6 +16,7 @@ public class AnomalyInfo implements Comparable<AnomalyInfo> {
     private Timestamp startTs;
     private Timestamp endTs;
     private AnomalyType type;
+    private long value;
 
 
     @Override

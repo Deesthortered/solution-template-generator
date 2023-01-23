@@ -30,6 +30,9 @@ public class AnomalyService {
     }
 
     public void applyAnomaly(Telemetry<?> telemetry, List<AnomalyInfo> anomalyInfoList) {
+        if (anomalyInfoList == null) {
+            return;
+        }
         for (AnomalyInfo anomalyInfo : anomalyInfoList) {
             AnomalyCreator creator = this.typeToCreatorMap.get(anomalyInfo.getType());
             if (creator == null) {

@@ -82,7 +82,7 @@ All telemetry will be produced by meters since the beginning of the year, except
 3. Hogurity, 3-4 floors since March 2022 
 
 Anomalies:
-1. Alpire, 2nd floor, 1st apartment - increased consumption, July 10-20
+1. Alpire, 1st floor, 2nd apartment - increased consumption, July 10-20
 2. Feline, 1st floor, 1st apartment - increased consumption, September 1-10
 3. Feline, 3rd floor, 1st apartment - decreased consumption, October 20-25
 4. Feline, 3rd floor, 2nd apartment - zero values, September 15-20
