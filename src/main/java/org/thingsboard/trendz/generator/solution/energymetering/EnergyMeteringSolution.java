@@ -712,20 +712,24 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
                 .build();
 
         configuration.setApartmentConfiguration(
-                3, 1,
+                1, 3,
                 ApartmentConfiguration.builder()
                         .occupied(true)
                         .level(3)
                         .startDate(TS_MARCH)
                         .anomalies(List.of(
-
+                                AnomalyInfo.builder()
+                                        .startTs(Timestamp.of(DateTimeUtils.toTs(startYear.withMonth(12).withDayOfMonth(1))))
+                                        .endTs(Timestamp.of(DateTimeUtils.toTs(startYear.withMonth(12).withDayOfMonth(3))))
+                                        .type(AnomalyType.DATA_GAP)
+                                        .build()
                         ))
                         .area(3)
                         .build()
         );
 
         configuration.setApartmentConfiguration(
-                4, 1,
+                1, 4,
                 ApartmentConfiguration.builder()
                         .occupied(true)
                         .level(3)
@@ -735,6 +739,11 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
                                         .startTs(Timestamp.of(DateTimeUtils.toTs(startYear.withMonth(8).withDayOfMonth(1))))
                                         .endTs(Timestamp.of(DateTimeUtils.toTs(startYear.withMonth(8).withDayOfMonth(5))))
                                         .type(AnomalyType.ZERO_VALUES)
+                                        .build(),
+                                AnomalyInfo.builder()
+                                        .startTs(Timestamp.of(DateTimeUtils.toTs(startYear.withMonth(12).withDayOfMonth(1))))
+                                        .endTs(Timestamp.of(DateTimeUtils.toTs(startYear.withMonth(12).withDayOfMonth(3))))
+                                        .type(AnomalyType.DATA_GAP)
                                         .build()
                         ))
                         .area(3)
