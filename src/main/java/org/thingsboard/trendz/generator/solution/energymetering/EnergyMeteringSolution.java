@@ -339,15 +339,12 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
             Set<Apartment> apartments = building.getApartments();
             for (Apartment apartment : apartments) {
                 Asset apartmentAsset = createApartment(apartment, ownerId);
-                this.tbRestClient.assignAssetToCustomer(ownerId, apartmentAsset.getUuidId());
                 this.tbRestClient.createRelation(RelationType.CONTAINS.getType(), buildingAsset.getId(), apartmentAsset.getId());
 
                 EnergyMeter energyMeter = apartment.getEnergyMeter();
                 HeatMeter heatMeter = apartment.getHeatMeter();
                 Device energyMeterDevice = createEnergyMeter(energyMeter, ownerId);
                 Device heatMeterDevice = createHeatMeter(heatMeter, ownerId);
-                this.tbRestClient.assignDeviceToCustomer(ownerId, energyMeterDevice.getUuidId());
-                this.tbRestClient.assignDeviceToCustomer(ownerId, heatMeterDevice.getUuidId());
                 this.tbRestClient.createRelation(RelationType.CONTAINS.getType(), apartmentAsset.getId(), energyMeterDevice.getId());
                 this.tbRestClient.createRelation(RelationType.CONTAINS.getType(), apartmentAsset.getId(), heatMeterDevice.getId());
             }
