@@ -16,6 +16,6 @@ public class Consumer implements ModelEntity {
     private String systemName;
     private String systemLabel;
 
-    private String type;
+    private ConsumerType type;
     private Telemetry<Long> consumption;
 }

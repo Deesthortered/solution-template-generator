@@ -17,7 +17,7 @@ public class City implements ModelEntity {
     private String systemName;
     private String systemLabel;
 
-    private int population;
+    private long population;
 
     private Set<Region> regions;
     private Set<PumpStation> pumpStations;

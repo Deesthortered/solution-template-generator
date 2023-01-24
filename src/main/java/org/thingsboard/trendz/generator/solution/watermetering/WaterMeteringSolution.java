@@ -28,6 +28,8 @@ import org.thingsboard.trendz.generator.service.VisualizationService;
 import org.thingsboard.trendz.generator.service.anomaly.AnomalyService;
 import org.thingsboard.trendz.generator.service.rest.TbRestClient;
 import org.thingsboard.trendz.generator.solution.SolutionTemplateGenerator;
+import org.thingsboard.trendz.generator.solution.watermetering.configuration.CityConfiguration;
+import org.thingsboard.trendz.generator.solution.watermetering.configuration.RegionConfiguration;
 import org.thingsboard.trendz.generator.solution.watermetering.model.City;
 import org.thingsboard.trendz.generator.solution.watermetering.model.Consumer;
 import org.thingsboard.trendz.generator.solution.watermetering.model.PumpStation;
@@ -40,6 +42,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeSet;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -175,6 +178,11 @@ public class WaterMeteringSolution implements SolutionTemplateGenerator {
                 for (Region region : city.getRegions()) {
                     UUID regionId = this.regionToIdMap.get(region);
 
+                    for (Consumer consumer : region.getConsumers()) {
+                        UUID consumerId = this.consumerToIdMap.get(consumer);
+
+                    }
+
                     int index = nodes.size();
                 }
                 for (PumpStation pumpStation : city.getPumpStations()) {
@@ -210,14 +218,23 @@ public class WaterMeteringSolution implements SolutionTemplateGenerator {
 
 
     private ModelData makeData(boolean skipTelemetry, ZonedDateTime startYear) {
-//        Building alpire = makeAlpire(skipTelemetry, startYear);
-//        Building feline = makeFeline(skipTelemetry, startYear);
-//        Building hogurity = makeHogurity(skipTelemetry, startYear);
-//
-//        return ModelData.builder()
-//                .data(new TreeSet<>(Set.of(alpire, feline, hogurity)))
-//                .build();
-        return null;
+        Set<CityConfiguration> cityConfigurations = Set.of(
+            CityConfiguration.builder()
+                    .startYear(startYear)
+                    .regionConfigurations(Set.of(
+                            RegionConfiguration.builder()
+                                    .startYear(startYear)
+
+                                    .build()
+                    ))
+                    .build()
+        );
+
+        Set<ModelEntity> cities = cityConfigurations.stream()
+                .map(configuration -> makeCityByConfiguration(configuration, skipTelemetry))
+                .collect(Collectors.toCollection(TreeSet::new));
+
+        return new ModelData(cities);
     }
 
     private void applyData(ModelData data, CustomerData customerData) {
@@ -380,5 +397,29 @@ public class WaterMeteringSolution implements SolutionTemplateGenerator {
 
         this.pumpStationToIdMap.put(pumpStation, device.getUuidId());
         return device;
+    }
+
+
+    private City makeCityByConfiguration(CityConfiguration cityConfiguration, boolean skipTelemetry) {
+        Set<Region> regions = new TreeSet<>();
+        for (RegionConfiguration regionConfiguration : cityConfiguration.getRegionConfigurations()) {
+            Region region = makeRegionByConfiguration(cityConfiguration, regionConfiguration, skipTelemetry);
+            regions.add(region);
+        }
+
+        return City.builder()
+                .systemName(cityConfiguration.getName())
+                .systemLabel(cityConfiguration.getLabel())
+                .population(cityConfiguration.getPopulation())
+                .regions(regions)
+                .pumpStations(null)
+                .build();
+    }
+
+    private Region makeRegionByConfiguration(CityConfiguration configuration, RegionConfiguration regionConfiguration, boolean skipTelemetry) {
+
+        return Region.builder()
+
+                .build();
     }
 }
