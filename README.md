@@ -28,7 +28,7 @@ Data starts at 2023-01-01 00:00.000000
   * Password: `password`
 
   ### Summary
-There are the following item types: `buildings`, `apartments`, one `energy meter`, and one `heat meter`.
+There are the following item types: `buildings`, `apartments`, `energy meter`, and `heat meter`.
 Buildings contain some apartments, apartments have one energy and one heat meter.
 
 There are three buildings: Alpire, Feline, and Hogurity.
@@ -94,5 +94,30 @@ Anomalies:
 ## Water Metering Solution 
   * Login: `watermetering@thingsboard.io`
   * Password: `password`
+
+### Summary
+There are the following item types: `WM City`, `WM Region`, `WM Consumer`, and `WM Pump station`.
+Cities (WM City) contain some regions (WM Region) and pump station (WM Pump station) for each region - 
+all of them is under city in the hierarchy. Regions have some consumers (WM Consumer).
+Business case is - consumers has the consumption of water that provided by pump station in particular region.
+City can be considered as bundle of regions. 
+Consumers have types - Householders (HSH), Government (GOV) and Industrial (IND). 
+
+There are two cities: London and Edinburgh.
+London has Dulwich and Wimbledon regions with 6 and 2 consumers (4 HSH, 1 GOV, 1 IND and Wimbledon).
+Edinburgh has Leith and Stockbridge regions by 3 consumers (by each type).
+
+Any consumption telemetry uses `Litres` as measurement unit.
+Consumer types:
+* Householder - usual living building, has little consumption, bigger in the morning and evening, interval of values is [10, 150].
+* Government - government building (not enterprises), has little consumption, bigger in the middle of day, interval of values is [10, 120].
+* Industrial - industrial building (like factories, plants, workshops), has big consumption, less at night, interval of values is [50, 600].
+Any consumption has noises +-20 litres.
+
+### Details
+Telemetry starts is on `<start year>-01-01` and will be consumed `each hour` from all meters.
+It can not have gaps except anomaly cases.
+All telemetry will be produced by meters since the beginning of the year with no exception.
+
 
 ***

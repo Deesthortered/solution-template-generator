@@ -40,7 +40,7 @@ public class Telemetry<T> {
         this.points = new TreeSet<>();
     }
 
-    private Telemetry(String name, Set<Point<T>> points) {
+    public Telemetry(String name, Set<Point<T>> points) {
         this.name = name;
         this.points = new TreeSet<>(points);
     }

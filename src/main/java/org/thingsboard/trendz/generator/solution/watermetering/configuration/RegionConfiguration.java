@@ -6,6 +6,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.ZonedDateTime;
+import java.util.Set;
 
 @Data
 @Builder
@@ -15,4 +16,7 @@ public class RegionConfiguration {
 
     private ZonedDateTime startYear;
     private String name;
+    private String label;
+
+    private Set<ConsumerConfiguration> consumerConfigurations;
 }

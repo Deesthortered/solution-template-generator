@@ -23,19 +23,25 @@ import org.thingsboard.trendz.generator.model.tb.Attribute;
 import org.thingsboard.trendz.generator.model.tb.CustomerData;
 import org.thingsboard.trendz.generator.model.tb.CustomerUser;
 import org.thingsboard.trendz.generator.model.tb.RelationType;
+import org.thingsboard.trendz.generator.model.tb.Telemetry;
+import org.thingsboard.trendz.generator.model.tb.Timestamp;
 import org.thingsboard.trendz.generator.service.FileService;
 import org.thingsboard.trendz.generator.service.VisualizationService;
 import org.thingsboard.trendz.generator.service.anomaly.AnomalyService;
 import org.thingsboard.trendz.generator.service.rest.TbRestClient;
 import org.thingsboard.trendz.generator.solution.SolutionTemplateGenerator;
 import org.thingsboard.trendz.generator.solution.watermetering.configuration.CityConfiguration;
+import org.thingsboard.trendz.generator.solution.watermetering.configuration.ConsumerConfiguration;
 import org.thingsboard.trendz.generator.solution.watermetering.configuration.RegionConfiguration;
 import org.thingsboard.trendz.generator.solution.watermetering.model.City;
 import org.thingsboard.trendz.generator.solution.watermetering.model.Consumer;
+import org.thingsboard.trendz.generator.solution.watermetering.model.ConsumerType;
 import org.thingsboard.trendz.generator.solution.watermetering.model.PumpStation;
 import org.thingsboard.trendz.generator.solution.watermetering.model.Region;
+import org.thingsboard.trendz.generator.utils.DateTimeUtils;
 
 import java.time.ZonedDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -219,15 +225,63 @@ public class WaterMeteringSolution implements SolutionTemplateGenerator {
 
     private ModelData makeData(boolean skipTelemetry, ZonedDateTime startYear) {
         Set<CityConfiguration> cityConfigurations = Set.of(
-            CityConfiguration.builder()
-                    .startYear(startYear)
-                    .regionConfigurations(Set.of(
-                            RegionConfiguration.builder()
-                                    .startYear(startYear)
+                CityConfiguration.builder()
+                        .name("London")
+                        .label("Label for City London")
+                        .population(4_000_000)
+                        .regionConfigurations(Set.of(
+                                RegionConfiguration.builder()
+                                        .startYear(startYear)
+                                        .name("Dulwich")
+                                        .label("Label for Dulwich, London")
+                                        .consumerConfigurations(Set.of(
+                                                new ConsumerConfiguration("1", ConsumerType.HSH),
+                                                new ConsumerConfiguration("2", ConsumerType.HSH),
+                                                new ConsumerConfiguration("3", ConsumerType.HSH),
+                                                new ConsumerConfiguration("4", ConsumerType.HSH),
+                                                new ConsumerConfiguration("1", ConsumerType.GOV),
+                                                new ConsumerConfiguration("1", ConsumerType.IND)
+                                        ))
+                                        .build(),
+                                RegionConfiguration.builder()
+                                        .startYear(startYear)
+                                        .name("Wimbledon")
+                                        .label("Label for Wimbledon, London")
+                                        .consumerConfigurations(Set.of(
+                                                new ConsumerConfiguration("1", ConsumerType.GOV),
+                                                new ConsumerConfiguration("1", ConsumerType.IND)
+                                        ))
+                                        .build()
+                        ))
+                        .build(),
 
-                                    .build()
-                    ))
-                    .build()
+                CityConfiguration.builder()
+                        .name("Edinburgh")
+                        .label("Label for City Edinburgh")
+                        .population(300_000)
+                        .regionConfigurations(Set.of(
+                                RegionConfiguration.builder()
+                                        .startYear(startYear)
+                                        .name("Leith")
+                                        .label("Label for Leith, Edinburgh")
+                                        .consumerConfigurations(Set.of(
+                                                new ConsumerConfiguration("1", ConsumerType.HSH),
+                                                new ConsumerConfiguration("1", ConsumerType.GOV),
+                                                new ConsumerConfiguration("1", ConsumerType.IND)
+                                        ))
+                                        .build(),
+                                RegionConfiguration.builder()
+                                        .startYear(startYear)
+                                        .name("Stockbridge")
+                                        .label("Label for Stockbridge, Edinburgh")
+                                        .consumerConfigurations(Set.of(
+                                                new ConsumerConfiguration("1", ConsumerType.HSH),
+                                                new ConsumerConfiguration("1", ConsumerType.GOV),
+                                                new ConsumerConfiguration("1", ConsumerType.IND)
+                                        ))
+                                        .build()
+                        ))
+                        .build()
         );
 
         Set<ModelEntity> cities = cityConfigurations.stream()
@@ -402,9 +456,14 @@ public class WaterMeteringSolution implements SolutionTemplateGenerator {
 
     private City makeCityByConfiguration(CityConfiguration cityConfiguration, boolean skipTelemetry) {
         Set<Region> regions = new TreeSet<>();
+        Set<PumpStation> pumpStations = new TreeSet<>();
         for (RegionConfiguration regionConfiguration : cityConfiguration.getRegionConfigurations()) {
-            Region region = makeRegionByConfiguration(cityConfiguration, regionConfiguration, skipTelemetry);
+            Region region = makeRegionByConfiguration(regionConfiguration, skipTelemetry);
             regions.add(region);
+        }
+        for (Region region : regions) {
+            PumpStation pumpStation = makePumpStationByRegion(region);
+            pumpStations.add(pumpStation);
         }
 
         return City.builder()
@@ -412,14 +471,247 @@ public class WaterMeteringSolution implements SolutionTemplateGenerator {
                 .systemLabel(cityConfiguration.getLabel())
                 .population(cityConfiguration.getPopulation())
                 .regions(regions)
-                .pumpStations(null)
+                .pumpStations(pumpStations)
                 .build();
     }
 
-    private Region makeRegionByConfiguration(CityConfiguration configuration, RegionConfiguration regionConfiguration, boolean skipTelemetry) {
+    private Region makeRegionByConfiguration(RegionConfiguration regionConfiguration, boolean skipTelemetry) {
+        Set<Consumer> consumers = new TreeSet<>();
+        for (ConsumerConfiguration consumerConfiguration : regionConfiguration.getConsumerConfigurations()) {
+            Consumer consumer = makeConsumerByConfiguration(regionConfiguration, consumerConfiguration, skipTelemetry);
+            consumers.add(consumer);
+        }
+
+        Set<Telemetry<Long>> consumptionSet = consumers.stream()
+                .map(Consumer::getConsumption)
+                .collect(Collectors.toSet());
+
+        Telemetry<Long> fullConsumption = createTelemetryRegionFullConsumption(consumptionSet, skipTelemetry);
 
         return Region.builder()
-
+                .systemName(regionConfiguration.getName())
+                .systemLabel(regionConfiguration.getLabel())
+                .fullConsumption(fullConsumption)
+                .consumers(consumers)
                 .build();
+    }
+
+    private Consumer makeConsumerByConfiguration(RegionConfiguration regionConfiguration, ConsumerConfiguration consumerConfiguration, boolean skipTelemetry) {
+        ZonedDateTime startYear = regionConfiguration.getStartYear();
+        String regionName = regionConfiguration.getName();
+        String index = consumerConfiguration.getIndex();
+        ConsumerType type = consumerConfiguration.getType();
+
+        String consumerName = regionName + " " + type.name() + "_" + index;
+        Telemetry<Long> consumption = createTelemetryConsumerConsumption(consumerConfiguration, startYear, skipTelemetry);
+
+        return Consumer.builder()
+                .systemName(consumerName)
+                .systemLabel("Label for consumer " + consumerName)
+                .type(type)
+                .consumption(consumption)
+                .build();
+    }
+
+    private PumpStation makePumpStationByRegion(Region region) {
+        // TODO
+        return PumpStation.builder()
+                .systemName("")
+                .systemLabel("")
+                .provided(null)
+                .build();
+    }
+
+
+    private Telemetry<Long> createTelemetryConsumerConsumption(ConsumerConfiguration consumerConfiguration, ZonedDateTime startYear, boolean skipTelemetry) {
+        if (skipTelemetry) {
+            return new Telemetry<>("skip");
+        }
+
+        Telemetry<Long> result = new Telemetry<>("consumption");
+        ConsumerType type = consumerConfiguration.getType();
+
+        long now = System.currentTimeMillis();
+        ZonedDateTime startDate = startYear.truncatedTo(ChronoUnit.HOURS);
+        ZonedDateTime nowDate = DateTimeUtils.fromTs(now).truncatedTo(ChronoUnit.HOURS);
+        ZonedDateTime iteratedDate = startDate;
+        while (iteratedDate.isBefore(nowDate)) {
+            long iteratedTs = DateTimeUtils.toTs(iteratedDate);
+            int hour = iteratedDate.getHour();
+            long value = getHourConsumerConsumption(type, hour);
+            result.add(iteratedTs, value);
+            iteratedDate = iteratedDate.plus(1, ChronoUnit.HOURS);
+        }
+
+        return result;
+    }
+
+    private Telemetry<Long> createTelemetryRegionFullConsumption(Set<Telemetry<Long>> consumerConsumptionOfRegion, boolean skipTelemetry) {
+        if (skipTelemetry) {
+            return new Telemetry<>("skip");
+        }
+
+        Set<Telemetry.Point<Long>> summedConsumption = consumerConsumptionOfRegion.stream()
+                .map(Telemetry::getPoints)
+                .flatMap(Collection::stream)
+                .collect(Collectors.groupingBy(
+                        Telemetry.Point::getTs,
+                        Collectors.mapping(Telemetry.Point::getValue, Collectors.toList()))
+                )
+                .entrySet()
+                .stream()
+                .map(entry -> {
+                    Timestamp ts = entry.getKey();
+                    long sum = entry.getValue()
+                            .stream()
+                            .mapToLong(l -> l)
+                            .sum();
+
+                    return new Telemetry.Point<>(ts, sum);
+                })
+                .collect(Collectors.toCollection(TreeSet::new));
+
+        return new Telemetry<>("full_consumption", summedConsumption);
+    }
+
+    private long getHourConsumerConsumption(ConsumerType type, int hour) {
+        switch (type) {
+            case HSH:
+                return getHourHshConsumption(hour);
+            case GOV:
+                return getHourGovConsumption(hour);
+            case IND:
+                return getHourIndConsumption(hour);
+            default:
+                throw new IllegalArgumentException("Unsupported consumer type = " + type);
+        }
+    }
+
+    private long getHourHshConsumption(int hour) {
+        switch (hour) {
+            case 0:
+            case 1:
+            case 2:
+            case 3:
+                return 10;
+            case 4:
+                return 50;
+            case 5:
+                return 100;
+            case 6:
+            case 7:
+                return 150;
+            case 8:
+            case 9:
+                return 100;
+            case 10:
+                return 50;
+            case 11:
+            case 12:
+            case 13:
+            case 14:
+            case 15:
+                return 10;
+            case 16:
+                return 30;
+            case 17:
+            case 18:
+            case 19:
+                return 50;
+            case 20:
+                return 150;
+            case 21:
+                return 100;
+            case 22:
+                return 40;
+            case 23:
+                return 10;
+            default:
+                throw new IllegalArgumentException("Unsupported hour = " + hour);
+        }
+    }
+
+    private long getHourGovConsumption(int hour) {
+        switch (hour) {
+            case 0:
+            case 1:
+            case 2:
+                return 50;
+            case 3:
+            case 4:
+            case 5:
+                return 60;
+            case 6:
+                return 70;
+            case 7:
+                return 80;
+            case 8:
+                return 100;
+            case 9:
+            case 10:
+            case 11:
+            case 12:
+            case 13:
+            case 14:
+            case 15:
+            case 16:
+                return 120;
+            case 17:
+                return 100;
+            case 18:
+            case 19:
+                return 80;
+            case 20:
+            case 21:
+            case 22:
+            case 23:
+                return 50;
+            default:
+                throw new IllegalArgumentException("Unsupported hour = " + hour);
+        }
+    }
+
+    private long getHourIndConsumption(int hour) {
+        // 100L, 100L, 100L, 100L, 200L, 200L, 500L, 400L, 400L, 400L, 450L, 500L, 600L, 550L, 550L, 400L, 300L, 100L, 100L, 100L, 100L, 100L, 100L, 100L
+
+        switch (hour) {
+            case 0:
+            case 1:
+            case 2:
+            case 3:
+                return 100;
+            case 4:
+            case 5:
+                return 200;
+            case 6:
+                return 500;
+            case 7:
+            case 8:
+            case 9:
+                return 400;
+            case 10:
+                return 450;
+            case 11:
+                return 500;
+            case 12:
+                return 600;
+            case 13:
+            case 14:
+                return 550;
+            case 15:
+                return 400;
+            case 16:
+                return 300;
+            case 17:
+            case 18:
+            case 19:
+            case 20:
+            case 21:
+            case 22:
+            case 23:
+                return 100;
+            default:
+                throw new IllegalArgumentException("Unsupported hour = " + hour);
+        }
     }
 }

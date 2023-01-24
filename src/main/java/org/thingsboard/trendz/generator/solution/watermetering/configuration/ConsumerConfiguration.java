@@ -4,17 +4,14 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
-import java.util.Set;
+import org.thingsboard.trendz.generator.solution.watermetering.model.ConsumerType;
 
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class CityConfiguration {
+public class ConsumerConfiguration {
 
-    private String name;
-    private String label;
-    private long population;
-    private Set<RegionConfiguration> regionConfigurations;
+    private String index;
+    private ConsumerType type;
 }
