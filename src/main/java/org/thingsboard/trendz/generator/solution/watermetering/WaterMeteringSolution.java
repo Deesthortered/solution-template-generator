@@ -39,7 +39,10 @@ import org.thingsboard.trendz.generator.solution.watermetering.model.ConsumerTyp
 import org.thingsboard.trendz.generator.solution.watermetering.model.PumpStation;
 import org.thingsboard.trendz.generator.solution.watermetering.model.Region;
 import org.thingsboard.trendz.generator.utils.DateTimeUtils;
+import org.thingsboard.trendz.generator.utils.RandomUtils;
 
+import java.time.DayOfWeek;
+import java.time.Month;
 import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
@@ -532,6 +535,7 @@ public class WaterMeteringSolution implements SolutionTemplateGenerator {
 
         Telemetry<Long> result = new Telemetry<>("consumption");
         ConsumerType type = consumerConfiguration.getType();
+        Set<DayOfWeek> weekEnd = Set.of(DayOfWeek.SATURDAY, DayOfWeek.SUNDAY);
 
         long now = System.currentTimeMillis();
         ZonedDateTime startDate = startYear.truncatedTo(ChronoUnit.HOURS);
@@ -540,7 +544,22 @@ public class WaterMeteringSolution implements SolutionTemplateGenerator {
         while (iteratedDate.isBefore(nowDate)) {
             long iteratedTs = DateTimeUtils.toTs(iteratedDate);
             int hour = iteratedDate.getHour();
-            long value = getHourConsumerConsumption(type, hour);
+            DayOfWeek dayOfWeek = iteratedDate.getDayOfWeek();
+            int dayOfYear = iteratedDate.getDayOfYear();
+            Month month = iteratedDate.getMonth();
+            long dailyNoise = RandomUtils.getRandomNumber(-20, 20);
+
+            long consumption;
+            if (weekEnd.contains(dayOfWeek)) {
+                consumption = getHourConsumerConsumption(type, hour);
+            } else {
+                consumption = 10;
+            }
+            consumption += getModificationByMonth(month);
+            consumption += getModificationByDayOfYear(dayOfYear);
+
+            long value = consumption + dailyNoise;
+
             result.add(iteratedTs, value);
             iteratedDate = iteratedDate.plus(1, ChronoUnit.HOURS);
         }
@@ -715,5 +734,33 @@ public class WaterMeteringSolution implements SolutionTemplateGenerator {
             default:
                 throw new IllegalArgumentException("Unsupported hour = " + hour);
         }
+    }
+
+    private long getModificationByMonth(Month month) {
+        long value = 20;
+        switch (month) {
+            case JANUARY:
+            case FEBRUARY:
+                return 0;
+            case MARCH:
+            case APRIL:
+            case MAY:
+                return value;
+            case JUNE:
+            case JULY:
+            case AUGUST:
+                return 0;
+            case SEPTEMBER:
+            case OCTOBER:
+            case NOVEMBER:
+                return value;
+            case DECEMBER:
+                return 0;
+            default: throw new IllegalArgumentException("Unsupported month: " + month);
+        }
+    }
+
+    private long getModificationByDayOfYear(int dayOfYear) {
+        return (dayOfYear * 24L) / 500 + RandomUtils.getRandomNumber(-5, 5);
     }
 }
