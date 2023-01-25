@@ -514,11 +514,13 @@ public class WaterMeteringSolution implements SolutionTemplateGenerator {
     }
 
     private PumpStation makePumpStationByRegion(Region region) {
-        // TODO
+        String name = region.getSystemName() + " Pump Station";
+        Telemetry<Long> provided = new Telemetry<>("provided", region.getFullConsumption().getPoints());
+
         return PumpStation.builder()
-                .systemName("")
-                .systemLabel("")
-                .provided(null)
+                .systemName(name)
+                .systemLabel("Label for " + name)
+                .provided(provided)
                 .build();
     }
 
