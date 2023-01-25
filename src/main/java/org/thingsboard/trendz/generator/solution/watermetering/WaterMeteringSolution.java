@@ -19,6 +19,8 @@ import org.thingsboard.trendz.generator.exception.DeviceAlreadyExistException;
 import org.thingsboard.trendz.generator.exception.RuleChainAlreadyExistException;
 import org.thingsboard.trendz.generator.model.ModelData;
 import org.thingsboard.trendz.generator.model.ModelEntity;
+import org.thingsboard.trendz.generator.model.anomaly.AnomalyInfo;
+import org.thingsboard.trendz.generator.model.anomaly.AnomalyType;
 import org.thingsboard.trendz.generator.model.tb.Attribute;
 import org.thingsboard.trendz.generator.model.tb.CustomerData;
 import org.thingsboard.trendz.generator.model.tb.CustomerUser;
@@ -32,6 +34,7 @@ import org.thingsboard.trendz.generator.service.rest.TbRestClient;
 import org.thingsboard.trendz.generator.solution.SolutionTemplateGenerator;
 import org.thingsboard.trendz.generator.solution.watermetering.configuration.CityConfiguration;
 import org.thingsboard.trendz.generator.solution.watermetering.configuration.ConsumerConfiguration;
+import org.thingsboard.trendz.generator.solution.watermetering.configuration.PumpStationConfiguration;
 import org.thingsboard.trendz.generator.solution.watermetering.configuration.RegionConfiguration;
 import org.thingsboard.trendz.generator.solution.watermetering.model.City;
 import org.thingsboard.trendz.generator.solution.watermetering.model.Consumer;
@@ -54,6 +57,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.UUID;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -238,23 +242,68 @@ public class WaterMeteringSolution implements SolutionTemplateGenerator {
                                         .startYear(startYear)
                                         .name("Dulwich")
                                         .label("Label for Dulwich, London")
+                                        .anomalies(Collections.emptySet())
                                         .consumerConfigurations(Set.of(
                                                 new ConsumerConfiguration("1", ConsumerType.HSH, Collections.emptySet()),
-                                                new ConsumerConfiguration("2", ConsumerType.HSH, Collections.emptySet()),
+                                                new ConsumerConfiguration("2", ConsumerType.HSH, Set.of(
+                                                        AnomalyInfo.builder()
+                                                                .startTs(Timestamp.of(DateTimeUtils.toTs(startYear.withMonth(3).withDayOfMonth(15))))
+                                                                .endTs(Timestamp.of(DateTimeUtils.toTs(startYear.withMonth(3).withDayOfMonth(22))))
+                                                                .type(AnomalyType.ZERO_VALUES)
+                                                                .build()
+                                                )),
                                                 new ConsumerConfiguration("3", ConsumerType.HSH, Collections.emptySet()),
                                                 new ConsumerConfiguration("4", ConsumerType.HSH, Collections.emptySet()),
                                                 new ConsumerConfiguration("1", ConsumerType.GOV, Collections.emptySet()),
                                                 new ConsumerConfiguration("1", ConsumerType.IND, Collections.emptySet())
                                         ))
+                                        .pumpStationConfiguration(
+                                                PumpStationConfiguration.builder()
+                                                        .anomalies(
+                                                                ((Supplier<Set<AnomalyInfo>>) () -> {
+                                                                    Set<AnomalyInfo> result = new TreeSet<>();
+                                                                    ZonedDateTime from = startYear.withMonth(5).withDayOfMonth(1);
+                                                                    ZonedDateTime to = startYear.withMonth(5).withDayOfMonth(21);
+                                                                    ZonedDateTime iteratedDate = from;
+                                                                    while (iteratedDate.isBefore(to)) {
+                                                                        ZonedDateTime start = iteratedDate.withHour(3);
+                                                                        ZonedDateTime end = iteratedDate.withHour(5);
+
+                                                                        AnomalyInfo anomalyInfo = AnomalyInfo.builder()
+                                                                                .startTs(Timestamp.of(DateTimeUtils.toTs(start)))
+                                                                                .endTs(Timestamp.of(DateTimeUtils.toTs(end)))
+                                                                                .type(AnomalyType.SHIFTED_DATA)
+                                                                                .value(20)
+                                                                                .build();
+
+                                                                        result.add(anomalyInfo);
+                                                                        iteratedDate = iteratedDate.plus(1, ChronoUnit.DAYS);
+                                                                    }
+                                                                    return result;
+                                                                }).get())
+                                                        .build()
+                                        )
                                         .build(),
                                 RegionConfiguration.builder()
                                         .startYear(startYear)
                                         .name("Wimbledon")
                                         .label("Label for Wimbledon, London")
+                                        .anomalies(Collections.emptySet())
                                         .consumerConfigurations(Set.of(
-                                                new ConsumerConfiguration("1", ConsumerType.GOV, Collections.emptySet()),
+                                                new ConsumerConfiguration("1", ConsumerType.GOV, Set.of(
+                                                        AnomalyInfo.builder()
+                                                                .startTs(Timestamp.of(DateTimeUtils.toTs(startYear.withMonth(1).withDayOfMonth(5))))
+                                                                .endTs(Timestamp.of(DateTimeUtils.toTs(startYear.withMonth(1).withDayOfMonth(10))))
+                                                                .type(AnomalyType.ZERO_VALUES)
+                                                                .build()
+                                                )),
                                                 new ConsumerConfiguration("1", ConsumerType.IND, Collections.emptySet())
                                         ))
+                                        .pumpStationConfiguration(
+                                                PumpStationConfiguration.builder()
+                                                        .anomalies(Collections.emptySet())
+                                                        .build()
+                                        )
                                         .build()
                         ))
                         .build(),
@@ -268,21 +317,59 @@ public class WaterMeteringSolution implements SolutionTemplateGenerator {
                                         .startYear(startYear)
                                         .name("Leith")
                                         .label("Label for Leith, Edinburgh")
+                                        .anomalies(Set.of(
+                                                AnomalyInfo.builder()
+                                                        .startTs(Timestamp.of(DateTimeUtils.toTs(startYear.withMonth(2).withDayOfMonth(10))))
+                                                        .endTs(Timestamp.of(DateTimeUtils.toTs(startYear.withMonth(4).withDayOfMonth(10))))
+                                                        .type(AnomalyType.SHIFTED_DATA)
+                                                        .value(10)
+                                                        .build(),
+                                                AnomalyInfo.builder()
+                                                        .startTs(Timestamp.of(DateTimeUtils.toTs(startYear.withMonth(6).withDayOfMonth(5))))
+                                                        .endTs(Timestamp.of(DateTimeUtils.toTs(startYear.withMonth(6).withDayOfMonth(25))))
+                                                        .type(AnomalyType.SHIFTED_DATA)
+                                                        .value(10)
+                                                        .build()
+                                        ))
                                         .consumerConfigurations(Set.of(
                                                 new ConsumerConfiguration("1", ConsumerType.HSH, Collections.emptySet()),
                                                 new ConsumerConfiguration("1", ConsumerType.GOV, Collections.emptySet()),
                                                 new ConsumerConfiguration("1", ConsumerType.IND, Collections.emptySet())
                                         ))
+                                        .pumpStationConfiguration(
+                                                PumpStationConfiguration.builder()
+                                                        .anomalies(Collections.emptySet())
+                                                        .build()
+                                        )
                                         .build(),
                                 RegionConfiguration.builder()
                                         .startYear(startYear)
                                         .name("Stockbridge")
                                         .label("Label for Stockbridge, Edinburgh")
+                                        .anomalies(Set.of(
+                                                AnomalyInfo.builder()
+                                                        .startTs(Timestamp.of(DateTimeUtils.toTs(startYear.withMonth(1).withDayOfMonth(5))))
+                                                        .endTs(Timestamp.of(DateTimeUtils.toTs(startYear.withMonth(1).withDayOfMonth(1))))
+                                                        .type(AnomalyType.SHIFTED_DATA)
+                                                        .value(10)
+                                                        .build(),
+                                                AnomalyInfo.builder()
+                                                        .startTs(Timestamp.of(DateTimeUtils.toTs(startYear.withMonth(3).withDayOfMonth(1))))
+                                                        .endTs(Timestamp.of(DateTimeUtils.toTs(startYear.withMonth(3).withDayOfMonth(14))))
+                                                        .type(AnomalyType.SHIFTED_DATA)
+                                                        .value(10)
+                                                        .build()
+                                        ))
                                         .consumerConfigurations(Set.of(
                                                 new ConsumerConfiguration("1", ConsumerType.HSH, Collections.emptySet()),
                                                 new ConsumerConfiguration("1", ConsumerType.GOV, Collections.emptySet()),
                                                 new ConsumerConfiguration("1", ConsumerType.IND, Collections.emptySet())
                                         ))
+                                        .pumpStationConfiguration(
+                                                PumpStationConfiguration.builder()
+                                                        .anomalies(Collections.emptySet())
+                                                        .build()
+                                        )
                                         .build()
                         ))
                         .build()
@@ -464,9 +551,9 @@ public class WaterMeteringSolution implements SolutionTemplateGenerator {
         for (RegionConfiguration regionConfiguration : cityConfiguration.getRegionConfigurations()) {
             Region region = makeRegionByConfiguration(regionConfiguration, skipTelemetry);
             regions.add(region);
-        }
-        for (Region region : regions) {
-            PumpStation pumpStation = makePumpStationByRegion(region);
+
+            PumpStationConfiguration pumpStationConfiguration = regionConfiguration.getPumpStationConfiguration();
+            PumpStation pumpStation = makePumpStationByRegion(pumpStationConfiguration, region);
             pumpStations.add(pumpStation);
         }
 
@@ -491,6 +578,7 @@ public class WaterMeteringSolution implements SolutionTemplateGenerator {
                 .collect(Collectors.toSet());
 
         Telemetry<Long> fullConsumption = createTelemetryRegionFullConsumption(consumptionSet, skipTelemetry);
+        this.anomalyService.applyAnomaly(fullConsumption, regionConfiguration.getAnomalies());
 
         return Region.builder()
                 .systemName(regionConfiguration.getName())
@@ -518,9 +606,10 @@ public class WaterMeteringSolution implements SolutionTemplateGenerator {
                 .build();
     }
 
-    private PumpStation makePumpStationByRegion(Region region) {
+    private PumpStation makePumpStationByRegion(PumpStationConfiguration pumpStationConfiguration, Region region) {
         String name = region.getSystemName() + " Pump Station";
         Telemetry<Long> provided = new Telemetry<>("provided", region.getFullConsumption().getPoints());
+        this.anomalyService.applyAnomaly(provided, pumpStationConfiguration.getAnomalies());
 
         return PumpStation.builder()
                 .systemName(name)
@@ -560,7 +649,7 @@ public class WaterMeteringSolution implements SolutionTemplateGenerator {
             consumption += getModificationByMonth(month);
             consumption += getModificationByDayOfYear(dayOfYear);
 
-            long value = consumption + dailyNoise;
+            long value = Math.max(0, consumption + dailyNoise);
 
             result.add(iteratedTs, value);
             iteratedDate = iteratedDate.plus(1, ChronoUnit.HOURS);
@@ -758,7 +847,8 @@ public class WaterMeteringSolution implements SolutionTemplateGenerator {
                 return value;
             case DECEMBER:
                 return 0;
-            default: throw new IllegalArgumentException("Unsupported month: " + month);
+            default:
+                throw new IllegalArgumentException("Unsupported month: " + month);
         }
     }
 
