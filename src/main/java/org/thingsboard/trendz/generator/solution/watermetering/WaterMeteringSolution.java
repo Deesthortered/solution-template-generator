@@ -47,6 +47,7 @@ import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -238,12 +239,12 @@ public class WaterMeteringSolution implements SolutionTemplateGenerator {
                                         .name("Dulwich")
                                         .label("Label for Dulwich, London")
                                         .consumerConfigurations(Set.of(
-                                                new ConsumerConfiguration("1", ConsumerType.HSH),
-                                                new ConsumerConfiguration("2", ConsumerType.HSH),
-                                                new ConsumerConfiguration("3", ConsumerType.HSH),
-                                                new ConsumerConfiguration("4", ConsumerType.HSH),
-                                                new ConsumerConfiguration("1", ConsumerType.GOV),
-                                                new ConsumerConfiguration("1", ConsumerType.IND)
+                                                new ConsumerConfiguration("1", ConsumerType.HSH, Collections.emptySet()),
+                                                new ConsumerConfiguration("2", ConsumerType.HSH, Collections.emptySet()),
+                                                new ConsumerConfiguration("3", ConsumerType.HSH, Collections.emptySet()),
+                                                new ConsumerConfiguration("4", ConsumerType.HSH, Collections.emptySet()),
+                                                new ConsumerConfiguration("1", ConsumerType.GOV, Collections.emptySet()),
+                                                new ConsumerConfiguration("1", ConsumerType.IND, Collections.emptySet())
                                         ))
                                         .build(),
                                 RegionConfiguration.builder()
@@ -251,8 +252,8 @@ public class WaterMeteringSolution implements SolutionTemplateGenerator {
                                         .name("Wimbledon")
                                         .label("Label for Wimbledon, London")
                                         .consumerConfigurations(Set.of(
-                                                new ConsumerConfiguration("1", ConsumerType.GOV),
-                                                new ConsumerConfiguration("1", ConsumerType.IND)
+                                                new ConsumerConfiguration("1", ConsumerType.GOV, Collections.emptySet()),
+                                                new ConsumerConfiguration("1", ConsumerType.IND, Collections.emptySet())
                                         ))
                                         .build()
                         ))
@@ -268,9 +269,9 @@ public class WaterMeteringSolution implements SolutionTemplateGenerator {
                                         .name("Leith")
                                         .label("Label for Leith, Edinburgh")
                                         .consumerConfigurations(Set.of(
-                                                new ConsumerConfiguration("1", ConsumerType.HSH),
-                                                new ConsumerConfiguration("1", ConsumerType.GOV),
-                                                new ConsumerConfiguration("1", ConsumerType.IND)
+                                                new ConsumerConfiguration("1", ConsumerType.HSH, Collections.emptySet()),
+                                                new ConsumerConfiguration("1", ConsumerType.GOV, Collections.emptySet()),
+                                                new ConsumerConfiguration("1", ConsumerType.IND, Collections.emptySet())
                                         ))
                                         .build(),
                                 RegionConfiguration.builder()
@@ -278,9 +279,9 @@ public class WaterMeteringSolution implements SolutionTemplateGenerator {
                                         .name("Stockbridge")
                                         .label("Label for Stockbridge, Edinburgh")
                                         .consumerConfigurations(Set.of(
-                                                new ConsumerConfiguration("1", ConsumerType.HSH),
-                                                new ConsumerConfiguration("1", ConsumerType.GOV),
-                                                new ConsumerConfiguration("1", ConsumerType.IND)
+                                                new ConsumerConfiguration("1", ConsumerType.HSH, Collections.emptySet()),
+                                                new ConsumerConfiguration("1", ConsumerType.GOV, Collections.emptySet()),
+                                                new ConsumerConfiguration("1", ConsumerType.IND, Collections.emptySet())
                                         ))
                                         .build()
                         ))
@@ -507,6 +508,7 @@ public class WaterMeteringSolution implements SolutionTemplateGenerator {
 
         String consumerName = regionName + " " + type.name() + "_" + index;
         Telemetry<Long> consumption = createTelemetryConsumerConsumption(consumerConfiguration, startYear, skipTelemetry);
+        this.anomalyService.applyAnomaly(consumption, consumerConfiguration.getAnomalies());
 
         return Consumer.builder()
                 .systemName(consumerName)

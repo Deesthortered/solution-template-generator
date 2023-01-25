@@ -453,7 +453,7 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
                                 .occupied(true)
                                 .level(2)
                                 .startDate(TS_JANUARY)
-                                .anomalies(List.of())
+                                .anomalies(Set.of())
                                 .area(2)
                                 .build()
                 )
@@ -465,7 +465,7 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
                         .occupied(false)
                         .level(0)
                         .startDate(TS_JANUARY)
-                        .anomalies(List.of(
+                        .anomalies(Set.of(
                             AnomalyInfo.builder()
                                     .startTs(Timestamp.of(DateTimeUtils.toTs(startYear.withMonth(7).withDayOfMonth(10))))
                                     .endTs(Timestamp.of(DateTimeUtils.toTs(startYear.withMonth(7).withDayOfMonth(20))))
@@ -483,7 +483,7 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
                         .occupied(false)
                         .level(0)
                         .startDate(TS_JANUARY)
-                        .anomalies(List.of())
+                        .anomalies(Set.of())
                         .area(0)
                         .build()
         );
@@ -494,7 +494,7 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
                         .occupied(true)
                         .level(3)
                         .startDate(TS_JANUARY)
-                        .anomalies(List.of())
+                        .anomalies(Set.of())
                         .area(3)
                         .build()
         );
@@ -505,7 +505,7 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
                         .occupied(true)
                         .level(3)
                         .startDate(TS_JANUARY)
-                        .anomalies(List.of())
+                        .anomalies(Set.of())
                         .area(3)
                         .build()
         );
@@ -516,7 +516,7 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
                         .occupied(false)
                         .level(0)
                         .startDate(TS_FEBRUARY)
-                        .anomalies(List.of())
+                        .anomalies(Set.of())
                         .area(0)
                         .build()
         );
@@ -527,7 +527,7 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
                         .occupied(false)
                         .level(0)
                         .startDate(TS_FEBRUARY)
-                        .anomalies(List.of())
+                        .anomalies(Set.of())
                         .area(0)
                         .build()
         );
@@ -552,7 +552,7 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
                                 .occupied(true)
                                 .level(3)
                                 .startDate(TS_MAY)
-                                .anomalies(List.of())
+                                .anomalies(Set.of())
                                 .area(3)
                                 .build()
                 )
@@ -564,7 +564,7 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
                         .occupied(false)
                         .level(0)
                         .startDate(TS_MAY)
-                        .anomalies(List.of(
+                        .anomalies(Set.of(
                                 AnomalyInfo.builder()
                                         .startTs(Timestamp.of(DateTimeUtils.toTs(startYear.withMonth(9).withDayOfMonth(1))))
                                         .endTs(Timestamp.of(DateTimeUtils.toTs(startYear.withMonth(9).withDayOfMonth(10))))
@@ -582,9 +582,7 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
                         .occupied(true)
                         .level(1)
                         .startDate(TS_MAY)
-                        .anomalies(List.of(
-
-                        ))
+                        .anomalies(Set.of())
                         .area(1)
                         .build()
         );
@@ -595,9 +593,7 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
                         .occupied(true)
                         .level(1)
                         .startDate(TS_MAY)
-                        .anomalies(List.of(
-
-                        ))
+                        .anomalies(Set.of())
                         .area(1)
                         .build()
         );
@@ -608,9 +604,7 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
                         .occupied(true)
                         .level(2)
                         .startDate(TS_MAY)
-                        .anomalies(List.of(
-
-                        ))
+                        .anomalies(Set.of())
                         .area(2)
                         .build()
         );
@@ -621,9 +615,7 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
                         .occupied(true)
                         .level(2)
                         .startDate(TS_MAY)
-                        .anomalies(List.of(
-
-                        ))
+                        .anomalies(Set.of())
                         .area(2)
                         .build()
         );
@@ -634,9 +626,7 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
                         .occupied(true)
                         .level(2)
                         .startDate(TS_MAY)
-                        .anomalies(List.of(
-
-                        ))
+                        .anomalies(Set.of())
                         .area(2)
                         .build()
         );
@@ -647,7 +637,7 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
                         .occupied(true)
                         .level(3)
                         .startDate(TS_MAY)
-                        .anomalies(List.of(
+                        .anomalies(Set.of(
                                 AnomalyInfo.builder()
                                         .startTs(Timestamp.of(DateTimeUtils.toTs(startYear.withMonth(10).withDayOfMonth(20))))
                                         .endTs(Timestamp.of(DateTimeUtils.toTs(startYear.withMonth(10).withDayOfMonth(25))))
@@ -665,7 +655,7 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
                         .occupied(true)
                         .level(3)
                         .startDate(TS_MAY)
-                        .anomalies(List.of(
+                        .anomalies(Set.of(
                                 AnomalyInfo.builder()
                                         .startTs(Timestamp.of(DateTimeUtils.toTs(startYear.withMonth(9).withDayOfMonth(15))))
                                         .endTs(Timestamp.of(DateTimeUtils.toTs(startYear.withMonth(9).withDayOfMonth(20))))
@@ -696,7 +686,7 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
                                 .occupied(true)
                                 .level(3)
                                 .startDate(TS_JANUARY)
-                                .anomalies(List.of(
+                                .anomalies(Set.of(
                                         AnomalyInfo.builder()
                                                 .startTs(Timestamp.of(DateTimeUtils.toTs(startYear.withMonth(12).withDayOfMonth(1))))
                                                 .endTs(Timestamp.of(DateTimeUtils.toTs(startYear.withMonth(12).withDayOfMonth(3))))
@@ -714,7 +704,7 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
                         .occupied(true)
                         .level(3)
                         .startDate(TS_MARCH)
-                        .anomalies(List.of(
+                        .anomalies(Set.of(
                                 AnomalyInfo.builder()
                                         .startTs(Timestamp.of(DateTimeUtils.toTs(startYear.withMonth(12).withDayOfMonth(1))))
                                         .endTs(Timestamp.of(DateTimeUtils.toTs(startYear.withMonth(12).withDayOfMonth(3))))
@@ -731,7 +721,7 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
                         .occupied(true)
                         .level(3)
                         .startDate(TS_MARCH)
-                        .anomalies(List.of(
+                        .anomalies(Set.of(
                                 AnomalyInfo.builder()
                                         .startTs(Timestamp.of(DateTimeUtils.toTs(startYear.withMonth(8).withDayOfMonth(1))))
                                         .endTs(Timestamp.of(DateTimeUtils.toTs(startYear.withMonth(8).withDayOfMonth(5))))

@@ -11,6 +11,7 @@ import javax.annotation.PostConstruct;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 @Slf4j
 @Service
@@ -29,7 +30,7 @@ public class AnomalyService {
         }
     }
 
-    public void applyAnomaly(Telemetry<?> telemetry, List<AnomalyInfo> anomalyInfoList) {
+    public void applyAnomaly(Telemetry<?> telemetry, Set<AnomalyInfo> anomalyInfoList) {
         if (anomalyInfoList == null) {
             return;
         }

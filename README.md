@@ -108,16 +108,31 @@ London has Dulwich and Wimbledon regions with 6 and 2 consumers (4 HSH, 1 GOV, 1
 Edinburgh has Leith and Stockbridge regions by 3 consumers (by each type).
 
 Any consumption telemetry uses `Litres` as measurement unit.
+There is `consumption` telemetry produced by consumers and measurements depend on type of consumers.
 Consumer types:
 * Householder - usual living building, has little consumption, bigger in the morning and evening, interval of values is [10, 150].
 * Government - government building (not enterprises), has little consumption, bigger in the middle of day, interval of values is [10, 120].
 * Industrial - industrial building (like factories, plants, workshops), has big consumption, less at night, interval of values is [50, 600].
 Any consumption has noises +-20 litres.
 
+Each region has `full_consumption` telemetry that summing all related consumer's `consumption` telemetries.
+Pump Station (only one for region) has telemetry `provided` that must be equal to `full_consumption` of corresponding region.
+
+The data has anomalies that violate mentioned rules, and it can be found by existing inaccuracies.
+Anomalies:
+1. London, Wimbledon, Gov1        - January (5-10), zero consumption
+2. London, Dulwich, Hsh2          - March (15-22), zero consumption
+3. London, Dulwich, Pump Station  - May (1-21) 3am-5am every day, Theft (20 litres every hour)
+4. Edinburgh, Leith, Region       - 10 February - 10 April, leakage (10 litres every hour)
+5. Edinburgh, Leith, Region       - June (5-25), leakage (10 litres every hour)
+6. Edinburgh, Stockbridge, Region - January (5-16), leakage (10 litres every hour)
+7. Edinburgh, Stockbridge, Region - March (1-14), leakage (10 litres every hour)
+
 ### Details
 Telemetry starts is on `<start year>-01-01` and will be consumed `each hour` from all meters.
 It can not have gaps except anomaly cases.
 All telemetry will be produced by meters since the beginning of the year with no exception.
+All anomaly will be only at first year of the telemetry.
 
 
 ***

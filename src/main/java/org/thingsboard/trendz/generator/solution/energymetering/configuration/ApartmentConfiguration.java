@@ -6,7 +6,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.thingsboard.trendz.generator.model.anomaly.AnomalyInfo;
 
-import java.util.List;
+import java.util.Set;
 
 @Data
 @Builder
@@ -19,5 +19,5 @@ public class ApartmentConfiguration {
     private int level;
     private long startDate;
 
-    private List<AnomalyInfo> anomalies;
+    private Set<AnomalyInfo> anomalies;
 }
