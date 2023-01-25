@@ -38,7 +38,6 @@ import org.thingsboard.trendz.generator.model.tb.NodeConnectionType;
 import org.thingsboard.trendz.generator.model.tb.RelationType;
 import org.thingsboard.trendz.generator.model.tb.RuleNodeAdditionalInfo;
 import org.thingsboard.trendz.generator.model.tb.Telemetry;
-import org.thingsboard.trendz.generator.model.tb.Timestamp;
 import org.thingsboard.trendz.generator.service.FileService;
 import org.thingsboard.trendz.generator.service.VisualizationService;
 import org.thingsboard.trendz.generator.service.anomaly.AnomalyService;
@@ -467,8 +466,8 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
                         .startDate(TS_JANUARY)
                         .anomalies(Set.of(
                             AnomalyInfo.builder()
-                                    .startTs(Timestamp.of(DateTimeUtils.toTs(startYear.withMonth(7).withDayOfMonth(10))))
-                                    .endTs(Timestamp.of(DateTimeUtils.toTs(startYear.withMonth(7).withDayOfMonth(20))))
+                                    .startDate(startYear.withMonth(7).withDayOfMonth(10))
+                                    .endDate(startYear.withMonth(7).withDayOfMonth(20))
                                     .type(AnomalyType.SHIFTED_DATA)
                                     .value(300)
                                     .build()
@@ -566,8 +565,8 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
                         .startDate(TS_MAY)
                         .anomalies(Set.of(
                                 AnomalyInfo.builder()
-                                        .startTs(Timestamp.of(DateTimeUtils.toTs(startYear.withMonth(9).withDayOfMonth(1))))
-                                        .endTs(Timestamp.of(DateTimeUtils.toTs(startYear.withMonth(9).withDayOfMonth(10))))
+                                        .startDate(startYear.withMonth(9).withDayOfMonth(1))
+                                        .endDate(startYear.withMonth(9).withDayOfMonth(10))
                                         .type(AnomalyType.SHIFTED_DATA)
                                         .value(300)
                                         .build()
@@ -639,8 +638,8 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
                         .startDate(TS_MAY)
                         .anomalies(Set.of(
                                 AnomalyInfo.builder()
-                                        .startTs(Timestamp.of(DateTimeUtils.toTs(startYear.withMonth(10).withDayOfMonth(20))))
-                                        .endTs(Timestamp.of(DateTimeUtils.toTs(startYear.withMonth(10).withDayOfMonth(25))))
+                                        .startDate(startYear.withMonth(10).withDayOfMonth(20))
+                                        .endDate(startYear.withMonth(10).withDayOfMonth(25))
                                         .type(AnomalyType.SHIFTED_DATA)
                                         .value(3000)
                                         .build()
@@ -657,8 +656,8 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
                         .startDate(TS_MAY)
                         .anomalies(Set.of(
                                 AnomalyInfo.builder()
-                                        .startTs(Timestamp.of(DateTimeUtils.toTs(startYear.withMonth(9).withDayOfMonth(15))))
-                                        .endTs(Timestamp.of(DateTimeUtils.toTs(startYear.withMonth(9).withDayOfMonth(20))))
+                                        .startDate(startYear.withMonth(9).withDayOfMonth(15))
+                                        .endDate(startYear.withMonth(9).withDayOfMonth(20))
                                         .type(AnomalyType.ZERO_VALUES)
                                         .build()
                         ))
@@ -688,8 +687,8 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
                                 .startDate(TS_JANUARY)
                                 .anomalies(Set.of(
                                         AnomalyInfo.builder()
-                                                .startTs(Timestamp.of(DateTimeUtils.toTs(startYear.withMonth(12).withDayOfMonth(1))))
-                                                .endTs(Timestamp.of(DateTimeUtils.toTs(startYear.withMonth(12).withDayOfMonth(3))))
+                                                .startDate(startYear.withMonth(12).withDayOfMonth(1))
+                                                .endDate(startYear.withMonth(12).withDayOfMonth(3))
                                                 .type(AnomalyType.DATA_GAP)
                                                 .build()
                                 ))
@@ -706,8 +705,8 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
                         .startDate(TS_MARCH)
                         .anomalies(Set.of(
                                 AnomalyInfo.builder()
-                                        .startTs(Timestamp.of(DateTimeUtils.toTs(startYear.withMonth(12).withDayOfMonth(1))))
-                                        .endTs(Timestamp.of(DateTimeUtils.toTs(startYear.withMonth(12).withDayOfMonth(3))))
+                                        .startDate(startYear.withMonth(12).withDayOfMonth(1))
+                                        .endDate(startYear.withMonth(12).withDayOfMonth(3))
                                         .type(AnomalyType.DATA_GAP)
                                         .build()
                         ))
@@ -723,13 +722,13 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
                         .startDate(TS_MARCH)
                         .anomalies(Set.of(
                                 AnomalyInfo.builder()
-                                        .startTs(Timestamp.of(DateTimeUtils.toTs(startYear.withMonth(8).withDayOfMonth(1))))
-                                        .endTs(Timestamp.of(DateTimeUtils.toTs(startYear.withMonth(8).withDayOfMonth(5))))
+                                        .startDate(startYear.withMonth(8).withDayOfMonth(1))
+                                        .endDate(startYear.withMonth(8).withDayOfMonth(5))
                                         .type(AnomalyType.ZERO_VALUES)
                                         .build(),
                                 AnomalyInfo.builder()
-                                        .startTs(Timestamp.of(DateTimeUtils.toTs(startYear.withMonth(12).withDayOfMonth(1))))
-                                        .endTs(Timestamp.of(DateTimeUtils.toTs(startYear.withMonth(12).withDayOfMonth(3))))
+                                        .startDate(startYear.withMonth(12).withDayOfMonth(1))
+                                        .endDate(startYear.withMonth(12).withDayOfMonth(3))
                                         .type(AnomalyType.DATA_GAP)
                                         .build()
                         ))

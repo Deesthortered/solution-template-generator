@@ -22,8 +22,8 @@ public class ShiftedDataAnomalyCreator implements AnomalyCreator {
 
     @Override
     public <T> void create(Telemetry<T> telemetry, AnomalyInfo anomalyInfo) {
-        ZonedDateTime startDate = DateTimeUtils.fromTs(anomalyInfo.getStartTs());
-        ZonedDateTime endDate = DateTimeUtils.fromTs(anomalyInfo.getEndTs());
+        ZonedDateTime startDate = anomalyInfo.getStartDate();
+        ZonedDateTime endDate = anomalyInfo.getEndDate();
 
         Set<Telemetry.Point<T>> oldPoints = telemetry.getPoints().stream()
                 .filter(point -> DateTimeUtils.toTs(startDate) <= point.getTs().get())
@@ -31,7 +31,7 @@ public class ShiftedDataAnomalyCreator implements AnomalyCreator {
                 .collect(Collectors.toSet());
 
         Set<Telemetry.Point<T>> newPoints = oldPoints.stream()
-                .map(point -> new Telemetry.Point<T>(point.getTs(), getShiftedValue(point.getValue(), anomalyInfo.getValue())))
+                .map(point -> new Telemetry.Point<>(point.getTs(), getShiftedValue(point.getValue(), anomalyInfo.getValue())))
                 .collect(Collectors.toSet());
 
         telemetry.getPoints().removeAll(oldPoints);

@@ -122,11 +122,11 @@ The data has anomalies that violate mentioned rules, and it can be found by exis
 Anomalies:
 1. London, Wimbledon, Gov1        - January (5-10), zero consumption
 2. London, Dulwich, Hsh2          - March (15-22), zero consumption
-3. London, Dulwich, Pump Station  - May (1-21) 3am-5am every day, Theft (20 litres every hour)
-4. Edinburgh, Leith, Region       - 10 February - 10 April, leakage (10 litres every hour)
-5. Edinburgh, Leith, Region       - June (5-25), leakage (10 litres every hour)
-6. Edinburgh, Stockbridge, Region - January (5-16), leakage (10 litres every hour)
-7. Edinburgh, Stockbridge, Region - March (1-14), leakage (10 litres every hour)
+3. London, Dulwich, Pump Station  - May (1-21) 3am-8am every day, Theft (200 litres every hour)
+4. Edinburgh, Leith, Region       - 10 February - 10 April, leakage (100 litres every hour)
+5. Edinburgh, Leith, Region       - June (5-25), leakage (100 litres every hour)
+6. Edinburgh, Stockbridge, Region - January (5-16), leakage (100 litres every hour)
+7. Edinburgh, Stockbridge, Region - March (1-14), leakage (100 litres every hour)
 
 ### Details
 Telemetry starts is on `<start year>-01-01` and will be consumed `each hour` from all meters.

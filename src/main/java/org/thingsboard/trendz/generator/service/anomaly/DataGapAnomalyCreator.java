@@ -22,8 +22,8 @@ public class DataGapAnomalyCreator implements AnomalyCreator {
 
     @Override
     public <T> void create(Telemetry<T> telemetry, AnomalyInfo anomalyInfo) {
-        ZonedDateTime startDate = DateTimeUtils.fromTs(anomalyInfo.getStartTs());
-        ZonedDateTime endDate = DateTimeUtils.fromTs(anomalyInfo.getEndTs());
+        ZonedDateTime startDate = anomalyInfo.getStartDate();
+        ZonedDateTime endDate = anomalyInfo.getEndDate();
 
         Set<Telemetry.Point<T>> oldPoints = telemetry.getPoints().stream()
                 .filter(point -> DateTimeUtils.toTs(startDate) <= point.getTs().get())

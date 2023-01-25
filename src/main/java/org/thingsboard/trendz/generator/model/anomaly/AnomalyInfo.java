@@ -5,7 +5,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.jetbrains.annotations.NotNull;
-import org.thingsboard.trendz.generator.model.tb.Timestamp;
+
+import java.time.ZonedDateTime;
 
 @Data
 @Builder
@@ -13,14 +14,14 @@ import org.thingsboard.trendz.generator.model.tb.Timestamp;
 @AllArgsConstructor
 public class AnomalyInfo implements Comparable<AnomalyInfo> {
 
-    private Timestamp startTs;
-    private Timestamp endTs;
+    private ZonedDateTime startDate;
+    private ZonedDateTime endDate;
     private AnomalyType type;
     private long value;
 
 
     @Override
     public int compareTo(@NotNull AnomalyInfo that) {
-        return this.startTs.compareTo(that.startTs);
+        return this.startDate.compareTo(that.startDate);
     }
 }

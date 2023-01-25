@@ -247,8 +247,8 @@ public class WaterMeteringSolution implements SolutionTemplateGenerator {
                                                 new ConsumerConfiguration("1", ConsumerType.HSH, Collections.emptySet()),
                                                 new ConsumerConfiguration("2", ConsumerType.HSH, Set.of(
                                                         AnomalyInfo.builder()
-                                                                .startTs(Timestamp.of(DateTimeUtils.toTs(startYear.withMonth(3).withDayOfMonth(15))))
-                                                                .endTs(Timestamp.of(DateTimeUtils.toTs(startYear.withMonth(3).withDayOfMonth(22))))
+                                                                .startDate(startYear.withMonth(3).withDayOfMonth(15))
+                                                                .endDate(startYear.withMonth(3).withDayOfMonth(22))
                                                                 .type(AnomalyType.ZERO_VALUES)
                                                                 .build()
                                                 )),
@@ -267,13 +267,13 @@ public class WaterMeteringSolution implements SolutionTemplateGenerator {
                                                                     ZonedDateTime iteratedDate = from;
                                                                     while (iteratedDate.isBefore(to)) {
                                                                         ZonedDateTime start = iteratedDate.withHour(3);
-                                                                        ZonedDateTime end = iteratedDate.withHour(5);
+                                                                        ZonedDateTime end = iteratedDate.withHour(8);
 
                                                                         AnomalyInfo anomalyInfo = AnomalyInfo.builder()
-                                                                                .startTs(Timestamp.of(DateTimeUtils.toTs(start)))
-                                                                                .endTs(Timestamp.of(DateTimeUtils.toTs(end)))
+                                                                                .startDate(start)
+                                                                                .endDate(end)
                                                                                 .type(AnomalyType.SHIFTED_DATA)
-                                                                                .value(20)
+                                                                                .value(200)
                                                                                 .build();
 
                                                                         result.add(anomalyInfo);
@@ -292,8 +292,8 @@ public class WaterMeteringSolution implements SolutionTemplateGenerator {
                                         .consumerConfigurations(Set.of(
                                                 new ConsumerConfiguration("1", ConsumerType.GOV, Set.of(
                                                         AnomalyInfo.builder()
-                                                                .startTs(Timestamp.of(DateTimeUtils.toTs(startYear.withMonth(1).withDayOfMonth(5))))
-                                                                .endTs(Timestamp.of(DateTimeUtils.toTs(startYear.withMonth(1).withDayOfMonth(10))))
+                                                                .startDate(startYear.withMonth(1).withDayOfMonth(5))
+                                                                .endDate(startYear.withMonth(1).withDayOfMonth(10))
                                                                 .type(AnomalyType.ZERO_VALUES)
                                                                 .build()
                                                 )),
@@ -319,16 +319,16 @@ public class WaterMeteringSolution implements SolutionTemplateGenerator {
                                         .label("Label for Leith, Edinburgh")
                                         .anomalies(Set.of(
                                                 AnomalyInfo.builder()
-                                                        .startTs(Timestamp.of(DateTimeUtils.toTs(startYear.withMonth(2).withDayOfMonth(10))))
-                                                        .endTs(Timestamp.of(DateTimeUtils.toTs(startYear.withMonth(4).withDayOfMonth(10))))
+                                                        .startDate(startYear.withMonth(2).withDayOfMonth(10))
+                                                        .endDate(startYear.withMonth(4).withDayOfMonth(10))
                                                         .type(AnomalyType.SHIFTED_DATA)
-                                                        .value(10)
+                                                        .value(100)
                                                         .build(),
                                                 AnomalyInfo.builder()
-                                                        .startTs(Timestamp.of(DateTimeUtils.toTs(startYear.withMonth(6).withDayOfMonth(5))))
-                                                        .endTs(Timestamp.of(DateTimeUtils.toTs(startYear.withMonth(6).withDayOfMonth(25))))
+                                                        .startDate(startYear.withMonth(6).withDayOfMonth(5))
+                                                        .endDate(startYear.withMonth(6).withDayOfMonth(25))
                                                         .type(AnomalyType.SHIFTED_DATA)
-                                                        .value(10)
+                                                        .value(100)
                                                         .build()
                                         ))
                                         .consumerConfigurations(Set.of(
@@ -348,16 +348,16 @@ public class WaterMeteringSolution implements SolutionTemplateGenerator {
                                         .label("Label for Stockbridge, Edinburgh")
                                         .anomalies(Set.of(
                                                 AnomalyInfo.builder()
-                                                        .startTs(Timestamp.of(DateTimeUtils.toTs(startYear.withMonth(1).withDayOfMonth(5))))
-                                                        .endTs(Timestamp.of(DateTimeUtils.toTs(startYear.withMonth(1).withDayOfMonth(1))))
+                                                        .startDate(startYear.withMonth(1).withDayOfMonth(5))
+                                                        .endDate(startYear.withMonth(1).withDayOfMonth(16))
                                                         .type(AnomalyType.SHIFTED_DATA)
-                                                        .value(10)
+                                                        .value(100)
                                                         .build(),
                                                 AnomalyInfo.builder()
-                                                        .startTs(Timestamp.of(DateTimeUtils.toTs(startYear.withMonth(3).withDayOfMonth(1))))
-                                                        .endTs(Timestamp.of(DateTimeUtils.toTs(startYear.withMonth(3).withDayOfMonth(14))))
+                                                        .startDate(startYear.withMonth(3).withDayOfMonth(1))
+                                                        .endDate(startYear.withMonth(3).withDayOfMonth(14))
                                                         .type(AnomalyType.SHIFTED_DATA)
-                                                        .value(10)
+                                                        .value(100)
                                                         .build()
                                         ))
                                         .consumerConfigurations(Set.of(
