@@ -8,6 +8,8 @@ import org.thingsboard.server.common.data.Customer;
 import org.thingsboard.server.common.data.Device;
 import org.thingsboard.server.common.data.EntityType;
 import org.thingsboard.server.common.data.asset.Asset;
+import org.thingsboard.server.common.data.group.EntityGroup;
+import org.thingsboard.server.common.data.id.CustomerId;
 import org.thingsboard.server.common.data.rule.NodeConnectionInfo;
 import org.thingsboard.server.common.data.rule.RuleChain;
 import org.thingsboard.server.common.data.rule.RuleChainMetaData;
@@ -67,9 +69,11 @@ public class WaterMeteringSolution implements SolutionTemplateGenerator {
     private static final String CUSTOMER_TITLE = "Water Metering Customer";
     private static final String CUSTOMER_USER_EMAIL = "watermetering@thingsboard.io";
     private static final String CUSTOMER_USER_PASSWORD = "password";
-    private static final String CUSTOMER_USER_FIRST_NAME = "John";
-    private static final String CUSTOMER_USER_LAST_NAME = "Doe";
+    private static final String CUSTOMER_USER_FIRST_NAME = "Water Metering Solution";
+    private static final String CUSTOMER_USER_LAST_NAME = "";
 
+    private static final String ASSET_GROUP_NAME = "Water Metering Asset Group";
+    private static final String DEVICE_GROUP_NAME = "Water Metering Device Group";
     private static final String RULE_CHAIN_NAME = "Water Metering Rule Chain";
 
     private final TbRestClient tbRestClient;
@@ -159,6 +163,9 @@ public class WaterMeteringSolution implements SolutionTemplateGenerator {
                 customer, CUSTOMER_USER_EMAIL, CUSTOMER_USER_PASSWORD,
                 CUSTOMER_USER_FIRST_NAME, CUSTOMER_USER_LAST_NAME
         );
+        if (tbRestClient.isPe()) {
+            tbRestClient.setCustomerUserToCustomerGroup(customer, customerUser);
+        }
 
         return new CustomerData(customer, customerUser);
     }
@@ -386,21 +393,30 @@ public class WaterMeteringSolution implements SolutionTemplateGenerator {
         CustomerUser customerUser = customerData.getUser();
         UUID ownerId = customerUser.getCustomerId().getId();
 
+        UUID assetGroupId = null;
+        UUID deviceGroupId = null;
+        if (tbRestClient.isPe()) {
+            EntityGroup assetGroup = tbRestClient.createEntityGroup(ASSET_GROUP_NAME, EntityType.ASSET, ownerId, true);
+            EntityGroup deviceGroup = tbRestClient.createEntityGroup(DEVICE_GROUP_NAME, EntityType.DEVICE, ownerId, true);
+            assetGroupId = assetGroup.getUuidId();
+            deviceGroupId = deviceGroup.getUuidId();
+        }
+
         Set<City> cities = mapToCities(data);
         for (City city : cities) {
-            Asset cityAsset = createCity(city, ownerId);
+            Asset cityAsset = createCity(city, ownerId, assetGroupId);
 
             for (Region region : city.getRegions()) {
-                Device regionDevice = createRegion(region, ownerId);
+                Device regionDevice = createRegion(region, ownerId, deviceGroupId);
                 this.tbRestClient.createRelation(RelationType.CONTAINS.getType(), cityAsset.getId(), regionDevice.getId());
 
                 for (Consumer consumer : region.getConsumers()) {
-                    Device consumerDevice = createConsumer(consumer, ownerId);
+                    Device consumerDevice = createConsumer(consumer, ownerId, deviceGroupId);
                     this.tbRestClient.createRelation(RelationType.CONTAINS.getType(), regionDevice.getId(), consumerDevice.getId());
                 }
             }
             for (PumpStation pumpStation : city.getPumpStations()) {
-                Device pumpStationDevice = createPumpStation(pumpStation, ownerId);
+                Device pumpStationDevice = createPumpStation(pumpStation, ownerId, deviceGroupId);
                 this.tbRestClient.createRelation(RelationType.CONTAINS.getType(), cityAsset.getId(), pumpStationDevice.getId());
             }
         }
@@ -495,9 +511,15 @@ public class WaterMeteringSolution implements SolutionTemplateGenerator {
     }
 
 
-    private Asset createCity(City city, UUID ownerId) {
-        Asset asset = tbRestClient.createAsset(city.getSystemName(), "WM City");
-        tbRestClient.assignAssetToCustomer(ownerId, asset.getUuidId());
+    private Asset createCity(City city, UUID ownerId, UUID assetGroupId) {
+        Asset asset;
+        if (tbRestClient.isPe()) {
+            asset = tbRestClient.createAsset(city.getSystemName(), "WM City", new CustomerId(ownerId));
+            tbRestClient.addEntitiesToTheGroup(assetGroupId, Set.of(asset.getUuidId()));
+        } else {
+            asset = tbRestClient.createAsset(city.getSystemName(), "WM City");
+            tbRestClient.assignAssetToCustomer(ownerId, asset.getUuidId());
+        }
 
         Set<Attribute<?>> attributes = Set.of(
                 new Attribute<>("population", city.getPopulation())
@@ -506,10 +528,16 @@ public class WaterMeteringSolution implements SolutionTemplateGenerator {
         return asset;
     }
 
-    private Device createRegion(Region region, UUID ownerId) {
-        Device device = tbRestClient.createDevice(region.getSystemName(), "WM Region");
+    private Device createRegion(Region region, UUID ownerId, UUID deviceGroupId) {
+        Device device;
+        if (tbRestClient.isPe()) {
+            device = tbRestClient.createDevice(region.getSystemName(), "WM Region", new CustomerId(ownerId));
+            tbRestClient.addEntitiesToTheGroup(deviceGroupId, Set.of(device.getUuidId()));
+        } else {
+            device = tbRestClient.createDevice(region.getSystemName(), "WM Region");
+            tbRestClient.assignDeviceToCustomer(ownerId, device.getUuidId());
+        }
         DeviceCredentials deviceCredentials = tbRestClient.getDeviceCredentials(device.getUuidId());
-        tbRestClient.assignDeviceToCustomer(ownerId, device.getUuidId());
 
         tbRestClient.pushTelemetry(deviceCredentials.getCredentialsId(), region.getFullConsumption());
 
@@ -517,10 +545,16 @@ public class WaterMeteringSolution implements SolutionTemplateGenerator {
         return device;
     }
 
-    private Device createConsumer(Consumer consumer, UUID ownerId) {
-        Device device = tbRestClient.createDevice(consumer.getSystemName(), "WM Consumer");
+    private Device createConsumer(Consumer consumer, UUID ownerId, UUID deviceGroupId) {
+        Device device;
+        if (tbRestClient.isPe()) {
+            device = tbRestClient.createDevice(consumer.getSystemName(), "WM Consumer", new CustomerId(ownerId));
+            tbRestClient.addEntitiesToTheGroup(deviceGroupId, Set.of(device.getUuidId()));
+        } else {
+            device = tbRestClient.createDevice(consumer.getSystemName(), "WM Consumer");
+            tbRestClient.assignDeviceToCustomer(ownerId, device.getUuidId());
+        }
         DeviceCredentials deviceCredentials = tbRestClient.getDeviceCredentials(device.getUuidId());
-        tbRestClient.assignDeviceToCustomer(ownerId, device.getUuidId());
 
         Set<Attribute<?>> attributes = Set.of(
                 new Attribute<>("type", consumer.getType())
@@ -533,10 +567,16 @@ public class WaterMeteringSolution implements SolutionTemplateGenerator {
         return device;
     }
 
-    private Device createPumpStation(PumpStation pumpStation, UUID ownerId) {
-        Device device = tbRestClient.createDevice(pumpStation.getSystemName(), "WM Pump Station");
+    private Device createPumpStation(PumpStation pumpStation, UUID ownerId, UUID deviceGroupId) {
+        Device device;
+        if (tbRestClient.isPe()) {
+            device = tbRestClient.createDevice(pumpStation.getSystemName(), "WM Pump Station", new CustomerId(ownerId));
+            tbRestClient.addEntitiesToTheGroup(deviceGroupId, Set.of(device.getUuidId()));
+        } else {
+            device = tbRestClient.createDevice(pumpStation.getSystemName(), "WM Pump Station");
+            tbRestClient.assignDeviceToCustomer(ownerId, device.getUuidId());
+        }
         DeviceCredentials deviceCredentials = tbRestClient.getDeviceCredentials(device.getUuidId());
-        tbRestClient.assignDeviceToCustomer(ownerId, device.getUuidId());
 
         tbRestClient.pushTelemetry(deviceCredentials.getCredentialsId(), pumpStation.getProvided());
 
