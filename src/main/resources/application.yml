@@ -3,14 +3,14 @@ server:
 
 tb:
   api:
-    host:     http://localhost:8080
-    username: solution.template.generator@thingsboard.io
-    password: password
-    pe:       false
-    cloud:    false
+    host:     "${GENERATOR_HOST:http://localhost:8080}"
+    username: "${GENERATOR_USERNAME:solution.template.generator@thingsboard.io}"
+    password: "${GENERATOR_PASSWORD:password}"
+    pe:       "${GENERATOR_PE:false}"
+    cloud:    "${GENERATOR_CLOUD:false}"
 
 generator:
   mode: "${GENERATOR_MODE:generate}"  # generate, remove
-  solutions: WaterMetering
+  solutions: Basic
   skipTelemetry: false
   startYear: 2022

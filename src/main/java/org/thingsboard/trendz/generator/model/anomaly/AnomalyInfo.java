@@ -4,7 +4,6 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.jetbrains.annotations.NotNull;
 
 import java.time.ZonedDateTime;
 
@@ -21,7 +20,7 @@ public class AnomalyInfo implements Comparable<AnomalyInfo> {
 
 
     @Override
-    public int compareTo(@NotNull AnomalyInfo that) {
+    public int compareTo(AnomalyInfo that) {
         return this.startDate.compareTo(that.startDate);
     }
 }

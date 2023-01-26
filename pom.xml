@@ -27,12 +27,12 @@
 		<dependency>
 			<groupId>org.thingsboard.common</groupId>
 			<artifactId>data</artifactId>
-			<version>${tb.version}</version>
+			<version>3.4.2PE-SNAPSHOT</version>
 		</dependency>
 		<dependency>
 			<groupId>org.thingsboard.rule-engine</groupId>
 			<artifactId>rule-engine-components</artifactId>
-			<version>${tb.version}</version>
+			<version>3.4.4-SNAPSHOT</version>
 		</dependency>
 
 		<dependency>

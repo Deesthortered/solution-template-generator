@@ -1,5 +1,6 @@
 package org.thingsboard.trendz.generator.service.rest;
 
+import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,7 +15,10 @@ import org.thingsboard.server.common.data.Customer;
 import org.thingsboard.server.common.data.Device;
 import org.thingsboard.server.common.data.EntityType;
 import org.thingsboard.server.common.data.asset.Asset;
+import org.thingsboard.server.common.data.group.EntityGroup;
+import org.thingsboard.server.common.data.id.CustomerId;
 import org.thingsboard.server.common.data.id.EntityId;
+import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.common.data.relation.EntityRelation;
 import org.thingsboard.server.common.data.rule.RuleChain;
 import org.thingsboard.server.common.data.rule.RuleChainMetaData;
@@ -430,26 +434,56 @@ public class TbRestClient {
         return restTemplate.postForEntity(baseURL + "/api/ruleChain/metadata", metaData, RuleChainMetaData.class).getBody();
     }
 
-//    // PE functions
-//
-//    public Optional<EntityGroup> getEntityGroup(String name, EntityType entityType, UUID ownerId, boolean isCustomerOwner) {
-//        try {
-//            String ownerType = (isCustomerOwner ? "CUSTOMER" : "TENANT");
-//            EntityGroup entityGroup = restTemplate.getForEntity(baseURL + "/api/entityGroup/" + ownerType + "/" + ownerId + "/" + entityType + "/" + name, EntityGroup.class).getBody();
-//            return Optional.ofNullable(entityGroup);
-//        } catch (HttpClientErrorException.NotFound e) {
-//            return Optional.empty();
-//        }
-//    }
-//
-//    public EntityGroup createEntityGroup(String name, EntityType entityType, UUID ownerId, boolean isCustomerOwner) {
-//        EntityGroup entityGroup = new EntityGroup();
-//        entityGroup.setName(name);
-//        entityGroup.setType(entityType);
-//        entityGroup.setOwnerId(
-//                isCustomerOwner ? new CustomerId(ownerId) : new TenantId(ownerId)
-//        );
-//
-//        return restTemplate.postForEntity(baseURL + "/api/entityGroup", entityGroup, EntityGroup.class).getBody();
-//    }
+    // PE functions
+
+    public Optional<EntityGroup> getEntityGroup(String name, EntityType entityType, UUID ownerId, boolean isCustomerOwner) {
+        try {
+            String ownerType = (isCustomerOwner ? "CUSTOMER" : "TENANT");
+            EntityGroup entityGroup = restTemplate.getForEntity(baseURL + "/api/entityGroup/" + ownerType + "/" + ownerId + "/" + entityType + "/" + name, EntityGroup.class).getBody();
+            return Optional.ofNullable(entityGroup);
+        } catch (HttpClientErrorException.NotFound e) {
+            return Optional.empty();
+        }
+    }
+
+    public EntityGroup createEntityGroup(String name, EntityType entityType, UUID ownerId, boolean isCustomerOwner) {
+        EntityGroup entityGroup = new EntityGroup();
+        entityGroup.setName(name);
+        entityGroup.setType(entityType);
+        entityGroup.setOwnerId(
+                isCustomerOwner ? new CustomerId(ownerId) : new TenantId(ownerId)
+        );
+
+        return restTemplate.postForEntity(baseURL + "/api/entityGroup", entityGroup, EntityGroup.class).getBody();
+    }
+
+    public void deleteEntityGroup(UUID entityGroupId) {
+        restTemplate.delete(baseURL + "/api/entityGroup/" + entityGroupId.toString());
+    }
+
+    public void addEntitiesToTheGroup(UUID entityGroupId, Set<UUID> entityIdSet) {
+        ArrayNode arrayNode = JsonUtils.getObjectMapper().createArrayNode();
+        for (UUID uuid : entityIdSet) {
+            arrayNode.add(uuid.toString());
+        }
+
+        restTemplate.postForEntity(
+                baseURL + "/api/entityGroup/" + entityGroupId.toString() + "/addEntities",
+                arrayNode,
+                EntityGroup.class
+        ).getBody();
+    }
+
+    public void deleteEntitiesFromTheGroup(UUID entityGroupId, Set<UUID> entityIdSet) {
+        ArrayNode arrayNode = JsonUtils.getObjectMapper().createArrayNode();
+        for (UUID uuid : entityIdSet) {
+            arrayNode.add(uuid.toString());
+        }
+
+        restTemplate.postForEntity(
+                baseURL + "/api/entityGroup/" + entityGroupId.toString() + "/deleteEntities",
+                arrayNode,
+                EntityGroup.class
+        ).getBody();
+    }
 }

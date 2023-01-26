@@ -1,7 +1,5 @@
 package org.thingsboard.trendz.generator.model;
 
-import org.jetbrains.annotations.NotNull;
-
 public interface ModelEntity extends Comparable<ModelEntity> {
 
     String getSystemName();
@@ -11,7 +9,7 @@ public interface ModelEntity extends Comparable<ModelEntity> {
     void setSystemLabel(String systemLabel);
 
     @Override
-    default int compareTo(@NotNull ModelEntity that) {
+    default int compareTo(ModelEntity that) {
         return this.getSystemName().compareTo(that.getSystemName());
     }
 }
