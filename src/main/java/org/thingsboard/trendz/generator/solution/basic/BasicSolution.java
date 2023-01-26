@@ -52,6 +52,8 @@ public class BasicSolution implements SolutionTemplateGenerator {
     private static final String CUSTOMER_USER_PASSWORD = "password";
     private static final String CUSTOMER_USER_FIRST_NAME = "Basic Solution";
     private static final String CUSTOMER_USER_LAST_NAME = "";
+    private static final String ASSET_GROUP_NAME = "Basic Asset Group";
+    private static final String DEVICE_GROUP_NAME = "Basic Device Group";
     private static final String DEVICE_NAME = "Basic Device Name";
     private static final String DEVICE_TYPE = "Basic Device Type";
     private static final String ASSET_NAME = "Basic Asset Name";
@@ -129,8 +131,8 @@ public class BasicSolution implements SolutionTemplateGenerator {
             if (tbRestClient.isPe()) {
                 asset = tbRestClient.createAsset(ASSET_NAME, ASSET_TYPE, customer.getId());
                 device = tbRestClient.createDevice(DEVICE_NAME, DEVICE_TYPE, customer.getId());
-                EntityGroup assetGroup = tbRestClient.createEntityGroup("Basic Asset Group", EntityType.ASSET, customer.getUuidId(), true);
-                EntityGroup deviceGroup = tbRestClient.createEntityGroup("Basic Device Group", EntityType.DEVICE, customer.getUuidId(), true);
+                EntityGroup assetGroup = tbRestClient.createEntityGroup(ASSET_GROUP_NAME, EntityType.ASSET, customer.getUuidId(), true);
+                EntityGroup deviceGroup = tbRestClient.createEntityGroup(DEVICE_GROUP_NAME, EntityType.DEVICE, customer.getUuidId(), true);
                 tbRestClient.addEntitiesToTheGroup(assetGroup.getUuidId(), Set.of(asset.getUuidId()));
                 tbRestClient.addEntitiesToTheGroup(deviceGroup.getUuidId(), Set.of(device.getUuidId()));
                 log.info("");
