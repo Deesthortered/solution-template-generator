@@ -256,6 +256,37 @@ public class TbRestClient {
         }
     }
 
+    public Customer createCustomer(String name, EntityId ownerId) {
+        Customer customer = new Customer();
+        customer.setTitle(name);
+        customer.setOwnerId(ownerId);
+        return restTemplate.postForEntity(baseURL + "/api/customer", customer, Customer.class).getBody();
+    }
+
+    public Asset createAsset(String name, String type, EntityId ownerId) {
+        try {
+            Asset asset = new Asset();
+            asset.setName(name);
+            asset.setType(type);
+            asset.setOwnerId(ownerId);
+            return restTemplate.postForEntity(baseURL + "/api/asset", asset, Asset.class).getBody();
+        } catch (Exception e) {
+            throw new RuntimeException("", e);
+        }
+    }
+
+    public Device createDevice(String name, String type, EntityId ownerId) {
+        try {
+            Device device = new Device();
+            device.setName(name);
+            device.setType(type);
+            device.setOwnerId(ownerId);
+            return restTemplate.postForEntity(baseURL + "/api/device", device, Device.class).getBody();
+        } catch (Exception e) {
+            throw new RuntimeException("", e);
+        }
+    }
+
 
     public void deleteCustomer(UUID customerId) {
         restTemplate.delete(baseURL + "/api/customer/" + customerId);

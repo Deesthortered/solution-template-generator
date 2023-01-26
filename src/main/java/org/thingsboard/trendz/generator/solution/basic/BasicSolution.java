@@ -11,6 +11,7 @@ import org.thingsboard.server.common.data.Customer;
 import org.thingsboard.server.common.data.Device;
 import org.thingsboard.server.common.data.EntityType;
 import org.thingsboard.server.common.data.asset.Asset;
+import org.thingsboard.server.common.data.group.EntityGroup;
 import org.thingsboard.server.common.data.relation.EntityRelation;
 import org.thingsboard.server.common.data.rule.NodeConnectionInfo;
 import org.thingsboard.server.common.data.rule.RuleChain;
@@ -46,11 +47,11 @@ import java.util.Set;
 @Service
 public class BasicSolution implements SolutionTemplateGenerator {
 
-    private static final String CUSTOMER_TITLE = "Basic Customer";
+    private static final String CUSTOMER_TITLE = "Basic Solution Customer";
     private static final String CUSTOMER_USER_EMAIL = "basic@thingsboard.io";
     private static final String CUSTOMER_USER_PASSWORD = "password";
-    private static final String CUSTOMER_USER_FIRST_NAME = "Basic First Name";
-    private static final String CUSTOMER_USER_LAST_NAME = "Basic Last Name";
+    private static final String CUSTOMER_USER_FIRST_NAME = "Basic Solution";
+    private static final String CUSTOMER_USER_LAST_NAME = "";
     private static final String DEVICE_NAME = "Basic Device Name";
     private static final String DEVICE_TYPE = "Basic Device Type";
     private static final String ASSET_NAME = "Basic Asset Name";
@@ -119,18 +120,27 @@ public class BasicSolution implements SolutionTemplateGenerator {
                     customer, CUSTOMER_USER_EMAIL, CUSTOMER_USER_PASSWORD,
                     CUSTOMER_USER_FIRST_NAME, CUSTOMER_USER_LAST_NAME
             );
-            if (tbRestClient.isCloud()) {
+            if (tbRestClient.isPe()) {
                 tbRestClient.setCustomerUserToCustomerGroup(customer, customerUser);
             }
 
-            Asset asset = tbRestClient.createAsset(ASSET_NAME, ASSET_TYPE);
-            Device device = tbRestClient.createDevice(DEVICE_NAME, DEVICE_TYPE);
-            EntityRelation relation = tbRestClient.createRelation(RelationType.CONTAINS.getType(), asset.getId(), device.getId());
-
-            if (!tbRestClient.isPe()) {
+            Asset asset;
+            Device device;
+            if (tbRestClient.isPe()) {
+                asset = tbRestClient.createAsset(ASSET_NAME, ASSET_TYPE, customer.getId());
+                device = tbRestClient.createDevice(DEVICE_NAME, DEVICE_TYPE, customer.getId());
+                EntityGroup assetGroup = tbRestClient.createEntityGroup("Basic Asset Group", EntityType.ASSET, customer.getUuidId(), true);
+                EntityGroup deviceGroup = tbRestClient.createEntityGroup("Basic Device Group", EntityType.DEVICE, customer.getUuidId(), true);
+                tbRestClient.addEntitiesToTheGroup(assetGroup.getUuidId(), Set.of(asset.getUuidId()));
+                tbRestClient.addEntitiesToTheGroup(deviceGroup.getUuidId(), Set.of(device.getUuidId()));
+                log.info("");
+            } else {
+                asset = tbRestClient.createAsset(ASSET_NAME, ASSET_TYPE);
+                device = tbRestClient.createDevice(DEVICE_NAME, DEVICE_TYPE);
                 tbRestClient.assignAssetToCustomer(customer.getUuidId(), asset.getUuidId());
                 tbRestClient.assignDeviceToCustomer(customer.getUuidId(), device.getUuidId());
             }
+            EntityRelation relation = tbRestClient.createRelation(RelationType.CONTAINS.getType(), asset.getId(), device.getId());
 
             Telemetry<Integer> deviceTelemetry = new Telemetry<>("pushed_telemetry");
             long now = System.currentTimeMillis();
@@ -248,7 +258,7 @@ public class BasicSolution implements SolutionTemplateGenerator {
             }
 
             assetByName.ifPresent(asset -> {
-                if (!tbRestClient.isCloud()) {
+                if (!tbRestClient.isPe()) {
                     tbRestClient.getCustomerByTitle(CUSTOMER_TITLE)
                             .ifPresent(customer -> tbRestClient.unassignAssetToCustomer(asset.getUuidId()));
                 }
@@ -256,7 +266,7 @@ public class BasicSolution implements SolutionTemplateGenerator {
             });
 
             deviceByName.ifPresent(device -> {
-                if (!tbRestClient.isCloud()) {
+                if (!tbRestClient.isPe()) {
                     tbRestClient.getCustomerByTitle(CUSTOMER_TITLE)
                             .ifPresent(customer -> tbRestClient.unassignDeviceToCustomer(device.getUuidId()));
                 }
@@ -274,7 +284,16 @@ public class BasicSolution implements SolutionTemplateGenerator {
                     });
 
             tbRestClient.getCustomerByTitle(CUSTOMER_TITLE)
-                    .ifPresent(customer -> tbRestClient.deleteCustomer(customer.getUuidId()));
+                    .stream()
+                    .peek(customer -> {
+                        if (tbRestClient.isPe()) {
+                            tbRestClient.getEntityGroup("Basic Asset Group", EntityType.ASSET, customer.getUuidId(), true)
+                                    .ifPresent(entityGroup -> tbRestClient.deleteEntityGroup(entityGroup.getUuidId()));
+                            tbRestClient.getEntityGroup("Basic Device Group", EntityType.DEVICE, customer.getUuidId(), true)
+                                    .ifPresent(entityGroup -> tbRestClient.deleteEntityGroup(entityGroup.getUuidId()));
+                        }
+                    })
+                    .forEach(customer -> tbRestClient.deleteCustomer(customer.getUuidId()));
 
             log.info("Basic Solution - removal is completed!");
         } catch (Exception e) {
