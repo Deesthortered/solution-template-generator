@@ -75,6 +75,15 @@ public class TbRestClient {
     }
 
 
+    public boolean isPe() {
+        return this.pe;
+    }
+
+    public boolean isCloud() {
+        return this.cloud;
+    }
+
+
     public AuthToken login(LoginRequest request) {
         ResponseEntity<AuthToken> response = restTemplate.postForEntity(baseURL + LOGIN_PATH, request, AuthToken.class);
         AuthToken authToken = response.getBody();
@@ -485,5 +494,20 @@ public class TbRestClient {
                 arrayNode,
                 EntityGroup.class
         ).getBody();
+    }
+
+    public void setCustomerUserToCustomerGroup(Customer customer, CustomerUser customerUser) {
+        try {
+            EntityGroup customerUsersGroup = getEntityGroup(
+                    "Customer Users",
+                    EntityType.USER,
+                    customer.getUuidId(),
+                    true
+            ).orElseThrow();
+
+            addEntitiesToTheGroup(customerUsersGroup.getUuidId(), Set.of(customerUser.getId().getId()));
+        } catch (Exception e) {
+            throw new RuntimeException("Can not assign customer user to the Customer Group", e);
+        }
     }
 }

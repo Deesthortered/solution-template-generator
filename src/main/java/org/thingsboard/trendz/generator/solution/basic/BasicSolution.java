@@ -119,13 +119,18 @@ public class BasicSolution implements SolutionTemplateGenerator {
                     customer, CUSTOMER_USER_EMAIL, CUSTOMER_USER_PASSWORD,
                     CUSTOMER_USER_FIRST_NAME, CUSTOMER_USER_LAST_NAME
             );
+            if (tbRestClient.isCloud()) {
+                tbRestClient.setCustomerUserToCustomerGroup(customer, customerUser);
+            }
 
             Asset asset = tbRestClient.createAsset(ASSET_NAME, ASSET_TYPE);
             Device device = tbRestClient.createDevice(DEVICE_NAME, DEVICE_TYPE);
             EntityRelation relation = tbRestClient.createRelation(RelationType.CONTAINS.getType(), asset.getId(), device.getId());
 
-            tbRestClient.assignAssetToCustomer(customer.getUuidId(), asset.getUuidId());
-            tbRestClient.assignDeviceToCustomer(customer.getUuidId(), device.getUuidId());
+            if (!tbRestClient.isPe()) {
+                tbRestClient.assignAssetToCustomer(customer.getUuidId(), asset.getUuidId());
+                tbRestClient.assignDeviceToCustomer(customer.getUuidId(), device.getUuidId());
+            }
 
             Telemetry<Integer> deviceTelemetry = new Telemetry<>("pushed_telemetry");
             long now = System.currentTimeMillis();
@@ -243,14 +248,18 @@ public class BasicSolution implements SolutionTemplateGenerator {
             }
 
             assetByName.ifPresent(asset -> {
-                tbRestClient.getCustomerByTitle(CUSTOMER_TITLE)
-                        .ifPresent(customer -> tbRestClient.unassignAssetToCustomer(asset.getUuidId()));
+                if (!tbRestClient.isCloud()) {
+                    tbRestClient.getCustomerByTitle(CUSTOMER_TITLE)
+                            .ifPresent(customer -> tbRestClient.unassignAssetToCustomer(asset.getUuidId()));
+                }
                 tbRestClient.deleteAsset(asset.getUuidId());
             });
 
             deviceByName.ifPresent(device -> {
-                tbRestClient.getCustomerByTitle(CUSTOMER_TITLE)
-                        .ifPresent(customer -> tbRestClient.unassignDeviceToCustomer(device.getUuidId()));
+                if (!tbRestClient.isCloud()) {
+                    tbRestClient.getCustomerByTitle(CUSTOMER_TITLE)
+                            .ifPresent(customer -> tbRestClient.unassignDeviceToCustomer(device.getUuidId()));
+                }
                 tbRestClient.deleteDevice(device.getUuidId());
             });
 
