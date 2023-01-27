@@ -383,7 +383,7 @@ public class TbRestClient {
                     pushTelemetry0(accessToken, partitions.get(i));
 
                     errorCount = 0;
-                    log.info("Batch is sent ({}/{})", i, partitions.size());
+                    log.info("Batch is sent ({}/{})", i+1, partitions.size());
                 } catch (Exception e) {
                     log.error("Error during pushing telemetry to the cloud, error count = " + errorCount + ", retry...", e);
                     errorCount++;
