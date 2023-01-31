@@ -685,12 +685,17 @@ public class WaterMeteringSolution implements SolutionTemplateGenerator {
             Month month = iteratedDate.getMonth();
 
             long dailyNoise = RandomUtils.getRandomNumber(-5, 5);
+
+            int timezoneShift = 2;
+            hour = (hour + timezoneShift + 24) % 24;
+
             long consumption = 0;
             consumption += getHourConsumerConsumption(type, dayOfWeek, hour);
-            consumption += getModificationByMonth(month);
-            consumption += getModificationByDayOfYear(dayOfYear);
+//            consumption += getModificationByMonth(month);
+//            consumption += getModificationByDayOfYear(dayOfYear);
+//            consumption += dailyNoise;
 
-            long value = Math.max(0, consumption + dailyNoise);
+            long value = Math.max(0, consumption);
 
             result.add(iteratedTs, value);
             iteratedDate = iteratedDate.plus(1, ChronoUnit.HOURS);
