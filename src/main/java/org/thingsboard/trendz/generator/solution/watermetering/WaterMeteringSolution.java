@@ -33,6 +33,7 @@ import org.thingsboard.trendz.generator.model.tb.Timestamp;
 import org.thingsboard.trendz.generator.service.anomaly.AnomalyService;
 import org.thingsboard.trendz.generator.service.dashboard.DashboardService;
 import org.thingsboard.trendz.generator.service.rest.TbRestClient;
+import org.thingsboard.trendz.generator.service.roolchain.RuleChainBuildingService;
 import org.thingsboard.trendz.generator.solution.SolutionTemplateGenerator;
 import org.thingsboard.trendz.generator.solution.watermetering.configuration.CityConfiguration;
 import org.thingsboard.trendz.generator.solution.watermetering.configuration.ConsumerConfiguration;
@@ -78,6 +79,7 @@ public class WaterMeteringSolution implements SolutionTemplateGenerator {
 
     private final TbRestClient tbRestClient;
     private final AnomalyService anomalyService;
+    private final RuleChainBuildingService ruleChainBuildingService;
     private final DashboardService dashboardService;
 
     private final Map<Region, UUID> regionToIdMap = new HashMap<>();
@@ -88,10 +90,12 @@ public class WaterMeteringSolution implements SolutionTemplateGenerator {
     public WaterMeteringSolution(
             TbRestClient tbRestClient,
             AnomalyService anomalyService,
+            RuleChainBuildingService ruleChainBuildingService,
             DashboardService dashboardService
     ) {
         this.tbRestClient = tbRestClient;
         this.anomalyService = anomalyService;
+        this.ruleChainBuildingService = ruleChainBuildingService;
         this.dashboardService = dashboardService;
     }
 
@@ -684,8 +688,7 @@ public class WaterMeteringSolution implements SolutionTemplateGenerator {
             int dayOfYear = iteratedDate.getDayOfYear();
             Month month = iteratedDate.getMonth();
 
-            long dailyNoise = RandomUtils.getRandomNumber(-5, 5);
-
+            long dailyNoiseAmplitude = 5;
             int timezoneShift = 2;
             hour = (hour + timezoneShift + 24) % 24;
 
@@ -693,7 +696,7 @@ public class WaterMeteringSolution implements SolutionTemplateGenerator {
             consumption += getHourConsumerConsumption(type, dayOfWeek, hour);
 //            consumption += getModificationByMonth(month);
 //            consumption += getModificationByDayOfYear(dayOfYear);
-//            consumption += dailyNoise;
+            consumption += RandomUtils.getRandomNumber(-dailyNoiseAmplitude, dailyNoiseAmplitude);
 
             long value = Math.max(0, consumption);
 
