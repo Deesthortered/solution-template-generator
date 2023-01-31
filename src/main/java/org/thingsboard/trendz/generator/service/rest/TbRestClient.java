@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 import org.thingsboard.server.common.data.Customer;
+import org.thingsboard.server.common.data.Dashboard;
 import org.thingsboard.server.common.data.Device;
 import org.thingsboard.server.common.data.EntityType;
 import org.thingsboard.server.common.data.asset.Asset;
@@ -35,6 +36,7 @@ import org.thingsboard.trendz.generator.model.tb.CustomerUser;
 import org.thingsboard.trendz.generator.model.tb.CustomerUserAdditionalInfo;
 import org.thingsboard.trendz.generator.model.tb.RelationType;
 import org.thingsboard.trendz.generator.model.tb.Telemetry;
+import org.thingsboard.trendz.generator.service.jwt.TokenExtractor;
 import org.thingsboard.trendz.generator.utils.JsonUtils;
 
 import java.util.HashMap;
@@ -60,18 +62,23 @@ public class TbRestClient {
     private final boolean pe;
     private final boolean cloud;
     private final RestTemplate restTemplate;
+    private final TokenExtractor tokenExtractor;
+
+    private UUID tenantId;
 
     @Autowired
     public TbRestClient(
             @Value("${tb.api.host}") String tbApiHost,
             @Value("${tb.api.pe}") boolean pe,
             @Value("${tb.api.cloud}") boolean cloud,
-            RestTemplate restTemplate
+            RestTemplate restTemplate,
+            TokenExtractor tokenExtractor
     ) {
         this.baseURL = tbApiHost;
         this.pe = pe;
         this.cloud = cloud;
         this.restTemplate = restTemplate;
+        this.tokenExtractor = tokenExtractor;
     }
 
 
@@ -90,6 +97,7 @@ public class TbRestClient {
         if (authToken == null) {
             throw new IllegalStateException("Login request is failed!");
         }
+        this.tenantId = tokenExtractor.getTenantId(authToken);
         return authToken;
     }
 
@@ -102,8 +110,14 @@ public class TbRestClient {
         if (authToken == null) {
             throw new IllegalStateException("Refresh token is failed!");
         }
+        this.tenantId = tokenExtractor.getTenantId(authToken);
         return authToken;
     }
+
+    public UUID getTenantId() {
+        return this.tenantId;
+    }
+
 
     public CustomerUser createCustomerUser(Customer customer, String email, String password, String firstName, String lastName) {
         CustomerUser user = CustomerUser.builder()
@@ -129,6 +143,14 @@ public class TbRestClient {
         return savedUser;
     }
 
+    public Dashboard assignDashboardToSpecifiedCustomer(UUID dashboardId, UUID customerId) {
+        try {
+            return restTemplate.postForEntity(baseURL + "/api/customer/" + customerId.toString() + "/dashboard/" + dashboardId.toString(), null, Dashboard.class).getBody();
+        } catch (Exception e) {
+            throw new RuntimeException("", e);
+        }
+    }
+
 
     public Optional<Customer> getCustomerById(UUID customerId) {
         try {
@@ -152,6 +174,15 @@ public class TbRestClient {
         try {
             Device device = restTemplate.getForEntity(baseURL + "/api/device/" + deviceId.toString(), Device.class).getBody();
             return Optional.ofNullable(device);
+        } catch (HttpClientErrorException.NotFound e) {
+            return Optional.empty();
+        }
+    }
+
+    public Optional<Dashboard> getDashboardById(UUID dashboardId) {
+        try {
+            Dashboard dashboard = restTemplate.getForEntity(baseURL + "/api/dashboard/" + dashboardId.toString(), Dashboard.class).getBody();
+            return Optional.ofNullable(dashboard);
         } catch (HttpClientErrorException.NotFound e) {
             return Optional.empty();
         }
@@ -207,6 +238,20 @@ public class TbRestClient {
         return getAllEntities("/api/tenant/devices", reference);
     }
 
+    public Set<Dashboard> getAllTenantDashboards() {
+        ParameterizedTypeReference<PageData<Dashboard>> reference = new ParameterizedTypeReference<>() {
+        };
+
+        return getAllEntities("/api/tenant/dashboards", reference);
+    }
+
+    public Set<Dashboard> getAllCustomerDashboards(UUID customerId) {
+        ParameterizedTypeReference<PageData<Dashboard>> reference = new ParameterizedTypeReference<>() {
+        };
+
+        return getAllEntities("/api/customer/" + customerId.toString() + "/dashboards", reference);
+    }
+
     private <T> Set<T> getAllEntities(String request, ParameterizedTypeReference<PageData<T>> type) {
         Set<T> result = new HashSet<>();
         boolean hasNextPage = true;
@@ -256,6 +301,16 @@ public class TbRestClient {
         }
     }
 
+    public Dashboard createDashboard(String title) {
+        try {
+            Dashboard dashboard = new Dashboard();
+            dashboard.setTitle(title);
+            return restTemplate.postForEntity(baseURL + "/api/dashboard", dashboard, Dashboard.class).getBody();
+        } catch (Exception e) {
+            throw new RuntimeException("", e);
+        }
+    }
+
 
     public Customer createCustomer(String name, EntityId ownerId) {
         Customer customer = new Customer();
@@ -288,6 +343,17 @@ public class TbRestClient {
         }
     }
 
+    public Dashboard createDashboard(String title, EntityId ownerId) {
+        try {
+            Dashboard dashboard = new Dashboard();
+            dashboard.setTitle(title);
+            dashboard.setOwnerId(ownerId);
+            return restTemplate.postForEntity(baseURL + "/api/dashboard", dashboard, Dashboard.class).getBody();
+        } catch (Exception e) {
+            throw new RuntimeException("", e);
+        }
+    }
+
 
     public void deleteCustomer(UUID customerId) {
         restTemplate.delete(baseURL + "/api/customer/" + customerId);
@@ -299,6 +365,10 @@ public class TbRestClient {
 
     public void deleteDevice(UUID deviceId) {
         restTemplate.delete(baseURL + "/api/device/" + deviceId);
+    }
+
+    public void deleteDashboard(UUID dashboardId) {
+        restTemplate.delete(baseURL + "/api/dashboard/" + dashboardId);
     }
 
 
@@ -475,6 +545,7 @@ public class TbRestClient {
         return restTemplate.postForEntity(baseURL + "/api/ruleChain/metadata", metaData, RuleChainMetaData.class).getBody();
     }
 
+
     // PE functions
 
     public Optional<EntityGroup> getEntityGroup(String name, EntityType entityType, UUID ownerId, boolean isCustomerOwner) {
@@ -528,7 +599,23 @@ public class TbRestClient {
         ).getBody();
     }
 
-    public void setCustomerUserToCustomerGroup(Customer customer, CustomerUser customerUser) {
+
+    public void setCustomerUserToCustomerAdministratorsGroup(Customer customer, CustomerUser customerUser) {
+        try {
+            EntityGroup customerUsersGroup = getEntityGroup(
+                    "Customer Administrators",
+                    EntityType.USER,
+                    customer.getUuidId(),
+                    true
+            ).orElseThrow();
+
+            addEntitiesToTheGroup(customerUsersGroup.getUuidId(), Set.of(customerUser.getId().getId()));
+        } catch (Exception e) {
+            throw new RuntimeException("Can not assign customer user to the Customer Group", e);
+        }
+    }
+
+    public void setCustomerUserToCustomerUsersGroup(Customer customer, CustomerUser customerUser) {
         try {
             EntityGroup customerUsersGroup = getEntityGroup(
                     "Customer Users",

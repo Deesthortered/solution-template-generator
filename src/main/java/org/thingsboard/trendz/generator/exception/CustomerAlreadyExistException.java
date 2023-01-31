@@ -7,6 +7,7 @@ public class CustomerAlreadyExistException extends SolutionTemplateGeneratorExce
     private final Customer customer;
 
     public CustomerAlreadyExistException(Customer customer) {
+        super("Customer is already exists: " + customer.getName());
         this.customer = customer;
     }
 }

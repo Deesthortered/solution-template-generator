@@ -19,6 +19,7 @@ import org.thingsboard.trendz.generator.exception.AssetAlreadyExistException;
 import org.thingsboard.trendz.generator.exception.CustomerAlreadyExistException;
 import org.thingsboard.trendz.generator.exception.DeviceAlreadyExistException;
 import org.thingsboard.trendz.generator.exception.RuleChainAlreadyExistException;
+import org.thingsboard.trendz.generator.exception.SolutionValidationException;
 import org.thingsboard.trendz.generator.model.ModelData;
 import org.thingsboard.trendz.generator.model.ModelEntity;
 import org.thingsboard.trendz.generator.model.anomaly.AnomalyInfo;
@@ -29,9 +30,8 @@ import org.thingsboard.trendz.generator.model.tb.CustomerUser;
 import org.thingsboard.trendz.generator.model.tb.RelationType;
 import org.thingsboard.trendz.generator.model.tb.Telemetry;
 import org.thingsboard.trendz.generator.model.tb.Timestamp;
-import org.thingsboard.trendz.generator.service.FileService;
-import org.thingsboard.trendz.generator.service.VisualizationService;
 import org.thingsboard.trendz.generator.service.anomaly.AnomalyService;
+import org.thingsboard.trendz.generator.service.dashboard.DashboardService;
 import org.thingsboard.trendz.generator.service.rest.TbRestClient;
 import org.thingsboard.trendz.generator.solution.SolutionTemplateGenerator;
 import org.thingsboard.trendz.generator.solution.watermetering.configuration.CityConfiguration;
@@ -77,9 +77,8 @@ public class WaterMeteringSolution implements SolutionTemplateGenerator {
     private static final String RULE_CHAIN_NAME = "Water Metering Rule Chain";
 
     private final TbRestClient tbRestClient;
-    private final FileService fileService;
     private final AnomalyService anomalyService;
-    private final VisualizationService visualizationService;
+    private final DashboardService dashboardService;
 
     private final Map<Region, UUID> regionToIdMap = new HashMap<>();
     private final Map<Consumer, UUID> consumerToIdMap = new HashMap<>();
@@ -88,14 +87,12 @@ public class WaterMeteringSolution implements SolutionTemplateGenerator {
     @Autowired
     public WaterMeteringSolution(
             TbRestClient tbRestClient,
-            FileService fileService,
             AnomalyService anomalyService,
-            VisualizationService visualizationService
+            DashboardService dashboardService
     ) {
         this.tbRestClient = tbRestClient;
-        this.fileService = fileService;
         this.anomalyService = anomalyService;
-        this.visualizationService = visualizationService;
+        this.dashboardService = dashboardService;
     }
 
     @Override
@@ -110,12 +107,16 @@ public class WaterMeteringSolution implements SolutionTemplateGenerator {
 
             validateCustomerData();
             validateRuleChain();
-            ModelData data = makeData(true, ZonedDateTime.now());
-            validateData(data);
+
+            if (!tbRestClient.isPe()) {
+                dashboardService.validateDashboardItems(getSolutionName(), null);
+                ModelData data = makeData(true, ZonedDateTime.now());
+                validateData(data);
+            }
 
             log.info("Water Metering Solution - validation is completed!");
         } catch (Exception e) {
-            log.error("Water Metering Solution validation was failed, skipping...", e);
+            throw new SolutionValidationException(getSolutionName(), e);
         }
     }
 
@@ -127,6 +128,7 @@ public class WaterMeteringSolution implements SolutionTemplateGenerator {
             ModelData data = makeData(skipTelemetry, startYear);
             applyData(data, customerData);
             createRuleChain(data);
+            dashboardService.createDashboardItems(getSolutionName(), customerData.getCustomer().getId());
 
             log.info("Water Metering Solution - generation is completed!");
         } catch (Exception e) {
@@ -140,8 +142,12 @@ public class WaterMeteringSolution implements SolutionTemplateGenerator {
         try {
             deleteCustomerData();
             deleteRuleChain();
-            ModelData data = makeData(true, ZonedDateTime.now());
-            deleteData(data);
+
+            if (!tbRestClient.isPe()) {
+                dashboardService.deleteDashboardItems(getSolutionName(), null);
+                ModelData data = makeData(true, ZonedDateTime.now());
+                deleteData(data);
+            }
 
             log.info("Water Metering Solution - removal is completed!");
         } catch (Exception e) {
@@ -164,7 +170,7 @@ public class WaterMeteringSolution implements SolutionTemplateGenerator {
                 CUSTOMER_USER_FIRST_NAME, CUSTOMER_USER_LAST_NAME
         );
         if (tbRestClient.isPe()) {
-            tbRestClient.setCustomerUserToCustomerGroup(customer, customerUser);
+            tbRestClient.setCustomerUserToCustomerAdministratorsGroup(customer, customerUser);
         }
 
         return new CustomerData(customer, customerUser);

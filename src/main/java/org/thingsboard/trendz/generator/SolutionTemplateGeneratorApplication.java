@@ -5,6 +5,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.thingsboard.trendz.generator.exception.SolutionValidationException;
 import org.thingsboard.trendz.generator.solution.SolutionTemplateGenerator;
 import org.thingsboard.trendz.generator.utils.RandomUtils;
 
@@ -56,18 +57,23 @@ public class SolutionTemplateGeneratorApplication implements CommandLineRunner {
 			} else {
 				if (modeGenerate) {
 					RandomUtils.refreshRandom();
-					solutionGenerator.validate();
-					solutionGenerator.generate(this.skipTelemetry, this.startYear);
+					try {
+						solutionGenerator.validate();
+						solutionGenerator.generate(this.skipTelemetry, this.startYear);
+						log.info("Current generator is finished: {}", solutionName);
+					} catch (SolutionValidationException e) {
+						log.error("Validation solution error: " + solutionGenerator.getSolutionName(), e.getCause());
+					}
 				} else if (modeRemove) {
 					solutionGenerator.remove();
 				} else {
 					throw new IllegalArgumentException("Unsupported mode: " + this.mode);
 				}
 			}
-			log.info("Current generator is finished: {}", solutionName);
 		}
 		System.exit(0);
 	}
+
 
 	private static void setDefaultTimezone() {
 		TimeZone.setDefault(TimeZone.getTimeZone("UTC"));

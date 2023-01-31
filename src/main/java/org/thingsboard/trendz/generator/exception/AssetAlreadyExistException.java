@@ -7,6 +7,7 @@ public class AssetAlreadyExistException extends SolutionTemplateGeneratorExcepti
     private final Asset asset;
 
     public AssetAlreadyExistException(Asset asset) {
+        super("Asset is already exists: " + asset.getName());
         this.asset = asset;
     }
 }

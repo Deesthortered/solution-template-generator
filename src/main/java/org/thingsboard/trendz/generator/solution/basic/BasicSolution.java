@@ -22,6 +22,7 @@ import org.thingsboard.trendz.generator.exception.AssetAlreadyExistException;
 import org.thingsboard.trendz.generator.exception.CustomerAlreadyExistException;
 import org.thingsboard.trendz.generator.exception.DeviceAlreadyExistException;
 import org.thingsboard.trendz.generator.exception.RuleChainAlreadyExistException;
+import org.thingsboard.trendz.generator.exception.SolutionValidationException;
 import org.thingsboard.trendz.generator.model.tb.Attribute;
 import org.thingsboard.trendz.generator.model.tb.CustomerUser;
 import org.thingsboard.trendz.generator.model.tb.NodeConnectionType;
@@ -30,6 +31,7 @@ import org.thingsboard.trendz.generator.model.tb.RuleNodeAdditionalInfo;
 import org.thingsboard.trendz.generator.model.tb.Telemetry;
 import org.thingsboard.trendz.generator.model.tb.Timestamp;
 import org.thingsboard.trendz.generator.service.FileService;
+import org.thingsboard.trendz.generator.service.dashboard.DashboardService;
 import org.thingsboard.trendz.generator.service.rest.TbRestClient;
 import org.thingsboard.trendz.generator.solution.SolutionTemplateGenerator;
 import org.thingsboard.trendz.generator.utils.DateTimeUtils;
@@ -63,14 +65,17 @@ public class BasicSolution implements SolutionTemplateGenerator {
 
     private final TbRestClient tbRestClient;
     private final FileService fileService;
+    private final DashboardService dashboardService;
 
     @Autowired
     public BasicSolution(
             TbRestClient tbRestClient,
-            FileService fileService
+            FileService fileService,
+            DashboardService dashboardService
     ) {
         this.tbRestClient = tbRestClient;
         this.fileService = fileService;
+        this.dashboardService = dashboardService;
     }
 
     @Override
@@ -96,6 +101,8 @@ public class BasicSolution implements SolutionTemplateGenerator {
                         throw new RuleChainAlreadyExistException(ruleChain);
                     });
 
+            dashboardService.validateDashboardItems(getSolutionName(), null);
+
             tbRestClient.getAssetByName(DEVICE_NAME)
                     .ifPresent(asset -> {
                         throw new AssetAlreadyExistException(asset);
@@ -108,7 +115,7 @@ public class BasicSolution implements SolutionTemplateGenerator {
 
             log.info("Basic Solution - validation is completed!");
         } catch (Exception e) {
-            log.error("Basic Solution validation was failed, skipping...", e);
+            throw new SolutionValidationException(getSolutionName(), e);
         }
     }
 
@@ -123,8 +130,10 @@ public class BasicSolution implements SolutionTemplateGenerator {
                     CUSTOMER_USER_FIRST_NAME, CUSTOMER_USER_LAST_NAME
             );
             if (tbRestClient.isPe()) {
-                tbRestClient.setCustomerUserToCustomerGroup(customer, customerUser);
+                tbRestClient.setCustomerUserToCustomerAdministratorsGroup(customer, customerUser);
             }
+
+            dashboardService.createDashboardItems(getSolutionName(), customer.getId());
 
             Asset asset;
             Device device;
@@ -233,6 +242,8 @@ public class BasicSolution implements SolutionTemplateGenerator {
 
             RuleChainMetaData savedMetaData = tbRestClient.saveRuleChainMetadata(metaData);
 
+
+
             log.info("Basic Solution - generation is completed!");
         } catch (Exception e) {
             log.error("Basic Solution generate was failed, skipping...", e);
@@ -284,6 +295,8 @@ public class BasicSolution implements SolutionTemplateGenerator {
                     .ifPresent(ruleChain -> {
                         tbRestClient.deleteRuleChain(ruleChain.getUuidId());
                     });
+
+            dashboardService.deleteDashboardItems(getSolutionName(), null);
 
             tbRestClient.getCustomerByTitle(CUSTOMER_TITLE)
                     .stream()

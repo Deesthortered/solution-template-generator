@@ -7,6 +7,7 @@ public class DeviceAlreadyExistException extends SolutionTemplateGeneratorExcept
     private final Device device;
 
     public DeviceAlreadyExistException(Device device) {
+        super("Device is already exists: " + device.getName());
         this.device = device;
     }
 }

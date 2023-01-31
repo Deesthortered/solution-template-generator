@@ -7,6 +7,7 @@ public class RuleChainAlreadyExistException extends SolutionTemplateGeneratorExc
     private final RuleChain ruleChain;
 
     public RuleChainAlreadyExistException(RuleChain ruleChain) {
+        super("Rule chain is already exists: " + ruleChain.getName());
         this.ruleChain = ruleChain;
     }
 }
