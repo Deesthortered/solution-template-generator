@@ -672,7 +672,6 @@ public class WaterMeteringSolution implements SolutionTemplateGenerator {
 
         Telemetry<Long> result = new Telemetry<>("consumption");
         ConsumerType type = consumerConfiguration.getType();
-        Set<DayOfWeek> weekEnd = Set.of(DayOfWeek.SATURDAY, DayOfWeek.SUNDAY);
 
         long now = System.currentTimeMillis();
         ZonedDateTime startDate = startYear.truncatedTo(ChronoUnit.HOURS);
@@ -684,14 +683,10 @@ public class WaterMeteringSolution implements SolutionTemplateGenerator {
             DayOfWeek dayOfWeek = iteratedDate.getDayOfWeek();
             int dayOfYear = iteratedDate.getDayOfYear();
             Month month = iteratedDate.getMonth();
-            long dailyNoise = RandomUtils.getRandomNumber(-20, 20);
 
-            long consumption;
-            if (weekEnd.contains(dayOfWeek)) {
-                consumption = getHourConsumerConsumption(type, hour);
-            } else {
-                consumption = 10;
-            }
+            long dailyNoise = RandomUtils.getRandomNumber(-5, 5);
+            long consumption = 0;
+            consumption += getHourConsumerConsumption(type, dayOfWeek, hour);
             consumption += getModificationByMonth(month);
             consumption += getModificationByDayOfYear(dayOfYear);
 
@@ -732,146 +727,6 @@ public class WaterMeteringSolution implements SolutionTemplateGenerator {
         return new Telemetry<>("full_consumption", summedConsumption);
     }
 
-    private long getHourConsumerConsumption(ConsumerType type, int hour) {
-        switch (type) {
-            case HSH:
-                return getHourHshConsumption(hour);
-            case GOV:
-                return getHourGovConsumption(hour);
-            case IND:
-                return getHourIndConsumption(hour);
-            default:
-                throw new IllegalArgumentException("Unsupported consumer type = " + type);
-        }
-    }
-
-    private long getHourHshConsumption(int hour) {
-        switch (hour) {
-            case 0:
-            case 1:
-            case 2:
-            case 3:
-                return 10;
-            case 4:
-                return 50;
-            case 5:
-                return 100;
-            case 6:
-            case 7:
-                return 150;
-            case 8:
-            case 9:
-                return 100;
-            case 10:
-                return 50;
-            case 11:
-            case 12:
-            case 13:
-            case 14:
-            case 15:
-                return 10;
-            case 16:
-                return 30;
-            case 17:
-            case 18:
-            case 19:
-                return 50;
-            case 20:
-                return 150;
-            case 21:
-                return 100;
-            case 22:
-                return 40;
-            case 23:
-                return 10;
-            default:
-                throw new IllegalArgumentException("Unsupported hour = " + hour);
-        }
-    }
-
-    private long getHourGovConsumption(int hour) {
-        switch (hour) {
-            case 0:
-            case 1:
-            case 2:
-                return 50;
-            case 3:
-            case 4:
-            case 5:
-                return 60;
-            case 6:
-                return 70;
-            case 7:
-                return 80;
-            case 8:
-                return 100;
-            case 9:
-            case 10:
-            case 11:
-            case 12:
-            case 13:
-            case 14:
-            case 15:
-            case 16:
-                return 120;
-            case 17:
-                return 100;
-            case 18:
-            case 19:
-                return 80;
-            case 20:
-            case 21:
-            case 22:
-            case 23:
-                return 50;
-            default:
-                throw new IllegalArgumentException("Unsupported hour = " + hour);
-        }
-    }
-
-    private long getHourIndConsumption(int hour) {
-        // 100L, 100L, 100L, 100L, 200L, 200L, 500L, 400L, 400L, 400L, 450L, 500L, 600L, 550L, 550L, 400L, 300L, 100L, 100L, 100L, 100L, 100L, 100L, 100L
-
-        switch (hour) {
-            case 0:
-            case 1:
-            case 2:
-            case 3:
-                return 100;
-            case 4:
-            case 5:
-                return 200;
-            case 6:
-                return 500;
-            case 7:
-            case 8:
-            case 9:
-                return 400;
-            case 10:
-                return 450;
-            case 11:
-                return 500;
-            case 12:
-                return 600;
-            case 13:
-            case 14:
-                return 550;
-            case 15:
-                return 400;
-            case 16:
-                return 300;
-            case 17:
-            case 18:
-            case 19:
-            case 20:
-            case 21:
-            case 22:
-            case 23:
-                return 100;
-            default:
-                throw new IllegalArgumentException("Unsupported hour = " + hour);
-        }
-    }
 
     private long getModificationByMonth(Month month) {
         long value = 20;
@@ -900,5 +755,237 @@ public class WaterMeteringSolution implements SolutionTemplateGenerator {
 
     private long getModificationByDayOfYear(int dayOfYear) {
         return (dayOfYear * 24L) / 500 + RandomUtils.getRandomNumber(-5, 5);
+    }
+
+
+    private long getHourConsumerConsumption(ConsumerType type, DayOfWeek day, int hour) {
+        if (day == DayOfWeek.SATURDAY || day == DayOfWeek.SUNDAY) {
+            switch (type) {
+                case HSH:
+                    return getHourHshConsumptionWeekend(hour);
+                case GOV:
+                    return getHourGovConsumptionWeekend(hour);
+                case IND:
+                    return getHourIndConsumptionWeekend(hour);
+                default:
+                    throw new IllegalArgumentException("Unsupported consumer type = " + type);
+            }
+        }
+
+        switch (type) {
+            case HSH:
+                return getHourHshConsumption(hour);
+            case GOV:
+                return getHourGovConsumption(hour);
+            case IND:
+                return getHourIndConsumption(hour);
+            default:
+                throw new IllegalArgumentException("Unsupported consumer type = " + type);
+        }
+    }
+
+    private long getHourHshConsumption(int hour) {
+        switch (hour) {
+            case 0:
+            case 1:
+                return 0;
+            case 2:
+            case 3:
+            case 4:
+            case 5:
+            case 6:
+                return 10;
+            case 7:
+            case 8:
+            case 9:
+            case 10:
+                return 100;
+            case 11:
+            case 12:
+            case 13:
+            case 14:
+            case 15:
+            case 16:
+                return 10;
+            case 17:
+            case 18:
+            case 19:
+            case 20:
+            case 21:
+                return 100;
+            case 22:
+            case 23:
+                return 0;
+            default:
+                throw new IllegalArgumentException("Unsupported hour = " + hour);
+        }
+    }
+
+    private long getHourGovConsumption(int hour) {
+        switch (hour) {
+            case 0:
+            case 1:
+            case 2:
+            case 3:
+            case 4:
+            case 5:
+            case 6:
+                return 0;
+            case 7:
+            case 8:
+            case 9:
+            case 10:
+            case 11:
+            case 12:
+            case 13:
+            case 14:
+            case 15:
+            case 16:
+            case 17:
+            case 18:
+            case 19:
+            case 20:
+                return 50;
+            case 21:
+            case 22:
+            case 23:
+                return 0;
+            default:
+                throw new IllegalArgumentException("Unsupported hour = " + hour);
+        }
+    }
+
+    private long getHourIndConsumption(int hour) {
+        switch (hour) {
+            case 0:
+            case 1:
+            case 2:
+            case 3:
+            case 4:
+            case 5:
+                return 10;
+            case 6:
+            case 7:
+            case 8:
+            case 9:
+            case 10:
+            case 11:
+            case 12:
+            case 13:
+            case 14:
+            case 15:
+            case 16:
+            case 17:
+            case 18:
+            case 19:
+                return 500;
+            case 20:
+            case 21:
+            case 22:
+            case 23:
+                return 10;
+            default:
+                throw new IllegalArgumentException("Unsupported hour = " + hour);
+        }
+    }
+
+    private long getHourHshConsumptionWeekend(int hour) {
+        switch (hour) {
+            case 0:
+            case 1:
+            case 2:
+            case 3:
+            case 4:
+            case 5:
+            case 6:
+            case 7:
+                return 0;
+            case 8:
+            case 9:
+            case 10:
+            case 11:
+            case 12:
+            case 13:
+            case 14:
+            case 15:
+            case 16:
+            case 17:
+            case 18:
+            case 19:
+            case 20:
+            case 21:
+                return 10;
+            case 22:
+            case 23:
+                return 0;
+            default:
+                throw new IllegalArgumentException("Unsupported hour = " + hour);
+        }
+    }
+
+    private long getHourGovConsumptionWeekend(int hour) {
+        switch (hour) {
+            case 0:
+            case 1:
+            case 2:
+            case 3:
+            case 4:
+            case 5:
+            case 6:
+            case 7:
+            case 8:
+            case 9:
+            case 10:
+            case 11:
+            case 12:
+            case 13:
+            case 14:
+            case 15:
+            case 16:
+            case 17:
+            case 18:
+            case 19:
+            case 20:
+            case 21:
+            case 22:
+            case 23:
+                return 0;
+            default:
+                throw new IllegalArgumentException("Unsupported hour = " + hour);
+        }
+    }
+
+    private long getHourIndConsumptionWeekend(int hour) {
+        switch (hour) {
+            case 0:
+            case 1:
+            case 2:
+            case 3:
+            case 4:
+            case 5:
+                return 10;
+            case 6:
+            case 7:
+            case 8:
+            case 9:
+            case 10:
+            case 11:
+            case 12:
+            case 13:
+            case 14:
+            case 15:
+            case 16:
+            case 17:
+            case 18:
+            case 19:
+                return 500;
+            case 20:
+            case 21:
+            case 22:
+            case 23:
+                return 10;
+            default:
+                throw new IllegalArgumentException("Unsupported hour = " + hour);
+        }
     }
 }
