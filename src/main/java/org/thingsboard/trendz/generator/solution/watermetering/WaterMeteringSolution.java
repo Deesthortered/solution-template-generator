@@ -61,6 +61,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
@@ -223,58 +224,50 @@ public class WaterMeteringSolution implements SolutionTemplateGenerator {
                                 getPositionX(consumerCounter, 0),
                                 getPositionY(consumerCounter, 0)
                         );
-                        RuleNode transformationNode1 = ruleChainBuildingService.createTransformationNode(
-                                getSolutionName(),
-                                consumer.getSystemName() + ": transform node",
-                                "node_tr1.js",
-                                getPositionX(consumerCounter, 1),
-                                getPositionY(consumerCounter, 1)
-                        );
                         RuleNode changeOriginatorNode1 = ruleChainBuildingService.createChangeOriginatorNode(
                                 region.getSystemName() + ": change originator node (" + consumer.getSystemName() + ")",
                                 region.getSystemName(),
                                 EntityType.DEVICE,
-                                getPositionX(consumerCounter, 2),
-                                getPositionY(consumerCounter, 2)
+                                getPositionX(consumerCounter, 1),
+                                getPositionY(consumerCounter, 1)
                         );
                         RuleNode latestTelemetryLoadNode1 = ruleChainBuildingService.createLatestTelemetryLoadNode(
                                 region.getSystemName() + ": latest telemetry node (" + consumer.getSystemName() + ")",
                                 "full_consumption",
-                                getPositionX(consumerCounter, 3),
-                                getPositionY(consumerCounter, 3)
+                                getPositionX(consumerCounter, 2),
+                                getPositionY(consumerCounter, 2)
                         );
                         RuleNode transformationNode2 = ruleChainBuildingService.createTransformationNode(
                                 getSolutionName(),
                                 region.getSystemName() + ": transform node (" + consumer.getSystemName() + ")",
-                                "node_tr2.js",
-                                getPositionX(consumerCounter, 4),
-                                getPositionY(consumerCounter, 4)
+                                "node_tr1.js",
+                                getPositionX(consumerCounter, 3),
+                                getPositionY(consumerCounter, 3)
                         );
                         RuleNode changeOriginatorNode2 = ruleChainBuildingService.createChangeOriginatorNode(
                                 region.getSystemName() + " Pump Station: change originator node (" + consumer.getSystemName() + ")",
                                 region.getSystemName() + " Pump Station",
                                 EntityType.DEVICE,
-                                getPositionX(consumerCounter, 5),
-                                getPositionY(consumerCounter, 5)
+                                getPositionX(consumerCounter, 4),
+                                getPositionY(consumerCounter, 4)
                         );
                         RuleNode transformationNode3 = ruleChainBuildingService.createTransformationNode(
                                 getSolutionName(),
                                 region.getSystemName() + " Pump Station: transform node (" + consumer.getSystemName() + ")",
-                                "node_tr3.js",
-                                getPositionX(consumerCounter, 6),
-                                getPositionY(consumerCounter, 6)
+                                "node_tr2.js",
+                                getPositionX(consumerCounter, 5),
+                                getPositionY(consumerCounter, 5)
                         );
 
                         RuleNode saveNode = ruleChainBuildingService.createSaveNode(
                                 region.getSystemName() + ": save node",
-                                getPositionX(consumerCounter, 7),
-                                getPositionY(consumerCounter, 7)
+                                getPositionX(consumerCounter, 6),
+                                getPositionY(consumerCounter, 6)
                         );
 
                         int index = nodes.size();
 
                         nodes.add(generatorNode);
-                        nodes.add(transformationNode1);
                         nodes.add(changeOriginatorNode1);
                         nodes.add(latestTelemetryLoadNode1);
                         nodes.add(transformationNode2);
@@ -288,16 +281,16 @@ public class WaterMeteringSolution implements SolutionTemplateGenerator {
                         connections.add(ruleChainBuildingService.createRuleConnection(index + 3, index + 4));
                         connections.add(ruleChainBuildingService.createRuleConnection(index + 4, index + 5));
                         connections.add(ruleChainBuildingService.createRuleConnection(index + 5, index + 6));
-                        connections.add(ruleChainBuildingService.createRuleConnection(index + 6, index + 7));
-                        connections.add(ruleChainBuildingService.createRuleConnection(index + 0, index + 7));
-                        connections.add(ruleChainBuildingService.createRuleConnection(index + 4, index + 7));
+                        connections.add(ruleChainBuildingService.createRuleConnection(index + 0, index + 6));
+                        connections.add(ruleChainBuildingService.createRuleConnection(index + 3, index + 6));
 
                         consumerCounter++;
+                        RuleChainMetaData savedMetaData = this.tbRestClient.saveRuleChainMetadata(metaData);
+                        TimeUnit.SECONDS.sleep(3);
+                        log.warn("Sleeping for solving race condition problem!");
                     }
                 }
             }
-
-            RuleChainMetaData savedMetaData = this.tbRestClient.saveRuleChainMetadata(metaData);
         } catch (Exception e) {
             throw new RuntimeException("Exception during rule chain creation", e);
         }
@@ -1078,7 +1071,7 @@ public class WaterMeteringSolution implements SolutionTemplateGenerator {
 
     private double getPositionY(int consumerCounter, int i) {
         int shift = 75;
-        if (i == 0 || i == 7) {
+        if (i == 0 || i == 6) {
             shift = 0;
         }
         return 300 + RuleNodeAdditionalInfo.CELL_SIZE * consumerCounter * 6 + shift;

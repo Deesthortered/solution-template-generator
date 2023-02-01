@@ -64,6 +64,7 @@ public class RuleChainBuildingService {
     public RuleNode createLatestTelemetryLoadNode(String name, String telemetryName, double gridX, double gridY) {
         TbGetAttributesNodeConfiguration configuration = new TbGetAttributesNodeConfiguration();
         configuration.setLatestTsKeyNames(List.of(telemetryName));
+        configuration.setGetLatestValueWithTs(true);
 
         return createRuleNode(name, TbGetAttributesNode.class, configuration, (int) gridX, (int) gridY);
     }
