@@ -9,6 +9,8 @@ import org.thingsboard.rule.engine.metadata.TbGetAttributesNode;
 import org.thingsboard.rule.engine.metadata.TbGetAttributesNodeConfiguration;
 import org.thingsboard.rule.engine.telemetry.TbMsgTimeseriesNode;
 import org.thingsboard.rule.engine.telemetry.TbMsgTimeseriesNodeConfiguration;
+import org.thingsboard.rule.engine.transform.TbChangeOriginatorNode;
+import org.thingsboard.rule.engine.transform.TbChangeOriginatorNodeConfiguration;
 import org.thingsboard.rule.engine.transform.TbTransformMsgNode;
 import org.thingsboard.rule.engine.transform.TbTransformMsgNodeConfiguration;
 import org.thingsboard.server.common.data.EntityType;
@@ -74,6 +76,15 @@ public class RuleChainBuildingService {
         configuration.setJsScript(fileContent);
 
         return createRuleNode(name, TbTransformMsgNode.class, configuration, (int) gridX, (int) gridY);
+    }
+
+    public RuleNode createChangeOriginatorNode(String name, String entityNamePattern, EntityType entityType, double gridX, double gridY) {
+        TbChangeOriginatorNodeConfiguration configuration = new TbChangeOriginatorNodeConfiguration();
+        configuration.setOriginatorSource("ENTITY");
+        configuration.setEntityType(entityType.name());
+        configuration.setEntityNamePattern(entityNamePattern);
+
+        return createRuleNode(name, TbChangeOriginatorNode.class, configuration, (int) gridX, (int) gridY);
     }
 
     public NodeConnectionInfo createRuleConnection(int from, int to) {

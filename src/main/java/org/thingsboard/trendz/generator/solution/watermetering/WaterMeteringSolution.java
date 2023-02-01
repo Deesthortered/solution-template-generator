@@ -28,6 +28,7 @@ import org.thingsboard.trendz.generator.model.tb.Attribute;
 import org.thingsboard.trendz.generator.model.tb.CustomerData;
 import org.thingsboard.trendz.generator.model.tb.CustomerUser;
 import org.thingsboard.trendz.generator.model.tb.RelationType;
+import org.thingsboard.trendz.generator.model.tb.RuleNodeAdditionalInfo;
 import org.thingsboard.trendz.generator.model.tb.Telemetry;
 import org.thingsboard.trendz.generator.model.tb.Timestamp;
 import org.thingsboard.trendz.generator.service.anomaly.AnomalyService;
@@ -205,21 +206,94 @@ public class WaterMeteringSolution implements SolutionTemplateGenerator {
             List<NodeConnectionInfo> connections = new ArrayList<>();
             metaData.setConnections(connections);
 
+            int consumerCounter = 0;
             for (City city : cities) {
+
                 for (Region region : city.getRegions()) {
                     UUID regionId = this.regionToIdMap.get(region);
 
                     for (Consumer consumer : region.getConsumers()) {
                         UUID consumerId = this.consumerToIdMap.get(consumer);
 
+                        RuleNode generatorNode = ruleChainBuildingService.createGeneratorNode(
+                                getSolutionName(),
+                                consumer.getSystemName() + ": generate node",
+                                consumerId,
+                                getConsumerConsumptionFileName(consumer.getType()),
+                                getPositionX(consumerCounter, 0),
+                                getPositionY(consumerCounter, 0)
+                        );
+                        RuleNode transformationNode1 = ruleChainBuildingService.createTransformationNode(
+                                getSolutionName(),
+                                consumer.getSystemName() + ": transform node",
+                                "node_tr1.js",
+                                getPositionX(consumerCounter, 1),
+                                getPositionY(consumerCounter, 1)
+                        );
+                        RuleNode changeOriginatorNode1 = ruleChainBuildingService.createChangeOriginatorNode(
+                                region.getSystemName() + ": change originator node (" + consumer.getSystemName() + ")",
+                                region.getSystemName(),
+                                EntityType.DEVICE,
+                                getPositionX(consumerCounter, 2),
+                                getPositionY(consumerCounter, 2)
+                        );
+                        RuleNode latestTelemetryLoadNode1 = ruleChainBuildingService.createLatestTelemetryLoadNode(
+                                region.getSystemName() + ": latest telemetry node (" + consumer.getSystemName() + ")",
+                                "full_consumption",
+                                getPositionX(consumerCounter, 3),
+                                getPositionY(consumerCounter, 3)
+                        );
+                        RuleNode transformationNode2 = ruleChainBuildingService.createTransformationNode(
+                                getSolutionName(),
+                                region.getSystemName() + ": transform node (" + consumer.getSystemName() + ")",
+                                "node_tr2.js",
+                                getPositionX(consumerCounter, 4),
+                                getPositionY(consumerCounter, 4)
+                        );
+                        RuleNode changeOriginatorNode2 = ruleChainBuildingService.createChangeOriginatorNode(
+                                region.getSystemName() + " Pump Station: change originator node (" + consumer.getSystemName() + ")",
+                                region.getSystemName() + " Pump Station",
+                                EntityType.DEVICE,
+                                getPositionX(consumerCounter, 5),
+                                getPositionY(consumerCounter, 5)
+                        );
+                        RuleNode transformationNode3 = ruleChainBuildingService.createTransformationNode(
+                                getSolutionName(),
+                                region.getSystemName() + " Pump Station: transform node (" + consumer.getSystemName() + ")",
+                                "node_tr3.js",
+                                getPositionX(consumerCounter, 6),
+                                getPositionY(consumerCounter, 6)
+                        );
+
+                        RuleNode saveNode = ruleChainBuildingService.createSaveNode(
+                                region.getSystemName() + ": save node",
+                                getPositionX(consumerCounter, 7),
+                                getPositionY(consumerCounter, 7)
+                        );
+
+                        int index = nodes.size();
+
+                        nodes.add(generatorNode);
+                        nodes.add(transformationNode1);
+                        nodes.add(changeOriginatorNode1);
+                        nodes.add(latestTelemetryLoadNode1);
+                        nodes.add(transformationNode2);
+                        nodes.add(changeOriginatorNode2);
+                        nodes.add(transformationNode3);
+                        nodes.add(saveNode);
+
+                        connections.add(ruleChainBuildingService.createRuleConnection(index + 0, index + 1));
+                        connections.add(ruleChainBuildingService.createRuleConnection(index + 1, index + 2));
+                        connections.add(ruleChainBuildingService.createRuleConnection(index + 2, index + 3));
+                        connections.add(ruleChainBuildingService.createRuleConnection(index + 3, index + 4));
+                        connections.add(ruleChainBuildingService.createRuleConnection(index + 4, index + 5));
+                        connections.add(ruleChainBuildingService.createRuleConnection(index + 5, index + 6));
+                        connections.add(ruleChainBuildingService.createRuleConnection(index + 6, index + 7));
+                        connections.add(ruleChainBuildingService.createRuleConnection(index + 0, index + 7));
+                        connections.add(ruleChainBuildingService.createRuleConnection(index + 4, index + 7));
+
+                        consumerCounter++;
                     }
-
-                    int index = nodes.size();
-                }
-                for (PumpStation pumpStation : city.getPumpStations()) {
-                    UUID pumpStationId = this.pumpStationToIdMap.get(pumpStation);
-
-                    int index = nodes.size();
                 }
             }
 
@@ -994,6 +1068,32 @@ public class WaterMeteringSolution implements SolutionTemplateGenerator {
                 return 10;
             default:
                 throw new IllegalArgumentException("Unsupported hour = " + hour);
+        }
+    }
+
+
+    private double getPositionX(int consumerCounter, int i) {
+        return 70 + RuleNodeAdditionalInfo.CELL_SIZE * i * 11;
+    }
+
+    private double getPositionY(int consumerCounter, int i) {
+        int shift = 75;
+        if (i == 0 || i == 7) {
+            shift = 0;
+        }
+        return 300 + RuleNodeAdditionalInfo.CELL_SIZE * consumerCounter * 6 + shift;
+    }
+
+    private String getConsumerConsumptionFileName(ConsumerType type) {
+        switch (type) {
+            case HSH:
+                return "consumer_consumption_hsh.js";
+            case IND:
+                return "consumer_consumption_ind.js";
+            case GOV:
+                return "consumer_consumption_gov.js";
+            default:
+                throw new IllegalArgumentException("Unsupported type: " + type);
         }
     }
 }
