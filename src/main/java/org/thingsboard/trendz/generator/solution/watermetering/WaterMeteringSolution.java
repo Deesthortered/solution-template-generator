@@ -2,6 +2,7 @@ package org.thingsboard.trendz.generator.solution.watermetering;
 
 import com.google.common.collect.Sets;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.thingsboard.server.common.data.Customer;
@@ -49,7 +50,6 @@ import org.thingsboard.trendz.generator.utils.DateTimeUtils;
 import org.thingsboard.trendz.generator.utils.RandomUtils;
 
 import java.time.DayOfWeek;
-import java.time.Month;
 import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
@@ -285,8 +285,8 @@ public class WaterMeteringSolution implements SolutionTemplateGenerator {
 
                         consumerCounter++;
                         RuleChainMetaData savedMetaData = this.tbRestClient.saveRuleChainMetadata(metaData);
-                        TimeUnit.SECONDS.sleep(3);
-                        log.warn("Sleeping for solving race condition problem!");
+//                        TimeUnit.SECONDS.sleep(3);
+//                        log.warn("Sleeping for solving race condition problem!");
                     }
                 }
             }
@@ -763,22 +763,26 @@ public class WaterMeteringSolution implements SolutionTemplateGenerator {
         long now = System.currentTimeMillis();
         ZonedDateTime startDate = startYear.truncatedTo(ChronoUnit.HOURS);
         ZonedDateTime nowDate = DateTimeUtils.fromTs(now).truncatedTo(ChronoUnit.HOURS);
+
+        int fullInterval = 365;
+        int minValue = 0;
+        int maxValue = 100;
+        List<Pair<Long, Long>> intervals = generateRandomRanges(fullInterval, fullInterval / 30, minValue, maxValue);
+
         ZonedDateTime iteratedDate = startDate;
         while (iteratedDate.isBefore(nowDate)) {
             long iteratedTs = DateTimeUtils.toTs(iteratedDate);
             int hour = iteratedDate.getHour();
             DayOfWeek dayOfWeek = iteratedDate.getDayOfWeek();
             int dayOfYear = iteratedDate.getDayOfYear();
-            Month month = iteratedDate.getMonth();
 
-            long dailyNoiseAmplitude = 5;
+            long dailyNoiseAmplitude = 60;
             int timezoneShift = 2;
             hour = (hour + timezoneShift + 24) % 24;
 
             long consumption = 0;
             consumption += getHourConsumerConsumption(type, dayOfWeek, hour);
-//            consumption += getModificationByMonth(month);
-//            consumption += getModificationByDayOfYear(dayOfYear);
+            consumption += getModificationByDayOfYear(dayOfYear, intervals);
             consumption += RandomUtils.getRandomNumber(-dailyNoiseAmplitude, dailyNoiseAmplitude);
 
             long value = Math.max(0, consumption);
@@ -819,33 +823,36 @@ public class WaterMeteringSolution implements SolutionTemplateGenerator {
     }
 
 
-    private long getModificationByMonth(Month month) {
-        long value = 20;
-        switch (month) {
-            case JANUARY:
-            case FEBRUARY:
-                return 0;
-            case MARCH:
-            case APRIL:
-            case MAY:
-                return value;
-            case JUNE:
-            case JULY:
-            case AUGUST:
-                return 0;
-            case SEPTEMBER:
-            case OCTOBER:
-            case NOVEMBER:
-                return value;
-            case DECEMBER:
-                return 0;
-            default:
-                throw new IllegalArgumentException("Unsupported month: " + month);
+    private List<Pair<Long, Long>> generateRandomRanges(int interval, int count, int minValue, int maxValue) {
+        List<Pair<Long, Long>> result = new ArrayList<>(count);
+        int minLength = interval / (count * 10);
+        int maxLength = interval / count;
+        long used = 0;
+
+        while (used < interval) {
+            long length = RandomUtils.getRandomNumber(minLength, maxLength);
+            long value = RandomUtils.getRandomNumber(minValue, maxValue);
+            used += length;
+            result.add(Pair.of(used, value));
         }
+
+        return result;
     }
 
-    private long getModificationByDayOfYear(int dayOfYear) {
-        return (dayOfYear * 24L) / 500 + RandomUtils.getRandomNumber(-5, 5);
+    private long getModificationByDayOfYear(int dayOfYear, List<Pair<Long, Long>> intervals) {
+        Pair<Long, Long> prev = Pair.of(0L, 0L);
+        for (Pair<Long, Long> interval : intervals) {
+            if (dayOfYear <= interval.getKey()) {
+                long x1 = prev.getKey();
+                long x2 = interval.getKey();
+                long y1 = prev.getValue();
+                long y2 = interval.getValue();
+                long x = dayOfYear;
+                return ((x - x1) * (y2 - y1)) / (x2 - x1) + y1;
+            }
+            prev = interval;
+        }
+        throw new IllegalStateException("Can not assign day of year to corresponding interval");
     }
 
 
