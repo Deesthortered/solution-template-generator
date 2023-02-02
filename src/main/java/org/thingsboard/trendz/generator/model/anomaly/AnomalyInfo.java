@@ -16,8 +16,11 @@ public class AnomalyInfo implements Comparable<AnomalyInfo> {
     private ZonedDateTime startDate;
     private ZonedDateTime endDate;
     private AnomalyType type;
-    private long value;
 
+    private double settingValue;
+    private double shiftValue;
+    private double coefficient;
+    private double noiseAmplitude;
 
     @Override
     public int compareTo(AnomalyInfo that) {

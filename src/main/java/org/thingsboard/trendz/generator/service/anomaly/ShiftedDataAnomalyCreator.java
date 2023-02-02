@@ -6,6 +6,7 @@ import org.thingsboard.trendz.generator.model.anomaly.AnomalyInfo;
 import org.thingsboard.trendz.generator.model.anomaly.AnomalyType;
 import org.thingsboard.trendz.generator.model.tb.Telemetry;
 import org.thingsboard.trendz.generator.utils.DateTimeUtils;
+import org.thingsboard.trendz.generator.utils.RandomUtils;
 
 import java.time.ZonedDateTime;
 import java.util.Set;
@@ -21,43 +22,38 @@ public class ShiftedDataAnomalyCreator implements AnomalyCreator {
     }
 
     @Override
-    public <T> void create(Telemetry<T> telemetry, AnomalyInfo anomalyInfo) {
+    public void create(Telemetry<? extends Number> telemetry, AnomalyInfo anomalyInfo) {
         ZonedDateTime startDate = anomalyInfo.getStartDate();
         ZonedDateTime endDate = anomalyInfo.getEndDate();
 
-        Set<Telemetry.Point<T>> oldPoints = telemetry.getPoints().stream()
+        Set<? extends Telemetry.Point<? extends Number>> rawPoints = telemetry.getPoints();
+        Set<Telemetry.Point<? extends Number>> points = (Set<Telemetry.Point<? extends Number>>) rawPoints;
+
+        Set<Telemetry.Point<? extends Number>> oldPoints = points.stream()
                 .filter(point -> DateTimeUtils.toTs(startDate) <= point.getTs().get())
                 .filter(point -> point.getTs().get() < DateTimeUtils.toTs(endDate))
                 .collect(Collectors.toSet());
 
-        Set<Telemetry.Point<T>> newPoints = oldPoints.stream()
-                .map(point -> new Telemetry.Point<>(point.getTs(), getShiftedValue(point.getValue(), anomalyInfo.getValue())))
+        Set<Telemetry.Point<? extends Number>> newPoints = oldPoints.stream()
+                .map(point -> {
+                    Number old_value = point.getValue();
+
+                    double shift = anomalyInfo.getShiftValue();
+                    double coeff = anomalyInfo.getCoefficient();
+                    long amplitude = (long) anomalyInfo.getNoiseAmplitude();
+                    long noise = RandomUtils.getRandomNumber(-amplitude, amplitude);
+
+                    double value = old_value.doubleValue();
+                    value = value * coeff + shift + noise;
+
+                    Number newValue = castValue(old_value, value);
+                    return new Telemetry.Point<>(point.getTs(), newValue);
+                })
                 .collect(Collectors.toSet());
 
-        telemetry.getPoints().removeAll(oldPoints);
-        telemetry.getPoints().addAll(newPoints);
+        points.removeAll(oldPoints);
+        points.addAll(newPoints);
     }
 
 
-    private <T> T getShiftedValue(T oldValue, long shift) {
-        if (oldValue instanceof Byte) {
-            return (T) Byte.valueOf((byte) (((byte) oldValue) + ((byte) shift)));
-        }
-        if (oldValue instanceof Short) {
-            return (T) Short.valueOf((short) (((short) oldValue) + ((short) shift)));
-        }
-        if (oldValue instanceof Integer) {
-            return (T) Integer.valueOf((int) (((int) oldValue) + ((int) shift)));
-        }
-        if (oldValue instanceof Long) {
-            return (T) Long.valueOf((long) (((long) oldValue) + ((long) shift)));
-        }
-        if (oldValue instanceof Float) {
-            return (T) Float.valueOf((float) (((float) oldValue) + ((float) shift)));
-        }
-        if (oldValue instanceof Double) {
-            return (T) Double.valueOf((double) (((double) oldValue) + ((double) shift)));
-        }
-        throw new IllegalArgumentException("Value class is not supported: " + oldValue.getClass());
-    }
 }

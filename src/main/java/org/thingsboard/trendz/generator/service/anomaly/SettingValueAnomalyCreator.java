@@ -13,11 +13,11 @@ import java.util.stream.Collectors;
 
 @Slf4j
 @Service
-public class DataGapAnomalyCreator implements AnomalyCreator {
+public class SettingValueAnomalyCreator implements AnomalyCreator {
 
     @Override
     public AnomalyType type() {
-        return AnomalyType.DATA_GAP;
+        return AnomalyType.SET_VALUES;
     }
 
     @Override
@@ -33,6 +33,11 @@ public class DataGapAnomalyCreator implements AnomalyCreator {
                 .filter(point -> point.getTs().get() < DateTimeUtils.toTs(endDate))
                 .collect(Collectors.toSet());
 
+        Set<Telemetry.Point<? extends Number>> newPoints = oldPoints.stream()
+                .map(point -> new Telemetry.Point<>(point.getTs(), castValue(point.getValue(), anomalyInfo.getSettingValue())))
+                .collect(Collectors.toSet());
+
         points.removeAll(oldPoints);
+        points.addAll(newPoints);
     }
 }

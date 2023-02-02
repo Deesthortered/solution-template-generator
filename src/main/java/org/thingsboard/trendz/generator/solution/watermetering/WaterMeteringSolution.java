@@ -61,7 +61,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.UUID;
-import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
@@ -333,7 +332,8 @@ public class WaterMeteringSolution implements SolutionTemplateGenerator {
                                                         AnomalyInfo.builder()
                                                                 .startDate(startYear.withMonth(3).withDayOfMonth(15))
                                                                 .endDate(startYear.withMonth(3).withDayOfMonth(22))
-                                                                .type(AnomalyType.ZERO_VALUES)
+                                                                .type(AnomalyType.SET_VALUES)
+                                                                .settingValue(0)
                                                                 .build()
                                                 )),
                                                 new ConsumerConfiguration("3", ConsumerType.HSH, Collections.emptySet()),
@@ -357,7 +357,10 @@ public class WaterMeteringSolution implements SolutionTemplateGenerator {
                                                                                 .startDate(start)
                                                                                 .endDate(end)
                                                                                 .type(AnomalyType.SHIFTED_DATA)
-                                                                                .value(200)
+                                                                                .shiftValue(200)
+                                                                                .coefficient(1.3)
+                                                                                .noiseAmplitude(100)
+                                                                                .settingValue(0)
                                                                                 .build();
 
                                                                         result.add(anomalyInfo);
@@ -378,7 +381,8 @@ public class WaterMeteringSolution implements SolutionTemplateGenerator {
                                                         AnomalyInfo.builder()
                                                                 .startDate(startYear.withMonth(1).withDayOfMonth(5))
                                                                 .endDate(startYear.withMonth(1).withDayOfMonth(10))
-                                                                .type(AnomalyType.ZERO_VALUES)
+                                                                .type(AnomalyType.SET_VALUES)
+                                                                .settingValue(0)
                                                                 .build()
                                                 )),
                                                 new ConsumerConfiguration("1", ConsumerType.IND, Collections.emptySet())
@@ -406,13 +410,19 @@ public class WaterMeteringSolution implements SolutionTemplateGenerator {
                                                         .startDate(startYear.withMonth(2).withDayOfMonth(10))
                                                         .endDate(startYear.withMonth(4).withDayOfMonth(10))
                                                         .type(AnomalyType.SHIFTED_DATA)
-                                                        .value(100)
+                                                        .shiftValue(100)
+                                                        .coefficient(1.2)
+                                                        .noiseAmplitude(50)
+                                                        .settingValue(0)
                                                         .build(),
                                                 AnomalyInfo.builder()
                                                         .startDate(startYear.withMonth(6).withDayOfMonth(5))
                                                         .endDate(startYear.withMonth(6).withDayOfMonth(25))
                                                         .type(AnomalyType.SHIFTED_DATA)
-                                                        .value(100)
+                                                        .shiftValue(100)
+                                                        .coefficient(1.2)
+                                                        .noiseAmplitude(50)
+                                                        .settingValue(0)
                                                         .build()
                                         ))
                                         .consumerConfigurations(Set.of(
@@ -435,13 +445,19 @@ public class WaterMeteringSolution implements SolutionTemplateGenerator {
                                                         .startDate(startYear.withMonth(1).withDayOfMonth(5))
                                                         .endDate(startYear.withMonth(1).withDayOfMonth(16))
                                                         .type(AnomalyType.SHIFTED_DATA)
-                                                        .value(100)
+                                                        .shiftValue(100)
+                                                        .coefficient(1.2)
+                                                        .noiseAmplitude(50)
+                                                        .settingValue(0)
                                                         .build(),
                                                 AnomalyInfo.builder()
                                                         .startDate(startYear.withMonth(3).withDayOfMonth(1))
                                                         .endDate(startYear.withMonth(3).withDayOfMonth(14))
                                                         .type(AnomalyType.SHIFTED_DATA)
-                                                        .value(100)
+                                                        .shiftValue(100)
+                                                        .coefficient(1.3)
+                                                        .noiseAmplitude(50)
+                                                        .settingValue(0)
                                                         .build()
                                         ))
                                         .consumerConfigurations(Set.of(

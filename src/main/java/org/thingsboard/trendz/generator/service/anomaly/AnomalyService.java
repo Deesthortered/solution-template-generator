@@ -30,7 +30,7 @@ public class AnomalyService {
         }
     }
 
-    public void applyAnomaly(Telemetry<?> telemetry, Set<AnomalyInfo> anomalyInfoList) {
+    public void applyAnomaly(Telemetry<? extends Number> telemetry, Set<AnomalyInfo> anomalyInfoList) {
         if (anomalyInfoList == null) {
             return;
         }
