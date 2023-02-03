@@ -764,10 +764,11 @@ public class WaterMeteringSolution implements SolutionTemplateGenerator {
         ZonedDateTime startDate = startYear.truncatedTo(ChronoUnit.HOURS);
         ZonedDateTime nowDate = DateTimeUtils.fromTs(now).truncatedTo(ChronoUnit.HOURS);
 
+        Pair<Long, Long> intervalValues = getIntervalValuesRangeByConsumerType(consumerConfiguration.getType());
         int fullInterval = 365;
-        int minValue = 0;
-        int maxValue = 100;
-        List<Pair<Long, Long>> intervals = generateRandomRanges(fullInterval, fullInterval / 30, minValue, maxValue);
+        long minValue = intervalValues.getLeft();
+        long maxValue = intervalValues.getRight();
+        List<Pair<Long, Long>> intervals = generateRandomRanges(fullInterval, fullInterval / 40, minValue, maxValue);
 
         ZonedDateTime iteratedDate = startDate;
         while (iteratedDate.isBefore(nowDate)) {
@@ -823,7 +824,23 @@ public class WaterMeteringSolution implements SolutionTemplateGenerator {
     }
 
 
-    private List<Pair<Long, Long>> generateRandomRanges(int interval, int count, int minValue, int maxValue) {
+    private long getModificationByDayOfYear(int dayOfYear, List<Pair<Long, Long>> intervals) {
+        Pair<Long, Long> prev = Pair.of(0L, 0L);
+        for (Pair<Long, Long> interval : intervals) {
+            if (dayOfYear <= interval.getKey()) {
+                long x1 = prev.getKey();
+                long x2 = interval.getKey();
+                long y1 = prev.getValue();
+                long y2 = interval.getValue();
+                long x = dayOfYear;
+                return ((x - x1) * (y2 - y1)) / (x2 - x1) + y1;
+            }
+            prev = interval;
+        }
+        throw new IllegalStateException("Can not assign day of year to corresponding interval");
+    }
+
+    private List<Pair<Long, Long>> generateRandomRanges(int interval, int count, long minValue, long maxValue) {
         List<Pair<Long, Long>> result = new ArrayList<>(count);
         int minLength = interval / (count * 10);
         int maxLength = interval / count;
@@ -839,20 +856,13 @@ public class WaterMeteringSolution implements SolutionTemplateGenerator {
         return result;
     }
 
-    private long getModificationByDayOfYear(int dayOfYear, List<Pair<Long, Long>> intervals) {
-        Pair<Long, Long> prev = Pair.of(0L, 0L);
-        for (Pair<Long, Long> interval : intervals) {
-            if (dayOfYear <= interval.getKey()) {
-                long x1 = prev.getKey();
-                long x2 = interval.getKey();
-                long y1 = prev.getValue();
-                long y2 = interval.getValue();
-                long x = dayOfYear;
-                return ((x - x1) * (y2 - y1)) / (x2 - x1) + y1;
-            }
-            prev = interval;
+    private Pair<Long, Long> getIntervalValuesRangeByConsumerType(ConsumerType type) {
+        switch (type) {
+            case HSH: return Pair.of(0L, 100L);
+            case GOV: return Pair.of(-30L, 100L);
+            case IND: return Pair.of(-100L, 100L);
+            default: throw new IllegalArgumentException("Unsupported consumer type: " + type);
         }
-        throw new IllegalStateException("Can not assign day of year to corresponding interval");
     }
 
 
