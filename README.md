@@ -109,11 +109,12 @@ Edinburgh has Leith and Stockbridge regions by 3 consumers (by each type).
 
 Any consumption telemetry uses `Litres` as measurement unit.
 There is `consumption` telemetry produced by consumers and measurements depend on type of consumers.
+Also, telemetry has one more pattern that is summed with daily and make random zigzag values.
 Consumer types:
-* Householder - usual living building, has little consumption, bigger in the morning and evening, interval of values is [10, 150].
-* Government - government building (not enterprises), has little consumption, bigger in the middle of day, interval of values is [10, 120].
-* Industrial - industrial building (like factories, plants, workshops), has big consumption, less at night, interval of values is [50, 600].
-Any consumption has noises +-20 litres.
+* Householder - usual living building, has little consumption, bigger in the morning and evening, daily interval of values is [0, 100] and zigzag range is [0, 100].
+* Government - government building (not enterprises), has little consumption, bigger in the middle of day, daily interval of values is [0, 50] and zigzag range is [-30, 100].
+* Industrial - industrial building (like factories, plants, workshops), has big consumption, less at night, daily interval of values is [10, 600] and zigzag range is [-100, 100].
+Any consumption has noises with amplitude `60 litres`.
 
 Each region has `full_consumption` telemetry that summing all related consumer's `consumption` telemetries.
 Pump Station (only one for region) has telemetry `provided` that must be equal to `full_consumption` of corresponding region.
