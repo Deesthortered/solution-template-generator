@@ -61,6 +61,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
@@ -285,8 +286,8 @@ public class WaterMeteringSolution implements SolutionTemplateGenerator {
 
                         consumerCounter++;
                         RuleChainMetaData savedMetaData = this.tbRestClient.saveRuleChainMetadata(metaData);
-//                        TimeUnit.SECONDS.sleep(3);
-//                        log.warn("Sleeping for solving race condition problem!");
+                        TimeUnit.SECONDS.sleep(10);
+                        log.warn("Sleeping for solving race condition problem!");
                     }
                 }
             }

@@ -25,6 +25,7 @@ var consumer_consumption_by_hour_workday_gov = function (hour) {
         case 4:
         case 5:
         case 6:
+            return 0;
         case 7:
         case 8:
         case 9:
@@ -39,10 +40,11 @@ var consumer_consumption_by_hour_workday_gov = function (hour) {
         case 18:
         case 19:
         case 20:
+            return 50;
         case 21:
         case 22:
         case 23:
-            return 100;
+            return 0;
         default:
             return Number.NaN;
     }
@@ -74,7 +76,7 @@ var consumer_consumption_by_hour_weekend_gov = function (hour) {
         case 21:
         case 22:
         case 23:
-            return 100;
+            return 0;
         default:
             return Number.NaN;
     }
@@ -96,17 +98,17 @@ var consumer_consumption_gov = function () {
     var hour = currentDate.getHours();
     var dayOfWeek = currentDate.getDay(); // 1-7
     var dayOfYear = getDayOfYear(currentDate);
-    var month = currentDate.getMonth(); // 0-11
 
-    var dailyNoiseAmplitude = 5;
+    var dailyNoiseAmplitude = 60;
 
     var timezoneShift = 2;
     hour = (hour + timezoneShift + 24) % 24;
 
-    var value = 0;
-    value += consumer_consumption_by_hour_gov(hour, dayOfWeek);
-    value += getRandomInt(-dailyNoiseAmplitude, dailyNoiseAmplitude);
+    var consumption = 0;
+    consumption += consumer_consumption_by_hour_gov(hour, dayOfWeek);
+    consumption += getRandomInt(-dailyNoiseAmplitude, dailyNoiseAmplitude);
 
+    var value = Math.max(0, consumption);
     return {
         ts: ts,
         values: {

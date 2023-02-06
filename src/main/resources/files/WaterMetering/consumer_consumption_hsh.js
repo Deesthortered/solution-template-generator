@@ -24,8 +24,9 @@ var consumer_consumption_by_hour_workday_hsh = function (hour) {
         case 3:
         case 4:
         case 5:
-        case 6:
         case 7:
+        case 6:
+            return 0;
         case 8:
         case 9:
         case 10:
@@ -40,9 +41,10 @@ var consumer_consumption_by_hour_workday_hsh = function (hour) {
         case 19:
         case 20:
         case 21:
+            return 10;
         case 22:
         case 23:
-            return 100;
+            return 0;
         default:
             return Number.NaN;
     }
@@ -52,29 +54,34 @@ var consumer_consumption_by_hour_weekend_hsh = function (hour) {
     switch (hour) {
         case 0:
         case 1:
+            return 0;
         case 2:
         case 3:
         case 4:
         case 5:
         case 6:
+            return 10;
         case 7:
         case 8:
         case 9:
         case 10:
+            return 100;
         case 11:
         case 12:
         case 13:
         case 14:
         case 15:
         case 16:
+            return 10;
         case 17:
         case 18:
         case 19:
         case 20:
         case 21:
+            return 100;
         case 22:
         case 23:
-            return 100;
+            return 0;
         default:
             return Number.NaN;
     }
@@ -96,17 +103,17 @@ var consumer_consumption_hsh = function () {
     var hour = currentDate.getHours();
     var dayOfWeek = currentDate.getDay(); // 1-7
     var dayOfYear = getDayOfYear(currentDate);
-    var month = currentDate.getMonth(); // 0-11
 
-    var dailyNoiseAmplitude = 5;
+    var dailyNoiseAmplitude = 60;
 
     var timezoneShift = 2;
     hour = (hour + timezoneShift + 24) % 24;
 
-    var value = 0;
-    value += consumer_consumption_by_hour_hsh(hour, dayOfWeek);
-    value += getRandomInt(-dailyNoiseAmplitude, dailyNoiseAmplitude);
+    var consumption = 0;
+    consumption += consumer_consumption_by_hour_hsh(hour, dayOfWeek);
+    consumption += getRandomInt(-dailyNoiseAmplitude, dailyNoiseAmplitude);
 
+    var value = Math.max(0, consumption);
     return {
         ts: ts,
         values: {
