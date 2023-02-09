@@ -23,6 +23,6 @@ public class InsideAirWarmMoistureSensor extends ModelEntity {
     private String systemName;
     private String systemLabel;
 
-    private Telemetry<Integer> warm;
+    private Telemetry<Integer> temperature;
     private Telemetry<Integer> moisture;
 }

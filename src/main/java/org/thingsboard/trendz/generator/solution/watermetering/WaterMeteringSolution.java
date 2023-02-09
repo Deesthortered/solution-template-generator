@@ -84,9 +84,7 @@ public class WaterMeteringSolution implements SolutionTemplateGenerator {
     private final RuleChainBuildingService ruleChainBuildingService;
     private final DashboardService dashboardService;
 
-    private final Map<Region, UUID> regionToIdMap = new HashMap<>();
     private final Map<Consumer, UUID> consumerToIdMap = new HashMap<>();
-    private final Map<PumpStation, UUID> pumpStationToIdMap = new HashMap<>();
 
     @Autowired
     public WaterMeteringSolution(
@@ -229,7 +227,6 @@ public class WaterMeteringSolution implements SolutionTemplateGenerator {
             for (City city : cities) {
 
                 for (Region region : city.getRegions()) {
-                    UUID regionId = this.regionToIdMap.get(region);
 
                     for (Consumer consumer : region.getConsumers()) {
                         UUID consumerId = this.consumerToIdMap.get(consumer);
@@ -660,7 +657,6 @@ public class WaterMeteringSolution implements SolutionTemplateGenerator {
 
         tbRestClient.pushTelemetry(deviceCredentials.getCredentialsId(), region.getFullConsumption());
 
-        this.regionToIdMap.put(region, device.getUuidId());
         return device;
     }
 
@@ -699,7 +695,6 @@ public class WaterMeteringSolution implements SolutionTemplateGenerator {
 
         tbRestClient.pushTelemetry(deviceCredentials.getCredentialsId(), pumpStation.getProvided());
 
-        this.pumpStationToIdMap.put(pumpStation, device.getUuidId());
         return device;
     }
 

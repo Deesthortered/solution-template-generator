@@ -29,15 +29,15 @@ import org.thingsboard.trendz.generator.service.dashboard.DashboardService;
 import org.thingsboard.trendz.generator.service.rest.TbRestClient;
 import org.thingsboard.trendz.generator.service.roolchain.RuleChainBuildingService;
 import org.thingsboard.trendz.generator.solution.SolutionTemplateGenerator;
-import org.thingsboard.trendz.generator.solution.greenhouse.model.Greenhouse;
-import org.thingsboard.trendz.generator.solution.greenhouse.model.Section;
-import org.thingsboard.trendz.generator.solution.greenhouse.model.SoilNpkSensor;
+import org.thingsboard.trendz.generator.solution.greenhouse.model.*;
 import org.thingsboard.trendz.generator.utils.MySortedSet;
 
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -61,6 +61,18 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
     private final RuleChainBuildingService ruleChainBuildingService;
     private final DashboardService dashboardService;
 
+    private final Map<SoilNpkSensor, UUID> soilNpkSensorToIdMap = new HashMap<>();
+    private final Map<SoilWarmMoistureSensor, UUID> soilWarmMoistureSensorToIdMap = new HashMap<>();
+    private final Map<SoilAciditySensor, UUID> soilAciditySensorToIdMap = new HashMap<>();
+    private final Map<InsideAirWarmMoistureSensor, UUID> insideAirWarmMoistureSensorToIdMap = new HashMap<>();
+    private final Map<InsideCO2Sensor, UUID> insideCO2SensorToIdMap = new HashMap<>();
+    private final Map<InsideLightSensor, UUID> insideLightSensorToIdMap = new HashMap<>();
+    private final Map<HarvestReporter, UUID> harvestReporterToIdMap = new HashMap<>();
+    private final Map<EnergyMeter, UUID> energyMeterToIdMap = new HashMap<>();
+    private final Map<WaterMeter, UUID> waterMeterToIdMap = new HashMap<>();
+    private final Map<OutsideAirWarmMoistureSensor, UUID> outsideAirWarmMoistureSensorToIdMap = new HashMap<>();
+    private final Map<OutsideLightSensor, UUID> outsideLightSensorToIdMap = new HashMap<>();
+
 
     @Autowired
     public GreenhouseSolution(
@@ -83,7 +95,7 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
     @Override
     public void validate() {
         try {
-            log.info("Energy Metering Solution - start validation");
+            log.info("Greenhouse Solution - start validation");
 
             validateCustomerData();
             validateRuleChain();
@@ -94,7 +106,7 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
                 validateData(data);
             }
 
-            log.info("Energy Metering Solution - validation is completed!");
+            log.info("Greenhouse Solution - validation is completed!");
         } catch (Exception e) {
             throw new SolutionValidationException(getSolutionName(), e);
         }
@@ -102,7 +114,7 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
 
     @Override
     public void generate(boolean skipTelemetry, ZonedDateTime startYear) {
-        log.info("Energy Metering Solution - start generation");
+        log.info("Greenhouse Solution - start generation");
         try {
             CustomerData customerData = createCustomerData();
             ModelData data = makeData(skipTelemetry, startYear);
@@ -110,15 +122,15 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
             createRuleChain(data);
             dashboardService.createDashboardItems(getSolutionName(), customerData.getCustomer().getId());
 
-            log.info("Energy Metering Solution - generation is completed!");
+            log.info("Greenhouse Solution - generation is completed!");
         } catch (Exception e) {
-            log.error("Energy Metering Solution generate was failed, skipping...", e);
+            log.error("Greenhouse Solution generate was failed, skipping...", e);
         }
     }
 
     @Override
     public void remove() {
-        log.info("Energy Metering Solution - start removal");
+        log.info("Greenhouse Solution - start removal");
         try {
             deleteCustomerData();
             deleteRuleChain();
@@ -129,9 +141,9 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
                 deleteData(data);
             }
 
-            log.info("Energy Metering Solution - removal is completed!");
+            log.info("Greenhouse Solution - removal is completed!");
         } catch (Exception e) {
-            log.error("Energy Metering Solution removal was failed, skipping...", e);
+            log.error("Greenhouse Solution removal was failed, skipping...", e);
         }
     }
 
@@ -362,7 +374,220 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
         tbRestClient.pushTelemetry(deviceCredentials.getCredentialsId(), soilNpkSensor.getPotassium());
         tbRestClient.pushTelemetry(deviceCredentials.getCredentialsId(), soilNpkSensor.getPotassium());
 
-//        this.energyMeterIdMap.put(energyMeter, device.getUuidId());
+        this.soilNpkSensorToIdMap.put(soilNpkSensor, device.getUuidId());
+        return device;
+    }
+
+    private Device createSoilWarmMoistureSensor(SoilWarmMoistureSensor soilWarmMoistureSensor, UUID ownerId, UUID deviceGroupId) {
+        String name = soilWarmMoistureSensor.getSystemName();
+        String entityType = soilWarmMoistureSensor.entityType();
+
+        Device device;
+        if (tbRestClient.isPe()) {
+            device = tbRestClient.createDevice(name, entityType, new CustomerId(ownerId));
+            tbRestClient.addEntitiesToTheGroup(deviceGroupId, Set.of(device.getUuidId()));
+        } else {
+            device = tbRestClient.createDevice(name, entityType);
+            tbRestClient.assignDeviceToCustomer(ownerId, device.getUuidId());
+        }
+        DeviceCredentials deviceCredentials = tbRestClient.getDeviceCredentials(device.getUuidId());
+
+
+        tbRestClient.pushTelemetry(deviceCredentials.getCredentialsId(), soilWarmMoistureSensor.getTemperature());
+        tbRestClient.pushTelemetry(deviceCredentials.getCredentialsId(), soilWarmMoistureSensor.getMoisture());
+
+        this.soilWarmMoistureSensorToIdMap.put(soilWarmMoistureSensor, device.getUuidId());
+        return device;
+    }
+
+    private Device createSoilAciditySensor(SoilAciditySensor soilAciditySensor, UUID ownerId, UUID deviceGroupId) {
+        String name = soilAciditySensor.getSystemName();
+        String entityType = soilAciditySensor.entityType();
+
+        Device device;
+        if (tbRestClient.isPe()) {
+            device = tbRestClient.createDevice(name, entityType, new CustomerId(ownerId));
+            tbRestClient.addEntitiesToTheGroup(deviceGroupId, Set.of(device.getUuidId()));
+        } else {
+            device = tbRestClient.createDevice(name, entityType);
+            tbRestClient.assignDeviceToCustomer(ownerId, device.getUuidId());
+        }
+        DeviceCredentials deviceCredentials = tbRestClient.getDeviceCredentials(device.getUuidId());
+
+        tbRestClient.pushTelemetry(deviceCredentials.getCredentialsId(), soilAciditySensor.getAcidity());
+
+        this.soilAciditySensorToIdMap.put(soilAciditySensor, device.getUuidId());
+        return device;
+    }
+
+    private Device createInsideAirWarmMoistureSensor(InsideAirWarmMoistureSensor insideAirWarmMoistureSensor, UUID ownerId, UUID deviceGroupId) {
+        String name = insideAirWarmMoistureSensor.getSystemName();
+        String entityType = insideAirWarmMoistureSensor.entityType();
+
+        Device device;
+        if (tbRestClient.isPe()) {
+            device = tbRestClient.createDevice(name, entityType, new CustomerId(ownerId));
+            tbRestClient.addEntitiesToTheGroup(deviceGroupId, Set.of(device.getUuidId()));
+        } else {
+            device = tbRestClient.createDevice(name, entityType);
+            tbRestClient.assignDeviceToCustomer(ownerId, device.getUuidId());
+        }
+        DeviceCredentials deviceCredentials = tbRestClient.getDeviceCredentials(device.getUuidId());
+
+
+        tbRestClient.pushTelemetry(deviceCredentials.getCredentialsId(), insideAirWarmMoistureSensor.getTemperature());
+        tbRestClient.pushTelemetry(deviceCredentials.getCredentialsId(), insideAirWarmMoistureSensor.getMoisture());
+
+        this.insideAirWarmMoistureSensorToIdMap.put(insideAirWarmMoistureSensor, device.getUuidId());
+        return device;
+    }
+
+    private Device createInsideCO2Sensor(InsideCO2Sensor insideCO2Sensor, UUID ownerId, UUID deviceGroupId) {
+        String name = insideCO2Sensor.getSystemName();
+        String entityType = insideCO2Sensor.entityType();
+
+        Device device;
+        if (tbRestClient.isPe()) {
+            device = tbRestClient.createDevice(name, entityType, new CustomerId(ownerId));
+            tbRestClient.addEntitiesToTheGroup(deviceGroupId, Set.of(device.getUuidId()));
+        } else {
+            device = tbRestClient.createDevice(name, entityType);
+            tbRestClient.assignDeviceToCustomer(ownerId, device.getUuidId());
+        }
+        DeviceCredentials deviceCredentials = tbRestClient.getDeviceCredentials(device.getUuidId());
+
+
+        tbRestClient.pushTelemetry(deviceCredentials.getCredentialsId(), insideCO2Sensor.getConcentration());
+
+        this.insideCO2SensorToIdMap.put(insideCO2Sensor, device.getUuidId());
+        return device;
+    }
+
+    private Device createInsideLightSensor(InsideLightSensor insideLightSensor, UUID ownerId, UUID deviceGroupId) {
+        String name = insideLightSensor.getSystemName();
+        String entityType = insideLightSensor.entityType();
+
+        Device device;
+        if (tbRestClient.isPe()) {
+            device = tbRestClient.createDevice(name, entityType, new CustomerId(ownerId));
+            tbRestClient.addEntitiesToTheGroup(deviceGroupId, Set.of(device.getUuidId()));
+        } else {
+            device = tbRestClient.createDevice(name, entityType);
+            tbRestClient.assignDeviceToCustomer(ownerId, device.getUuidId());
+        }
+        DeviceCredentials deviceCredentials = tbRestClient.getDeviceCredentials(device.getUuidId());
+
+
+        tbRestClient.pushTelemetry(deviceCredentials.getCredentialsId(), insideLightSensor.getLight());
+
+        this.insideLightSensorToIdMap.put(insideLightSensor, device.getUuidId());
+        return device;
+    }
+
+    private Device createHarvestReporter(HarvestReporter harvestReporter, UUID ownerId, UUID deviceGroupId) {
+        String name = harvestReporter.getSystemName();
+        String entityType = harvestReporter.entityType();
+
+        Device device;
+        if (tbRestClient.isPe()) {
+            device = tbRestClient.createDevice(name, entityType, new CustomerId(ownerId));
+            tbRestClient.addEntitiesToTheGroup(deviceGroupId, Set.of(device.getUuidId()));
+        } else {
+            device = tbRestClient.createDevice(name, entityType);
+            tbRestClient.assignDeviceToCustomer(ownerId, device.getUuidId());
+        }
+        DeviceCredentials deviceCredentials = tbRestClient.getDeviceCredentials(device.getUuidId());
+
+
+        tbRestClient.pushTelemetry(deviceCredentials.getCredentialsId(), harvestReporter.getCropWeight());
+        tbRestClient.pushTelemetry(deviceCredentials.getCredentialsId(), harvestReporter.getWorkerInCharge());
+
+        this.harvestReporterToIdMap.put(harvestReporter, device.getUuidId());
+        return device;
+    }
+
+    private Device createEnergyMeter(EnergyMeter energyMeter, UUID ownerId, UUID deviceGroupId) {
+        String name = energyMeter.getSystemName();
+        String entityType = energyMeter.entityType();
+
+        Device device;
+        if (tbRestClient.isPe()) {
+            device = tbRestClient.createDevice(name, entityType, new CustomerId(ownerId));
+            tbRestClient.addEntitiesToTheGroup(deviceGroupId, Set.of(device.getUuidId()));
+        } else {
+            device = tbRestClient.createDevice(name, entityType);
+            tbRestClient.assignDeviceToCustomer(ownerId, device.getUuidId());
+        }
+        DeviceCredentials deviceCredentials = tbRestClient.getDeviceCredentials(device.getUuidId());
+
+
+        tbRestClient.pushTelemetry(deviceCredentials.getCredentialsId(), energyMeter.getConsumptionEnergy());
+
+        this.energyMeterToIdMap.put(energyMeter, device.getUuidId());
+        return device;
+    }
+
+    private Device createWaterMeter(WaterMeter waterMeter, UUID ownerId, UUID deviceGroupId) {
+        String name = waterMeter.getSystemName();
+        String entityType = waterMeter.entityType();
+
+        Device device;
+        if (tbRestClient.isPe()) {
+            device = tbRestClient.createDevice(name, entityType, new CustomerId(ownerId));
+            tbRestClient.addEntitiesToTheGroup(deviceGroupId, Set.of(device.getUuidId()));
+        } else {
+            device = tbRestClient.createDevice(name, entityType);
+            tbRestClient.assignDeviceToCustomer(ownerId, device.getUuidId());
+        }
+        DeviceCredentials deviceCredentials = tbRestClient.getDeviceCredentials(device.getUuidId());
+
+
+        tbRestClient.pushTelemetry(deviceCredentials.getCredentialsId(), waterMeter.getConsumptionWater());
+
+        this.waterMeterToIdMap.put(waterMeter, device.getUuidId());
+        return device;
+    }
+
+    private Device createOutsideAirWarmMoistureSensor(OutsideAirWarmMoistureSensor outsideAirWarmMoistureSensor, UUID ownerId, UUID deviceGroupId) {
+        String name = outsideAirWarmMoistureSensor.getSystemName();
+        String entityType = outsideAirWarmMoistureSensor.entityType();
+
+        Device device;
+        if (tbRestClient.isPe()) {
+            device = tbRestClient.createDevice(name, entityType, new CustomerId(ownerId));
+            tbRestClient.addEntitiesToTheGroup(deviceGroupId, Set.of(device.getUuidId()));
+        } else {
+            device = tbRestClient.createDevice(name, entityType);
+            tbRestClient.assignDeviceToCustomer(ownerId, device.getUuidId());
+        }
+        DeviceCredentials deviceCredentials = tbRestClient.getDeviceCredentials(device.getUuidId());
+
+
+        tbRestClient.pushTelemetry(deviceCredentials.getCredentialsId(), outsideAirWarmMoistureSensor.getTemperature());
+        tbRestClient.pushTelemetry(deviceCredentials.getCredentialsId(), outsideAirWarmMoistureSensor.getMoisture());
+
+        this.outsideAirWarmMoistureSensorToIdMap.put(outsideAirWarmMoistureSensor, device.getUuidId());
+        return device;
+    }
+
+    private Device createOutsideLightSensor(OutsideLightSensor outsideLightSensor, UUID ownerId, UUID deviceGroupId) {
+        String name = outsideLightSensor.getSystemName();
+        String entityType = outsideLightSensor.entityType();
+
+        Device device;
+        if (tbRestClient.isPe()) {
+            device = tbRestClient.createDevice(name, entityType, new CustomerId(ownerId));
+            tbRestClient.addEntitiesToTheGroup(deviceGroupId, Set.of(device.getUuidId()));
+        } else {
+            device = tbRestClient.createDevice(name, entityType);
+            tbRestClient.assignDeviceToCustomer(ownerId, device.getUuidId());
+        }
+        DeviceCredentials deviceCredentials = tbRestClient.getDeviceCredentials(device.getUuidId());
+
+
+        tbRestClient.pushTelemetry(deviceCredentials.getCredentialsId(), outsideLightSensor.getLight());
+
+        this.outsideLightSensorToIdMap.put(outsideLightSensor, device.getUuidId());
         return device;
     }
 }
