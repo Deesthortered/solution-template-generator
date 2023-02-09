@@ -19,6 +19,8 @@ public class ApartmentConfiguration extends ConfigurationEntity {
 
     private int order;
 
+    private int floor;
+    private int number;
     private int area;
     private boolean occupied;
     private int level;

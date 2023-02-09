@@ -475,83 +475,78 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
                                 .area(2)
                                 .build()
                 )
+                .customApartmentConfigurations(List.of(
+                        ApartmentConfiguration.builder()
+                                .floor(1)
+                                .number(2)
+                                .occupied(false)
+                                .level(0)
+                                .startDate(TS_JANUARY)
+                                .anomalies(MySortedSet.of(
+                                        AnomalyInfo.builder()
+                                                .startDate(startYear.withMonth(7).withDayOfMonth(10))
+                                                .endDate(startYear.withMonth(7).withDayOfMonth(20))
+                                                .type(AnomalyType.SHIFTED_DATA)
+                                                .shiftValue(300)
+                                                .coefficient(1)
+                                                .noiseAmplitude(0)
+                                                .settingValue(0)
+                                                .build()
+                                ))
+                                .area(0)
+                                .build(),
+
+                        ApartmentConfiguration.builder()
+                                .floor(3)
+                                .number(1)
+                                .occupied(false)
+                                .level(0)
+                                .startDate(TS_JANUARY)
+                                .anomalies(MySortedSet.of())
+                                .area(0)
+                                .build(),
+
+                        ApartmentConfiguration.builder()
+                                .floor(4)
+                                .number(1)
+                                .occupied(true)
+                                .level(3)
+                                .startDate(TS_JANUARY)
+                                .anomalies(MySortedSet.of())
+                                .area(3)
+                                .build(),
+
+                        ApartmentConfiguration.builder()
+                                .floor(4)
+                                .number(2)
+                                .occupied(true)
+                                .level(3)
+                                .startDate(TS_JANUARY)
+                                .anomalies(MySortedSet.of())
+                                .area(3)
+                                .build(),
+
+                        ApartmentConfiguration.builder()
+                                .floor(5)
+                                .number(1)
+                                .occupied(false)
+                                .level(0)
+                                .startDate(TS_FEBRUARY)
+                                .anomalies(MySortedSet.of())
+                                .area(0)
+                                .build(),
+
+                        ApartmentConfiguration.builder()
+                                .floor(5)
+                                .number(2)
+                                .occupied(false)
+                                .level(0)
+                                .startDate(TS_FEBRUARY)
+                                .anomalies(MySortedSet.of())
+                                .area(0)
+                                .build()
+                ))
                 .build();
-
-        configuration.setApartmentConfiguration(
-                1, 2,
-                ApartmentConfiguration.builder()
-                        .occupied(false)
-                        .level(0)
-                        .startDate(TS_JANUARY)
-                        .anomalies(MySortedSet.of(
-                            AnomalyInfo.builder()
-                                    .startDate(startYear.withMonth(7).withDayOfMonth(10))
-                                    .endDate(startYear.withMonth(7).withDayOfMonth(20))
-                                    .type(AnomalyType.SHIFTED_DATA)
-                                    .shiftValue(300)
-                                    .coefficient(1)
-                                    .noiseAmplitude(0)
-                                    .settingValue(0)
-                                    .build()
-                        ))
-                        .area(0)
-                        .build()
-        );
-
-        configuration.setApartmentConfiguration(
-                3, 1,
-                ApartmentConfiguration.builder()
-                        .occupied(false)
-                        .level(0)
-                        .startDate(TS_JANUARY)
-                        .anomalies(MySortedSet.of())
-                        .area(0)
-                        .build()
-        );
-
-        configuration.setApartmentConfiguration(
-                4, 1,
-                ApartmentConfiguration.builder()
-                        .occupied(true)
-                        .level(3)
-                        .startDate(TS_JANUARY)
-                        .anomalies(MySortedSet.of())
-                        .area(3)
-                        .build()
-        );
-
-        configuration.setApartmentConfiguration(
-                4, 2,
-                ApartmentConfiguration.builder()
-                        .occupied(true)
-                        .level(3)
-                        .startDate(TS_JANUARY)
-                        .anomalies(MySortedSet.of())
-                        .area(3)
-                        .build()
-        );
-
-        configuration.setApartmentConfiguration(
-                5, 1,
-                ApartmentConfiguration.builder()
-                        .occupied(false)
-                        .level(0)
-                        .startDate(TS_FEBRUARY)
-                        .anomalies(MySortedSet.of())
-                        .area(0)
-                        .build()
-        );
-
-        configuration.setApartmentConfiguration(
-                5, 2,
-                ApartmentConfiguration.builder()
-                        .occupied(false)
-                        .level(0)
-                        .startDate(TS_FEBRUARY)
-                        .anomalies(MySortedSet.of())
-                        .area(0)
-                        .build()
-        );
 
         return makeBuildingByConfiguration(configuration, skipTelemetry);
     }
@@ -578,122 +573,115 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
                                 .area(3)
                                 .build()
                 )
+                .customApartmentConfigurations(List.of(
+                        ApartmentConfiguration.builder()
+                                .floor(1)
+                                .number(1)
+                                .occupied(false)
+                                .level(0)
+                                .startDate(TS_MAY)
+                                .anomalies(MySortedSet.of(
+                                        AnomalyInfo.builder()
+                                                .startDate(startYear.withMonth(9).withDayOfMonth(1))
+                                                .endDate(startYear.withMonth(9).withDayOfMonth(10))
+                                                .type(AnomalyType.SHIFTED_DATA)
+                                                .shiftValue(300)
+                                                .coefficient(1)
+                                                .noiseAmplitude(0)
+                                                .settingValue(0)
+                                                .build()
+                                ))
+                                .area(0)
+                                .build(),
+
+                        ApartmentConfiguration.builder()
+                                .floor(1)
+                                .number(2)
+                                .occupied(true)
+                                .level(1)
+                                .startDate(TS_MAY)
+                                .anomalies(MySortedSet.of())
+                                .area(1)
+                                .build(),
+
+                        ApartmentConfiguration.builder()
+                                .floor(1)
+                                .number(3)
+                                .occupied(true)
+                                .level(1)
+                                .startDate(TS_MAY)
+                                .anomalies(MySortedSet.of())
+                                .area(1)
+                                .build(),
+
+                        ApartmentConfiguration.builder()
+                                .floor(2)
+                                .number(1)
+                                .occupied(true)
+                                .level(2)
+                                .startDate(TS_MAY)
+                                .anomalies(MySortedSet.of())
+                                .area(2)
+                                .build(),
+
+                        ApartmentConfiguration.builder()
+                                .floor(2)
+                                .number(2)
+                                .occupied(true)
+                                .level(2)
+                                .startDate(TS_MAY)
+                                .anomalies(MySortedSet.of())
+                                .area(2)
+                                .build(),
+
+                        ApartmentConfiguration.builder()
+                                .floor(2)
+                                .number(3)
+                                .occupied(true)
+                                .level(2)
+                                .startDate(TS_MAY)
+                                .anomalies(MySortedSet.of())
+                                .area(2)
+                                .build(),
+
+                        ApartmentConfiguration.builder()
+                                .floor(3)
+                                .number(1)
+                                .occupied(true)
+                                .level(3)
+                                .startDate(TS_MAY)
+                                .anomalies(MySortedSet.of(
+                                        AnomalyInfo.builder()
+                                                .startDate(startYear.withMonth(10).withDayOfMonth(20))
+                                                .endDate(startYear.withMonth(10).withDayOfMonth(25))
+                                                .type(AnomalyType.SHIFTED_DATA)
+                                                .shiftValue(3000)
+                                                .coefficient(1)
+                                                .noiseAmplitude(0)
+                                                .settingValue(0)
+                                                .build()
+                                ))
+                                .area(3)
+                                .build(),
+
+                        ApartmentConfiguration.builder()
+                                .floor(3)
+                                .number(2)
+                                .occupied(true)
+                                .level(3)
+                                .startDate(TS_MAY)
+                                .anomalies(MySortedSet.of(
+                                        AnomalyInfo.builder()
+                                                .startDate(startYear.withMonth(9).withDayOfMonth(15))
+                                                .endDate(startYear.withMonth(9).withDayOfMonth(20))
+                                                .type(AnomalyType.SET_VALUES)
+                                                .settingValue(0)
+                                                .build()
+                                ))
+                                .area(3)
+                                .build()
+                ))
                 .build();
-
-        configuration.setApartmentConfiguration(
-                1, 1,
-                ApartmentConfiguration.builder()
-                        .occupied(false)
-                        .level(0)
-                        .startDate(TS_MAY)
-                        .anomalies(MySortedSet.of(
-                                AnomalyInfo.builder()
-                                        .startDate(startYear.withMonth(9).withDayOfMonth(1))
-                                        .endDate(startYear.withMonth(9).withDayOfMonth(10))
-                                        .type(AnomalyType.SHIFTED_DATA)
-                                        .shiftValue(300)
-                                        .coefficient(1)
-                                        .noiseAmplitude(0)
-                                        .settingValue(0)
-                                        .build()
-                        ))
-                        .area(0)
-                        .build()
-        );
-
-        configuration.setApartmentConfiguration(
-                1, 2,
-                ApartmentConfiguration.builder()
-                        .occupied(true)
-                        .level(1)
-                        .startDate(TS_MAY)
-                        .anomalies(MySortedSet.of())
-                        .area(1)
-                        .build()
-        );
-
-        configuration.setApartmentConfiguration(
-                1, 3,
-                ApartmentConfiguration.builder()
-                        .occupied(true)
-                        .level(1)
-                        .startDate(TS_MAY)
-                        .anomalies(MySortedSet.of())
-                        .area(1)
-                        .build()
-        );
-
-        configuration.setApartmentConfiguration(
-                2, 1,
-                ApartmentConfiguration.builder()
-                        .occupied(true)
-                        .level(2)
-                        .startDate(TS_MAY)
-                        .anomalies(MySortedSet.of())
-                        .area(2)
-                        .build()
-        );
-
-        configuration.setApartmentConfiguration(
-                2, 2,
-                ApartmentConfiguration.builder()
-                        .occupied(true)
-                        .level(2)
-                        .startDate(TS_MAY)
-                        .anomalies(MySortedSet.of())
-                        .area(2)
-                        .build()
-        );
-
-        configuration.setApartmentConfiguration(
-                2, 3,
-                ApartmentConfiguration.builder()
-                        .occupied(true)
-                        .level(2)
-                        .startDate(TS_MAY)
-                        .anomalies(MySortedSet.of())
-                        .area(2)
-                        .build()
-        );
-
-        configuration.setApartmentConfiguration(
-                3, 1,
-                ApartmentConfiguration.builder()
-                        .occupied(true)
-                        .level(3)
-                        .startDate(TS_MAY)
-                        .anomalies(MySortedSet.of(
-                                AnomalyInfo.builder()
-                                        .startDate(startYear.withMonth(10).withDayOfMonth(20))
-                                        .endDate(startYear.withMonth(10).withDayOfMonth(25))
-                                        .type(AnomalyType.SHIFTED_DATA)
-                                        .shiftValue(3000)
-                                        .coefficient(1)
-                                        .noiseAmplitude(0)
-                                        .settingValue(0)
-                                        .build()
-                        ))
-                        .area(3)
-                        .build()
-        );
-
-        configuration.setApartmentConfiguration(
-                3, 2,
-                ApartmentConfiguration.builder()
-                        .occupied(true)
-                        .level(3)
-                        .startDate(TS_MAY)
-                        .anomalies(MySortedSet.of(
-                                AnomalyInfo.builder()
-                                        .startDate(startYear.withMonth(9).withDayOfMonth(15))
-                                        .endDate(startYear.withMonth(9).withDayOfMonth(20))
-                                        .type(AnomalyType.SET_VALUES)
-                                        .settingValue(0)
-                                        .build()
-                        ))
-                        .area(3)
-                        .build()
-        );
 
         return makeBuildingByConfiguration(configuration, skipTelemetry);
     }
@@ -726,47 +714,46 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
                                 .area(3)
                                 .build()
                 )
+                .customApartmentConfigurations(List.of(
+                        ApartmentConfiguration.builder()
+                                .floor(1)
+                                .number(3)
+                                .occupied(true)
+                                .level(3)
+                                .startDate(TS_MARCH)
+                                .anomalies(MySortedSet.of(
+                                        AnomalyInfo.builder()
+                                                .startDate(startYear.withMonth(12).withDayOfMonth(1))
+                                                .endDate(startYear.withMonth(12).withDayOfMonth(3))
+                                                .type(AnomalyType.DATA_GAP)
+                                                .build()
+                                ))
+                                .area(3)
+                                .build(),
+
+                        ApartmentConfiguration.builder()
+                                .floor(1)
+                                .number(4)
+                                .occupied(true)
+                                .level(3)
+                                .startDate(TS_MARCH)
+                                .anomalies(MySortedSet.of(
+                                        AnomalyInfo.builder()
+                                                .startDate(startYear.withMonth(8).withDayOfMonth(1))
+                                                .endDate(startYear.withMonth(8).withDayOfMonth(5))
+                                                .type(AnomalyType.SET_VALUES)
+                                                .settingValue(0)
+                                                .build(),
+                                        AnomalyInfo.builder()
+                                                .startDate(startYear.withMonth(12).withDayOfMonth(1))
+                                                .endDate(startYear.withMonth(12).withDayOfMonth(3))
+                                                .type(AnomalyType.DATA_GAP)
+                                                .build()
+                                ))
+                                .area(3)
+                                .build()
+                ))
                 .build();
-
-        configuration.setApartmentConfiguration(
-                1, 3,
-                ApartmentConfiguration.builder()
-                        .occupied(true)
-                        .level(3)
-                        .startDate(TS_MARCH)
-                        .anomalies(MySortedSet.of(
-                                AnomalyInfo.builder()
-                                        .startDate(startYear.withMonth(12).withDayOfMonth(1))
-                                        .endDate(startYear.withMonth(12).withDayOfMonth(3))
-                                        .type(AnomalyType.DATA_GAP)
-                                        .build()
-                        ))
-                        .area(3)
-                        .build()
-        );
-
-        configuration.setApartmentConfiguration(
-                1, 4,
-                ApartmentConfiguration.builder()
-                        .occupied(true)
-                        .level(3)
-                        .startDate(TS_MARCH)
-                        .anomalies(MySortedSet.of(
-                                AnomalyInfo.builder()
-                                        .startDate(startYear.withMonth(8).withDayOfMonth(1))
-                                        .endDate(startYear.withMonth(8).withDayOfMonth(5))
-                                        .type(AnomalyType.SET_VALUES)
-                                        .settingValue(0)
-                                        .build(),
-                                AnomalyInfo.builder()
-                                        .startDate(startYear.withMonth(12).withDayOfMonth(1))
-                                        .endDate(startYear.withMonth(12).withDayOfMonth(3))
-                                        .type(AnomalyType.DATA_GAP)
-                                        .build()
-                        ))
-                        .area(3)
-                        .build()
-        );
 
         return makeBuildingByConfiguration(configuration, skipTelemetry);
     }
@@ -776,7 +763,19 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
         Set<Apartment> apartments = MySortedSet.of();
         for (int floor = 1; floor <= configuration.getFloorCount(); floor++) {
             for (int number = 1; number <= configuration.getApartmentsByFloorCount(); number++) {
-                ApartmentConfiguration apartmentConfiguration = configuration.getApartmentConfiguration(floor, number);
+
+                Map<Integer, Map<Integer, ApartmentConfiguration>> floorAndNumberToConfigurationMap = configuration
+                        .getCustomApartmentConfigurations()
+                        .stream()
+                        .collect(Collectors.groupingBy(
+                                ApartmentConfiguration::getFloor,
+                                Collectors.toMap(ApartmentConfiguration::getNumber, i -> i))
+                        );
+
+                ApartmentConfiguration apartmentConfiguration = floorAndNumberToConfigurationMap
+                        .computeIfAbsent(floor, key -> new HashMap<>())
+                        .computeIfAbsent(number, key -> configuration.getDefaultApartmentConfiguration());
+
                 Apartment apartment = createApartmentByConfiguration(apartmentConfiguration, configuration.getName(), floor, number, configuration.getApartmentsByFloorCount(), skipTelemetry);
                 apartments.add(apartment);
             }
