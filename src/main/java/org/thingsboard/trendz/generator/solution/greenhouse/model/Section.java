@@ -10,10 +10,11 @@ import org.thingsboard.trendz.generator.model.ModelEntity;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class Greenhouse implements ModelEntity {
+public class Section implements ModelEntity {
 
     private String systemName;
     private String systemLabel;
 
-    private PlantType plantType;
+    private int positionHeight;
+    private int positionWidth;
 }

@@ -10,10 +10,10 @@ import org.thingsboard.trendz.generator.model.ModelEntity;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class Greenhouse implements ModelEntity {
+public class Plant implements ModelEntity {
 
     private String systemName;
     private String systemLabel;
 
-    private PlantType plantType;
+    // special asset for saving plant properties
 }
