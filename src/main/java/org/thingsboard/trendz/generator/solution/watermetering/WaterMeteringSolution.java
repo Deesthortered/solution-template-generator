@@ -47,6 +47,7 @@ import org.thingsboard.trendz.generator.solution.watermetering.model.ConsumerTyp
 import org.thingsboard.trendz.generator.solution.watermetering.model.PumpStation;
 import org.thingsboard.trendz.generator.solution.watermetering.model.Region;
 import org.thingsboard.trendz.generator.utils.DateTimeUtils;
+import org.thingsboard.trendz.generator.utils.MySortedSet;
 import org.thingsboard.trendz.generator.utils.RandomUtils;
 
 import java.time.DayOfWeek;
@@ -316,20 +317,23 @@ public class WaterMeteringSolution implements SolutionTemplateGenerator {
 
 
     private ModelData makeData(boolean skipTelemetry, ZonedDateTime startYear) {
-        Set<CityConfiguration> cityConfigurations = Set.of(
+        int order = 0;
+        Set<CityConfiguration> cityConfigurations = MySortedSet.of(
                 CityConfiguration.builder()
+                        .order(order++)
                         .name("London")
                         .label("Label for City London")
                         .population(4_000_000)
-                        .regionConfigurations(Set.of(
+                        .regionConfigurations(MySortedSet.of(
                                 RegionConfiguration.builder()
+                                        .order(order++)
                                         .startYear(startYear)
                                         .name("Dulwich")
                                         .label("Label for Dulwich, London")
                                         .anomalies(Collections.emptySet())
-                                        .consumerConfigurations(Set.of(
-                                                new ConsumerConfiguration("1", ConsumerType.HSH, Collections.emptySet()),
-                                                new ConsumerConfiguration("2", ConsumerType.HSH, Set.of(
+                                        .consumerConfigurations(MySortedSet.of(
+                                                new ConsumerConfiguration(order++, "1", ConsumerType.HSH, Collections.emptySet()),
+                                                new ConsumerConfiguration(order++, "2", ConsumerType.HSH, MySortedSet.of(
                                                         AnomalyInfo.builder()
                                                                 .startDate(startYear.withMonth(3).withDayOfMonth(15))
                                                                 .endDate(startYear.withMonth(3).withDayOfMonth(22))
@@ -337,16 +341,16 @@ public class WaterMeteringSolution implements SolutionTemplateGenerator {
                                                                 .settingValue(0)
                                                                 .build()
                                                 )),
-                                                new ConsumerConfiguration("3", ConsumerType.HSH, Collections.emptySet()),
-                                                new ConsumerConfiguration("4", ConsumerType.HSH, Collections.emptySet()),
-                                                new ConsumerConfiguration("1", ConsumerType.GOV, Collections.emptySet()),
-                                                new ConsumerConfiguration("1", ConsumerType.IND, Collections.emptySet())
+                                                new ConsumerConfiguration(order++, "3", ConsumerType.HSH, Collections.emptySet()),
+                                                new ConsumerConfiguration(order++, "4", ConsumerType.HSH, Collections.emptySet()),
+                                                new ConsumerConfiguration(order++, "1", ConsumerType.GOV, Collections.emptySet()),
+                                                new ConsumerConfiguration(order++, "1", ConsumerType.IND, Collections.emptySet())
                                         ))
                                         .pumpStationConfiguration(
                                                 PumpStationConfiguration.builder()
                                                         .anomalies(
                                                                 ((Supplier<Set<AnomalyInfo>>) () -> {
-                                                                    Set<AnomalyInfo> result = new TreeSet<>();
+                                                                    Set<AnomalyInfo> result = MySortedSet.of();
                                                                     ZonedDateTime from = startYear.withMonth(5).withDayOfMonth(1);
                                                                     ZonedDateTime to = startYear.withMonth(5).withDayOfMonth(21);
                                                                     ZonedDateTime iteratedDate = from;
@@ -373,12 +377,13 @@ public class WaterMeteringSolution implements SolutionTemplateGenerator {
                                         )
                                         .build(),
                                 RegionConfiguration.builder()
+                                        .order(order++)
                                         .startYear(startYear)
                                         .name("Wimbledon")
                                         .label("Label for Wimbledon, London")
                                         .anomalies(Collections.emptySet())
-                                        .consumerConfigurations(Set.of(
-                                                new ConsumerConfiguration("1", ConsumerType.GOV, Set.of(
+                                        .consumerConfigurations(MySortedSet.of(
+                                                new ConsumerConfiguration(order++, "1", ConsumerType.GOV, MySortedSet.of(
                                                         AnomalyInfo.builder()
                                                                 .startDate(startYear.withMonth(1).withDayOfMonth(5))
                                                                 .endDate(startYear.withMonth(1).withDayOfMonth(10))
@@ -386,7 +391,7 @@ public class WaterMeteringSolution implements SolutionTemplateGenerator {
                                                                 .settingValue(0)
                                                                 .build()
                                                 )),
-                                                new ConsumerConfiguration("1", ConsumerType.IND, Collections.emptySet())
+                                                new ConsumerConfiguration(order++, "1", ConsumerType.IND, Collections.emptySet())
                                         ))
                                         .pumpStationConfiguration(
                                                 PumpStationConfiguration.builder()
@@ -398,15 +403,17 @@ public class WaterMeteringSolution implements SolutionTemplateGenerator {
                         .build(),
 
                 CityConfiguration.builder()
+                        .order(order++)
                         .name("Edinburgh")
                         .label("Label for City Edinburgh")
                         .population(300_000)
-                        .regionConfigurations(Set.of(
+                        .regionConfigurations(MySortedSet.of(
                                 RegionConfiguration.builder()
+                                        .order(order++)
                                         .startYear(startYear)
                                         .name("Leith")
                                         .label("Label for Leith, Edinburgh")
-                                        .anomalies(Set.of(
+                                        .anomalies(MySortedSet.of(
                                                 AnomalyInfo.builder()
                                                         .startDate(startYear.withMonth(2).withDayOfMonth(10))
                                                         .endDate(startYear.withMonth(4).withDayOfMonth(10))
@@ -426,10 +433,10 @@ public class WaterMeteringSolution implements SolutionTemplateGenerator {
                                                         .settingValue(0)
                                                         .build()
                                         ))
-                                        .consumerConfigurations(Set.of(
-                                                new ConsumerConfiguration("1", ConsumerType.HSH, Collections.emptySet()),
-                                                new ConsumerConfiguration("1", ConsumerType.GOV, Collections.emptySet()),
-                                                new ConsumerConfiguration("1", ConsumerType.IND, Collections.emptySet())
+                                        .consumerConfigurations(MySortedSet.of(
+                                                new ConsumerConfiguration(order++, "1", ConsumerType.HSH, Collections.emptySet()),
+                                                new ConsumerConfiguration(order++, "1", ConsumerType.GOV, Collections.emptySet()),
+                                                new ConsumerConfiguration(order++, "1", ConsumerType.IND, Collections.emptySet())
                                         ))
                                         .pumpStationConfiguration(
                                                 PumpStationConfiguration.builder()
@@ -438,10 +445,11 @@ public class WaterMeteringSolution implements SolutionTemplateGenerator {
                                         )
                                         .build(),
                                 RegionConfiguration.builder()
+                                        .order(order++)
                                         .startYear(startYear)
                                         .name("Stockbridge")
                                         .label("Label for Stockbridge, Edinburgh")
-                                        .anomalies(Set.of(
+                                        .anomalies(MySortedSet.of(
                                                 AnomalyInfo.builder()
                                                         .startDate(startYear.withMonth(1).withDayOfMonth(5))
                                                         .endDate(startYear.withMonth(1).withDayOfMonth(16))
@@ -461,10 +469,10 @@ public class WaterMeteringSolution implements SolutionTemplateGenerator {
                                                         .settingValue(0)
                                                         .build()
                                         ))
-                                        .consumerConfigurations(Set.of(
-                                                new ConsumerConfiguration("1", ConsumerType.HSH, Collections.emptySet()),
-                                                new ConsumerConfiguration("1", ConsumerType.GOV, Collections.emptySet()),
-                                                new ConsumerConfiguration("1", ConsumerType.IND, Collections.emptySet())
+                                        .consumerConfigurations(MySortedSet.of(
+                                                new ConsumerConfiguration(order++, "1", ConsumerType.HSH, Collections.emptySet()),
+                                                new ConsumerConfiguration(order++, "1", ConsumerType.GOV, Collections.emptySet()),
+                                                new ConsumerConfiguration(order++, "1", ConsumerType.IND, Collections.emptySet())
                                         ))
                                         .pumpStationConfiguration(
                                                 PumpStationConfiguration.builder()
@@ -608,10 +616,10 @@ public class WaterMeteringSolution implements SolutionTemplateGenerator {
     private Asset createCity(City city, UUID ownerId, UUID assetGroupId) {
         Asset asset;
         if (tbRestClient.isPe()) {
-            asset = tbRestClient.createAsset(city.getSystemName(), "WM City", new CustomerId(ownerId));
+            asset = tbRestClient.createAsset(city.getSystemName(), city.entityType(), new CustomerId(ownerId));
             tbRestClient.addEntitiesToTheGroup(assetGroupId, Set.of(asset.getUuidId()));
         } else {
-            asset = tbRestClient.createAsset(city.getSystemName(), "WM City");
+            asset = tbRestClient.createAsset(city.getSystemName(), city.entityType());
             tbRestClient.assignAssetToCustomer(ownerId, asset.getUuidId());
         }
 
@@ -625,10 +633,10 @@ public class WaterMeteringSolution implements SolutionTemplateGenerator {
     private Device createRegion(Region region, UUID ownerId, UUID deviceGroupId) {
         Device device;
         if (tbRestClient.isPe()) {
-            device = tbRestClient.createDevice(region.getSystemName(), "WM Region", new CustomerId(ownerId));
+            device = tbRestClient.createDevice(region.getSystemName(), region.entityType(), new CustomerId(ownerId));
             tbRestClient.addEntitiesToTheGroup(deviceGroupId, Set.of(device.getUuidId()));
         } else {
-            device = tbRestClient.createDevice(region.getSystemName(), "WM Region");
+            device = tbRestClient.createDevice(region.getSystemName(), region.entityType());
             tbRestClient.assignDeviceToCustomer(ownerId, device.getUuidId());
         }
         DeviceCredentials deviceCredentials = tbRestClient.getDeviceCredentials(device.getUuidId());
@@ -642,10 +650,10 @@ public class WaterMeteringSolution implements SolutionTemplateGenerator {
     private Device createConsumer(Consumer consumer, UUID ownerId, UUID deviceGroupId) {
         Device device;
         if (tbRestClient.isPe()) {
-            device = tbRestClient.createDevice(consumer.getSystemName(), "WM Consumer", new CustomerId(ownerId));
+            device = tbRestClient.createDevice(consumer.getSystemName(), consumer.entityType(), new CustomerId(ownerId));
             tbRestClient.addEntitiesToTheGroup(deviceGroupId, Set.of(device.getUuidId()));
         } else {
-            device = tbRestClient.createDevice(consumer.getSystemName(), "WM Consumer");
+            device = tbRestClient.createDevice(consumer.getSystemName(), consumer.entityType());
             tbRestClient.assignDeviceToCustomer(ownerId, device.getUuidId());
         }
         DeviceCredentials deviceCredentials = tbRestClient.getDeviceCredentials(device.getUuidId());
@@ -664,10 +672,10 @@ public class WaterMeteringSolution implements SolutionTemplateGenerator {
     private Device createPumpStation(PumpStation pumpStation, UUID ownerId, UUID deviceGroupId) {
         Device device;
         if (tbRestClient.isPe()) {
-            device = tbRestClient.createDevice(pumpStation.getSystemName(), "WM Pump Station", new CustomerId(ownerId));
+            device = tbRestClient.createDevice(pumpStation.getSystemName(), pumpStation.entityType(), new CustomerId(ownerId));
             tbRestClient.addEntitiesToTheGroup(deviceGroupId, Set.of(device.getUuidId()));
         } else {
-            device = tbRestClient.createDevice(pumpStation.getSystemName(), "WM Pump Station");
+            device = tbRestClient.createDevice(pumpStation.getSystemName(), pumpStation.entityType());
             tbRestClient.assignDeviceToCustomer(ownerId, device.getUuidId());
         }
         DeviceCredentials deviceCredentials = tbRestClient.getDeviceCredentials(device.getUuidId());
@@ -680,8 +688,8 @@ public class WaterMeteringSolution implements SolutionTemplateGenerator {
 
 
     private City makeCityByConfiguration(CityConfiguration cityConfiguration, boolean skipTelemetry) {
-        Set<Region> regions = new TreeSet<>();
-        Set<PumpStation> pumpStations = new TreeSet<>();
+        Set<Region> regions = MySortedSet.of();
+        Set<PumpStation> pumpStations = MySortedSet.of();
         for (RegionConfiguration regionConfiguration : cityConfiguration.getRegionConfigurations()) {
             Region region = makeRegionByConfiguration(regionConfiguration, skipTelemetry);
             regions.add(region);
@@ -701,7 +709,7 @@ public class WaterMeteringSolution implements SolutionTemplateGenerator {
     }
 
     private Region makeRegionByConfiguration(RegionConfiguration regionConfiguration, boolean skipTelemetry) {
-        Set<Consumer> consumers = new TreeSet<>();
+        Set<Consumer> consumers = MySortedSet.of();
         for (ConsumerConfiguration consumerConfiguration : regionConfiguration.getConsumerConfigurations()) {
             Consumer consumer = makeConsumerByConfiguration(regionConfiguration, consumerConfiguration, skipTelemetry);
             consumers.add(consumer);
@@ -859,10 +867,14 @@ public class WaterMeteringSolution implements SolutionTemplateGenerator {
 
     private Pair<Long, Long> getIntervalValuesRangeByConsumerType(ConsumerType type) {
         switch (type) {
-            case HSH: return Pair.of(0L, 100L);
-            case GOV: return Pair.of(-30L, 100L);
-            case IND: return Pair.of(-100L, 100L);
-            default: throw new IllegalArgumentException("Unsupported consumer type: " + type);
+            case HSH:
+                return Pair.of(0L, 100L);
+            case GOV:
+                return Pair.of(-30L, 100L);
+            case IND:
+                return Pair.of(-100L, 100L);
+            default:
+                throw new IllegalArgumentException("Unsupported consumer type: " + type);
         }
     }
 

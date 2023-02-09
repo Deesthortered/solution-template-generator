@@ -8,10 +8,12 @@ import org.thingsboard.server.common.data.Device;
 import org.thingsboard.server.common.data.EntityType;
 import org.thingsboard.server.common.data.asset.Asset;
 import org.thingsboard.server.common.data.group.EntityGroup;
+import org.thingsboard.server.common.data.id.CustomerId;
 import org.thingsboard.server.common.data.rule.NodeConnectionInfo;
 import org.thingsboard.server.common.data.rule.RuleChain;
 import org.thingsboard.server.common.data.rule.RuleChainMetaData;
 import org.thingsboard.server.common.data.rule.RuleNode;
+import org.thingsboard.server.common.data.security.DeviceCredentials;
 import org.thingsboard.trendz.generator.exception.AssetAlreadyExistException;
 import org.thingsboard.trendz.generator.exception.CustomerAlreadyExistException;
 import org.thingsboard.trendz.generator.exception.DeviceAlreadyExistException;
@@ -19,6 +21,7 @@ import org.thingsboard.trendz.generator.exception.RuleChainAlreadyExistException
 import org.thingsboard.trendz.generator.exception.SolutionValidationException;
 import org.thingsboard.trendz.generator.model.ModelData;
 import org.thingsboard.trendz.generator.model.ModelEntity;
+import org.thingsboard.trendz.generator.model.tb.Attribute;
 import org.thingsboard.trendz.generator.model.tb.CustomerData;
 import org.thingsboard.trendz.generator.model.tb.CustomerUser;
 import org.thingsboard.trendz.generator.service.anomaly.AnomalyService;
@@ -27,13 +30,15 @@ import org.thingsboard.trendz.generator.service.rest.TbRestClient;
 import org.thingsboard.trendz.generator.service.roolchain.RuleChainBuildingService;
 import org.thingsboard.trendz.generator.solution.SolutionTemplateGenerator;
 import org.thingsboard.trendz.generator.solution.greenhouse.model.Greenhouse;
+import org.thingsboard.trendz.generator.solution.greenhouse.model.Section;
+import org.thingsboard.trendz.generator.solution.greenhouse.model.SoilNpkSensor;
+import org.thingsboard.trendz.generator.utils.MySortedSet;
 
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.TreeSet;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -207,7 +212,7 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
     private ModelData makeData(boolean skipTelemetry, ZonedDateTime startYear) {
 
         return ModelData.builder()
-                .data(new TreeSet<>(Set.of()))
+                .data(MySortedSet.of())
                 .build();
     }
 
@@ -293,4 +298,71 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
                 .forEach(asset -> this.tbRestClient.deleteAsset(asset.getUuidId()));
     }
 
+
+
+    private Asset createGreenhouse(Greenhouse greenhouse, UUID ownerId, UUID assetGroupId) {
+        String name = greenhouse.getSystemName();
+        String entityType = greenhouse.entityType();
+
+        Asset asset;
+        if (tbRestClient.isPe()) {
+            asset = tbRestClient.createAsset(name, entityType, new CustomerId(ownerId));
+            tbRestClient.addEntitiesToTheGroup(assetGroupId, Set.of(asset.getUuidId()));
+        } else {
+            asset = tbRestClient.createAsset(name, entityType);
+            tbRestClient.assignAssetToCustomer(ownerId, asset.getUuidId());
+        }
+
+        Set<Attribute<?>> attributes = Set.of(
+                new Attribute<>("plant_type", greenhouse.getPlantType().toString())
+        );
+        tbRestClient.setEntityAttributes(asset.getUuidId(), EntityType.ASSET, Attribute.Scope.SERVER_SCOPE, attributes);
+
+        return asset;
+    }
+
+    private Asset createSection(Section section, UUID ownerId, UUID assetGroupId) {
+        String name = section.getSystemName();
+        String entityType = section.entityType();
+
+        Asset asset;
+        if (tbRestClient.isPe()) {
+            asset = tbRestClient.createAsset(name, entityType, new CustomerId(ownerId));
+            tbRestClient.addEntitiesToTheGroup(assetGroupId, Set.of(asset.getUuidId()));
+        } else {
+            asset = tbRestClient.createAsset(name, entityType);
+            tbRestClient.assignAssetToCustomer(ownerId, asset.getUuidId());
+        }
+
+        Set<Attribute<?>> attributes = Set.of(
+                new Attribute<>("position_height", section.getPositionHeight()),
+                new Attribute<>("position_width", section.getPositionWidth())
+        );
+        tbRestClient.setEntityAttributes(asset.getUuidId(), EntityType.ASSET, Attribute.Scope.SERVER_SCOPE, attributes);
+
+        return asset;
+    }
+
+    private Device createSoilNpkSensor(SoilNpkSensor soilNpkSensor, UUID ownerId, UUID deviceGroupId) {
+        String name = soilNpkSensor.getSystemName();
+        String entityType = soilNpkSensor.entityType();
+
+        Device device;
+        if (tbRestClient.isPe()) {
+            device = tbRestClient.createDevice(name, entityType, new CustomerId(ownerId));
+            tbRestClient.addEntitiesToTheGroup(deviceGroupId, Set.of(device.getUuidId()));
+        } else {
+            device = tbRestClient.createDevice(name, entityType);
+            tbRestClient.assignDeviceToCustomer(ownerId, device.getUuidId());
+        }
+        DeviceCredentials deviceCredentials = tbRestClient.getDeviceCredentials(device.getUuidId());
+
+
+        tbRestClient.pushTelemetry(deviceCredentials.getCredentialsId(), soilNpkSensor.getNitrogen());
+        tbRestClient.pushTelemetry(deviceCredentials.getCredentialsId(), soilNpkSensor.getPotassium());
+        tbRestClient.pushTelemetry(deviceCredentials.getCredentialsId(), soilNpkSensor.getPotassium());
+
+//        this.energyMeterIdMap.put(energyMeter, device.getUuidId());
+        return device;
+    }
 }

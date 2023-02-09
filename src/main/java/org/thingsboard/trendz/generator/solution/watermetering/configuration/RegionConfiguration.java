@@ -2,18 +2,23 @@ package org.thingsboard.trendz.generator.solution.watermetering.configuration;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.ToString;
+import org.thingsboard.trendz.generator.model.ConfigurationEntity;
 import org.thingsboard.trendz.generator.model.anomaly.AnomalyInfo;
 
 import java.time.ZonedDateTime;
 import java.util.Set;
 
-@Data
+@Getter
+@ToString
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class RegionConfiguration {
+public class RegionConfiguration extends ConfigurationEntity {
+
+    private int order;
 
     private ZonedDateTime startYear;
     private String name;

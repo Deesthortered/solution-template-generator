@@ -1,7 +1,11 @@
 package org.thingsboard.trendz.generator.exception;
 
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
 import org.thingsboard.server.common.data.Device;
 
+@Getter
+@EqualsAndHashCode(callSuper = true)
 public class DeviceAlreadyExistException extends SolutionTemplateGeneratorException {
 
     private final Device device;

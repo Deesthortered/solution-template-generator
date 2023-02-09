@@ -2,16 +2,23 @@ package org.thingsboard.trendz.generator.solution.greenhouse.model;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.ToString;
 import org.thingsboard.trendz.generator.model.ModelEntity;
 import org.thingsboard.trendz.generator.model.tb.Telemetry;
 
-@Data
+@Getter
+@ToString
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class SoilAciditySensor implements ModelEntity {
+public class SoilAciditySensor extends ModelEntity {
+
+    @Override
+    public String entityType() {
+        return "GR) soil acidity sensor";
+    }
 
     private String systemName;
     private String systemLabel;

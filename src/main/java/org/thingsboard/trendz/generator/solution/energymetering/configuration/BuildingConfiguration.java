@@ -2,17 +2,22 @@ package org.thingsboard.trendz.generator.solution.energymetering.configuration;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.ToString;
+import org.thingsboard.trendz.generator.model.ConfigurationEntity;
 
 import java.util.HashMap;
 import java.util.Map;
 
-@Data
+@Getter
+@ToString
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class BuildingConfiguration {
+public class BuildingConfiguration extends ConfigurationEntity {
+
+    private int order;
 
     private String name;
     private String label;

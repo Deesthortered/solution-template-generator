@@ -42,6 +42,7 @@ import org.thingsboard.trendz.generator.solution.energymetering.model.Building;
 import org.thingsboard.trendz.generator.solution.energymetering.model.EnergyMeter;
 import org.thingsboard.trendz.generator.solution.energymetering.model.HeatMeter;
 import org.thingsboard.trendz.generator.utils.DateTimeUtils;
+import org.thingsboard.trendz.generator.utils.MySortedSet;
 import org.thingsboard.trendz.generator.utils.RandomUtils;
 
 import java.time.ZonedDateTime;
@@ -52,7 +53,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.TreeSet;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -332,7 +332,7 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
         Building hogurity = makeHogurity(skipTelemetry, startYear);
 
         return ModelData.builder()
-                .data(new TreeSet<>(Set.of(alpire, feline, hogurity)))
+                .data(MySortedSet.of(alpire, feline, hogurity))
                 .build();
     }
 
@@ -460,6 +460,7 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
         long TS_MAY = DateTimeUtils.toTs(startYear.plusMonths(4));
 
         BuildingConfiguration configuration = BuildingConfiguration.builder()
+                .order(1)
                 .name("Alpire")
                 .label("Asset label for Alpire building")
                 .address("USA, California, San Francisco, ...")
@@ -470,7 +471,7 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
                                 .occupied(true)
                                 .level(2)
                                 .startDate(TS_JANUARY)
-                                .anomalies(Set.of())
+                                .anomalies(MySortedSet.of())
                                 .area(2)
                                 .build()
                 )
@@ -482,7 +483,7 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
                         .occupied(false)
                         .level(0)
                         .startDate(TS_JANUARY)
-                        .anomalies(Set.of(
+                        .anomalies(MySortedSet.of(
                             AnomalyInfo.builder()
                                     .startDate(startYear.withMonth(7).withDayOfMonth(10))
                                     .endDate(startYear.withMonth(7).withDayOfMonth(20))
@@ -503,7 +504,7 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
                         .occupied(false)
                         .level(0)
                         .startDate(TS_JANUARY)
-                        .anomalies(Set.of())
+                        .anomalies(MySortedSet.of())
                         .area(0)
                         .build()
         );
@@ -514,7 +515,7 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
                         .occupied(true)
                         .level(3)
                         .startDate(TS_JANUARY)
-                        .anomalies(Set.of())
+                        .anomalies(MySortedSet.of())
                         .area(3)
                         .build()
         );
@@ -525,7 +526,7 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
                         .occupied(true)
                         .level(3)
                         .startDate(TS_JANUARY)
-                        .anomalies(Set.of())
+                        .anomalies(MySortedSet.of())
                         .area(3)
                         .build()
         );
@@ -536,7 +537,7 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
                         .occupied(false)
                         .level(0)
                         .startDate(TS_FEBRUARY)
-                        .anomalies(Set.of())
+                        .anomalies(MySortedSet.of())
                         .area(0)
                         .build()
         );
@@ -547,7 +548,7 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
                         .occupied(false)
                         .level(0)
                         .startDate(TS_FEBRUARY)
-                        .anomalies(Set.of())
+                        .anomalies(MySortedSet.of())
                         .area(0)
                         .build()
         );
@@ -562,6 +563,7 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
         long TS_MAY = DateTimeUtils.toTs(startYear.plusMonths(4));
 
         BuildingConfiguration configuration = BuildingConfiguration.builder()
+                .order(2)
                 .name("Feline")
                 .label("Asset label for Feline building")
                 .address("USA, New York, New York City, Brooklyn, ...")
@@ -572,7 +574,7 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
                                 .occupied(true)
                                 .level(3)
                                 .startDate(TS_MAY)
-                                .anomalies(Set.of())
+                                .anomalies(MySortedSet.of())
                                 .area(3)
                                 .build()
                 )
@@ -584,7 +586,7 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
                         .occupied(false)
                         .level(0)
                         .startDate(TS_MAY)
-                        .anomalies(Set.of(
+                        .anomalies(MySortedSet.of(
                                 AnomalyInfo.builder()
                                         .startDate(startYear.withMonth(9).withDayOfMonth(1))
                                         .endDate(startYear.withMonth(9).withDayOfMonth(10))
@@ -605,7 +607,7 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
                         .occupied(true)
                         .level(1)
                         .startDate(TS_MAY)
-                        .anomalies(Set.of())
+                        .anomalies(MySortedSet.of())
                         .area(1)
                         .build()
         );
@@ -616,7 +618,7 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
                         .occupied(true)
                         .level(1)
                         .startDate(TS_MAY)
-                        .anomalies(Set.of())
+                        .anomalies(MySortedSet.of())
                         .area(1)
                         .build()
         );
@@ -627,7 +629,7 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
                         .occupied(true)
                         .level(2)
                         .startDate(TS_MAY)
-                        .anomalies(Set.of())
+                        .anomalies(MySortedSet.of())
                         .area(2)
                         .build()
         );
@@ -638,7 +640,7 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
                         .occupied(true)
                         .level(2)
                         .startDate(TS_MAY)
-                        .anomalies(Set.of())
+                        .anomalies(MySortedSet.of())
                         .area(2)
                         .build()
         );
@@ -649,7 +651,7 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
                         .occupied(true)
                         .level(2)
                         .startDate(TS_MAY)
-                        .anomalies(Set.of())
+                        .anomalies(MySortedSet.of())
                         .area(2)
                         .build()
         );
@@ -660,7 +662,7 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
                         .occupied(true)
                         .level(3)
                         .startDate(TS_MAY)
-                        .anomalies(Set.of(
+                        .anomalies(MySortedSet.of(
                                 AnomalyInfo.builder()
                                         .startDate(startYear.withMonth(10).withDayOfMonth(20))
                                         .endDate(startYear.withMonth(10).withDayOfMonth(25))
@@ -681,7 +683,7 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
                         .occupied(true)
                         .level(3)
                         .startDate(TS_MAY)
-                        .anomalies(Set.of(
+                        .anomalies(MySortedSet.of(
                                 AnomalyInfo.builder()
                                         .startDate(startYear.withMonth(9).withDayOfMonth(15))
                                         .endDate(startYear.withMonth(9).withDayOfMonth(20))
@@ -703,6 +705,7 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
         long TS_MAY = DateTimeUtils.toTs(startYear.plusMonths(4));
 
         BuildingConfiguration configuration = BuildingConfiguration.builder()
+                .order(3)
                 .name("Hogurity")
                 .label("Asset label for Hogurity building")
                 .address("USA, New York, New York City, Manhattan, ...")
@@ -713,7 +716,7 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
                                 .occupied(true)
                                 .level(3)
                                 .startDate(TS_JANUARY)
-                                .anomalies(Set.of(
+                                .anomalies(MySortedSet.of(
                                         AnomalyInfo.builder()
                                                 .startDate(startYear.withMonth(12).withDayOfMonth(1))
                                                 .endDate(startYear.withMonth(12).withDayOfMonth(3))
@@ -731,7 +734,7 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
                         .occupied(true)
                         .level(3)
                         .startDate(TS_MARCH)
-                        .anomalies(Set.of(
+                        .anomalies(MySortedSet.of(
                                 AnomalyInfo.builder()
                                         .startDate(startYear.withMonth(12).withDayOfMonth(1))
                                         .endDate(startYear.withMonth(12).withDayOfMonth(3))
@@ -748,7 +751,7 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
                         .occupied(true)
                         .level(3)
                         .startDate(TS_MARCH)
-                        .anomalies(Set.of(
+                        .anomalies(MySortedSet.of(
                                 AnomalyInfo.builder()
                                         .startDate(startYear.withMonth(8).withDayOfMonth(1))
                                         .endDate(startYear.withMonth(8).withDayOfMonth(5))
@@ -770,7 +773,7 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
 
 
     private Building makeBuildingByConfiguration(BuildingConfiguration configuration, boolean skipTelemetry) {
-        Set<Apartment> apartments = new TreeSet<>();
+        Set<Apartment> apartments = MySortedSet.of();
         for (int floor = 1; floor <= configuration.getFloorCount(); floor++) {
             for (int number = 1; number <= configuration.getApartmentsByFloorCount(); number++) {
                 ApartmentConfiguration apartmentConfiguration = configuration.getApartmentConfiguration(floor, number);
@@ -1130,10 +1133,10 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
     private Asset createBuilding(Building building, UUID ownerId, UUID assetGroupId) {
         Asset asset;
         if (tbRestClient.isPe()) {
-            asset = tbRestClient.createAsset(building.getSystemName(), "building", new CustomerId(ownerId));
+            asset = tbRestClient.createAsset(building.getSystemName(), building.entityType(), new CustomerId(ownerId));
             tbRestClient.addEntitiesToTheGroup(assetGroupId, Set.of(asset.getUuidId()));
         } else {
-            asset = tbRestClient.createAsset(building.getSystemName(), "building");
+            asset = tbRestClient.createAsset(building.getSystemName(), building.entityType());
             tbRestClient.assignAssetToCustomer(ownerId, asset.getUuidId());
         }
 
@@ -1147,10 +1150,10 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
     private Asset createApartment(Apartment apartment, UUID ownerId, UUID assetGroupId) {
         Asset asset;
         if (tbRestClient.isPe()) {
-            asset = tbRestClient.createAsset(apartment.getSystemName(), "apartment", new CustomerId(ownerId));
+            asset = tbRestClient.createAsset(apartment.getSystemName(), apartment.entityType(), new CustomerId(ownerId));
             tbRestClient.addEntitiesToTheGroup(assetGroupId, Set.of(asset.getUuidId()));
         } else {
-            asset = tbRestClient.createAsset(apartment.getSystemName(), "apartment");
+            asset = tbRestClient.createAsset(apartment.getSystemName(), apartment.entityType());
             tbRestClient.assignAssetToCustomer(ownerId, asset.getUuidId());
         }
 
@@ -1167,10 +1170,10 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
     private Device createEnergyMeter(EnergyMeter energyMeter, UUID ownerId, UUID deviceGroupId) {
         Device device;
         if (tbRestClient.isPe()) {
-            device = tbRestClient.createDevice(energyMeter.getSystemName(), "energyMeter", new CustomerId(ownerId));
+            device = tbRestClient.createDevice(energyMeter.getSystemName(), energyMeter.entityType(), new CustomerId(ownerId));
             tbRestClient.addEntitiesToTheGroup(deviceGroupId, Set.of(device.getUuidId()));
         } else {
-            device = tbRestClient.createDevice(energyMeter.getSystemName(), "energyMeter");
+            device = tbRestClient.createDevice(energyMeter.getSystemName(), energyMeter.entityType());
             tbRestClient.assignDeviceToCustomer(ownerId, device.getUuidId());
         }
         DeviceCredentials deviceCredentials = tbRestClient.getDeviceCredentials(device.getUuidId());
@@ -1191,10 +1194,10 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
     private Device createHeatMeter(HeatMeter heatMeter, UUID ownerId, UUID deviceGroupId) {
         Device device;
         if (tbRestClient.isPe()) {
-            device = tbRestClient.createDevice(heatMeter.getSystemName(), "heatMeter", new CustomerId(ownerId));
+            device = tbRestClient.createDevice(heatMeter.getSystemName(), heatMeter.entityType(), new CustomerId(ownerId));
             tbRestClient.addEntitiesToTheGroup(deviceGroupId, Set.of(device.getUuidId()));
         } else {
-            device = tbRestClient.createDevice(heatMeter.getSystemName(), "heatMeter");
+            device = tbRestClient.createDevice(heatMeter.getSystemName(), heatMeter.entityType());
             tbRestClient.assignDeviceToCustomer(ownerId, device.getUuidId());
         }
         DeviceCredentials deviceCredentials = tbRestClient.getDeviceCredentials(device.getUuidId());
