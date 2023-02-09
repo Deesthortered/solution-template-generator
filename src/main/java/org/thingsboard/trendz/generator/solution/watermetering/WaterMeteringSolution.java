@@ -62,7 +62,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.UUID;
-import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
@@ -137,6 +136,7 @@ public class WaterMeteringSolution implements SolutionTemplateGenerator {
             createRuleChain(data);
             dashboardService.createDashboardItems(getSolutionName(), customerData.getCustomer().getId());
 
+            checkRandomStability();
             log.info("Water Metering Solution - generation is completed!");
         } catch (Exception e) {
             log.error("Water Metering Solution generate was failed, skipping...", e);
@@ -162,6 +162,23 @@ public class WaterMeteringSolution implements SolutionTemplateGenerator {
         }
     }
 
+
+    private void checkRandomStability() {
+        int count = 5;
+        List<Long> actual = new ArrayList<>();
+        for (int i = 0; i < count; i++) {
+            actual.add(RandomUtils.getRandomNumber(0, 100));
+        }
+
+        List<Long> expected = List.of(38L, 67L, 29L, 81L, 92L);
+
+        for (int i = 0; i < count; i++) {
+            if (Long.compare(expected.get(i), actual.get(i)) != 0) {
+                log.warn("Random Stability check if failed");
+                break;
+            }
+        }
+    }
 
     private Set<City> mapToCities(ModelData data) {
         return data.getData().stream()
@@ -287,8 +304,8 @@ public class WaterMeteringSolution implements SolutionTemplateGenerator {
 
                         consumerCounter++;
                         RuleChainMetaData savedMetaData = this.tbRestClient.saveRuleChainMetadata(metaData);
-                        TimeUnit.SECONDS.sleep(10);
-                        log.warn("Sleeping for solving race condition problem!");
+//                        TimeUnit.SECONDS.sleep(10);
+//                        log.warn("Sleeping for solving race condition problem!");
                     }
                 }
             }
