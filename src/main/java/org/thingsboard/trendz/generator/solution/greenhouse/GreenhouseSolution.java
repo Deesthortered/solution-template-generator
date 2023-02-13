@@ -556,8 +556,8 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
 
     private Greenhouse makeGreenhouseByConfiguration(GreenhouseConfiguration configuration, ZonedDateTime startYear, boolean skipTelemetry) {
         Set<Section> sections = new TreeSet<>();
-        for (int height = 0; height < configuration.getSectionHeight(); height++) {
-            for (int width = 0; width < configuration.getSectionWidth(); width++) {
+        for (int height = 1; height <= configuration.getSectionHeight(); height++) {
+            for (int width = 1; width <= configuration.getSectionWidth(); width++) {
 
                 SoilWarmMoistureSensor soilWarmMoistureSensor = SoilWarmMoistureSensor.builder()
                         .systemName("Soil Warm-Moisture Sensor: " + configuration.getName() + ", " + String.format("%s-%s", height, width))
