@@ -317,7 +317,7 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
             Asset greenhouseAsset = createGreenhouse(greenhouse, ownerId, assetGroupId);
 
             for (Section section : greenhouse.getSections()) {
-                Asset sectionAsset = createSection(section, ownerId, deviceGroupId);
+                Asset sectionAsset = createSection(section, ownerId, assetGroupId);
                 this.tbRestClient.createRelation(RelationType.CONTAINS.getType(), greenhouseAsset.getId(), sectionAsset.getId());
 
                 Device soilWarmMoistureSensorDevice = createSoilWarmMoistureSensor(section.getSoilWarmMoistureSensor(), ownerId, deviceGroupId);
