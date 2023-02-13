@@ -1,6 +1,7 @@
 package org.thingsboard.trendz.generator.utils;
 
 import java.util.Random;
+import java.util.UUID;
 
 public class RandomUtils {
 
@@ -21,5 +22,11 @@ public class RandomUtils {
         }
         long i = Math.abs(getRandom().nextLong());
         return from + (i % (to - from));
+    }
+
+    public static UUID getRandonUUID() {
+        byte[] randomBytes = new byte[16];
+        random.nextBytes(randomBytes);
+        return UUID.nameUUIDFromBytes(randomBytes);
     }
 }

@@ -267,6 +267,7 @@ public class TbRestClient {
                     pageIndex, pageSize
             ).getBody();
             hasNextPage = page.hasNext();
+            pageIndex++;
             result.addAll(page.getData());
         }
         return result;

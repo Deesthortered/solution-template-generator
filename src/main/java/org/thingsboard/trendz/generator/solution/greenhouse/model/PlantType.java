@@ -2,6 +2,7 @@ package org.thingsboard.trendz.generator.solution.greenhouse.model;
 
 public enum PlantType {
     TOMATO("Tomato"),
+    CUCUMBER("Cucumber"),
     ;
 
 

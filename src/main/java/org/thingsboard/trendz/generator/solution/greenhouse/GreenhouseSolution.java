@@ -25,6 +25,8 @@ import org.thingsboard.trendz.generator.model.tb.Attribute;
 import org.thingsboard.trendz.generator.model.tb.CustomerData;
 import org.thingsboard.trendz.generator.model.tb.CustomerUser;
 import org.thingsboard.trendz.generator.model.tb.RelationType;
+import org.thingsboard.trendz.generator.model.tb.Telemetry;
+import org.thingsboard.trendz.generator.model.tb.Timestamp;
 import org.thingsboard.trendz.generator.service.anomaly.AnomalyService;
 import org.thingsboard.trendz.generator.service.dashboard.DashboardService;
 import org.thingsboard.trendz.generator.service.rest.TbRestClient;
@@ -43,6 +45,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -238,16 +241,24 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
         Set<GreenhouseConfiguration> greenhouseConfigurations = MySortedSet.of(
             GreenhouseConfiguration.builder()
                     .order(1)
-                    .name("123")
+                    .name("Box")
                     .plantType(PlantType.TOMATO)
                     .sectionHeight(5)
                     .sectionWidth(10)
+                    .build(),
+
+            GreenhouseConfiguration.builder()
+                    .order(2)
+                    .name("Circle")
+                    .plantType(PlantType.CUCUMBER)
+                    .sectionHeight(5)
+                    .sectionWidth(5)
                     .build()
         );
 
         Set<Plant> plants = MySortedSet.of(
                 Plant.builder()
-                        .systemName(UUID.randomUUID().toString())
+                        .systemName("Tomato - Sungold")
                         .systemLabel("")
                         .name("Tomato")
                         .variety("Sungold")
@@ -307,6 +318,7 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
 
             for (Section section : greenhouse.getSections()) {
                 Asset sectionAsset = createSection(section, ownerId, deviceGroupId);
+                this.tbRestClient.createRelation(RelationType.CONTAINS.getType(), greenhouseAsset.getId(), sectionAsset.getId());
 
                 Device soilWarmMoistureSensorDevice = createSoilWarmMoistureSensor(section.getSoilWarmMoistureSensor(), ownerId, deviceGroupId);
                 Device soilAciditySensorDevice = createSoilAciditySensor(section.getSoilAciditySensor(), ownerId, deviceGroupId);
@@ -522,15 +534,23 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
                 .map(ModelEntity::getSystemName)
                 .collect(Collectors.toSet());
 
+        AtomicInteger deviceCounter = new AtomicInteger(0);
         this.tbRestClient.getAllDevices()
                 .stream()
                 .filter(device -> devices.contains(device.getName()))
-                .forEach(device -> this.tbRestClient.deleteDevice(device.getUuidId()));
+                .forEach(device -> {
+                    log.debug("Device deleted {}/{}", deviceCounter.incrementAndGet(), devices.size());
+                    this.tbRestClient.deleteDevice(device.getUuidId());
+                });
 
+        AtomicInteger assetCounter = new AtomicInteger(0);
         this.tbRestClient.getAllAssets()
                 .stream()
                 .filter(asset -> assets.contains(asset.getName()))
-                .forEach(asset -> this.tbRestClient.deleteAsset(asset.getUuidId()));
+                .forEach(asset -> {
+                    log.debug("Asset deleted {}/{}", assetCounter.incrementAndGet(), assets.size());
+                    this.tbRestClient.deleteAsset(asset.getUuidId());
+                });
     }
 
 
@@ -540,28 +560,36 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
             for (int width = 0; width < configuration.getSectionWidth(); width++) {
 
                 SoilWarmMoistureSensor soilWarmMoistureSensor = SoilWarmMoistureSensor.builder()
-                        .systemName("")
+                        .systemName("Soil Warm-Moisture Sensor: " + configuration.getName() + ", " + String.format("%s-%s", height, width))
                         .systemLabel("")
+                        .temperature(new Telemetry<>("temperature", MySortedSet.of(new Telemetry.Point<>(Timestamp.of(0), 0))))
+                        .moisture(new Telemetry<>("moisture", MySortedSet.of(new Telemetry.Point<>(Timestamp.of(0), 0))))
                         .build();
 
                 SoilAciditySensor soilAciditySensor = SoilAciditySensor.builder()
-                        .systemName("")
+                        .systemName("Soil Acidity: " + configuration.getName() + ", " + String.format("%s-%s", height, width))
                         .systemLabel("")
+                        .acidity(new Telemetry<>("acidity", MySortedSet.of(new Telemetry.Point<>(Timestamp.of(0), 0))))
                         .build();
 
                 SoilNpkSensor soilNpkSensor = SoilNpkSensor.builder()
-                        .systemName("")
+                        .systemName("Soil NPK Sensor: " + configuration.getName() + ", " + String.format("%s-%s", height, width))
                         .systemLabel("")
+                        .nitrogen(new Telemetry<>("nitrogen", MySortedSet.of(new Telemetry.Point<>(Timestamp.of(0), 0))))
+                        .phosphorus(new Telemetry<>("phosphorus", MySortedSet.of(new Telemetry.Point<>(Timestamp.of(0), 0))))
+                        .potassium(new Telemetry<>("potassium", MySortedSet.of(new Telemetry.Point<>(Timestamp.of(0), 0))))
                         .build();
 
                 HarvestReporter harvestReporter = HarvestReporter.builder()
-                        .systemName("")
+                        .systemName("Harvester: " + configuration.getName() + ", " + String.format("%s-%s", height, width))
                         .systemLabel("")
+                        .cropWeight(new Telemetry<>("cropWeight", MySortedSet.of(new Telemetry.Point<>(Timestamp.of(0), 0))))
+                        .workerInCharge(new Telemetry<>("workerInCharge", MySortedSet.of(new Telemetry.Point<>(Timestamp.of(0), "1"))))
                         .build();
 
 
                 Section section = Section.builder()
-                        .systemName(String.format("Section %s-%s", height, width))
+                        .systemName(String.format(configuration.getName() + ", section %s-%s", height, width))
                         .systemLabel("")
                         .positionHeight(height)
                         .positionWidth(width)
@@ -576,43 +604,53 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
         }
 
         InsideAirWarmMoistureSensor insideAirWarmMoistureSensor = InsideAirWarmMoistureSensor.builder()
-                .systemName("")
+                .systemName(configuration.getName() + ": Air Warm-Moisture Sensor (Inside)")
                 .systemLabel("")
+                .temperature(new Telemetry<>("temperature", MySortedSet.of(new Telemetry.Point<>(Timestamp.of(0), 0))))
+                .moisture(new Telemetry<>("moisture", MySortedSet.of(new Telemetry.Point<>(Timestamp.of(0), 0))))
                 .build();
 
         InsideLightSensor insideLightSensor = InsideLightSensor.builder()
-                .systemName("")
+                .systemName(configuration.getName() + ": Light Sensor (Inside)")
                 .systemLabel("")
+                .light(new Telemetry<>("light", MySortedSet.of(new Telemetry.Point<>(Timestamp.of(0), 0))))
                 .build();
 
         InsideCO2Sensor insideCO2Sensor = InsideCO2Sensor.builder()
-                .systemName("")
+                .systemName(configuration.getName() + ": CO2 Sensor (Inside)")
                 .systemLabel("")
+                .concentration(new Telemetry<>("concentration", MySortedSet.of(new Telemetry.Point<>(Timestamp.of(0), 0))))
                 .build();
 
         OutsideAirWarmMoistureSensor outsideAirWarmMoistureSensor = OutsideAirWarmMoistureSensor.builder()
-                .systemName("")
+                .systemName(configuration.getName() + ": Air Warm-Moisture Sensor (Outside)")
                 .systemLabel("")
+                .temperature(new Telemetry<>("temperature", MySortedSet.of(new Telemetry.Point<>(Timestamp.of(0), 0))))
+                .moisture(new Telemetry<>("moisture", MySortedSet.of(new Telemetry.Point<>(Timestamp.of(0), 0))))
                 .build();
 
         OutsideLightSensor outsideLightSensor = OutsideLightSensor.builder()
-                .systemName("")
+                .systemName(configuration.getName() + ": Light Sensor (Outside)")
                 .systemLabel("")
+                .light(new Telemetry<>("light", MySortedSet.of(new Telemetry.Point<>(Timestamp.of(0), 0))))
                 .build();
 
         EnergyMeter energyMeter = EnergyMeter.builder()
-                .systemName("")
+                .systemName(configuration.getName() + ": Energy Meter")
                 .systemLabel("")
+                .consumptionEnergy(new Telemetry<>("consumptionEnergy", MySortedSet.of(new Telemetry.Point<>(Timestamp.of(0), 0))))
                 .build();
 
         WaterMeter waterMeter = WaterMeter.builder()
-                .systemName("")
+                .systemName(configuration.getName() + ": Water Meter")
                 .systemLabel("")
+                .consumptionWater(new Telemetry<>("consumptionWater", MySortedSet.of(new Telemetry.Point<>(Timestamp.of(0), 0))))
                 .build();
 
         return Greenhouse.builder()
-                .systemName("")
+                .systemName("Greenhouse " + configuration.getName())
                 .systemLabel("")
+                .plantType(configuration.getPlantType())
                 .sections(sections)
                 .insideAirWarmMoistureSensor(insideAirWarmMoistureSensor)
                 .insideLightSensor(insideLightSensor)
