@@ -236,7 +236,13 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
     private ModelData makeData(boolean skipTelemetry, ZonedDateTime startYear) {
 
         Set<GreenhouseConfiguration> greenhouseConfigurations = MySortedSet.of(
-
+            GreenhouseConfiguration.builder()
+                    .order(1)
+                    .name("123")
+                    .plantType(PlantType.TOMATO)
+                    .sectionHeight(5)
+                    .sectionWidth(10)
+                    .build()
         );
 
         Set<Plant> plants = MySortedSet.of(
@@ -268,12 +274,12 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
         entities.addAll(
                 greenhouseConfigurations
                         .stream()
-                        .map(this::makeGreenhouseByConfiguration)
+                        .map(configuration -> makeGreenhouseByConfiguration(configuration, startYear, skipTelemetry))
                         .collect(Collectors.toList())
         );
 
         return ModelData.builder()
-                .data(MySortedSet.of())
+                .data(entities)
                 .build();
     }
 
@@ -528,8 +534,94 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
     }
 
 
-    private Greenhouse makeGreenhouseByConfiguration(GreenhouseConfiguration configuration) {
-        return null;
+    private Greenhouse makeGreenhouseByConfiguration(GreenhouseConfiguration configuration, ZonedDateTime startYear, boolean skipTelemetry) {
+        Set<Section> sections = new TreeSet<>();
+        for (int height = 0; height < configuration.getSectionHeight(); height++) {
+            for (int width = 0; width < configuration.getSectionWidth(); width++) {
+
+                SoilWarmMoistureSensor soilWarmMoistureSensor = SoilWarmMoistureSensor.builder()
+                        .systemName("")
+                        .systemLabel("")
+                        .build();
+
+                SoilAciditySensor soilAciditySensor = SoilAciditySensor.builder()
+                        .systemName("")
+                        .systemLabel("")
+                        .build();
+
+                SoilNpkSensor soilNpkSensor = SoilNpkSensor.builder()
+                        .systemName("")
+                        .systemLabel("")
+                        .build();
+
+                HarvestReporter harvestReporter = HarvestReporter.builder()
+                        .systemName("")
+                        .systemLabel("")
+                        .build();
+
+
+                Section section = Section.builder()
+                        .systemName(String.format("Section %s-%s", height, width))
+                        .systemLabel("")
+                        .positionHeight(height)
+                        .positionWidth(width)
+                        .soilWarmMoistureSensor(soilWarmMoistureSensor)
+                        .soilAciditySensor(soilAciditySensor)
+                        .soilNpkSensor(soilNpkSensor)
+                        .harvestReporter(harvestReporter)
+                        .build();
+
+                sections.add(section);
+            }
+        }
+
+        InsideAirWarmMoistureSensor insideAirWarmMoistureSensor = InsideAirWarmMoistureSensor.builder()
+                .systemName("")
+                .systemLabel("")
+                .build();
+
+        InsideLightSensor insideLightSensor = InsideLightSensor.builder()
+                .systemName("")
+                .systemLabel("")
+                .build();
+
+        InsideCO2Sensor insideCO2Sensor = InsideCO2Sensor.builder()
+                .systemName("")
+                .systemLabel("")
+                .build();
+
+        OutsideAirWarmMoistureSensor outsideAirWarmMoistureSensor = OutsideAirWarmMoistureSensor.builder()
+                .systemName("")
+                .systemLabel("")
+                .build();
+
+        OutsideLightSensor outsideLightSensor = OutsideLightSensor.builder()
+                .systemName("")
+                .systemLabel("")
+                .build();
+
+        EnergyMeter energyMeter = EnergyMeter.builder()
+                .systemName("")
+                .systemLabel("")
+                .build();
+
+        WaterMeter waterMeter = WaterMeter.builder()
+                .systemName("")
+                .systemLabel("")
+                .build();
+
+        return Greenhouse.builder()
+                .systemName("")
+                .systemLabel("")
+                .sections(sections)
+                .insideAirWarmMoistureSensor(insideAirWarmMoistureSensor)
+                .insideLightSensor(insideLightSensor)
+                .insideCO2Sensor(insideCO2Sensor)
+                .outsideAirWarmMoistureSensor(outsideAirWarmMoistureSensor)
+                .outsideLightSensor(outsideLightSensor)
+                .energyMeter(energyMeter)
+                .waterMeter(waterMeter)
+                .build();
     }
 
 
