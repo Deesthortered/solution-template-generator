@@ -7,6 +7,8 @@ import lombok.NoArgsConstructor;
 import lombok.ToString;
 import org.thingsboard.trendz.generator.model.ModelEntity;
 
+import java.util.Set;
+
 @Getter
 @ToString
 @Builder
@@ -23,4 +25,13 @@ public class Greenhouse extends ModelEntity {
     private String systemLabel;
 
     private PlantType plantType;
+
+    private Set<Section> sections;
+    private InsideAirWarmMoistureSensor insideAirWarmMoistureSensor;
+    private InsideLightSensor insideLightSensor;
+    private InsideCO2Sensor insideCO2Sensor;
+    private OutsideAirWarmMoistureSensor outsideAirWarmMoistureSensor;
+    private OutsideLightSensor outsideLightSensor;
+    private EnergyMeter energyMeter;
+    private WaterMeter waterMeter;
 }

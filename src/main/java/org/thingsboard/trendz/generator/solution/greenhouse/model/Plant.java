@@ -14,6 +14,7 @@ import org.thingsboard.trendz.generator.model.ModelEntity;
 @AllArgsConstructor
 public class Plant extends ModelEntity {
 
+    // special asset for saving plant properties
     @Override
     public String entityType() {
         return "GR) plant";
@@ -22,5 +23,20 @@ public class Plant extends ModelEntity {
     private String systemName;
     private String systemLabel;
 
-    // special asset for saving plant properties
+    private String name;
+    private String variety;
+    private int minRipeningPeriodDay;
+    private int maxRipeningPeriodDay;
+    private double dayMinTemperature;
+    private double dayMaxTemperature;
+    private double nightMinTemperature;
+    private double nightMaxTemperature;
+    private double minMoisture;
+    private double maxMoisture;
+    private double minCo2Concentration;
+    private double maxCo2Concentration;
+    private double minLight;
+    private double maxLight;
+    private double minPh;
+    private double maxPh;
 }

@@ -24,21 +24,24 @@ import org.thingsboard.trendz.generator.model.ModelEntity;
 import org.thingsboard.trendz.generator.model.tb.Attribute;
 import org.thingsboard.trendz.generator.model.tb.CustomerData;
 import org.thingsboard.trendz.generator.model.tb.CustomerUser;
+import org.thingsboard.trendz.generator.model.tb.RelationType;
 import org.thingsboard.trendz.generator.service.anomaly.AnomalyService;
 import org.thingsboard.trendz.generator.service.dashboard.DashboardService;
 import org.thingsboard.trendz.generator.service.rest.TbRestClient;
 import org.thingsboard.trendz.generator.service.roolchain.RuleChainBuildingService;
 import org.thingsboard.trendz.generator.solution.SolutionTemplateGenerator;
+import org.thingsboard.trendz.generator.solution.greenhouse.configuration.GreenhouseConfiguration;
 import org.thingsboard.trendz.generator.solution.greenhouse.model.*;
 import org.thingsboard.trendz.generator.utils.MySortedSet;
 
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeSet;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -150,9 +153,18 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
 
     private Set<Greenhouse> mapToGreenhouses(ModelData data) {
         return data.getData().stream()
+                .filter(modelEntity -> modelEntity instanceof Greenhouse)
                 .map(modelEntity -> (Greenhouse) modelEntity)
                 .collect(Collectors.toSet());
     }
+
+    private Set<Plant> mapToPlants(ModelData data) {
+        return data.getData().stream()
+                .filter(modelEntity -> modelEntity instanceof Plant)
+                .map(modelEntity -> (Plant) modelEntity)
+                .collect(Collectors.toSet());
+    }
+
 
     private CustomerData createCustomerData() {
         Customer customer = this.tbRestClient.createCustomer(CUSTOMER_TITLE);
@@ -223,6 +235,43 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
 
     private ModelData makeData(boolean skipTelemetry, ZonedDateTime startYear) {
 
+        Set<GreenhouseConfiguration> greenhouseConfigurations = MySortedSet.of(
+
+        );
+
+        Set<Plant> plants = MySortedSet.of(
+                Plant.builder()
+                        .systemName(UUID.randomUUID().toString())
+                        .systemLabel("")
+                        .name("Tomato")
+                        .variety("Sungold")
+                        .minRipeningPeriodDay(28)
+                        .maxRipeningPeriodDay(42)
+                        .dayMinTemperature(16)
+                        .dayMaxTemperature(21)
+                        .nightMinTemperature(7)
+                        .nightMaxTemperature(16)
+                        .minMoisture(40)
+                        .maxMoisture(60)
+                        .minCo2Concentration(800)
+                        .maxCo2Concentration(1000)
+                        .minLight(15000)
+                        .maxLight(20000)
+                        .minPh(6.0)
+                        .maxPh(6.8)
+                        .build()
+        );
+
+
+        Set<ModelEntity> entities = MySortedSet.of();
+        entities.addAll(plants);
+        entities.addAll(
+                greenhouseConfigurations
+                        .stream()
+                        .map(this::makeGreenhouseByConfiguration)
+                        .collect(Collectors.toList())
+        );
+
         return ModelData.builder()
                 .data(MySortedSet.of())
                 .build();
@@ -241,23 +290,125 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
             deviceGroupId = deviceGroup.getUuidId();
         }
 
+        Set<Plant> plants = mapToPlants(data);
+        for (Plant plant : plants) {
+            Asset plantAsset = createPlant(plant, ownerId, assetGroupId);
+        }
+
         Set<Greenhouse> greenhouses = mapToGreenhouses(data);
         for (Greenhouse greenhouse : greenhouses) {
+            Asset greenhouseAsset = createGreenhouse(greenhouse, ownerId, assetGroupId);
 
+            for (Section section : greenhouse.getSections()) {
+                Asset sectionAsset = createSection(section, ownerId, deviceGroupId);
+
+                Device soilWarmMoistureSensorDevice = createSoilWarmMoistureSensor(section.getSoilWarmMoistureSensor(), ownerId, deviceGroupId);
+                Device soilAciditySensorDevice = createSoilAciditySensor(section.getSoilAciditySensor(), ownerId, deviceGroupId);
+                Device soilNpkSensorDevice = createSoilNpkSensor(section.getSoilNpkSensor(), ownerId, deviceGroupId);
+                Device harvestReporterDevice = createHarvestReporter(section.getHarvestReporter(), ownerId, deviceGroupId);
+
+                this.tbRestClient.createRelation(RelationType.CONTAINS.getType(), sectionAsset.getId(), soilWarmMoistureSensorDevice.getId());
+                this.tbRestClient.createRelation(RelationType.CONTAINS.getType(), sectionAsset.getId(), soilAciditySensorDevice.getId());
+                this.tbRestClient.createRelation(RelationType.CONTAINS.getType(), sectionAsset.getId(), soilNpkSensorDevice.getId());
+                this.tbRestClient.createRelation(RelationType.CONTAINS.getType(), sectionAsset.getId(), harvestReporterDevice.getId());
+            }
+
+            Device insideAirWarmMoistureSensorDevice = createInsideAirWarmMoistureSensor(greenhouse.getInsideAirWarmMoistureSensor(), ownerId, deviceGroupId);
+            Device insideLightSensorDevice = createInsideLightSensor(greenhouse.getInsideLightSensor(), ownerId, deviceGroupId);
+            Device insideCO2SensorDevice = createInsideCO2Sensor(greenhouse.getInsideCO2Sensor(), ownerId, deviceGroupId);
+            Device outsideAirWarmMoistureSensorDevice = createOutsideAirWarmMoistureSensor(greenhouse.getOutsideAirWarmMoistureSensor(), ownerId, deviceGroupId);
+            Device outsideLightSensorDevice = createOutsideLightSensor(greenhouse.getOutsideLightSensor(), ownerId, deviceGroupId);
+            Device energyMeter = createEnergyMeter(greenhouse.getEnergyMeter(), ownerId, deviceGroupId);
+            Device waterMeter = createWaterMeter(greenhouse.getWaterMeter(), ownerId, deviceGroupId);
+
+            this.tbRestClient.createRelation(RelationType.CONTAINS.getType(), greenhouseAsset.getId(), insideAirWarmMoistureSensorDevice.getId());
+            this.tbRestClient.createRelation(RelationType.CONTAINS.getType(), greenhouseAsset.getId(), insideLightSensorDevice.getId());
+            this.tbRestClient.createRelation(RelationType.CONTAINS.getType(), greenhouseAsset.getId(), insideCO2SensorDevice.getId());
+            this.tbRestClient.createRelation(RelationType.CONTAINS.getType(), greenhouseAsset.getId(), outsideAirWarmMoistureSensorDevice.getId());
+            this.tbRestClient.createRelation(RelationType.CONTAINS.getType(), greenhouseAsset.getId(), outsideLightSensorDevice.getId());
+            this.tbRestClient.createRelation(RelationType.CONTAINS.getType(), greenhouseAsset.getId(), energyMeter.getId());
+            this.tbRestClient.createRelation(RelationType.CONTAINS.getType(), greenhouseAsset.getId(), waterMeter.getId());
         }
     }
 
     private void validateData(ModelData data) {
+        Set<Plant> plants = mapToPlants(data);
         Set<Greenhouse> greenhouses = mapToGreenhouses(data);
 
+        Set<EnergyMeter> energyMeters = greenhouses.stream()
+                .map(Greenhouse::getEnergyMeter)
+                .collect(Collectors.toSet());
+
+        Set<WaterMeter> waterMeters = greenhouses.stream()
+                .map(Greenhouse::getWaterMeter)
+                .collect(Collectors.toSet());
+
+        Set<InsideAirWarmMoistureSensor> insideAirWarmMoistureSensors = greenhouses.stream()
+                .map(Greenhouse::getInsideAirWarmMoistureSensor)
+                .collect(Collectors.toSet());
+
+        Set<InsideLightSensor> insideLightSensors = greenhouses.stream()
+                .map(Greenhouse::getInsideLightSensor)
+                .collect(Collectors.toSet());
+
+        Set<InsideCO2Sensor> insideCO2Sensors = greenhouses.stream()
+                .map(Greenhouse::getInsideCO2Sensor)
+                .collect(Collectors.toSet());
+
+        Set<OutsideAirWarmMoistureSensor> outsideAirWarmMoistureSensors = greenhouses.stream()
+                .map(Greenhouse::getOutsideAirWarmMoistureSensor)
+                .collect(Collectors.toSet());
+
+        Set<OutsideLightSensor> outsideLightSensors = greenhouses.stream()
+                .map(Greenhouse::getOutsideLightSensor)
+                .collect(Collectors.toSet());
 
 
-        Set<String> assets = new HashSet<Greenhouse>() // Sets.union()
+        Set<Section> sections = greenhouses.stream()
+                .map(Greenhouse::getSections)
+                .flatMap(Collection::stream)
+                .collect(Collectors.toSet());
+
+        Set<SoilWarmMoistureSensor> soilWarmMoistureSensors = sections.stream()
+                .map(Section::getSoilWarmMoistureSensor)
+                .collect(Collectors.toSet());
+
+        Set<SoilAciditySensor> soilAciditySensors = sections.stream()
+                .map(Section::getSoilAciditySensor)
+                .collect(Collectors.toSet());
+
+        Set<SoilNpkSensor> soilNpkSensors = sections.stream()
+                .map(Section::getSoilNpkSensor)
+                .collect(Collectors.toSet());
+
+        Set<HarvestReporter> harvestReporters = sections.stream()
+                .map(Section::getHarvestReporter)
+                .collect(Collectors.toSet());
+
+        Set<ModelEntity> allAssets = new TreeSet<>();
+        allAssets.addAll(plants);
+        allAssets.addAll(greenhouses);
+        allAssets.addAll(sections);
+
+        Set<ModelEntity> allDevices = new TreeSet<>();
+        allDevices.addAll(energyMeters);
+        allDevices.addAll(waterMeters);
+        allDevices.addAll(insideAirWarmMoistureSensors);
+        allDevices.addAll(insideLightSensors);
+        allDevices.addAll(insideCO2Sensors);
+        allDevices.addAll(outsideAirWarmMoistureSensors);
+        allDevices.addAll(outsideLightSensors);
+        allDevices.addAll(soilWarmMoistureSensors);
+        allDevices.addAll(soilAciditySensors);
+        allDevices.addAll(soilNpkSensors);
+        allDevices.addAll(harvestReporters);
+
+        Set<String> assets = allAssets
                 .stream()
                 .map(ModelEntity::getSystemName)
                 .collect(Collectors.toSet());
 
-        Set<String> devices = new HashSet<Greenhouse>() // Sets.union()
+        Set<String> devices = allDevices
                 .stream()
                 .map(ModelEntity::getSystemName)
                 .collect(Collectors.toSet());
@@ -284,17 +435,83 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
     }
 
     private void deleteData(ModelData data) {
+        Set<Plant> plants = mapToPlants(data);
         Set<Greenhouse> greenhouses = mapToGreenhouses(data);
 
+        Set<EnergyMeter> energyMeters = greenhouses.stream()
+                .map(Greenhouse::getEnergyMeter)
+                .collect(Collectors.toSet());
+
+        Set<WaterMeter> waterMeters = greenhouses.stream()
+                .map(Greenhouse::getWaterMeter)
+                .collect(Collectors.toSet());
+
+        Set<InsideAirWarmMoistureSensor> insideAirWarmMoistureSensors = greenhouses.stream()
+                .map(Greenhouse::getInsideAirWarmMoistureSensor)
+                .collect(Collectors.toSet());
+
+        Set<InsideLightSensor> insideLightSensors = greenhouses.stream()
+                .map(Greenhouse::getInsideLightSensor)
+                .collect(Collectors.toSet());
+
+        Set<InsideCO2Sensor> insideCO2Sensors = greenhouses.stream()
+                .map(Greenhouse::getInsideCO2Sensor)
+                .collect(Collectors.toSet());
+
+        Set<OutsideAirWarmMoistureSensor> outsideAirWarmMoistureSensors = greenhouses.stream()
+                .map(Greenhouse::getOutsideAirWarmMoistureSensor)
+                .collect(Collectors.toSet());
+
+        Set<OutsideLightSensor> outsideLightSensors = greenhouses.stream()
+                .map(Greenhouse::getOutsideLightSensor)
+                .collect(Collectors.toSet());
 
 
+        Set<Section> sections = greenhouses.stream()
+                .map(Greenhouse::getSections)
+                .flatMap(Collection::stream)
+                .collect(Collectors.toSet());
 
-        Set<String> assets = new HashSet<Greenhouse>() // Sets.union()
+        Set<SoilWarmMoistureSensor> soilWarmMoistureSensors = sections.stream()
+                .map(Section::getSoilWarmMoistureSensor)
+                .collect(Collectors.toSet());
+
+        Set<SoilAciditySensor> soilAciditySensors = sections.stream()
+                .map(Section::getSoilAciditySensor)
+                .collect(Collectors.toSet());
+
+        Set<SoilNpkSensor> soilNpkSensors = sections.stream()
+                .map(Section::getSoilNpkSensor)
+                .collect(Collectors.toSet());
+
+        Set<HarvestReporter> harvestReporters = sections.stream()
+                .map(Section::getHarvestReporter)
+                .collect(Collectors.toSet());
+
+        Set<ModelEntity> allAssets = new TreeSet<>();
+        allAssets.addAll(plants);
+        allAssets.addAll(greenhouses);
+        allAssets.addAll(sections);
+
+        Set<ModelEntity> allDevices = new TreeSet<>();
+        allDevices.addAll(energyMeters);
+        allDevices.addAll(waterMeters);
+        allDevices.addAll(insideAirWarmMoistureSensors);
+        allDevices.addAll(insideLightSensors);
+        allDevices.addAll(insideCO2Sensors);
+        allDevices.addAll(outsideAirWarmMoistureSensors);
+        allDevices.addAll(outsideLightSensors);
+        allDevices.addAll(soilWarmMoistureSensors);
+        allDevices.addAll(soilAciditySensors);
+        allDevices.addAll(soilNpkSensors);
+        allDevices.addAll(harvestReporters);
+
+        Set<String> assets = allAssets
                 .stream()
                 .map(ModelEntity::getSystemName)
                 .collect(Collectors.toSet());
 
-        Set<String> devices = new HashSet<Greenhouse>() //  Sets.union()
+        Set<String> devices = allDevices
                 .stream()
                 .map(ModelEntity::getSystemName)
                 .collect(Collectors.toSet());
@@ -311,6 +528,46 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
     }
 
 
+    private Greenhouse makeGreenhouseByConfiguration(GreenhouseConfiguration configuration) {
+        return null;
+    }
+
+
+    private Asset createPlant(Plant plant, UUID ownerId, UUID assetGroupId) {
+        String name = plant.getSystemName();
+        String entityType = plant.entityType();
+
+        Asset asset;
+        if (tbRestClient.isPe()) {
+            asset = tbRestClient.createAsset(name, entityType, new CustomerId(ownerId));
+            tbRestClient.addEntitiesToTheGroup(assetGroupId, Set.of(asset.getUuidId()));
+        } else {
+            asset = tbRestClient.createAsset(name, entityType);
+            tbRestClient.assignAssetToCustomer(ownerId, asset.getUuidId());
+        }
+
+        Set<Attribute<?>> attributes = Set.of(
+                new Attribute<>("name", plant.getName()),
+                new Attribute<>("variety", plant.getVariety()),
+                new Attribute<>("minRipeningPeriodDay", plant.getMinRipeningPeriodDay()),
+                new Attribute<>("maxRipeningPeriodDay", plant.getMaxRipeningPeriodDay()),
+                new Attribute<>("dayMinTemperature", plant.getDayMinTemperature()),
+                new Attribute<>("dayMaxTemperature", plant.getDayMaxTemperature()),
+                new Attribute<>("nightMinTemperature", plant.getNightMinTemperature()),
+                new Attribute<>("nightMaxTemperature", plant.getNightMaxTemperature()),
+                new Attribute<>("minMoisture", plant.getMinMoisture()),
+                new Attribute<>("maxMoisture", plant.getMaxMoisture()),
+                new Attribute<>("minCo2Concentration", plant.getMinCo2Concentration()),
+                new Attribute<>("maxCo2Concentration", plant.getMaxCo2Concentration()),
+                new Attribute<>("minLight", plant.getMinLight()),
+                new Attribute<>("maxLight", plant.getMaxLight()),
+                new Attribute<>("minPh", plant.getMinPh()),
+                new Attribute<>("maxPh", plant.getMaxPh())
+        );
+        tbRestClient.setEntityAttributes(asset.getUuidId(), EntityType.ASSET, Attribute.Scope.SERVER_SCOPE, attributes);
+
+        return asset;
+    }
 
     private Asset createGreenhouse(Greenhouse greenhouse, UUID ownerId, UUID assetGroupId) {
         String name = greenhouse.getSystemName();

@@ -24,4 +24,9 @@ public class Section extends ModelEntity {
 
     private int positionHeight;
     private int positionWidth;
+
+    private SoilWarmMoistureSensor soilWarmMoistureSensor;
+    private SoilAciditySensor soilAciditySensor;
+    private SoilNpkSensor soilNpkSensor;
+    private HarvestReporter harvestReporter;
 }
