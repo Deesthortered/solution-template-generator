@@ -33,6 +33,7 @@ import org.thingsboard.trendz.generator.service.rest.TbRestClient;
 import org.thingsboard.trendz.generator.service.roolchain.RuleChainBuildingService;
 import org.thingsboard.trendz.generator.solution.SolutionTemplateGenerator;
 import org.thingsboard.trendz.generator.solution.greenhouse.configuration.GreenhouseConfiguration;
+import org.thingsboard.trendz.generator.solution.greenhouse.configuration.StationCity;
 import org.thingsboard.trendz.generator.solution.greenhouse.model.*;
 import org.thingsboard.trendz.generator.utils.MySortedSet;
 
@@ -241,7 +242,11 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
         Set<GreenhouseConfiguration> greenhouseConfigurations = MySortedSet.of(
             GreenhouseConfiguration.builder()
                     .order(1)
-                    .name("Box")
+                    .name("Greenhouse in Kyiv")
+                    .stationCity(StationCity.KYIV)
+                    .address("Svyatoshyns'ka St, 34 к, Kyiv, 02000")
+                    .latitude(50.446603)
+                    .longitude(30.386447)
                     .plantType(PlantType.TOMATO)
                     .sectionHeight(5)
                     .sectionWidth(10)
@@ -249,8 +254,36 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
 
             GreenhouseConfiguration.builder()
                     .order(2)
-                    .name("Circle")
+                    .name("Greenhouse in Krakow")
+                    .stationCity(StationCity.KRAKOW)
+                    .address("Zielona 18, 32-087 Bibice, Poland")
+                    .latitude(50.121765)
+                    .longitude(19.946134)
                     .plantType(PlantType.CUCUMBER)
+                    .sectionHeight(5)
+                    .sectionWidth(7)
+                    .build(),
+
+            GreenhouseConfiguration.builder()
+                    .order(3)
+                    .name("Greenhouse in Warszawa")
+                    .stationCity(StationCity.WARSZAWA)
+                    .address("Ojca Aniceta 28, 03-264 Warszawa, Poland")
+                    .latitude(52.306237)
+                    .longitude(21.039917)
+                    .plantType(PlantType.ONION)
+                    .sectionHeight(10)
+                    .sectionWidth(15)
+                    .build(),
+
+            GreenhouseConfiguration.builder()
+                    .order(4)
+                    .name("Greenhouse in Stuttgart")
+                    .stationCity(StationCity.STUTTGART)
+                    .address("Augsburger Str. 500, 70327 Stuttgart, Germany")
+                    .latitude(48.774252)
+                    .longitude(9.259500)
+                    .plantType(PlantType.TRUFFLE)
                     .sectionHeight(5)
                     .sectionWidth(5)
                     .build()
@@ -262,23 +295,93 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
                         .systemLabel("")
                         .name("Tomato")
                         .variety("Sungold")
-                        .minRipeningPeriodDay(28)
-                        .maxRipeningPeriodDay(42)
-                        .dayMinTemperature(16)
-                        .dayMaxTemperature(21)
-                        .nightMinTemperature(7)
-                        .nightMaxTemperature(16)
-                        .minMoisture(40)
-                        .maxMoisture(60)
-                        .minCo2Concentration(800)
+                        .minRipeningCycleDays(28)
+                        .maxRipeningCycleDays(42)
+                        .dayMinTemperature(21)
+                        .dayMaxTemperature(29)
+                        .nightMinTemperature(15)
+                        .nightMaxTemperature(21)
+                        .minAirHumidity(40)
+                        .maxAirHumidity(70)
+                        .minSoilMoisture(20)
+                        .maxSoilMoisture(60)
+                        .minCo2Concentration(350)
                         .maxCo2Concentration(1000)
-                        .minLight(15000)
+                        .minLight(7000)
+                        .maxLight(120000)
+                        .minPh(5.5)
+                        .maxPh(7.5)
+                        .build(),
+
+                Plant.builder()
+                        .systemName("Cucumber - English")
+                        .systemLabel("")
+                        .name("Cucumber")
+                        .variety("English")
+                        .minRipeningCycleDays(28)
+                        .maxRipeningCycleDays(42)
+                        .dayMinTemperature(22)
+                        .dayMaxTemperature(27)
+                        .nightMinTemperature(16)
+                        .nightMaxTemperature(21)
+                        .minAirHumidity(60)
+                        .maxAirHumidity(70)
+                        .minSoilMoisture(60)
+                        .maxSoilMoisture(80)
+                        .minCo2Concentration(300)
+                        .maxCo2Concentration(1000)
+                        .minLight(10000)
                         .maxLight(20000)
                         .minPh(6.0)
+                        .maxPh(7.0)
+                        .build(),
+
+                Plant.builder()
+                        .systemName("Onion - Sweet Spanish")
+                        .systemLabel("")
+                        .name("Onion")
+                        .variety("Sweet Spanish")
+                        .minRipeningCycleDays(28)
+                        .maxRipeningCycleDays(42)
+                        .dayMinTemperature(21)
+                        .dayMaxTemperature(29)
+                        .nightMinTemperature(13)
+                        .nightMaxTemperature(21)
+                        .minAirHumidity(50)
+                        .maxAirHumidity(70)
+                        .minSoilMoisture(60)
+                        .maxSoilMoisture(80)
+                        .minCo2Concentration(300)
+                        .maxCo2Concentration(1000)
+                        .minLight(10000)
+                        .maxLight(20000)
+                        .minPh(6.0)
+                        .maxPh(7.0)
+                        .build(),
+
+                Plant.builder()
+                        .systemName("Tomato - Cherry")
+                        .systemLabel("")
+                        .name("Tomato")
+                        .variety("Cherry")
+                        .minRipeningCycleDays(28)
+                        .maxRipeningCycleDays(42)
+                        .dayMinTemperature(21)
+                        .dayMaxTemperature(29)
+                        .nightMinTemperature(15)
+                        .nightMaxTemperature(21)
+                        .minAirHumidity(50)
+                        .maxAirHumidity(70)
+                        .minSoilMoisture(40)
+                        .maxSoilMoisture(70)
+                        .minCo2Concentration(350)
+                        .maxCo2Concentration(1000)
+                        .minLight(7000)
+                        .maxLight(120000)
+                        .minPh(5.5)
                         .maxPh(6.8)
                         .build()
         );
-
 
         Set<ModelEntity> entities = MySortedSet.of();
         entities.addAll(plants);
@@ -679,14 +782,14 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
         Set<Attribute<?>> attributes = Set.of(
                 new Attribute<>("name", plant.getName()),
                 new Attribute<>("variety", plant.getVariety()),
-                new Attribute<>("minRipeningPeriodDay", plant.getMinRipeningPeriodDay()),
-                new Attribute<>("maxRipeningPeriodDay", plant.getMaxRipeningPeriodDay()),
+                new Attribute<>("minRipeningPeriodDay", plant.getMinRipeningCycleDays()),
+                new Attribute<>("maxRipeningPeriodDay", plant.getMaxRipeningCycleDays()),
                 new Attribute<>("dayMinTemperature", plant.getDayMinTemperature()),
                 new Attribute<>("dayMaxTemperature", plant.getDayMaxTemperature()),
                 new Attribute<>("nightMinTemperature", plant.getNightMinTemperature()),
                 new Attribute<>("nightMaxTemperature", plant.getNightMaxTemperature()),
-                new Attribute<>("minMoisture", plant.getMinMoisture()),
-                new Attribute<>("maxMoisture", plant.getMaxMoisture()),
+                new Attribute<>("minMoisture", plant.getMinAirHumidity()),
+                new Attribute<>("maxMoisture", plant.getMaxAirHumidity()),
                 new Attribute<>("minCo2Concentration", plant.getMinCo2Concentration()),
                 new Attribute<>("maxCo2Concentration", plant.getMaxCo2Concentration()),
                 new Attribute<>("minLight", plant.getMinLight()),

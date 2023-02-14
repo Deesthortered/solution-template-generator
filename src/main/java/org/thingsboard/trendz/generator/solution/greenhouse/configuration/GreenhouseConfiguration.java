@@ -18,6 +18,11 @@ public class GreenhouseConfiguration extends ConfigurationEntity {
     private int order;
 
     private String name;
+    private String address;
+    private double latitude;
+    private double longitude;
+    private StationCity stationCity;
+
     private PlantType plantType;
     private int sectionHeight;
     private int sectionWidth;
