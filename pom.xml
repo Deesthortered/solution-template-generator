@@ -61,7 +61,11 @@
 			<artifactId>guava</artifactId>
 			<version>${guava.version}</version>
 		</dependency>
-
+		<dependency>
+			<groupId>org.apache.commons</groupId>
+			<artifactId>commons-csv</artifactId>
+			<version>1.9.0</version>
+		</dependency>
 		<dependency>
 			<groupId>com.github.sh0nk</groupId>
 			<artifactId>matplotlib4j</artifactId>

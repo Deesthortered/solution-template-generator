@@ -1,6 +1,8 @@
 package org.thingsboard.trendz.generator.solution.greenhouse;
 
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.csv.CSVFormat;
+import org.apache.commons.csv.CSVParser;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.thingsboard.server.common.data.Customer;
@@ -35,12 +37,17 @@ import org.thingsboard.trendz.generator.service.roolchain.RuleChainBuildingServi
 import org.thingsboard.trendz.generator.solution.SolutionTemplateGenerator;
 import org.thingsboard.trendz.generator.solution.greenhouse.configuration.GreenhouseConfiguration;
 import org.thingsboard.trendz.generator.solution.greenhouse.configuration.StationCity;
+import org.thingsboard.trendz.generator.solution.greenhouse.configuration.WeatherData;
 import org.thingsboard.trendz.generator.solution.greenhouse.model.*;
 import org.thingsboard.trendz.generator.utils.MySortedSet;
 
+import java.io.FileReader;
+import java.io.Reader;
+import java.nio.file.Path;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -681,6 +688,13 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
 
 
     private Greenhouse makeGreenhouseByConfiguration(GreenhouseConfiguration configuration, ZonedDateTime startYear, boolean skipTelemetry) {
+        List<WeatherData> weatherData;
+        if (skipTelemetry) {
+            weatherData = Collections.emptyList();
+        } else {
+            weatherData = loadWeatherData(configuration.getStationCity());
+        }
+
         Set<Section> sections = new TreeSet<>();
         for (int height = 1; height <= configuration.getSectionHeight(); height++) {
             for (int width = 1; width <= configuration.getSectionWidth(); width++) {
@@ -787,6 +801,51 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
                 .energyMeter(energyMeter)
                 .waterMeter(waterMeter)
                 .build();
+    }
+
+    private List<WeatherData> loadWeatherData(StationCity city) {
+        try {
+            Path filePath = Path.of("data", "greenhouse_weather", getWeatherFileName(city));
+            Reader in = new FileReader(filePath.toFile());
+            CSVParser parser = CSVFormat.DEFAULT.withFirstRecordAsHeader().parse(in);
+
+            List<WeatherData> weatherData = parser.stream()
+                    .map(record -> WeatherData.builder()
+                            .ts(Long.parseLong(record.get("ts")))
+                            .pressure(Double.parseDouble(record.get("pressure")))
+                            .temperatureFahrenheit(Double.parseDouble(record.get("temperatureFahrenheit")))
+                            .temperatureCelsius(Double.parseDouble(record.get("temperatureCelsius").replace(',', '.')))
+                            .dewPointFahrenheit(Double.parseDouble(record.get("dewPointFahrenheit")))
+                            .dewPointCelsius(Double.parseDouble(record.get("dewPointCelsius").replace(',', '.')))
+                            .humidity(Double.parseDouble(record.get("humidity")))
+                            .windSpeed(Double.parseDouble(record.get("windSpeed")))
+                            .windGust(Double.parseDouble(record.get("windGust")))
+                            .windDirectionDegrees(Double.parseDouble(record.get("windDirectionDegrees")))
+                            .windDirectionWords(record.get("windDirectionWords"))
+                            .condition(record.get("condition"))
+                            .build()
+                    )
+                    .collect(Collectors.toList());
+
+            return weatherData;
+        } catch (Exception e) {
+            throw new RuntimeException("Can not read weather file for city " + city.toString(), e);
+        }
+    }
+
+    private String getWeatherFileName(StationCity city) {
+        switch (city) {
+            case KYIV:
+                return "kyiv.csv";
+            case KRAKOW:
+                return "krakow.csv";
+            case WARSZAWA:
+                return "warszawa.csv";
+            case STUTTGART:
+                return "stuttgart.csv";
+            default:
+                throw new IllegalArgumentException("Unsupported city: " + city);
+        }
     }
 
 
