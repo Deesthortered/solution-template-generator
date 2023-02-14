@@ -30,10 +30,10 @@ public class Greenhouse extends ModelEntity {
     private double longitude;
 
     private Set<Section> sections;
-    private InsideAirWarmMoistureSensor insideAirWarmMoistureSensor;
+    private InsideAirWarmHumiditySensor insideAirWarmHumiditySensor;
     private InsideLightSensor insideLightSensor;
     private InsideCO2Sensor insideCO2Sensor;
-    private OutsideAirWarmMoistureSensor outsideAirWarmMoistureSensor;
+    private OutsideAirWarmHumiditySensor outsideAirWarmHumiditySensor;
     private OutsideLightSensor outsideLightSensor;
     private EnergyMeter energyMeter;
     private WaterMeter waterMeter;

@@ -71,13 +71,13 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
     private final Map<SoilNpkSensor, UUID> soilNpkSensorToIdMap = new HashMap<>();
     private final Map<SoilWarmMoistureSensor, UUID> soilWarmMoistureSensorToIdMap = new HashMap<>();
     private final Map<SoilAciditySensor, UUID> soilAciditySensorToIdMap = new HashMap<>();
-    private final Map<InsideAirWarmMoistureSensor, UUID> insideAirWarmMoistureSensorToIdMap = new HashMap<>();
+    private final Map<InsideAirWarmHumiditySensor, UUID> insideAirWarmHumiditySensorToIdMap = new HashMap<>();
     private final Map<InsideCO2Sensor, UUID> insideCO2SensorToIdMap = new HashMap<>();
     private final Map<InsideLightSensor, UUID> insideLightSensorToIdMap = new HashMap<>();
     private final Map<HarvestReporter, UUID> harvestReporterToIdMap = new HashMap<>();
     private final Map<EnergyMeter, UUID> energyMeterToIdMap = new HashMap<>();
     private final Map<WaterMeter, UUID> waterMeterToIdMap = new HashMap<>();
-    private final Map<OutsideAirWarmMoistureSensor, UUID> outsideAirWarmMoistureSensorToIdMap = new HashMap<>();
+    private final Map<OutsideAirWarmHumiditySensor, UUID> outsideAirWarmHumiditySensorToIdMap = new HashMap<>();
     private final Map<OutsideLightSensor, UUID> outsideLightSensorToIdMap = new HashMap<>();
 
 
@@ -283,7 +283,7 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
                     .address("Augsburger Str. 500, 70327 Stuttgart, Germany")
                     .latitude(48.774252)
                     .longitude(9.259500)
-                    .plantType(PlantType.TRUFFLE)
+                    .plantType(PlantType.TOMATO)
                     .sectionHeight(5)
                     .sectionWidth(5)
                     .build()
@@ -434,18 +434,18 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
                 this.tbRestClient.createRelation(RelationType.CONTAINS.getType(), sectionAsset.getId(), harvestReporterDevice.getId());
             }
 
-            Device insideAirWarmMoistureSensorDevice = createInsideAirWarmMoistureSensor(greenhouse.getInsideAirWarmMoistureSensor(), ownerId, deviceGroupId);
+            Device insideAirWarmHumiditySensorDevice = createInsideAirWarmHumiditySensor(greenhouse.getInsideAirWarmHumiditySensor(), ownerId, deviceGroupId);
             Device insideLightSensorDevice = createInsideLightSensor(greenhouse.getInsideLightSensor(), ownerId, deviceGroupId);
             Device insideCO2SensorDevice = createInsideCO2Sensor(greenhouse.getInsideCO2Sensor(), ownerId, deviceGroupId);
-            Device outsideAirWarmMoistureSensorDevice = createOutsideAirWarmMoistureSensor(greenhouse.getOutsideAirWarmMoistureSensor(), ownerId, deviceGroupId);
+            Device outsideAirWarmHumiditySensorDevice = createOutsideAirWarmHumiditySensor(greenhouse.getOutsideAirWarmHumiditySensor(), ownerId, deviceGroupId);
             Device outsideLightSensorDevice = createOutsideLightSensor(greenhouse.getOutsideLightSensor(), ownerId, deviceGroupId);
             Device energyMeter = createEnergyMeter(greenhouse.getEnergyMeter(), ownerId, deviceGroupId);
             Device waterMeter = createWaterMeter(greenhouse.getWaterMeter(), ownerId, deviceGroupId);
 
-            this.tbRestClient.createRelation(RelationType.CONTAINS.getType(), greenhouseAsset.getId(), insideAirWarmMoistureSensorDevice.getId());
+            this.tbRestClient.createRelation(RelationType.CONTAINS.getType(), greenhouseAsset.getId(), insideAirWarmHumiditySensorDevice.getId());
             this.tbRestClient.createRelation(RelationType.CONTAINS.getType(), greenhouseAsset.getId(), insideLightSensorDevice.getId());
             this.tbRestClient.createRelation(RelationType.CONTAINS.getType(), greenhouseAsset.getId(), insideCO2SensorDevice.getId());
-            this.tbRestClient.createRelation(RelationType.CONTAINS.getType(), greenhouseAsset.getId(), outsideAirWarmMoistureSensorDevice.getId());
+            this.tbRestClient.createRelation(RelationType.CONTAINS.getType(), greenhouseAsset.getId(), outsideAirWarmHumiditySensorDevice.getId());
             this.tbRestClient.createRelation(RelationType.CONTAINS.getType(), greenhouseAsset.getId(), outsideLightSensorDevice.getId());
             this.tbRestClient.createRelation(RelationType.CONTAINS.getType(), greenhouseAsset.getId(), energyMeter.getId());
             this.tbRestClient.createRelation(RelationType.CONTAINS.getType(), greenhouseAsset.getId(), waterMeter.getId());
@@ -464,8 +464,8 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
                 .map(Greenhouse::getWaterMeter)
                 .collect(Collectors.toSet());
 
-        Set<InsideAirWarmMoistureSensor> insideAirWarmMoistureSensors = greenhouses.stream()
-                .map(Greenhouse::getInsideAirWarmMoistureSensor)
+        Set<InsideAirWarmHumiditySensor> insideAirWarmHumiditySensors = greenhouses.stream()
+                .map(Greenhouse::getInsideAirWarmHumiditySensor)
                 .collect(Collectors.toSet());
 
         Set<InsideLightSensor> insideLightSensors = greenhouses.stream()
@@ -476,8 +476,8 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
                 .map(Greenhouse::getInsideCO2Sensor)
                 .collect(Collectors.toSet());
 
-        Set<OutsideAirWarmMoistureSensor> outsideAirWarmMoistureSensors = greenhouses.stream()
-                .map(Greenhouse::getOutsideAirWarmMoistureSensor)
+        Set<OutsideAirWarmHumiditySensor> outsideAirWarmHumiditySensors = greenhouses.stream()
+                .map(Greenhouse::getOutsideAirWarmHumiditySensor)
                 .collect(Collectors.toSet());
 
         Set<OutsideLightSensor> outsideLightSensors = greenhouses.stream()
@@ -514,10 +514,10 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
         Set<ModelEntity> allDevices = new TreeSet<>();
         allDevices.addAll(energyMeters);
         allDevices.addAll(waterMeters);
-        allDevices.addAll(insideAirWarmMoistureSensors);
+        allDevices.addAll(insideAirWarmHumiditySensors);
         allDevices.addAll(insideLightSensors);
         allDevices.addAll(insideCO2Sensors);
-        allDevices.addAll(outsideAirWarmMoistureSensors);
+        allDevices.addAll(outsideAirWarmHumiditySensors);
         allDevices.addAll(outsideLightSensors);
         allDevices.addAll(soilWarmMoistureSensors);
         allDevices.addAll(soilAciditySensors);
@@ -567,8 +567,8 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
                 .map(Greenhouse::getWaterMeter)
                 .collect(Collectors.toSet());
 
-        Set<InsideAirWarmMoistureSensor> insideAirWarmMoistureSensors = greenhouses.stream()
-                .map(Greenhouse::getInsideAirWarmMoistureSensor)
+        Set<InsideAirWarmHumiditySensor> insideAirWarmHumiditySensors = greenhouses.stream()
+                .map(Greenhouse::getInsideAirWarmHumiditySensor)
                 .collect(Collectors.toSet());
 
         Set<InsideLightSensor> insideLightSensors = greenhouses.stream()
@@ -579,8 +579,8 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
                 .map(Greenhouse::getInsideCO2Sensor)
                 .collect(Collectors.toSet());
 
-        Set<OutsideAirWarmMoistureSensor> outsideAirWarmMoistureSensors = greenhouses.stream()
-                .map(Greenhouse::getOutsideAirWarmMoistureSensor)
+        Set<OutsideAirWarmHumiditySensor> outsideAirWarmHumiditySensors = greenhouses.stream()
+                .map(Greenhouse::getOutsideAirWarmHumiditySensor)
                 .collect(Collectors.toSet());
 
         Set<OutsideLightSensor> outsideLightSensors = greenhouses.stream()
@@ -617,10 +617,10 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
         Set<ModelEntity> allDevices = new TreeSet<>();
         allDevices.addAll(energyMeters);
         allDevices.addAll(waterMeters);
-        allDevices.addAll(insideAirWarmMoistureSensors);
+        allDevices.addAll(insideAirWarmHumiditySensors);
         allDevices.addAll(insideLightSensors);
         allDevices.addAll(insideCO2Sensors);
-        allDevices.addAll(outsideAirWarmMoistureSensors);
+        allDevices.addAll(outsideAirWarmHumiditySensors);
         allDevices.addAll(outsideLightSensors);
         allDevices.addAll(soilWarmMoistureSensors);
         allDevices.addAll(soilAciditySensors);
@@ -706,11 +706,11 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
             }
         }
 
-        InsideAirWarmMoistureSensor insideAirWarmMoistureSensor = InsideAirWarmMoistureSensor.builder()
+        InsideAirWarmHumiditySensor insideAirWarmHumiditySensor = InsideAirWarmHumiditySensor.builder()
                 .systemName(configuration.getName() + ": Air Warm-Moisture Sensor (Inside)")
                 .systemLabel("")
                 .temperature(new Telemetry<>("temperature", MySortedSet.of(new Telemetry.Point<>(Timestamp.of(0), 0))))
-                .moisture(new Telemetry<>("moisture", MySortedSet.of(new Telemetry.Point<>(Timestamp.of(0), 0))))
+                .humidity(new Telemetry<>("humidity", MySortedSet.of(new Telemetry.Point<>(Timestamp.of(0), 0))))
                 .build();
 
         InsideLightSensor insideLightSensor = InsideLightSensor.builder()
@@ -725,11 +725,11 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
                 .concentration(new Telemetry<>("concentration", MySortedSet.of(new Telemetry.Point<>(Timestamp.of(0), 0))))
                 .build();
 
-        OutsideAirWarmMoistureSensor outsideAirWarmMoistureSensor = OutsideAirWarmMoistureSensor.builder()
+        OutsideAirWarmHumiditySensor outsideAirWarmHumiditySensor = OutsideAirWarmHumiditySensor.builder()
                 .systemName(configuration.getName() + ": Air Warm-Moisture Sensor (Outside)")
                 .systemLabel("")
                 .temperature(new Telemetry<>("temperature", MySortedSet.of(new Telemetry.Point<>(Timestamp.of(0), 0))))
-                .moisture(new Telemetry<>("moisture", MySortedSet.of(new Telemetry.Point<>(Timestamp.of(0), 0))))
+                .humidity(new Telemetry<>("humidity", MySortedSet.of(new Telemetry.Point<>(Timestamp.of(0), 0))))
                 .build();
 
         OutsideLightSensor outsideLightSensor = OutsideLightSensor.builder()
@@ -755,10 +755,10 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
                 .systemLabel("")
                 .plantType(configuration.getPlantType())
                 .sections(sections)
-                .insideAirWarmMoistureSensor(insideAirWarmMoistureSensor)
+                .insideAirWarmHumiditySensor(insideAirWarmHumiditySensor)
                 .insideLightSensor(insideLightSensor)
                 .insideCO2Sensor(insideCO2Sensor)
-                .outsideAirWarmMoistureSensor(outsideAirWarmMoistureSensor)
+                .outsideAirWarmHumiditySensor(outsideAirWarmHumiditySensor)
                 .outsideLightSensor(outsideLightSensor)
                 .energyMeter(energyMeter)
                 .waterMeter(waterMeter)
@@ -910,9 +910,9 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
         return device;
     }
 
-    private Device createInsideAirWarmMoistureSensor(InsideAirWarmMoistureSensor insideAirWarmMoistureSensor, UUID ownerId, UUID deviceGroupId) {
-        String name = insideAirWarmMoistureSensor.getSystemName();
-        String entityType = insideAirWarmMoistureSensor.entityType();
+    private Device createInsideAirWarmHumiditySensor(InsideAirWarmHumiditySensor insideAirWarmHumiditySensor, UUID ownerId, UUID deviceGroupId) {
+        String name = insideAirWarmHumiditySensor.getSystemName();
+        String entityType = insideAirWarmHumiditySensor.entityType();
 
         Device device;
         if (tbRestClient.isPe()) {
@@ -925,10 +925,10 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
         DeviceCredentials deviceCredentials = tbRestClient.getDeviceCredentials(device.getUuidId());
 
 
-        tbRestClient.pushTelemetry(deviceCredentials.getCredentialsId(), insideAirWarmMoistureSensor.getTemperature());
-        tbRestClient.pushTelemetry(deviceCredentials.getCredentialsId(), insideAirWarmMoistureSensor.getMoisture());
+        tbRestClient.pushTelemetry(deviceCredentials.getCredentialsId(), insideAirWarmHumiditySensor.getTemperature());
+        tbRestClient.pushTelemetry(deviceCredentials.getCredentialsId(), insideAirWarmHumiditySensor.getHumidity());
 
-        this.insideAirWarmMoistureSensorToIdMap.put(insideAirWarmMoistureSensor, device.getUuidId());
+        this.insideAirWarmHumiditySensorToIdMap.put(insideAirWarmHumiditySensor, device.getUuidId());
         return device;
     }
 
@@ -1038,9 +1038,9 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
         return device;
     }
 
-    private Device createOutsideAirWarmMoistureSensor(OutsideAirWarmMoistureSensor outsideAirWarmMoistureSensor, UUID ownerId, UUID deviceGroupId) {
-        String name = outsideAirWarmMoistureSensor.getSystemName();
-        String entityType = outsideAirWarmMoistureSensor.entityType();
+    private Device createOutsideAirWarmHumiditySensor(OutsideAirWarmHumiditySensor outsideAirWarmHumiditySensor, UUID ownerId, UUID deviceGroupId) {
+        String name = outsideAirWarmHumiditySensor.getSystemName();
+        String entityType = outsideAirWarmHumiditySensor.entityType();
 
         Device device;
         if (tbRestClient.isPe()) {
@@ -1053,10 +1053,10 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
         DeviceCredentials deviceCredentials = tbRestClient.getDeviceCredentials(device.getUuidId());
 
 
-        tbRestClient.pushTelemetry(deviceCredentials.getCredentialsId(), outsideAirWarmMoistureSensor.getTemperature());
-        tbRestClient.pushTelemetry(deviceCredentials.getCredentialsId(), outsideAirWarmMoistureSensor.getMoisture());
+        tbRestClient.pushTelemetry(deviceCredentials.getCredentialsId(), outsideAirWarmHumiditySensor.getTemperature());
+        tbRestClient.pushTelemetry(deviceCredentials.getCredentialsId(), outsideAirWarmHumiditySensor.getHumidity());
 
-        this.outsideAirWarmMoistureSensorToIdMap.put(outsideAirWarmMoistureSensor, device.getUuidId());
+        this.outsideAirWarmHumiditySensorToIdMap.put(outsideAirWarmHumiditySensor, device.getUuidId());
         return device;
     }
 

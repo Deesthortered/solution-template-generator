@@ -4,7 +4,6 @@ public enum PlantType {
     TOMATO("Tomato"),
     CUCUMBER("Cucumber"),
     ONION("Onion"),
-    TRUFFLE("Truffle"),
     ;
 
 

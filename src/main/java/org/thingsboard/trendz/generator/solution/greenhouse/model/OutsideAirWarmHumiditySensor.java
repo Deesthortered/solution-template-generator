@@ -13,16 +13,16 @@ import org.thingsboard.trendz.generator.model.tb.Telemetry;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class OutsideAirWarmMoistureSensor extends ModelEntity {
+public class OutsideAirWarmHumiditySensor extends ModelEntity {
 
     @Override
     public String entityType() {
-        return "GR) outside air warm moisture sensor";
+        return "GR) outside air warm humidity sensor";
     }
 
     private String systemName;
     private String systemLabel;
 
     private Telemetry<Integer> temperature;
-    private Telemetry<Integer> moisture;
+    private Telemetry<Integer> humidity;
 }
