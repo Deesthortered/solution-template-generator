@@ -8,6 +8,7 @@ import org.thingsboard.server.common.data.Device;
 import org.thingsboard.server.common.data.EntityType;
 import org.thingsboard.server.common.data.asset.Asset;
 import org.thingsboard.server.common.data.group.EntityGroup;
+import org.thingsboard.server.common.data.id.AssetId;
 import org.thingsboard.server.common.data.id.CustomerId;
 import org.thingsboard.server.common.data.rule.NodeConnectionInfo;
 import org.thingsboard.server.common.data.rule.RuleChain;
@@ -68,6 +69,7 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
     private final RuleChainBuildingService ruleChainBuildingService;
     private final DashboardService dashboardService;
 
+    private final Map<Plant, UUID> plantToIdMap = new HashMap<>();
     private final Map<SoilNpkSensor, UUID> soilNpkSensorToIdMap = new HashMap<>();
     private final Map<SoilWarmMoistureSensor, UUID> soilWarmMoistureSensorToIdMap = new HashMap<>();
     private final Map<SoilAciditySensor, UUID> soilAciditySensorToIdMap = new HashMap<>();
@@ -238,57 +240,6 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
 
 
     private ModelData makeData(boolean skipTelemetry, ZonedDateTime startYear) {
-
-        Set<GreenhouseConfiguration> greenhouseConfigurations = MySortedSet.of(
-            GreenhouseConfiguration.builder()
-                    .order(1)
-                    .name("Greenhouse in Kyiv")
-                    .stationCity(StationCity.KYIV)
-                    .address("Svyatoshyns'ka St, 34 к, Kyiv, 02000")
-                    .latitude(50.446603)
-                    .longitude(30.386447)
-                    .plantType(PlantType.TOMATO)
-                    .sectionHeight(5)
-                    .sectionWidth(10)
-                    .build(),
-
-            GreenhouseConfiguration.builder()
-                    .order(2)
-                    .name("Greenhouse in Krakow")
-                    .stationCity(StationCity.KRAKOW)
-                    .address("Zielona 18, 32-087 Bibice, Poland")
-                    .latitude(50.121765)
-                    .longitude(19.946134)
-                    .plantType(PlantType.CUCUMBER)
-                    .sectionHeight(5)
-                    .sectionWidth(7)
-                    .build(),
-
-            GreenhouseConfiguration.builder()
-                    .order(3)
-                    .name("Greenhouse in Warszawa")
-                    .stationCity(StationCity.WARSZAWA)
-                    .address("Ojca Aniceta 28, 03-264 Warszawa, Poland")
-                    .latitude(52.306237)
-                    .longitude(21.039917)
-                    .plantType(PlantType.ONION)
-                    .sectionHeight(10)
-                    .sectionWidth(15)
-                    .build(),
-
-            GreenhouseConfiguration.builder()
-                    .order(4)
-                    .name("Greenhouse in Stuttgart")
-                    .stationCity(StationCity.STUTTGART)
-                    .address("Augsburger Str. 500, 70327 Stuttgart, Germany")
-                    .latitude(48.774252)
-                    .longitude(9.259500)
-                    .plantType(PlantType.TOMATO)
-                    .sectionHeight(5)
-                    .sectionWidth(5)
-                    .build()
-        );
-
         Set<Plant> plants = MySortedSet.of(
                 Plant.builder()
                         .systemName("Tomato - Sungold")
@@ -383,6 +334,61 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
                         .build()
         );
 
+        Set<GreenhouseConfiguration> greenhouseConfigurations = MySortedSet.of(
+                GreenhouseConfiguration.builder()
+                        .order(1)
+                        .name("Greenhouse in Kyiv")
+                        .stationCity(StationCity.KYIV)
+                        .address("Svyatoshyns'ka St, 34 к, Kyiv, 02000")
+                        .latitude(50.446603)
+                        .longitude(30.386447)
+                        .plantType(PlantType.TOMATO)
+                        .variety("Sweet Spanish")
+                        .sectionHeight(5)
+                        .sectionWidth(10)
+                        .build(),
+
+                GreenhouseConfiguration.builder()
+                        .order(2)
+                        .name("Greenhouse in Krakow")
+                        .stationCity(StationCity.KRAKOW)
+                        .address("Zielona 18, 32-087 Bibice, Poland")
+                        .latitude(50.121765)
+                        .longitude(19.946134)
+                        .plantType(PlantType.CUCUMBER)
+                        .variety("English")
+                        .sectionHeight(5)
+                        .sectionWidth(7)
+                        .build(),
+
+                GreenhouseConfiguration.builder()
+                        .order(3)
+                        .name("Greenhouse in Warszawa")
+                        .stationCity(StationCity.WARSZAWA)
+                        .address("Ojca Aniceta 28, 03-264 Warszawa, Poland")
+                        .latitude(52.306237)
+                        .longitude(21.039917)
+                        .plantType(PlantType.ONION)
+                        .variety("Sweet Spanish")
+                        .sectionHeight(10)
+                        .sectionWidth(15)
+                        .build(),
+
+                GreenhouseConfiguration.builder()
+                        .order(4)
+                        .name("Greenhouse in Stuttgart")
+                        .stationCity(StationCity.STUTTGART)
+                        .address("Augsburger Str. 500, 70327 Stuttgart, Germany")
+                        .latitude(48.774252)
+                        .longitude(9.259500)
+                        .plantType(PlantType.TOMATO)
+                        .variety("Cherry")
+                        .sectionHeight(5)
+                        .sectionWidth(5)
+                        .build()
+        );
+
+
         Set<ModelEntity> entities = MySortedSet.of();
         entities.addAll(plants);
         entities.addAll(
@@ -391,6 +397,7 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
                         .map(configuration -> makeGreenhouseByConfiguration(configuration, startYear, skipTelemetry))
                         .collect(Collectors.toList())
         );
+
 
         return ModelData.builder()
                 .data(entities)
@@ -411,6 +418,13 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
         }
 
         Set<Plant> plants = mapToPlants(data);
+
+        Map<String, Map<String, Plant>> plantsMap = plants
+                .stream()
+                .collect(Collectors.groupingBy(
+                        Plant::getName, Collectors.toMap(Plant::getVariety, i -> i)
+                ));
+
         for (Plant plant : plants) {
             Asset plantAsset = createPlant(plant, ownerId, assetGroupId);
         }
@@ -449,6 +463,15 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
             this.tbRestClient.createRelation(RelationType.CONTAINS.getType(), greenhouseAsset.getId(), outsideLightSensorDevice.getId());
             this.tbRestClient.createRelation(RelationType.CONTAINS.getType(), greenhouseAsset.getId(), energyMeter.getId());
             this.tbRestClient.createRelation(RelationType.CONTAINS.getType(), greenhouseAsset.getId(), waterMeter.getId());
+
+            if (plantsMap.containsKey(greenhouse.getPlantType().toString())) {
+                Map<String, Plant> varieties = plantsMap.get(greenhouse.getPlantType().toString());
+                if (varieties.containsKey(greenhouse.getVariety())) {
+                    Plant plant = varieties.get(greenhouse.getVariety());
+                    UUID plantUuid = this.plantToIdMap.get(plant);
+                    this.tbRestClient.createRelation(RelationType.CONTAINS.getType(), new AssetId(plantUuid), greenhouseAsset.getId());
+                }
+            }
         }
     }
 
@@ -754,6 +777,7 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
                 .systemName("Greenhouse " + configuration.getName())
                 .systemLabel("")
                 .plantType(configuration.getPlantType())
+                .variety(configuration.getVariety())
                 .sections(sections)
                 .insideAirWarmHumiditySensor(insideAirWarmHumiditySensor)
                 .insideLightSensor(insideLightSensor)
@@ -799,6 +823,7 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
         );
         tbRestClient.setEntityAttributes(asset.getUuidId(), EntityType.ASSET, Attribute.Scope.SERVER_SCOPE, attributes);
 
+        this.plantToIdMap.put(plant, asset.getUuidId());
         return asset;
     }
 

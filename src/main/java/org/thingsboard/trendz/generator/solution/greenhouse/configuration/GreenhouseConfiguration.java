@@ -24,6 +24,7 @@ public class GreenhouseConfiguration extends ConfigurationEntity {
     private StationCity stationCity;
 
     private PlantType plantType;
+    private String variety;
     private int sectionHeight;
     private int sectionWidth;
 }
