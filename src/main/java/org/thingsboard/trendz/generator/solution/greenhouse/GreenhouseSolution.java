@@ -887,7 +887,7 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
 
         tbRestClient.pushTelemetry(deviceCredentials.getCredentialsId(), soilNpkSensor.getNitrogen());
         tbRestClient.pushTelemetry(deviceCredentials.getCredentialsId(), soilNpkSensor.getPotassium());
-        tbRestClient.pushTelemetry(deviceCredentials.getCredentialsId(), soilNpkSensor.getPotassium());
+        tbRestClient.pushTelemetry(deviceCredentials.getCredentialsId(), soilNpkSensor.getPhosphorus());
 
         this.soilNpkSensorToIdMap.put(soilNpkSensor, device.getUuidId());
         return device;
