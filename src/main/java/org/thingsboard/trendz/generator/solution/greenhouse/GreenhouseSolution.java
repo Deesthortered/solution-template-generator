@@ -343,7 +343,7 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
                         .latitude(50.446603)
                         .longitude(30.386447)
                         .plantType(PlantType.TOMATO)
-                        .variety("Sweet Spanish")
+                        .variety("Sungold")
                         .sectionHeight(5)
                         .sectionWidth(10)
                         .build(),
