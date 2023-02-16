@@ -3,6 +3,7 @@ package org.thingsboard.trendz.generator.solution.greenhouse;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
+import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.thingsboard.server.common.data.Customer;
@@ -48,6 +49,7 @@ import java.nio.file.Path;
 import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
@@ -248,6 +250,10 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
 
 
     private ModelData makeData(boolean skipTelemetry, ZonedDateTime startYear) {
+        Map<StationCity, Map<Long, WeatherData>> weatherMap = Arrays.stream(StationCity.values())
+                .map(city -> Pair.of(city, loadWeatherData(city, startYear, skipTelemetry)))
+                .collect(Collectors.toMap(Pair::getKey, Pair::getValue));
+
         Set<Plant> plants = MySortedSet.of(
                 Plant.builder()
                         .systemName("Tomato - Sungold")
@@ -406,7 +412,9 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
         entities.addAll(
                 greenhouseConfigurations
                         .stream()
-                        .map(configuration -> makeGreenhouseByConfiguration(configuration, skipTelemetry))
+                        .map(configuration -> makeGreenhouseByConfiguration(
+                                configuration, weatherMap.get(configuration.getStationCity()), skipTelemetry
+                        ))
                         .collect(Collectors.toList())
         );
 
@@ -692,12 +700,11 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
     }
 
 
-    private Greenhouse makeGreenhouseByConfiguration(GreenhouseConfiguration configuration, boolean skipTelemetry) {
-        Map<Long, WeatherData> tsToWeatherMap = loadWeatherData(configuration.getStationCity(), skipTelemetry);
+    private Greenhouse makeGreenhouseByConfiguration(GreenhouseConfiguration configuration, Map<Long, WeatherData> weatherDataMap, boolean skipTelemetry) {
 
-        Telemetry<Integer> outsideTemperatureTelemetry = createOutsideTemperatureTelemetry(tsToWeatherMap, configuration, skipTelemetry);
-        Telemetry<Integer> outsideHumidityTelemetry = createOutsideHumidityTelemetry(tsToWeatherMap, configuration, skipTelemetry);
-        Telemetry<Integer> outsideLightTelemetry = createOutsideLightTelemetry(tsToWeatherMap, configuration, skipTelemetry);
+        Telemetry<Integer> outsideTemperatureTelemetry = createOutsideTemperatureTelemetry(weatherDataMap, configuration, skipTelemetry);
+        Telemetry<Integer> outsideHumidityTelemetry = createOutsideHumidityTelemetry(weatherDataMap, configuration, skipTelemetry);
+        Telemetry<Integer> outsideLightTelemetry = createOutsideLightTelemetry(weatherDataMap, configuration, skipTelemetry);
 
         OutsideAirWarmHumiditySensor outsideAirWarmHumiditySensor = OutsideAirWarmHumiditySensor.builder()
                 .systemName(configuration.getName() + ": Air Warm-Humidity Sensor (Outside)")
@@ -809,7 +816,7 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
     }
 
 
-    private Map<Long, WeatherData> loadWeatherData(StationCity city, boolean skipTelemetry) {
+    private Map<Long, WeatherData> loadWeatherData(StationCity city, ZonedDateTime startYear, boolean skipTelemetry) {
         if (skipTelemetry) {
             return new HashMap<>();
         }
@@ -819,12 +826,12 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
             Reader in = new FileReader(filePath.toFile());
             CSVParser parser = CSVFormat.DEFAULT.withFirstRecordAsHeader().parse(in);
 
-            List<WeatherData> weatherData = parser.stream()
+            List<WeatherData> weatherDataList = parser.stream()
                     .map(record -> {
                         long ts = Long.parseLong(record.get("ts"));
                         ZonedDateTime dateTime = DateTimeUtils.fromTs(ts);
 
-                        long newTs = DateTimeUtils.toTs(dateTime.plusYears(1));
+                        long newTs = DateTimeUtils.toTs(dateTime.plusYears(2));
 
                         return WeatherData.builder()
                                         .ts(newTs)
@@ -844,12 +851,34 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
                     )
                     .collect(Collectors.toList());
 
-            Map<Long, WeatherData> tsToWeatherMap = weatherData.stream()
+            Map<Long, WeatherData> tsToWeatherMap = weatherDataList.stream()
                     .collect(Collectors.toMap(
                             WeatherData::getTs,
                             i -> i,
                             (w1, w2) -> w1
                     ));
+
+            long now = System.currentTimeMillis();
+            ZonedDateTime startDate = startYear.truncatedTo(ChronoUnit.HOURS);
+            ZonedDateTime nowDate = DateTimeUtils.fromTs(now).truncatedTo(ChronoUnit.HOURS);
+            ZonedDateTime iteratedDate = startDate;
+            WeatherData last = weatherDataList.get(0);
+            while (iteratedDate.isBefore(nowDate)) {
+                long iteratedTs = DateTimeUtils.toTs(iteratedDate);
+                WeatherData weatherData = tsToWeatherMap.get(iteratedTs);
+                if (weatherData == null) {
+                    String message = String.format(
+                            "No weather data in city %s, time = %s, will used data from %s",
+                            city, iteratedDate, DateTimeUtils.fromTs(last.getTs())
+                    );
+//                    log.warn(message);
+                    weatherData = last;
+                    tsToWeatherMap.put(iteratedTs, weatherData);
+                }
+
+                last = weatherData;
+                iteratedDate = iteratedDate.plus(1, ChronoUnit.HOURS);
+            }
 
             return tsToWeatherMap;
         } catch (Exception e) {
