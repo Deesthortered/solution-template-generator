@@ -830,6 +830,7 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
                     .map(record -> {
                         long ts = Long.parseLong(record.get("ts"));
                         ZonedDateTime dateTime = DateTimeUtils.fromTs(ts);
+                        dateTime = dateTime.truncatedTo(ChronoUnit.HOURS);
 
                         long newTs = DateTimeUtils.toTs(dateTime.plusYears(2));
 
@@ -1039,9 +1040,9 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
         if (172 <= day && day < 356) {
             return (-diff * (day - 172)) / (356 - 172);
         } else if (356 <= day) {
-            return (diff * (day - 356)) / ((365 - 356) + 172);
+            return (diff * (day - 356)) / ((365 - 356) + 172) - diff;
         } else  {
-            return (diff * (day + (365 - 356) - 172)) / ((365 - 356) + 172);
+            return (diff * (day + (365 - 356))) / ((365 - 356) + 172) - diff;
         }
     }
 
@@ -1053,6 +1054,8 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
             case "Heavy Snow / Windy":
             case "Heavy Snow Shower":
             case "Heavy Snow Shower / Windy":
+            case "Heavy Rain":
+            case "Heavy Rain / Windy":
             case "Heavy Rain Shower":
             case "Heavy T-Storm":
             case "Heavy T-Storm / Windy":
@@ -1085,8 +1088,11 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
             case "Cloudy / Windy":
             case "Cloudy":
             case "Rain":
+            case "Rain / Windy":
             case "Rain Shower":
             case "Rain Shower / Windy":
+            case "Small Hail":
+            case "Small Hail / Windy":
             case "Snow":
             case "Snow / Windy":
             case "Snow Shower":
@@ -1096,9 +1102,12 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
             case "Drifting Snow":
             case "Drifting Snow / Windy":
             case "Drizzle":
+            case "Freezing Rain":
+            case "Freezing Rain / Windy":
             case "Snow Grains":
             case "Snow Grains / Windy":
             case "Thunder in the Vicinity":
+            case "Showers in the Vicinity":
             case "Mist":
                 return 0.70;
 
