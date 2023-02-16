@@ -1113,6 +1113,7 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
 
             case "Light Sleet":
             case "Light Sleet / Windy":
+            case "Light Snow and Sleet":
             case "Light Snow":
             case "Light Snow / Windy":
             case "Light Snow Shower / Windy":
