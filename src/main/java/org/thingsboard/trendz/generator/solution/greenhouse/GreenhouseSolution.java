@@ -963,20 +963,88 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
         while (iteratedDate.isBefore(nowDate)) {
             long iteratedTs = DateTimeUtils.toTs(iteratedDate);
             int hour = iteratedDate.getHour();
+            int day = iteratedDate.getDayOfYear();
 
             WeatherData weatherData = tsToWeatherMap.get(iteratedTs);
             String condition = weatherData.getCondition();
 
-            int percents = mapWeatherConditionToLuxValuesInPercents(condition);
+            int hourLux = getHourLuxValues(hour);
+            int yearLux = getYearLuxCycleValue(day);
+            double percents = mapWeatherConditionToLuxValuesInPercents(condition);
+            int value = (int) ((hourLux + yearLux) * percents);
 
-            result.add(iteratedTs, percents);
+            result.add(iteratedTs, value);
             iteratedDate = iteratedDate.plus(1, ChronoUnit.HOURS);
         }
 
         return result;
     }
 
-    private int mapWeatherConditionToLuxValuesInPercents(String condition) {
+    private int getHourLuxValues(int hour) {
+        /// As summer day [0 - 17_000]
+        switch (hour) {
+            case 0:
+            case 1:
+            case 2:
+            case 3:
+                return 0;
+            case 4:
+                return 1_000;
+            case 5:
+                return 2_000;
+            case 6:
+                return 4_000;
+            case 7:
+                return 6_000;
+            case 8:
+                return 9_000;
+            case 9:
+                return 12_000;
+            case 10:
+                return 14_000;
+            case 11:
+                return 16_000;
+            case 12:
+            case 13:
+                return 17_000;
+            case 14:
+            case 15:
+                return 16_000;
+            case 16:
+                return 15_000;
+            case 17:
+                return 13_000;
+            case 18:
+                return 11_000;
+            case 19:
+                return 8_000;
+            case 20:
+                return 6_000;
+            case 21:
+                return 4_000;
+            case 22:
+                return 1_000;
+            case 23:
+                return 0;
+            default:
+                throw new IllegalArgumentException("Unsupported hour = " + hour);
+        }
+    }
+
+    private int getYearLuxCycleValue(int day) {
+        /// Max summer luxes = 17000 (172 day), max winter luxes (356 day) = 5000, diff = 12000
+        // return 0 value if max, return -12000 value if min
+        int diff = 12000;
+        if (172 <= day && day < 356) {
+            return (-diff * (day - 172)) / (356 - 172);
+        } else if (356 <= day) {
+            return (diff * (day - 356)) / ((365 - 356) + 172);
+        } else  {
+            return (diff * (day + (365 - 356) - 172)) / ((365 - 356) + 172);
+        }
+    }
+
+    private double mapWeatherConditionToLuxValuesInPercents(String condition) {
         switch (condition) {
             case "Heavy Snow":
             case "Heavy Snow / Windy":
@@ -989,14 +1057,14 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
             case "Squalls / Windy":
             case "T-Storm":
             case "T-Storm / Windy":
-                return 10;
+                return 0.40;
 
             case "Smoke":
             case "Fog":
             case "Partial Fog":
             case "Shallow Fog":
             case "Widespread Dust":
-                return 30;
+                return 0.50;
 
             case "Mostly Cloudy":
             case "Mostly Cloudy / Windy":
@@ -1005,7 +1073,7 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
             case "Thunder":
             case "Wintry Mix":
             case "Wintry Mix / Windy":
-                return 50;
+                return 0.60;
 
             case "Partly Cloudy / Windy":
             case "Partly Cloudy":
@@ -1023,7 +1091,7 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
             case "Drizzle":
             case "Thunder in the Vicinity":
             case "Mist":
-                return 70;
+                return 0.70;
 
             case "Light Sleet":
             case "Light Snow":
@@ -1039,11 +1107,11 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
             case "Light Drizzle":
             case "Light Drizzle / Windy":
             case "Light Snow Grains":
-                return 85;
+                return 0.85;
 
             case "Fair":
             case "Fair / Windy":
-                return 100;
+                return 1.0;
             default: throw new IllegalArgumentException("Unsupported condition: " + condition);
         }
     }
