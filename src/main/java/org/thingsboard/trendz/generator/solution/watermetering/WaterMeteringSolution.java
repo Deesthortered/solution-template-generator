@@ -172,7 +172,7 @@ public class WaterMeteringSolution implements SolutionTemplateGenerator {
 
         for (int i = 0; i < count; i++) {
             if (Long.compare(expected.get(i), actual.get(i)) != 0) {
-                log.warn("Random Stability check if failed");
+                log.warn("Random Stability check is failed");
                 break;
             }
         }

@@ -39,15 +39,16 @@ import org.thingsboard.trendz.generator.solution.greenhouse.configuration.Greenh
 import org.thingsboard.trendz.generator.solution.greenhouse.configuration.StationCity;
 import org.thingsboard.trendz.generator.solution.greenhouse.configuration.WeatherData;
 import org.thingsboard.trendz.generator.solution.greenhouse.model.*;
+import org.thingsboard.trendz.generator.utils.DateTimeUtils;
 import org.thingsboard.trendz.generator.utils.MySortedSet;
 
 import java.io.FileReader;
 import java.io.Reader;
 import java.nio.file.Path;
 import java.time.ZonedDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -349,6 +350,7 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
                         .address("Svyatoshyns'ka St, 34 к, Kyiv, 02000")
                         .latitude(50.446603)
                         .longitude(30.386447)
+                        .installDate(DateTimeUtils.toTs(startYear))
                         .plantType(PlantType.TOMATO)
                         .variety("Sungold")
                         .sectionHeight(5)
@@ -362,6 +364,7 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
                         .address("Zielona 18, 32-087 Bibice, Poland")
                         .latitude(50.121765)
                         .longitude(19.946134)
+                        .installDate(DateTimeUtils.toTs(startYear))
                         .plantType(PlantType.CUCUMBER)
                         .variety("English")
                         .sectionHeight(5)
@@ -375,6 +378,7 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
                         .address("Ojca Aniceta 28, 03-264 Warszawa, Poland")
                         .latitude(52.306237)
                         .longitude(21.039917)
+                        .installDate(DateTimeUtils.toTs(startYear))
                         .plantType(PlantType.ONION)
                         .variety("Sweet Spanish")
                         .sectionHeight(10)
@@ -388,6 +392,7 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
                         .address("Augsburger Str. 500, 70327 Stuttgart, Germany")
                         .latitude(48.774252)
                         .longitude(9.259500)
+                        .installDate(DateTimeUtils.toTs(startYear))
                         .plantType(PlantType.TOMATO)
                         .variety("Cherry")
                         .sectionHeight(5)
@@ -401,7 +406,7 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
         entities.addAll(
                 greenhouseConfigurations
                         .stream()
-                        .map(configuration -> makeGreenhouseByConfiguration(configuration, startYear, skipTelemetry))
+                        .map(configuration -> makeGreenhouseByConfiguration(configuration, skipTelemetry))
                         .collect(Collectors.toList())
         );
 
@@ -687,13 +692,26 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
     }
 
 
-    private Greenhouse makeGreenhouseByConfiguration(GreenhouseConfiguration configuration, ZonedDateTime startYear, boolean skipTelemetry) {
-        List<WeatherData> weatherData;
-        if (skipTelemetry) {
-            weatherData = Collections.emptyList();
-        } else {
-            weatherData = loadWeatherData(configuration.getStationCity());
-        }
+    private Greenhouse makeGreenhouseByConfiguration(GreenhouseConfiguration configuration, boolean skipTelemetry) {
+        Map<Long, WeatherData> tsToWeatherMap = loadWeatherData(configuration.getStationCity(), skipTelemetry);
+
+        Telemetry<Integer> outsideTemperatureTelemetry = createOutsideTemperatureTelemetry(tsToWeatherMap, configuration, skipTelemetry);
+        Telemetry<Integer> outsideHumidityTelemetry = createOutsideHumidityTelemetry(tsToWeatherMap, configuration, skipTelemetry);
+        Telemetry<Integer> outsideLightTelemetry = createOutsideLightTelemetry(tsToWeatherMap, configuration, skipTelemetry);
+
+        OutsideAirWarmHumiditySensor outsideAirWarmHumiditySensor = OutsideAirWarmHumiditySensor.builder()
+                .systemName(configuration.getName() + ": Air Warm-Humidity Sensor (Outside)")
+                .systemLabel("")
+                .temperature(outsideTemperatureTelemetry)
+                .humidity(outsideHumidityTelemetry)
+                .build();
+
+        OutsideLightSensor outsideLightSensor = OutsideLightSensor.builder()
+                .systemName(configuration.getName() + ": Light Sensor (Outside)")
+                .systemLabel("")
+                .light(outsideLightTelemetry)
+                .build();
+
 
         Set<Section> sections = new TreeSet<>();
         for (int height = 1; height <= configuration.getSectionHeight(); height++) {
@@ -744,7 +762,7 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
         }
 
         InsideAirWarmHumiditySensor insideAirWarmHumiditySensor = InsideAirWarmHumiditySensor.builder()
-                .systemName(configuration.getName() + ": Air Warm-Moisture Sensor (Inside)")
+                .systemName(configuration.getName() + ": Air Warm-Humidity Sensor (Inside)")
                 .systemLabel("")
                 .temperature(new Telemetry<>("temperature", MySortedSet.of(new Telemetry.Point<>(Timestamp.of(0), 0))))
                 .humidity(new Telemetry<>("humidity", MySortedSet.of(new Telemetry.Point<>(Timestamp.of(0), 0))))
@@ -760,19 +778,6 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
                 .systemName(configuration.getName() + ": CO2 Sensor (Inside)")
                 .systemLabel("")
                 .concentration(new Telemetry<>("concentration", MySortedSet.of(new Telemetry.Point<>(Timestamp.of(0), 0))))
-                .build();
-
-        OutsideAirWarmHumiditySensor outsideAirWarmHumiditySensor = OutsideAirWarmHumiditySensor.builder()
-                .systemName(configuration.getName() + ": Air Warm-Moisture Sensor (Outside)")
-                .systemLabel("")
-                .temperature(new Telemetry<>("temperature", MySortedSet.of(new Telemetry.Point<>(Timestamp.of(0), 0))))
-                .humidity(new Telemetry<>("humidity", MySortedSet.of(new Telemetry.Point<>(Timestamp.of(0), 0))))
-                .build();
-
-        OutsideLightSensor outsideLightSensor = OutsideLightSensor.builder()
-                .systemName(configuration.getName() + ": Light Sensor (Outside)")
-                .systemLabel("")
-                .light(new Telemetry<>("light", MySortedSet.of(new Telemetry.Point<>(Timestamp.of(0), 0))))
                 .build();
 
         EnergyMeter energyMeter = EnergyMeter.builder()
@@ -803,31 +808,50 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
                 .build();
     }
 
-    private List<WeatherData> loadWeatherData(StationCity city) {
+
+    private Map<Long, WeatherData> loadWeatherData(StationCity city, boolean skipTelemetry) {
+        if (skipTelemetry) {
+            return new HashMap<>();
+        }
+
         try {
             Path filePath = Path.of("data", "greenhouse_weather", getWeatherFileName(city));
             Reader in = new FileReader(filePath.toFile());
             CSVParser parser = CSVFormat.DEFAULT.withFirstRecordAsHeader().parse(in);
 
             List<WeatherData> weatherData = parser.stream()
-                    .map(record -> WeatherData.builder()
-                            .ts(Long.parseLong(record.get("ts")))
-                            .pressure(Double.parseDouble(record.get("pressure")))
-                            .temperatureFahrenheit(Double.parseDouble(record.get("temperatureFahrenheit")))
-                            .temperatureCelsius(Double.parseDouble(record.get("temperatureCelsius").replace(',', '.')))
-                            .dewPointFahrenheit(Double.parseDouble(record.get("dewPointFahrenheit")))
-                            .dewPointCelsius(Double.parseDouble(record.get("dewPointCelsius").replace(',', '.')))
-                            .humidity(Double.parseDouble(record.get("humidity")))
-                            .windSpeed(Double.parseDouble(record.get("windSpeed")))
-                            .windGust(Double.parseDouble(record.get("windGust")))
-                            .windDirectionDegrees(Double.parseDouble(record.get("windDirectionDegrees")))
-                            .windDirectionWords(record.get("windDirectionWords"))
-                            .condition(record.get("condition"))
-                            .build()
+                    .map(record -> {
+                        long ts = Long.parseLong(record.get("ts"));
+                        ZonedDateTime dateTime = DateTimeUtils.fromTs(ts);
+
+                        long newTs = DateTimeUtils.toTs(dateTime.plusYears(1));
+
+                        return WeatherData.builder()
+                                        .ts(newTs)
+                                        .pressure(Double.parseDouble(record.get("pressure")))
+                                        .temperatureFahrenheit(Double.parseDouble(record.get("temperatureFahrenheit")))
+                                        .temperatureCelsius(Double.parseDouble(record.get("temperatureCelsius").replace(',', '.')))
+                                        .dewPointFahrenheit(Double.parseDouble(record.get("dewPointFahrenheit")))
+                                        .dewPointCelsius(Double.parseDouble(record.get("dewPointCelsius").replace(',', '.')))
+                                        .humidity(Double.parseDouble(record.get("humidity")))
+                                        .windSpeed(Double.parseDouble(record.get("windSpeed")))
+                                        .windGust(Double.parseDouble(record.get("windGust")))
+                                        .windDirectionDegrees(Double.parseDouble(record.get("windDirectionDegrees")))
+                                        .windDirectionWords(record.get("windDirectionWords"))
+                                        .condition(record.get("condition"))
+                                        .build();
+                            }
                     )
                     .collect(Collectors.toList());
 
-            return weatherData;
+            Map<Long, WeatherData> tsToWeatherMap = weatherData.stream()
+                    .collect(Collectors.toMap(
+                            WeatherData::getTs,
+                            i -> i,
+                            (w1, w2) -> w1
+                    ));
+
+            return tsToWeatherMap;
         } catch (Exception e) {
             throw new RuntimeException("Can not read weather file for city " + city.toString(), e);
         }
@@ -845,6 +869,153 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
                 return "stuttgart.csv";
             default:
                 throw new IllegalArgumentException("Unsupported city: " + city);
+        }
+    }
+
+
+    private Telemetry<Integer> createOutsideTemperatureTelemetry(Map<Long, WeatherData> tsToWeatherMap, GreenhouseConfiguration configuration, boolean skipTelemetry) {
+        if (skipTelemetry) {
+            return new Telemetry<>("skip");
+        }
+
+        Telemetry<Integer> result = new Telemetry<>("temperature");
+        long startTs = configuration.getInstallDate();
+        long now = System.currentTimeMillis();
+
+        ZonedDateTime startDate = DateTimeUtils.fromTs(startTs).truncatedTo(ChronoUnit.HOURS);
+        ZonedDateTime nowDate = DateTimeUtils.fromTs(now).truncatedTo(ChronoUnit.HOURS);
+        ZonedDateTime iteratedDate = startDate;
+        while (iteratedDate.isBefore(nowDate)) {
+            long iteratedTs = DateTimeUtils.toTs(iteratedDate);
+            WeatherData weatherData = tsToWeatherMap.get(iteratedTs);
+
+            result.add(iteratedTs, (int) weatherData.getTemperatureCelsius());
+            iteratedDate = iteratedDate.plus(1, ChronoUnit.HOURS);
+        }
+
+        return result;
+    }
+
+    private Telemetry<Integer> createOutsideHumidityTelemetry(Map<Long, WeatherData> tsToWeatherMap, GreenhouseConfiguration configuration, boolean skipTelemetry) {
+        if (skipTelemetry) {
+            return new Telemetry<>("skip");
+        }
+
+        Telemetry<Integer> result = new Telemetry<>("humidity");
+        long startTs = configuration.getInstallDate();
+        long now = System.currentTimeMillis();
+
+        ZonedDateTime startDate = DateTimeUtils.fromTs(startTs).truncatedTo(ChronoUnit.HOURS);
+        ZonedDateTime nowDate = DateTimeUtils.fromTs(now).truncatedTo(ChronoUnit.HOURS);
+        ZonedDateTime iteratedDate = startDate;
+        while (iteratedDate.isBefore(nowDate)) {
+            long iteratedTs = DateTimeUtils.toTs(iteratedDate);
+            WeatherData weatherData = tsToWeatherMap.get(iteratedTs);
+
+            result.add(iteratedTs, (int) weatherData.getHumidity());
+            iteratedDate = iteratedDate.plus(1, ChronoUnit.HOURS);
+        }
+
+        return result;
+    }
+
+    private Telemetry<Integer> createOutsideLightTelemetry(Map<Long, WeatherData> tsToWeatherMap, GreenhouseConfiguration configuration, boolean skipTelemetry) {
+        if (skipTelemetry) {
+            return new Telemetry<>("skip");
+        }
+
+        Telemetry<Integer> result = new Telemetry<>("light");
+        long startTs = configuration.getInstallDate();
+        long now = System.currentTimeMillis();
+
+        ZonedDateTime startDate = DateTimeUtils.fromTs(startTs).truncatedTo(ChronoUnit.HOURS);
+        ZonedDateTime nowDate = DateTimeUtils.fromTs(now).truncatedTo(ChronoUnit.HOURS);
+        ZonedDateTime iteratedDate = startDate;
+        while (iteratedDate.isBefore(nowDate)) {
+            long iteratedTs = DateTimeUtils.toTs(iteratedDate);
+            int hour = iteratedDate.getHour();
+
+            WeatherData weatherData = tsToWeatherMap.get(iteratedTs);
+            String condition = weatherData.getCondition();
+
+            int percents = mapWeatherConditionToLuxValuesInPercents(condition);
+
+            result.add(iteratedTs, percents);
+            iteratedDate = iteratedDate.plus(1, ChronoUnit.HOURS);
+        }
+
+        return result;
+    }
+
+    private int mapWeatherConditionToLuxValuesInPercents(String condition) {
+        switch (condition) {
+            case "Heavy Snow":
+            case "Heavy Snow / Windy":
+            case "Heavy Snow Shower":
+            case "Heavy Snow Shower / Windy":
+            case "Heavy Rain Shower":
+            case "Heavy T-Storm":
+            case "Heavy T-Storm / Windy":
+            case "Squalls":
+            case "Squalls / Windy":
+            case "T-Storm":
+            case "T-Storm / Windy":
+                return 10;
+
+            case "Smoke":
+            case "Fog":
+            case "Partial Fog":
+            case "Shallow Fog":
+            case "Widespread Dust":
+                return 30;
+
+            case "Mostly Cloudy":
+            case "Mostly Cloudy / Windy":
+            case "Light Snow Shower":
+            case "Thunder / Windy":
+            case "Thunder":
+            case "Wintry Mix":
+            case "Wintry Mix / Windy":
+                return 50;
+
+            case "Partly Cloudy / Windy":
+            case "Partly Cloudy":
+            case "Blowing Dust / Windy":
+            case "Cloudy / Windy":
+            case "Cloudy":
+            case "Rain":
+            case "Rain Shower":
+            case "Snow":
+            case "Snow / Windy":
+            case "Snow Shower":
+            case "Snow Shower / Windy":
+            case "Drifting Snow":
+            case "Drifting Snow / Windy":
+            case "Drizzle":
+            case "Thunder in the Vicinity":
+            case "Mist":
+                return 70;
+
+            case "Light Sleet":
+            case "Light Snow":
+            case "Light Snow / Windy":
+            case "Light Snow Shower / Windy":
+            case "Light Freezing Rain":
+            case "Light Freezing Drizzle":
+            case "Light Rain":
+            case "Light Rain / Windy":
+            case "Light Rain Shower":
+            case "Light Rain Shower / Windy":
+            case "Light Rain with Thunder":
+            case "Light Drizzle":
+            case "Light Drizzle / Windy":
+            case "Light Snow Grains":
+                return 85;
+
+            case "Fair":
+            case "Fair / Windy":
+                return 100;
+            default: throw new IllegalArgumentException("Unsupported condition: " + condition);
         }
     }
 
