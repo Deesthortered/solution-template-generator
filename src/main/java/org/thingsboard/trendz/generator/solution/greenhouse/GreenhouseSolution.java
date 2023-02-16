@@ -360,7 +360,7 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
                         .plantType(PlantType.TOMATO)
                         .variety("Sungold")
                         .sectionHeight(5)
-                        .sectionWidth(10)
+                        .sectionWidth(7)
                         .build(),
 
                 GreenhouseConfiguration.builder()
@@ -373,8 +373,8 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
                         .installDate(DateTimeUtils.toTs(startYear))
                         .plantType(PlantType.CUCUMBER)
                         .variety("English")
-                        .sectionHeight(5)
-                        .sectionWidth(7)
+                        .sectionHeight(3)
+                        .sectionWidth(4)
                         .build(),
 
                 GreenhouseConfiguration.builder()
@@ -387,8 +387,8 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
                         .installDate(DateTimeUtils.toTs(startYear))
                         .plantType(PlantType.ONION)
                         .variety("Sweet Spanish")
-                        .sectionHeight(10)
-                        .sectionWidth(15)
+                        .sectionHeight(2)
+                        .sectionWidth(6)
                         .build(),
 
                 GreenhouseConfiguration.builder()
@@ -401,7 +401,7 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
                         .installDate(DateTimeUtils.toTs(startYear))
                         .plantType(PlantType.TOMATO)
                         .variety("Cherry")
-                        .sectionHeight(5)
+                        .sectionHeight(3)
                         .sectionWidth(5)
                         .build()
         );
@@ -972,6 +972,7 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
             int yearLux = getYearLuxCycleValue(day);
             double percents = mapWeatherConditionToLuxValuesInPercents(condition);
             int value = (int) ((hourLux + yearLux) * percents);
+            value = Math.max(0, value);
 
             result.add(iteratedTs, value);
             iteratedDate = iteratedDate.plus(1, ChronoUnit.HOURS);
@@ -1046,6 +1047,8 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
 
     private double mapWeatherConditionToLuxValuesInPercents(String condition) {
         switch (condition) {
+            case "Heavy Drizzle":
+            case "Heavy Drizzle / Windy":
             case "Heavy Snow":
             case "Heavy Snow / Windy":
             case "Heavy Snow Shower":
@@ -1061,6 +1064,7 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
 
             case "Smoke":
             case "Fog":
+            case "Patches of Fog":
             case "Partial Fog":
             case "Shallow Fog":
             case "Widespread Dust":
@@ -1082,18 +1086,24 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
             case "Cloudy":
             case "Rain":
             case "Rain Shower":
+            case "Rain Shower / Windy":
             case "Snow":
             case "Snow / Windy":
             case "Snow Shower":
             case "Snow Shower / Windy":
+            case "Snow and Sleet":
+            case "Snow and Sleet / Windy":
             case "Drifting Snow":
             case "Drifting Snow / Windy":
             case "Drizzle":
+            case "Snow Grains":
+            case "Snow Grains / Windy":
             case "Thunder in the Vicinity":
             case "Mist":
                 return 0.70;
 
             case "Light Sleet":
+            case "Light Sleet / Windy":
             case "Light Snow":
             case "Light Snow / Windy":
             case "Light Snow Shower / Windy":
