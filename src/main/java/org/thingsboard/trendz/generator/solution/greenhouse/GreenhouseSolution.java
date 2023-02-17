@@ -42,6 +42,7 @@ import org.thingsboard.trendz.generator.solution.greenhouse.configuration.Weathe
 import org.thingsboard.trendz.generator.solution.greenhouse.model.*;
 import org.thingsboard.trendz.generator.utils.DateTimeUtils;
 import org.thingsboard.trendz.generator.utils.MySortedSet;
+import org.thingsboard.trendz.generator.utils.RandomUtils;
 
 import java.io.FileReader;
 import java.io.Reader;
@@ -972,7 +973,8 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
             int hourLux = getHourLuxValues(hour);
             int yearLux = getYearLuxCycleValue(day);
             double percents = mapWeatherConditionToLuxValuesInPercents(condition);
-            int value = (int) ((hourLux + yearLux) * percents);
+            long noise = RandomUtils.getRandomNumber(-1000, 1000);
+            int value = (int) ((hourLux + yearLux) * percents + noise);
             value = Math.max(0, value);
 
             result.add(iteratedTs, value);
