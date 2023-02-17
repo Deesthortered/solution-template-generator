@@ -30,6 +30,7 @@ import org.thingsboard.trendz.generator.model.tb.CustomerUser;
 import org.thingsboard.trendz.generator.model.tb.RelationType;
 import org.thingsboard.trendz.generator.model.tb.RuleNodeAdditionalInfo;
 import org.thingsboard.trendz.generator.model.tb.Telemetry;
+import org.thingsboard.trendz.generator.service.FileService;
 import org.thingsboard.trendz.generator.service.anomaly.AnomalyService;
 import org.thingsboard.trendz.generator.service.dashboard.DashboardService;
 import org.thingsboard.trendz.generator.service.rest.TbRestClient;
@@ -77,6 +78,7 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
     private static final long serialRangeTo = 99999;
 
     private final TbRestClient tbRestClient;
+    private final FileService fileService;
     private final AnomalyService anomalyService;
     private final RuleChainBuildingService ruleChainBuildingService;
     private final DashboardService dashboardService;
@@ -88,11 +90,13 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
     @Autowired
     public EnergyMeteringSolution(
             TbRestClient tbRestClient,
+            FileService fileService,
             AnomalyService anomalyService,
             RuleChainBuildingService ruleChainBuildingService,
             DashboardService dashboardService
     ) {
         this.tbRestClient = tbRestClient;
+        this.fileService = fileService;
         this.anomalyService = anomalyService;
         this.ruleChainBuildingService = ruleChainBuildingService;
         this.dashboardService = dashboardService;
@@ -242,12 +246,11 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
                     );
                     nodes.add(saveNode);
 
-
+                    String fileContentEnergyConsumption = this.fileService.getFileContent(getSolutionName(), getEnergyMeterConsumptionFile(occupied, level));
                     RuleNode energyMeterConsumptionGeneratorNode = ruleChainBuildingService.createGeneratorNode(
-                            getSolutionName(),
                             energyMeter.getSystemName() + ": energyConsumption",
                             energyMeterId,
-                            getEnergyMeterConsumptionFile(occupied, level),
+                            fileContentEnergyConsumption,
                             getNodePositionX(false),
                             getNodePositionY(index, 1)
                     );
@@ -274,24 +277,22 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
                     connections.add(ruleChainBuildingService.createRuleConnection(index + 2, index + 3));
                     connections.add(ruleChainBuildingService.createRuleConnection(index + 3, index));
 
-
+                    String fileContentTemperature = this.fileService.getFileContent(getSolutionName(), getHeatMeterTemperatureFile(occupied));
                     RuleNode heatMeterTemperatureGeneratorNode = ruleChainBuildingService.createGeneratorNode(
-                            getSolutionName(),
                             heatMeter.getSystemName() + ": temperature",
                             heatMeterId,
-                            getHeatMeterTemperatureFile(occupied),
+                            fileContentTemperature,
                             getNodePositionX(true),
                             getNodePositionY(index, 0)
                     );
                     nodes.add(heatMeterTemperatureGeneratorNode);
                     connections.add(ruleChainBuildingService.createRuleConnection(index + 4, index));
 
-
+                    String fileContentHeatConsumption = this.fileService.getFileContent(getSolutionName(), getHeatMeterConsumptionFile(occupied, level));
                     RuleNode heatMeterConsumptionGeneratorNode = ruleChainBuildingService.createGeneratorNode(
-                            getSolutionName(),
                             heatMeter.getSystemName() + ": heatConsumption",
                             heatMeterId,
-                            getHeatMeterConsumptionFile(occupied, level),
+                            fileContentHeatConsumption,
                             getNodePositionX(true),
                             getNodePositionY(index, 1)
                     );

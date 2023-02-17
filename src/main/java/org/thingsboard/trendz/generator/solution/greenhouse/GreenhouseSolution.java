@@ -29,8 +29,10 @@ import org.thingsboard.trendz.generator.model.tb.Attribute;
 import org.thingsboard.trendz.generator.model.tb.CustomerData;
 import org.thingsboard.trendz.generator.model.tb.CustomerUser;
 import org.thingsboard.trendz.generator.model.tb.RelationType;
+import org.thingsboard.trendz.generator.model.tb.RuleNodeAdditionalInfo;
 import org.thingsboard.trendz.generator.model.tb.Telemetry;
 import org.thingsboard.trendz.generator.model.tb.Timestamp;
+import org.thingsboard.trendz.generator.service.FileService;
 import org.thingsboard.trendz.generator.service.anomaly.AnomalyService;
 import org.thingsboard.trendz.generator.service.dashboard.DashboardService;
 import org.thingsboard.trendz.generator.service.rest.TbRestClient;
@@ -45,6 +47,7 @@ import org.thingsboard.trendz.generator.utils.MySortedSet;
 import org.thingsboard.trendz.generator.utils.RandomUtils;
 
 import java.io.FileReader;
+import java.io.IOException;
 import java.io.Reader;
 import java.nio.file.Path;
 import java.time.ZonedDateTime;
@@ -75,7 +78,11 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
     private static final String DEVICE_GROUP_NAME = "Greenhouse Device Group";
     private static final String RULE_CHAIN_NAME = "Greenhouse Rule Chain";
 
+    private static final String WEATHER_API_TOKEN = "80b7f53404dd4f058b0b156ed5dedc3f";
+    private static final String WEATHER_API_URL = "https://api.openweathermap.org/data/2.5/weather?lat=${latitude}&lon=${longitude}&appid=${appId}&units=metric";
+
     private final TbRestClient tbRestClient;
+    private final FileService fileService;
     private final AnomalyService anomalyService;
     private final RuleChainBuildingService ruleChainBuildingService;
     private final DashboardService dashboardService;
@@ -98,11 +105,13 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
     @Autowired
     public GreenhouseSolution(
             TbRestClient tbRestClient,
+            FileService fileService,
             AnomalyService anomalyService,
             RuleChainBuildingService ruleChainBuildingService,
             DashboardService dashboardService
     ) {
         this.tbRestClient = tbRestClient;
+        this.fileService = fileService;
         this.anomalyService = anomalyService;
         this.ruleChainBuildingService = ruleChainBuildingService;
         this.dashboardService = dashboardService;
@@ -222,14 +231,82 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
             List<NodeConnectionInfo> connections = new ArrayList<>();
             metaData.setConnections(connections);
 
+            int greenhouseCounter = 0;
             for (Greenhouse greenhouse : greenhouses) {
                 OutsideAirWarmHumiditySensor outsideAirWarmHumiditySensor = greenhouse.getOutsideAirWarmHumiditySensor();
                 OutsideLightSensor outsideLightSensor = greenhouse.getOutsideLightSensor();
+
+                EnergyMeter energyMeter = greenhouse.getEnergyMeter();
+                WaterMeter waterMeter = greenhouse.getWaterMeter();
 
                 UUID greenhouseId = this.greenhouseToIdMap.get(greenhouse);
                 UUID outsideAirWarmHumiditySensorId = this.outsideAirWarmHumiditySensorToIdMap.get(outsideAirWarmHumiditySensor);
                 UUID outsideLightSensorId = this.outsideLightSensorToIdMap.get(outsideLightSensor);
 
+                String greenhouseGeneratorCode = getGreenhouseGeneratorCode(greenhouse.getLatitude(), greenhouse.getLongitude(), WEATHER_API_TOKEN);
+                RuleNode greenhouseGeneratorNode = this.ruleChainBuildingService.createGeneratorNode(
+                        "",
+                        greenhouseId,
+                        greenhouseGeneratorCode,
+                        getNodePositionX(greenhouseCounter),
+                        getNodePositionY(greenhouseCounter)
+                );
+
+                RuleNode greenhouseWeatherApiCallNode = this.ruleChainBuildingService.createRestApiCallNode(
+                        "",
+                        WEATHER_API_URL,
+                        "GET",
+                        getNodePositionX(greenhouseCounter),
+                        getNodePositionY(greenhouseCounter)
+                );
+
+                RuleNode greenhouseMakeTempHumidityTelemetryNode = this.ruleChainBuildingService.createTransformationNode(
+                        getSolutionName(),
+                        "",
+                        "raw_weather_to_temp_humidity.js",
+                        getNodePositionX(greenhouseCounter),
+                        getNodePositionY(greenhouseCounter)
+                );
+
+                RuleNode greenhouseMakeLightTelemetryNode = this.ruleChainBuildingService.createTransformationNode(
+                        getSolutionName(),
+                        "",
+                        "raw_weather_to_light.js",
+                        getNodePositionX(greenhouseCounter),
+                        getNodePositionY(greenhouseCounter)
+                );
+
+                RuleNode outsideAirWamHumidityOriginatorNode = this.ruleChainBuildingService.createChangeOriginatorNode(
+                        "",
+                        outsideAirWarmHumiditySensor.getSystemName(),
+                        EntityType.DEVICE,
+                        getNodePositionX(greenhouseCounter),
+                        getNodePositionY(greenhouseCounter)
+                );
+
+                RuleNode outsideLightOriginatorNode = this.ruleChainBuildingService.createChangeOriginatorNode(
+                        "",
+                        outsideLightSensor.getSystemName(),
+                        EntityType.DEVICE,
+                        getNodePositionX(greenhouseCounter),
+                        getNodePositionY(greenhouseCounter)
+                );
+
+                RuleNode outsideSensorsSaveNode = this.ruleChainBuildingService.createSaveNode(
+                        "",
+                        getNodePositionX(greenhouseCounter),
+                        getNodePositionY(greenhouseCounter)
+                );
+
+                for (Section section : greenhouse.getSections()) {
+                    SoilWarmMoistureSensor soilWarmMoistureSensor = section.getSoilWarmMoistureSensor();
+                    SoilAciditySensor soilAciditySensor = section.getSoilAciditySensor();
+                    SoilNpkSensor soilNpkSensor = section.getSoilNpkSensor();
+                    HarvestReporter harvestReporter = section.getHarvestReporter();
+
+
+                }
+                greenhouseCounter++;
             }
 
             RuleChainMetaData savedMetaData = this.tbRestClient.saveRuleChainMetadata(metaData);
@@ -1461,5 +1538,22 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
 
         this.outsideLightSensorToIdMap.put(outsideLightSensor, device.getUuidId());
         return device;
+    }
+
+
+    private double getNodePositionX(int greenhouseCounter) {
+        return RuleNodeAdditionalInfo.CELL_SIZE;
+    }
+
+    private double getNodePositionY(int greenhouseCounter) {
+        return RuleNodeAdditionalInfo.CELL_SIZE;
+    }
+
+    private String getGreenhouseGeneratorCode(double latitude, double longitude, String apiId) throws IOException {
+        String fileContent = this.fileService.getFileContent(getSolutionName(), "greenhouse_generator.js");
+        fileContent = fileContent.replace("PUT_LATITUDE", String.valueOf(latitude));
+        fileContent = fileContent.replace("PUT_LONGITUDE", String.valueOf(longitude));
+        fileContent = fileContent.replace("PUT_API_ID", apiId);
+        return fileContent;
     }
 }

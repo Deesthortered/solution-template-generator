@@ -32,6 +32,7 @@ import org.thingsboard.trendz.generator.model.tb.RelationType;
 import org.thingsboard.trendz.generator.model.tb.RuleNodeAdditionalInfo;
 import org.thingsboard.trendz.generator.model.tb.Telemetry;
 import org.thingsboard.trendz.generator.model.tb.Timestamp;
+import org.thingsboard.trendz.generator.service.FileService;
 import org.thingsboard.trendz.generator.service.anomaly.AnomalyService;
 import org.thingsboard.trendz.generator.service.dashboard.DashboardService;
 import org.thingsboard.trendz.generator.service.rest.TbRestClient;
@@ -80,6 +81,7 @@ public class WaterMeteringSolution implements SolutionTemplateGenerator {
     private static final String RULE_CHAIN_NAME = "Water Metering Rule Chain";
 
     private final TbRestClient tbRestClient;
+    private final FileService fileService;
     private final AnomalyService anomalyService;
     private final RuleChainBuildingService ruleChainBuildingService;
     private final DashboardService dashboardService;
@@ -89,11 +91,13 @@ public class WaterMeteringSolution implements SolutionTemplateGenerator {
     @Autowired
     public WaterMeteringSolution(
             TbRestClient tbRestClient,
+            FileService fileService,
             AnomalyService anomalyService,
             RuleChainBuildingService ruleChainBuildingService,
             DashboardService dashboardService
     ) {
         this.tbRestClient = tbRestClient;
+        this.fileService = fileService;
         this.anomalyService = anomalyService;
         this.ruleChainBuildingService = ruleChainBuildingService;
         this.dashboardService = dashboardService;
@@ -231,11 +235,11 @@ public class WaterMeteringSolution implements SolutionTemplateGenerator {
                     for (Consumer consumer : region.getConsumers()) {
                         UUID consumerId = this.consumerToIdMap.get(consumer);
 
+                        String fileContent = this.fileService.getFileContent(getSolutionName(), getConsumerConsumptionFileName(consumer.getType()));
                         RuleNode generatorNode = ruleChainBuildingService.createGeneratorNode(
-                                getSolutionName(),
                                 consumer.getSystemName() + ": generate node",
                                 consumerId,
-                                getConsumerConsumptionFileName(consumer.getType()),
+                                fileContent,
                                 getPositionX(consumerCounter, 0),
                                 getPositionY(consumerCounter, 0)
                         );

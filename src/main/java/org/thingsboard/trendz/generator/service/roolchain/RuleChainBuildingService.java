@@ -7,6 +7,8 @@ import org.thingsboard.rule.engine.debug.TbMsgGeneratorNode;
 import org.thingsboard.rule.engine.debug.TbMsgGeneratorNodeConfiguration;
 import org.thingsboard.rule.engine.metadata.TbGetAttributesNode;
 import org.thingsboard.rule.engine.metadata.TbGetAttributesNodeConfiguration;
+import org.thingsboard.rule.engine.rest.TbRestApiCallNode;
+import org.thingsboard.rule.engine.rest.TbRestApiCallNodeConfiguration;
 import org.thingsboard.rule.engine.telemetry.TbMsgTimeseriesNode;
 import org.thingsboard.rule.engine.telemetry.TbMsgTimeseriesNodeConfiguration;
 import org.thingsboard.rule.engine.transform.TbChangeOriginatorNode;
@@ -38,6 +40,14 @@ public class RuleChainBuildingService {
         this.fileService = fileService;
     }
 
+    public NodeConnectionInfo createRuleConnection(int from, int to) {
+        NodeConnectionInfo connection = new NodeConnectionInfo();
+        connection.setType(NodeConnectionType.SUCCESS.toString());
+        connection.setFromIndex(from);
+        connection.setToIndex(to);
+        return connection;
+    }
+
 
     public RuleNode createSaveNode(String name, double gridX, double gridY) {
         TbMsgTimeseriesNodeConfiguration saveConfiguration = new TbMsgTimeseriesNodeConfiguration();
@@ -48,15 +58,13 @@ public class RuleChainBuildingService {
         return createRuleNode(name, TbMsgTimeseriesNode.class, saveConfiguration, (int) gridX, (int) gridY);
     }
 
-    public RuleNode createGeneratorNode(String solutionName, String name, UUID entityId, String fileName, double gridX, double gridY) throws IOException {
-        String fileContent = this.fileService.getFileContent(solutionName, fileName);
-
+    public RuleNode createGeneratorNode(String name, UUID entityId, String code, double gridX, double gridY) throws IOException {
         TbMsgGeneratorNodeConfiguration generatorConfiguration = new TbMsgGeneratorNodeConfiguration();
         generatorConfiguration.setOriginatorType(EntityType.DEVICE);
         generatorConfiguration.setOriginatorId(entityId.toString());
         generatorConfiguration.setMsgCount(0);
         generatorConfiguration.setPeriodInSeconds(3600);
-        generatorConfiguration.setJsScript(fileContent);
+        generatorConfiguration.setJsScript(code);
 
         return createRuleNode(name, TbMsgGeneratorNode.class, generatorConfiguration, (int) gridX, (int) gridY);
     }
@@ -88,12 +96,12 @@ public class RuleChainBuildingService {
         return createRuleNode(name, TbChangeOriginatorNode.class, configuration, (int) gridX, (int) gridY);
     }
 
-    public NodeConnectionInfo createRuleConnection(int from, int to) {
-        NodeConnectionInfo connection = new NodeConnectionInfo();
-        connection.setType(NodeConnectionType.SUCCESS.toString());
-        connection.setFromIndex(from);
-        connection.setToIndex(to);
-        return connection;
+    public RuleNode createRestApiCallNode(String name, String urlPattern, String requestMethod, double gridX, double gridY) {
+        TbRestApiCallNodeConfiguration configuration = new TbRestApiCallNodeConfiguration();
+        configuration.setRestEndpointUrlPattern(urlPattern);
+        configuration.setRequestMethod(requestMethod);
+
+        return createRuleNode(name, TbRestApiCallNode.class, configuration, (int) gridX, (int) gridY);
     }
 
 
