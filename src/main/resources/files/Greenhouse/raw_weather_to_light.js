@@ -100,14 +100,10 @@ var makeNecessaryData = function () {
     date.setMinutes(0, 0, 0);
 
     var ts = date.getTime();
-    var temperature = msg.main.temp;
-    var humidity = msg.main.humidity;
     var light = makeLightData(date, msg.clouds.all);
 
     return {
         'ts' : ts,
-        'temperature' : temperature,
-        'humidity' : humidity,
         'light' : light
     };
 };

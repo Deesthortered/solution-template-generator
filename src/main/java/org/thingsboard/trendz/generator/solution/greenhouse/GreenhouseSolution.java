@@ -80,6 +80,7 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
     private final RuleChainBuildingService ruleChainBuildingService;
     private final DashboardService dashboardService;
 
+    private final Map<Greenhouse, UUID> greenhouseToIdMap = new HashMap<>();
     private final Map<Plant, UUID> plantToIdMap = new HashMap<>();
     private final Map<SoilNpkSensor, UUID> soilNpkSensorToIdMap = new HashMap<>();
     private final Map<SoilWarmMoistureSensor, UUID> soilWarmMoistureSensorToIdMap = new HashMap<>();
@@ -222,6 +223,12 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
             metaData.setConnections(connections);
 
             for (Greenhouse greenhouse : greenhouses) {
+                OutsideAirWarmHumiditySensor outsideAirWarmHumiditySensor = greenhouse.getOutsideAirWarmHumiditySensor();
+                OutsideLightSensor outsideLightSensor = greenhouse.getOutsideLightSensor();
+
+                UUID greenhouseId = this.greenhouseToIdMap.get(greenhouse);
+                UUID outsideAirWarmHumiditySensorId = this.outsideAirWarmHumiditySensorToIdMap.get(outsideAirWarmHumiditySensor);
+                UUID outsideLightSensorId = this.outsideLightSensorToIdMap.get(outsideLightSensor);
 
             }
 
@@ -1194,6 +1201,7 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
         );
         tbRestClient.setEntityAttributes(asset.getUuidId(), EntityType.ASSET, Attribute.Scope.SERVER_SCOPE, attributes);
 
+        this.greenhouseToIdMap.put(greenhouse, asset.getUuidId());
         return asset;
     }
 
