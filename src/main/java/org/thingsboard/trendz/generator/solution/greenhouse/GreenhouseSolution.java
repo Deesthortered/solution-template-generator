@@ -446,6 +446,7 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
                         .variety("Sungold")
                         .sectionHeight(5)
                         .sectionWidth(7)
+                        .sectionArea(3)
                         .build(),
 
                 GreenhouseConfiguration.builder()
@@ -460,6 +461,7 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
                         .variety("English")
                         .sectionHeight(3)
                         .sectionWidth(4)
+                        .sectionArea(5)
                         .build(),
 
                 GreenhouseConfiguration.builder()
@@ -474,6 +476,7 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
                         .variety("Sweet Spanish")
                         .sectionHeight(2)
                         .sectionWidth(6)
+                        .sectionArea(4)
                         .build(),
 
                 GreenhouseConfiguration.builder()
@@ -488,6 +491,7 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
                         .variety("Cherry")
                         .sectionHeight(3)
                         .sectionWidth(5)
+                        .sectionArea(3)
                         .build()
         );
 
@@ -843,6 +847,7 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
                         .systemLabel("")
                         .positionHeight(height)
                         .positionWidth(width)
+                        .area(configuration.getSectionArea())
                         .soilWarmMoistureSensor(soilWarmMoistureSensor)
                         .soilAciditySensor(soilAciditySensor)
                         .soilNpkSensor(soilNpkSensor)
@@ -1220,6 +1225,145 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
                 return 1.0;
             default: throw new IllegalArgumentException("Unsupported condition: " + condition);
         }
+    }
+
+
+    private Telemetry<Double> createTemporalTelemetryPlantNitrogenConsumption(PlantType plantType, String variety, boolean skipTelemetry) {
+        if (skipTelemetry) {
+            return new Telemetry<>("skip");
+        }
+        switch (plantType) {
+            case TOMATO:
+                switch (variety) {
+                    case "Sungold":
+                        return createTemporalTelemetryPlantNitrogenConsumptionTomatoSungold();
+                    case "Cherry":
+                        return createTemporalTelemetryPlantNitrogenConsumptionTomatoCherry();
+                    default: throw new IllegalArgumentException("Unsupported plant variety: " + plantType + ", " + variety);
+                }
+            case CUCUMBER:
+                switch (variety) {
+                    case "English":
+                        return createTemporalTelemetryPlantNitrogenConsumptionCucumberEnglish();
+                    default: throw new IllegalArgumentException("Unsupported plant variety: " + plantType + ", " + variety);
+                }
+            case ONION:
+                switch (variety) {
+                    case "Sweet Spanish":
+                        return createTemporalTelemetryPlantNitrogenConsumptionOnionSweetSpanish();
+                    default: throw new IllegalArgumentException("Unsupported plant variety: " + plantType + ", " + variety);
+                }
+            default: throw new IllegalArgumentException("Unsupported plant: " + plantType);
+        }
+    }
+
+    private Telemetry<Double> createTemporalTelemetryPlantPhosphorusConsumption(PlantType plantType, String variety, boolean skipTelemetry) {
+        if (skipTelemetry) {
+            return new Telemetry<>("skip");
+        }
+        switch (plantType) {
+            case TOMATO:
+                switch (variety) {
+                    case "Sungold":
+                        return createTemporalTelemetryPlantPhosphorusConsumptionTomatoSungold();
+                    case "Cherry":
+                        return createTemporalTelemetryPlantPhosphorusConsumptionTomatoCherry();
+                    default: throw new IllegalArgumentException("Unsupported plant variety: " + plantType + ", " + variety);
+                }
+            case CUCUMBER:
+                switch (variety) {
+                    case "English":
+                        return createTemporalTelemetryPlantPhosphorusConsumptionCucumberEnglish();
+                    default: throw new IllegalArgumentException("Unsupported plant variety: " + plantType + ", " + variety);
+                }
+            case ONION:
+                switch (variety) {
+                    case "Sweet Spanish":
+                        return createTemporalTelemetryPlantPhosphorusConsumptionOnionSweetSpanish();
+                    default: throw new IllegalArgumentException("Unsupported plant variety: " + plantType + ", " + variety);
+                }
+            default: throw new IllegalArgumentException("Unsupported plant: " + plantType);
+        }
+    }
+
+    private Telemetry<Double> createTemporalTelemetryPlantPotassiumConsumption(PlantType plantType, String variety, boolean skipTelemetry) {
+        if (skipTelemetry) {
+            return new Telemetry<>("skip");
+        }
+        switch (plantType) {
+            case TOMATO:
+                switch (variety) {
+                    case "Sungold":
+                        return createTemporalTelemetryPlantPotassiumConsumptionTomatoSungold();
+                    case "Cherry":
+                        return createTemporalTelemetryPlantPotassiumConsumptionTomatoCherry();
+                    default: throw new IllegalArgumentException("Unsupported plant variety: " + plantType + ", " + variety);
+                }
+            case CUCUMBER:
+                switch (variety) {
+                    case "English":
+                        return createTemporalTelemetryPlantPotassiumConsumptionCucumberEnglish();
+                    default: throw new IllegalArgumentException("Unsupported plant variety: " + plantType + ", " + variety);
+                }
+            case ONION:
+                switch (variety) {
+                    case "Sweet Spanish":
+                        return createTemporalTelemetryPlantPotassiumConsumptionOnionSweetSpanish();
+                    default: throw new IllegalArgumentException("Unsupported plant variety: " + plantType + ", " + variety);
+                }
+            default: throw new IllegalArgumentException("Unsupported plant: " + plantType);
+        }
+    }
+
+
+    private Telemetry<Double> createTemporalTelemetryPlantNitrogenConsumptionTomatoSungold() {
+        return null;
+    }
+
+    private Telemetry<Double> createTemporalTelemetryPlantNitrogenConsumptionTomatoCherry() {
+        return null;
+    }
+
+    private Telemetry<Double> createTemporalTelemetryPlantNitrogenConsumptionCucumberEnglish() {
+        return null;
+    }
+
+    private Telemetry<Double> createTemporalTelemetryPlantNitrogenConsumptionOnionSweetSpanish() {
+        return null;
+    }
+
+
+    private Telemetry<Double> createTemporalTelemetryPlantPhosphorusConsumptionTomatoSungold() {
+        return null;
+    }
+
+    private Telemetry<Double> createTemporalTelemetryPlantPhosphorusConsumptionTomatoCherry() {
+        return null;
+    }
+
+    private Telemetry<Double> createTemporalTelemetryPlantPhosphorusConsumptionCucumberEnglish() {
+        return null;
+    }
+
+    private Telemetry<Double> createTemporalTelemetryPlantPhosphorusConsumptionOnionSweetSpanish() {
+        return null;
+    }
+
+
+    private Telemetry<Double> createTemporalTelemetryPlantPotassiumConsumptionTomatoSungold() {
+        return null;
+    }
+
+    private Telemetry<Double> createTemporalTelemetryPlantPotassiumConsumptionTomatoCherry() {
+        return null;
+    }
+
+    private Telemetry<Double> createTemporalTelemetryPlantPotassiumConsumptionCucumberEnglish() {
+        return null;
+    }
+
+    private Telemetry<Double> createTemporalTelemetryPlantPotassiumConsumptionOnionSweetSpanish() {
+        return null;
     }
 
 

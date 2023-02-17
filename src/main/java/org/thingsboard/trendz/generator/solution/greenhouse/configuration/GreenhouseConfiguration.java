@@ -28,4 +28,5 @@ public class GreenhouseConfiguration extends ConfigurationEntity {
     private String variety;
     private int sectionHeight;
     private int sectionWidth;
+    private int sectionArea;
 }
