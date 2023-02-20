@@ -1270,7 +1270,7 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
         Telemetry<Double> consumption = createTemporalTelemetryPlantPhosphorusConsumption(plantType, variety, startDate, endDate);
 
         String name = "phosphorus";
-        double startLevel = RandomUtils.getRandomNumber(150, 200);
+        double startLevel = RandomUtils.getRandomNumber(40, 140) * 0.1;
         double minLevel = 4;
         double raiseValue = 8;
 
@@ -1537,6 +1537,9 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
             long daysBetween = ChronoUnit.DAYS.between(startDate, iteratedDate);
 
             long currentDayCycle = daysBetween % totalPeriodDays;
+            if (currentDayCycle == 0) {
+                prevValue = 0;
+            }
             int periodDayPrev = 0;
             double periodValuePrev = 0;
             for (int i = 0; i < periodDays.size(); i++) {
@@ -1555,7 +1558,7 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
                 periodValuePrev = periodValue;
             }
 
-            iteratedDate = iteratedDate.plus(1, ChronoUnit.HOURS);
+            iteratedDate = iteratedDate.plus(1, ChronoUnit.DAYS);
         }
         return result;
     }
