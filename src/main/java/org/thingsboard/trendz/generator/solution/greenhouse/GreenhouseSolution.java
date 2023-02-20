@@ -820,6 +820,19 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
         for (int height = 1; height <= configuration.getSectionHeight(); height++) {
             for (int width = 1; width <= configuration.getSectionWidth(); width++) {
 
+                Telemetry<Double> nitrogenLevelTelemetry = createTelemetrySoilNitrogenLevel(configuration, skipTelemetry);
+                Telemetry<Double> phosphorusLevelTelemetry = createTelemetrySoilPhosphorusLevel(configuration, skipTelemetry);
+                Telemetry<Double> potassiumLevelTelemetry = createTelemetrySoilPotassiumLevel(configuration, skipTelemetry);
+
+                SoilNpkSensor soilNpkSensor = SoilNpkSensor.builder()
+                        .systemName("Soil NPK Sensor: " + configuration.getName() + ", " + String.format("%s-%s", height, width))
+                        .systemLabel("")
+                        .nitrogen(nitrogenLevelTelemetry)
+                        .phosphorus(phosphorusLevelTelemetry)
+                        .potassium(potassiumLevelTelemetry)
+                        .build();
+
+
                 SoilWarmMoistureSensor soilWarmMoistureSensor = SoilWarmMoistureSensor.builder()
                         .systemName("Soil Warm-Moisture Sensor: " + configuration.getName() + ", " + String.format("%s-%s", height, width))
                         .systemLabel("")
@@ -833,13 +846,6 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
                         .acidity(new Telemetry<>("acidity", MySortedSet.of(new Telemetry.Point<>(Timestamp.of(0), 0))))
                         .build();
 
-                SoilNpkSensor soilNpkSensor = SoilNpkSensor.builder()
-                        .systemName("Soil NPK Sensor: " + configuration.getName() + ", " + String.format("%s-%s", height, width))
-                        .systemLabel("")
-                        .nitrogen(new Telemetry<>("nitrogen", MySortedSet.of(new Telemetry.Point<>(Timestamp.of(0), 0))))
-                        .phosphorus(new Telemetry<>("phosphorus", MySortedSet.of(new Telemetry.Point<>(Timestamp.of(0), 0))))
-                        .potassium(new Telemetry<>("potassium", MySortedSet.of(new Telemetry.Point<>(Timestamp.of(0), 0))))
-                        .build();
 
                 HarvestReporter harvestReporter = HarvestReporter.builder()
                         .systemName("Harvester: " + configuration.getName() + ", " + String.format("%s-%s", height, width))
@@ -1235,11 +1241,16 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
     }
 
 
-    private Telemetry<Double> createTelemetrySoilNitrogenLevel(PlantType plantType, String variety, ZonedDateTime startDate, ZonedDateTime endDate, boolean skipTelemetry) {
+    private Telemetry<Double> createTelemetrySoilNitrogenLevel(GreenhouseConfiguration configuration, boolean skipTelemetry) {
         if (skipTelemetry) {
             return new Telemetry<>("skip");
         }
+        PlantType plantType = configuration.getPlantType();
+        String variety = configuration.getVariety();
+        ZonedDateTime startDate = DateTimeUtils.fromTs(configuration.getStartTs());
+        ZonedDateTime endDate = DateTimeUtils.fromTs(configuration.getEndTs());
         Telemetry<Double> consumption = createTemporalTelemetryPlantNitrogenConsumption(plantType, variety, startDate, endDate);
+
         String name = "nitrogen";
         double startLevel = RandomUtils.getRandomNumber(150, 200);
         double minLevel = 50;
@@ -1248,11 +1259,16 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
         return createSoilLevel(name, startLevel, minLevel, raiseValue, consumption);
     }
 
-    private Telemetry<Double> createTelemetrySoilPhosphorusLevel(PlantType plantType, String variety, ZonedDateTime startDate, ZonedDateTime endDate, boolean skipTelemetry) {
+    private Telemetry<Double> createTelemetrySoilPhosphorusLevel(GreenhouseConfiguration configuration, boolean skipTelemetry) {
         if (skipTelemetry) {
             return new Telemetry<>("skip");
         }
+        PlantType plantType = configuration.getPlantType();
+        String variety = configuration.getVariety();
+        ZonedDateTime startDate = DateTimeUtils.fromTs(configuration.getStartTs());
+        ZonedDateTime endDate = DateTimeUtils.fromTs(configuration.getEndTs());
         Telemetry<Double> consumption = createTemporalTelemetryPlantPhosphorusConsumption(plantType, variety, startDate, endDate);
+
         String name = "phosphorus";
         double startLevel = RandomUtils.getRandomNumber(150, 200);
         double minLevel = 4;
@@ -1261,11 +1277,16 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
         return createSoilLevel(name, startLevel, minLevel, raiseValue, consumption);
     }
 
-    private Telemetry<Double> createTelemetrySoilPotassiumLevel(PlantType plantType, String variety, ZonedDateTime startDate, ZonedDateTime endDate, boolean skipTelemetry) {
+    private Telemetry<Double> createTelemetrySoilPotassiumLevel(GreenhouseConfiguration configuration, boolean skipTelemetry) {
         if (skipTelemetry) {
             return new Telemetry<>("skip");
         }
+        PlantType plantType = configuration.getPlantType();
+        String variety = configuration.getVariety();
+        ZonedDateTime startDate = DateTimeUtils.fromTs(configuration.getStartTs());
+        ZonedDateTime endDate = DateTimeUtils.fromTs(configuration.getEndTs());
         Telemetry<Double> consumption = createTemporalTelemetryPlantPotassiumConsumption(plantType, variety, startDate, endDate);
+
         String name = "potassium";
         double startLevel = RandomUtils.getRandomNumber(150, 200);
         double minLevel = 50;
