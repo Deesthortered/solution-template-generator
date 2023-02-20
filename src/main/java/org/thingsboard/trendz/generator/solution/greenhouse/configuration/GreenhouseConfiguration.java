@@ -17,12 +17,13 @@ public class GreenhouseConfiguration extends ConfigurationEntity {
 
     private int order;
 
+    private long startTs;
+    private long endTs;
     private String name;
     private StationCity stationCity;
     private String address;
     private double latitude;
     private double longitude;
-    private long installDate;
 
     private PlantType plantType;
     private String variety;
