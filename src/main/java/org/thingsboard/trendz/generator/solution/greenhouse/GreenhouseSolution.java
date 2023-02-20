@@ -1235,10 +1235,66 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
     }
 
 
-    private Telemetry<Double> createTemporalTelemetryPlantNitrogenConsumption(PlantType plantType, String variety, ZonedDateTime startDate, ZonedDateTime endDate, boolean skipTelemetry) {
+    private Telemetry<Double> createTelemetrySoilNitrogenLevel(PlantType plantType, String variety, ZonedDateTime startDate, ZonedDateTime endDate, boolean skipTelemetry) {
         if (skipTelemetry) {
             return new Telemetry<>("skip");
         }
+        Telemetry<Double> consumption = createTemporalTelemetryPlantNitrogenConsumption(plantType, variety, startDate, endDate);
+        String name = "nitrogen";
+        double startLevel = RandomUtils.getRandomNumber(150, 200);
+        double minLevel = 50;
+        double raiseValue = 150;
+
+        return createSoilLevel(name, startLevel, minLevel, raiseValue, consumption);
+    }
+
+    private Telemetry<Double> createTelemetrySoilPhosphorusLevel(PlantType plantType, String variety, ZonedDateTime startDate, ZonedDateTime endDate, boolean skipTelemetry) {
+        if (skipTelemetry) {
+            return new Telemetry<>("skip");
+        }
+        Telemetry<Double> consumption = createTemporalTelemetryPlantPhosphorusConsumption(plantType, variety, startDate, endDate);
+        String name = "phosphorus";
+        double startLevel = RandomUtils.getRandomNumber(150, 200);
+        double minLevel = 4;
+        double raiseValue = 8;
+
+        return createSoilLevel(name, startLevel, minLevel, raiseValue, consumption);
+    }
+
+    private Telemetry<Double> createTelemetrySoilPotassiumLevel(PlantType plantType, String variety, ZonedDateTime startDate, ZonedDateTime endDate, boolean skipTelemetry) {
+        if (skipTelemetry) {
+            return new Telemetry<>("skip");
+        }
+        Telemetry<Double> consumption = createTemporalTelemetryPlantPotassiumConsumption(plantType, variety, startDate, endDate);
+        String name = "potassium";
+        double startLevel = RandomUtils.getRandomNumber(150, 200);
+        double minLevel = 50;
+        double raiseValue = 200;
+
+        return createSoilLevel(name, startLevel, minLevel, raiseValue, consumption);
+    }
+
+    private Telemetry<Double> createSoilLevel(String name, double startLevel, double minLevel, double raiseValue, Telemetry<Double> consumption) {
+        Telemetry<Double> result = new Telemetry<>(name);
+        double currentLevel = startLevel;
+        for (Telemetry.Point<Double> point : consumption.getPoints()) {
+            Timestamp ts = point.getTs();
+            double value = point.getValue();
+            if (currentLevel <= minLevel) {
+                currentLevel += raiseValue;
+            } else {
+                currentLevel += value;
+            }
+
+            Telemetry.Point<Double> newPoint = new Telemetry.Point<>(ts, currentLevel);
+            result.add(newPoint);
+        }
+
+        return result;
+    }
+
+
+    private Telemetry<Double> createTemporalTelemetryPlantNitrogenConsumption(PlantType plantType, String variety, ZonedDateTime startDate, ZonedDateTime endDate) {
         switch (plantType) {
             case TOMATO:
                 switch (variety) {
@@ -1264,10 +1320,7 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
         }
     }
 
-    private Telemetry<Double> createTemporalTelemetryPlantPhosphorusConsumption(PlantType plantType, String variety, ZonedDateTime startDate, ZonedDateTime endDate, boolean skipTelemetry) {
-        if (skipTelemetry) {
-            return new Telemetry<>("skip");
-        }
+    private Telemetry<Double> createTemporalTelemetryPlantPhosphorusConsumption(PlantType plantType, String variety, ZonedDateTime startDate, ZonedDateTime endDate) {
         switch (plantType) {
             case TOMATO:
                 switch (variety) {
@@ -1293,10 +1346,7 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
         }
     }
 
-    private Telemetry<Double> createTemporalTelemetryPlantPotassiumConsumption(PlantType plantType, String variety, ZonedDateTime startDate, ZonedDateTime endDate, boolean skipTelemetry) {
-        if (skipTelemetry) {
-            return new Telemetry<>("skip");
-        }
+    private Telemetry<Double> createTemporalTelemetryPlantPotassiumConsumption(PlantType plantType, String variety, ZonedDateTime startDate, ZonedDateTime endDate) {
         switch (plantType) {
             case TOMATO:
                 switch (variety) {
@@ -1465,6 +1515,7 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
                 if (currentDayCycle < periodDay) {
                     double value = periodValuePrev + (1.0 * (currentDayCycle - periodDayPrev) * (periodDay - periodDayPrev)) / (periodDay - periodDayPrev);
                     value += RandomUtils.getRandomNumber(-noiseAmplitude, noiseAmplitude) * noiseCoefficient;
+                    value = Math.max(0.0, value);
 
                     result.add(new Telemetry.Point<>(Timestamp.of(iteratedTs), value));
                     break;
