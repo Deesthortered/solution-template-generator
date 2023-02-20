@@ -1298,15 +1298,23 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
     private Telemetry<Double> createSoilLevel(String name, double startLevel, double minLevel, double raiseValue, Telemetry<Double> consumption) {
         Telemetry<Double> result = new Telemetry<>(name);
         double currentLevel = startLevel;
+        double prevValue = 0;
         for (Telemetry.Point<Double> point : consumption.getPoints()) {
             Timestamp ts = point.getTs();
             double value = point.getValue();
-            if (currentLevel <= minLevel) {
-                currentLevel += raiseValue;
-            } else {
-                currentLevel += value;
+
+            double delta = value - prevValue;
+            if (delta < 0) {
+                delta = value;
             }
 
+            currentLevel -= delta;
+
+            if (currentLevel <= minLevel) {
+                currentLevel += raiseValue;
+            }
+
+            prevValue = value;
             Telemetry.Point<Double> newPoint = new Telemetry.Point<>(ts, currentLevel);
             result.add(newPoint);
         }
@@ -1395,7 +1403,7 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
 
 
     private Telemetry<Double> createTemporalTelemetryPlantNitrogenConsumptionTomatoSungold(ZonedDateTime startDate, ZonedDateTime endDate) {
-        int noiseAmplitude = 10;
+        int noiseAmplitude = 3;
         double noiseCoefficient = 1.0;
         int totalPeriodDays = 100;
         List<Integer> periodDays = List.of(30, 60, 100);
@@ -1405,7 +1413,7 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
     }
 
     private Telemetry<Double> createTemporalTelemetryPlantNitrogenConsumptionTomatoCherry(ZonedDateTime startDate, ZonedDateTime endDate) {
-        int noiseAmplitude = 10;
+        int noiseAmplitude = 3;
         double noiseCoefficient = 1.0;
         int totalPeriodDays = 70;
         List<Integer> periodDays = List.of(30, 50, 70);
@@ -1415,7 +1423,7 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
     }
 
     private Telemetry<Double> createTemporalTelemetryPlantNitrogenConsumptionCucumberEnglish(ZonedDateTime startDate, ZonedDateTime endDate) {
-        int noiseAmplitude = 10;
+        int noiseAmplitude = 3;
         double noiseCoefficient = 1.0;
         int totalPeriodDays = 60;
         List<Integer> periodDays = List.of(15, 30, 45, 60);
@@ -1425,7 +1433,7 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
     }
 
     private Telemetry<Double> createTemporalTelemetryPlantNitrogenConsumptionOnionSweetSpanish(ZonedDateTime startDate, ZonedDateTime endDate) {
-        int noiseAmplitude = 10;
+        int noiseAmplitude = 3;
         double noiseCoefficient = 1.0;
         int totalPeriodDays = 90;
         List<Integer> periodDays = List.of(15, 30, 60, 90);
@@ -1437,7 +1445,7 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
 
     private Telemetry<Double> createTemporalTelemetryPlantPhosphorusConsumptionTomatoSungold(ZonedDateTime startDate, ZonedDateTime endDate) {
         int noiseAmplitude = 1;
-        double noiseCoefficient = 0.1;
+        double noiseCoefficient = 0.01;
         int totalPeriodDays = 100;
         List<Integer> periodDays = List.of(30, 60, 100);
         List<Double> periodValues = List.of(8.0, 12.0, 22.0);
@@ -1447,7 +1455,7 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
 
     private Telemetry<Double> createTemporalTelemetryPlantPhosphorusConsumptionTomatoCherry(ZonedDateTime startDate, ZonedDateTime endDate) {
         int noiseAmplitude = 1;
-        double noiseCoefficient = 0.1;
+        double noiseCoefficient = 0.01;
         int totalPeriodDays = 70;
         List<Integer> periodDays = List.of(30, 50, 70);
         List<Double> periodValues = List.of(5.0, 15.0, 23.0);
@@ -1457,7 +1465,7 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
 
     private Telemetry<Double> createTemporalTelemetryPlantPhosphorusConsumptionCucumberEnglish(ZonedDateTime startDate, ZonedDateTime endDate) {
         int noiseAmplitude = 1;
-        double noiseCoefficient = 0.1;
+        double noiseCoefficient = 0.01;
         int totalPeriodDays = 60;
         List<Integer> periodDays = List.of(15, 30, 45, 60);
         List<Double> periodValues = List.of(3.0, 8.0, 20.0, 28.0);
@@ -1467,7 +1475,7 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
 
     private Telemetry<Double> createTemporalTelemetryPlantPhosphorusConsumptionOnionSweetSpanish(ZonedDateTime startDate, ZonedDateTime endDate) {
         int noiseAmplitude = 1;
-        double noiseCoefficient = 0.1;
+        double noiseCoefficient = 0.01;
         int totalPeriodDays = 90;
         List<Integer> periodDays = List.of(15, 30, 60, 90);
         List<Double> periodValues = List.of(4.0, 10.0, 25.0, 33.0);
@@ -1477,7 +1485,7 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
 
 
     private Telemetry<Double> createTemporalTelemetryPlantPotassiumConsumptionTomatoSungold(ZonedDateTime startDate, ZonedDateTime endDate) {
-        int noiseAmplitude = 10;
+        int noiseAmplitude = 3;
         double noiseCoefficient = 1.0;
         int totalPeriodDays = 100;
         List<Integer> periodDays = List.of(30, 60, 100);
@@ -1487,7 +1495,7 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
     }
 
     private Telemetry<Double> createTemporalTelemetryPlantPotassiumConsumptionTomatoCherry(ZonedDateTime startDate, ZonedDateTime endDate) {
-        int noiseAmplitude = 10;
+        int noiseAmplitude = 3;
         double noiseCoefficient = 1.0;
         int totalPeriodDays = 70;
         List<Integer> periodDays = List.of(30, 50, 70);
@@ -1497,7 +1505,7 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
     }
 
     private Telemetry<Double> createTemporalTelemetryPlantPotassiumConsumptionCucumberEnglish(ZonedDateTime startDate, ZonedDateTime endDate) {
-        int noiseAmplitude = 10;
+        int noiseAmplitude = 3;
         double noiseCoefficient = 1.0;
         int totalPeriodDays = 60;
         List<Integer> periodDays = List.of(15, 30, 45, 60);
@@ -1507,7 +1515,7 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
     }
 
     private Telemetry<Double> createTemporalTelemetryPlantPotassiumConsumptionOnionSweetSpanish(ZonedDateTime startDate, ZonedDateTime endDate) {
-        int noiseAmplitude = 10;
+        int noiseAmplitude = 3;
         double noiseCoefficient = 1.0;
         int totalPeriodDays = 90;
         List<Integer> periodDays = List.of(15, 30, 60, 90);
@@ -1523,6 +1531,7 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
         startDate = startDate.truncatedTo(ChronoUnit.HOURS);
         endDate = endDate.truncatedTo(ChronoUnit.HOURS);
         ZonedDateTime iteratedDate = startDate;
+        double prevValue = 0;
         while (iteratedDate.isBefore(endDate)) {
             long iteratedTs = DateTimeUtils.toTs(iteratedDate);
             long daysBetween = ChronoUnit.DAYS.between(startDate, iteratedDate);
@@ -1534,11 +1543,12 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
                 int periodDay = periodDays.get(i);
                 double periodValue = periodValues.get(i);
                 if (currentDayCycle < periodDay) {
-                    double value = periodValuePrev + (1.0 * (currentDayCycle - periodDayPrev) * (periodDay - periodDayPrev)) / (periodDay - periodDayPrev);
-                    value += RandomUtils.getRandomNumber(-noiseAmplitude, noiseAmplitude) * noiseCoefficient;
-                    value = Math.max(0.0, value);
+                    double value = periodValuePrev + (1.0 * (currentDayCycle - periodDayPrev) * (periodValue - periodValuePrev)) / (periodDay - periodDayPrev);
+                    value += RandomUtils.getRandomNumber(0, noiseAmplitude) * noiseCoefficient;
+                    value = Math.max(prevValue, value);
 
                     result.add(new Telemetry.Point<>(Timestamp.of(iteratedTs), value));
+                    prevValue = value;
                     break;
                 }
                 periodDayPrev = periodDay;
