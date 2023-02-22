@@ -1,5 +1,6 @@
 package org.thingsboard.trendz.generator.solution.greenhouse;
 
+import com.google.common.base.Functions;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
@@ -802,18 +803,7 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
         Telemetry<Integer> outsideHumidityTelemetry = createOutsideHumidityTelemetry(weatherDataMap, configuration, skipTelemetry);
         Telemetry<Integer> outsideLightTelemetry = createOutsideLightTelemetry(weatherDataMap, configuration, skipTelemetry);
 
-        OutsideAirWarmHumiditySensor outsideAirWarmHumiditySensor = OutsideAirWarmHumiditySensor.builder()
-                .systemName(configuration.getName() + ": Air Warm-Humidity Sensor (Outside)")
-                .systemLabel("")
-                .temperature(outsideTemperatureTelemetry)
-                .humidity(outsideHumidityTelemetry)
-                .build();
-
-        OutsideLightSensor outsideLightSensor = OutsideLightSensor.builder()
-                .systemName(configuration.getName() + ": Light Sensor (Outside)")
-                .systemLabel("")
-                .light(outsideLightTelemetry)
-                .build();
+        Telemetry<Integer> insideLightTelemetry = createInsideLightTelemetry(outsideLightTelemetry, configuration, skipTelemetry);
 
 
         Set<Section> sections = new TreeSet<>();
@@ -871,17 +861,30 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
             }
         }
 
+        OutsideAirWarmHumiditySensor outsideAirWarmHumiditySensor = OutsideAirWarmHumiditySensor.builder()
+                .systemName(configuration.getName() + ": Air Warm-Humidity Sensor (Outside)")
+                .systemLabel("")
+                .temperature(outsideTemperatureTelemetry)
+                .humidity(outsideHumidityTelemetry)
+                .build();
+
+        OutsideLightSensor outsideLightSensor = OutsideLightSensor.builder()
+                .systemName(configuration.getName() + ": Light Sensor (Outside)")
+                .systemLabel("")
+                .light(outsideLightTelemetry)
+                .build();
+
         InsideAirWarmHumiditySensor insideAirWarmHumiditySensor = InsideAirWarmHumiditySensor.builder()
                 .systemName(configuration.getName() + ": Air Warm-Humidity Sensor (Inside)")
                 .systemLabel("")
-                .temperature(new Telemetry<>("temperature", MySortedSet.of(new Telemetry.Point<>(Timestamp.of(0), 0))))
-                .humidity(new Telemetry<>("humidity", MySortedSet.of(new Telemetry.Point<>(Timestamp.of(0), 0))))
+                .temperature(new Telemetry<>("temperature_in", MySortedSet.of(new Telemetry.Point<>(Timestamp.of(0), 0))))
+                .humidity(new Telemetry<>("humidity_in", MySortedSet.of(new Telemetry.Point<>(Timestamp.of(0), 0))))
                 .build();
 
         InsideLightSensor insideLightSensor = InsideLightSensor.builder()
                 .systemName(configuration.getName() + ": Light Sensor (Inside)")
                 .systemLabel("")
-                .light(new Telemetry<>("light", MySortedSet.of(new Telemetry.Point<>(Timestamp.of(0), 0))))
+                .light(insideLightTelemetry)
                 .build();
 
         InsideCO2Sensor insideCO2Sensor = InsideCO2Sensor.builder()
@@ -1011,7 +1014,7 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
             return new Telemetry<>("skip");
         }
 
-        Telemetry<Integer> result = new Telemetry<>("temperature");
+        Telemetry<Integer> result = new Telemetry<>("temperature_out");
         long startTs = configuration.getStartTs();
         long endTs = configuration.getEndTs();
 
@@ -1034,7 +1037,7 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
             return new Telemetry<>("skip");
         }
 
-        Telemetry<Integer> result = new Telemetry<>("humidity");
+        Telemetry<Integer> result = new Telemetry<>("humidity_out");
         long startTs = configuration.getStartTs();
         long endTs = configuration.getEndTs();
 
@@ -1057,7 +1060,7 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
             return new Telemetry<>("skip");
         }
 
-        Telemetry<Integer> result = new Telemetry<>("light");
+        Telemetry<Integer> result = new Telemetry<>("light_out");
         long startTs = configuration.getStartTs();
         long endTs = configuration.getEndTs();
 
@@ -1238,6 +1241,46 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
                 return 1.0;
             default: throw new IllegalArgumentException("Unsupported condition: " + condition);
         }
+    }
+
+
+    private Telemetry<Integer> createInsideLightTelemetry(Telemetry<Integer> outsideLightTelemetry, GreenhouseConfiguration configuration, boolean skipTelemetry) {
+        if (skipTelemetry) {
+            return new Telemetry<>("skip");
+        }
+        Telemetry<Integer> result = new Telemetry<>("light_in");
+
+        Map<Timestamp, Telemetry.Point<Integer>> outsideLightTelemetryMap = outsideLightTelemetry.getPoints()
+                .stream()
+                .collect(Collectors.toMap(Telemetry.Point::getTs, Functions.identity()));
+
+        int dayModeStartHour = 8;
+        int nightModeStartHour = 20;
+        int dayLevel = 14000;
+        int nightLevel = 3000;
+
+        ZonedDateTime startDate = DateTimeUtils.fromTs(configuration.getStartTs());
+        ZonedDateTime endDate = DateTimeUtils.fromTs(configuration.getEndTs());
+        ZonedDateTime iteratedDate = startDate;
+        Telemetry.Point<Integer> outsideLightPoint = outsideLightTelemetry.getPoints().iterator().next();
+        while (iteratedDate.isBefore(endDate)) {
+            long iteratedTs = DateTimeUtils.toTs(iteratedDate);
+            int hour = iteratedDate.getHour();
+
+            outsideLightPoint = outsideLightTelemetryMap.getOrDefault(Timestamp.of(iteratedTs), outsideLightPoint);
+            int outsideValue = outsideLightPoint.getValue();
+
+            int currentNeededLevel = (dayModeStartHour <= hour && hour < nightModeStartHour)
+                    ? dayLevel
+                    : nightLevel;
+
+            int diff = Math.max(0, currentNeededLevel - outsideValue);
+
+            result.add(new Telemetry.Point<>(Timestamp.of(iteratedTs), diff));
+            iteratedDate = iteratedDate.plus(1, ChronoUnit.HOURS);
+        }
+
+        return result;
     }
 
 
