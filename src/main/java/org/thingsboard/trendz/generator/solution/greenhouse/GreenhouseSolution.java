@@ -53,15 +53,7 @@ import java.io.Reader;
 import java.nio.file.Path;
 import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.TreeSet;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
@@ -805,9 +797,13 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
 
         Telemetry<Integer> insideLightTelemetry = createInsideLightTelemetry(outsideLightTelemetry, configuration, skipTelemetry);
 
-        List<Long> interruptions = new ArrayList<>();
+        Set<Long> aerations = new HashSet<>();
         Telemetry<Integer> temporalTelemetryCo2Consumption = createTemporalTelemetryCo2Consumption(outsideLightTelemetry, insideLightTelemetry, configuration, skipTelemetry);
-        Telemetry<Integer> co2ConcetracionTelemetry = createCo2ConcentrationTelemetryAndInterruption(interruptions, temporalTelemetryCo2Consumption, configuration, skipTelemetry);
+        Telemetry<Integer> co2ConcetracionTelemetry = createCo2ConcentrationTelemetryAndInterruption(aerations, temporalTelemetryCo2Consumption, configuration, skipTelemetry);
+
+        Set<Long> humidifications = new HashSet<>();
+        Telemetry<Integer> insideHumidityTelemetry = createInsideHumidityTelemetry(aerations, humidifications, configuration, skipTelemetry);
+        Telemetry<Integer> insideTemperatureTelemetry = createInsideTemperatureTelemetry(aerations, configuration, skipTelemetry);
 
         Set<Section> sections = new TreeSet<>();
         for (int height = 1; height <= configuration.getSectionHeight(); height++) {
@@ -880,8 +876,8 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
         InsideAirWarmHumiditySensor insideAirWarmHumiditySensor = InsideAirWarmHumiditySensor.builder()
                 .systemName(configuration.getName() + ": Air Warm-Humidity Sensor (Inside)")
                 .systemLabel("")
-                .temperature(new Telemetry<>("temperature_in", MySortedSet.of(new Telemetry.Point<>(Timestamp.of(0), 0))))
-                .humidity(new Telemetry<>("humidity_in", MySortedSet.of(new Telemetry.Point<>(Timestamp.of(0), 0))))
+                .temperature(insideTemperatureTelemetry)
+                .humidity(insideHumidityTelemetry)
                 .build();
 
         InsideLightSensor insideLightSensor = InsideLightSensor.builder()
@@ -1287,7 +1283,7 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
     }
 
 
-    private Telemetry<Integer> createCo2ConcentrationTelemetryAndInterruption(List<Long> interruptions, Telemetry<Integer> temporalTelemetryCo2Consumption, GreenhouseConfiguration configuration, boolean skipTelemetry) {
+    private Telemetry<Integer> createCo2ConcentrationTelemetryAndInterruption(Set<Long> aerations, Telemetry<Integer> temporalTelemetryCo2Consumption, GreenhouseConfiguration configuration, boolean skipTelemetry) {
         if (skipTelemetry) {
             return new Telemetry<>("skip");
         }
@@ -1311,7 +1307,7 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
 
             currentLevel -= co2Consumption;
             if (currentLevel <= minLevel) {
-                interruptions.add(iteratedTs);
+                aerations.add(iteratedTs);
                 currentLevel += raiseLevel;
             }
 
@@ -1353,6 +1349,58 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
             int consumption = (int) (Math.round((-1.0 * nightConsumption * light) / zeroConsumptionLightLevel) + nightConsumption);
 
             result.add(new Telemetry.Point<>(Timestamp.of(iteratedTs), consumption));
+            iteratedDate = iteratedDate.plus(1, ChronoUnit.HOURS);
+        }
+
+        return result;
+    }
+
+
+    private Telemetry<Integer> createInsideTemperatureTelemetry(Set<Long> aerations, GreenhouseConfiguration configuration, boolean skipTelemetry) {
+        if (skipTelemetry) {
+            return new Telemetry<>("skip");
+        }
+        Telemetry<Integer> result = new Telemetry<>("temperature_in");
+
+        return result;
+    }
+
+    private Telemetry<Integer> createInsideHumidityTelemetry(Set<Long> aerations, Set<Long> humidifications, GreenhouseConfiguration configuration, boolean skipTelemetry) {
+        if (skipTelemetry) {
+            return new Telemetry<>("skip");
+        }
+        Telemetry<Integer> result = new Telemetry<>("humidity_in");
+
+        double startLevel = 30;
+        double increaseLevel = 0.4;
+        double interruptionDecreaseLevel = 30;
+
+        boolean humidificationMode = false;
+        double humidificationIncreaseValue = 4;
+        double humidificationLowLevel = 35;
+        double humidificationHighLevel = 70;
+
+        ZonedDateTime startDate = DateTimeUtils.fromTs(configuration.getStartTs()).truncatedTo(ChronoUnit.HOURS);
+        ZonedDateTime endDate = DateTimeUtils.fromTs(configuration.getEndTs()).truncatedTo(ChronoUnit.HOURS);
+        ZonedDateTime iteratedDate = startDate;
+        double currentLevel = startLevel;
+        while (iteratedDate.isBefore(endDate)) {
+            long iteratedTs = DateTimeUtils.toTs(iteratedDate);
+            boolean interrupt = aerations.contains(iteratedTs);
+
+            if (currentLevel <= humidificationLowLevel) {
+                humidificationMode = true;
+                humidifications.add(iteratedTs);
+            }
+            if (humidificationHighLevel <= currentLevel) {
+                humidificationMode = false;
+            }
+
+            currentLevel += increaseLevel;
+            currentLevel -= (interrupt) ? interruptionDecreaseLevel : 0;
+            currentLevel += (humidificationMode) ? humidificationIncreaseValue : 0;
+
+            result.add(new Telemetry.Point<>(Timestamp.of(iteratedTs), (int) currentLevel));
             iteratedDate = iteratedDate.plus(1, ChronoUnit.HOURS);
         }
 
