@@ -805,6 +805,9 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
 
         Telemetry<Integer> insideLightTelemetry = createInsideLightTelemetry(outsideLightTelemetry, configuration, skipTelemetry);
 
+        List<Long> interruptions = new ArrayList<>();
+        Telemetry<Integer> temporalTelemetryCo2Consumption = createTemporalTelemetryCo2Consumption(outsideLightTelemetry, insideLightTelemetry, configuration, skipTelemetry);
+        Telemetry<Integer> co2ConcetracionTelemetry = createCo2ConcentrationTelemetryAndInterruption(interruptions, temporalTelemetryCo2Consumption, configuration, skipTelemetry);
 
         Set<Section> sections = new TreeSet<>();
         for (int height = 1; height <= configuration.getSectionHeight(); height++) {
@@ -890,7 +893,7 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
         InsideCO2Sensor insideCO2Sensor = InsideCO2Sensor.builder()
                 .systemName(configuration.getName() + ": CO2 Sensor (Inside)")
                 .systemLabel("")
-                .concentration(new Telemetry<>("concentration", MySortedSet.of(new Telemetry.Point<>(Timestamp.of(0), 0))))
+                .concentration(co2ConcetracionTelemetry)
                 .build();
 
         EnergyMeter energyMeter = EnergyMeter.builder()
@@ -934,13 +937,13 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
 
             List<WeatherData> weatherDataList = parser.stream()
                     .map(record -> {
-                        long ts = Long.parseLong(record.get("ts"));
-                        ZonedDateTime dateTime = DateTimeUtils.fromTs(ts);
-                        dateTime = dateTime.truncatedTo(ChronoUnit.HOURS);
+                                long ts = Long.parseLong(record.get("ts"));
+                                ZonedDateTime dateTime = DateTimeUtils.fromTs(ts);
+                                dateTime = dateTime.truncatedTo(ChronoUnit.HOURS);
 
-                        long newTs = DateTimeUtils.toTs(dateTime.plusYears(2));
+                                long newTs = DateTimeUtils.toTs(dateTime.plusYears(2));
 
-                        return WeatherData.builder()
+                                return WeatherData.builder()
                                         .ts(newTs)
                                         .pressure(Double.parseDouble(record.get("pressure")))
                                         .temperatureFahrenheit(Double.parseDouble(record.get("temperatureFahrenheit")))
@@ -1148,7 +1151,7 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
             return (-diff * (day - 172)) / (356 - 172);
         } else if (356 <= day) {
             return (diff * (day - 356)) / ((365 - 356) + 172) - diff;
-        } else  {
+        } else {
             return (diff * (day + (365 - 356))) / ((365 - 356) + 172) - diff;
         }
     }
@@ -1239,7 +1242,8 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
             case "Fair":
             case "Fair / Windy":
                 return 1.0;
-            default: throw new IllegalArgumentException("Unsupported condition: " + condition);
+            default:
+                throw new IllegalArgumentException("Unsupported condition: " + condition);
         }
     }
 
@@ -1256,8 +1260,8 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
 
         int dayModeStartHour = 8;
         int nightModeStartHour = 20;
-        int dayLevel = 14000;
-        int nightLevel = 3000;
+        int dayLevel = 18000;
+        int nightLevel = 2000;
 
         ZonedDateTime startDate = DateTimeUtils.fromTs(configuration.getStartTs()).truncatedTo(ChronoUnit.HOURS);
         ZonedDateTime endDate = DateTimeUtils.fromTs(configuration.getEndTs()).truncatedTo(ChronoUnit.HOURS);
@@ -1276,6 +1280,79 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
             int diff = Math.max(0, currentNeededLevel - outsideValue);
 
             result.add(new Telemetry.Point<>(Timestamp.of(iteratedTs), diff));
+            iteratedDate = iteratedDate.plus(1, ChronoUnit.HOURS);
+        }
+
+        return result;
+    }
+
+
+    private Telemetry<Integer> createCo2ConcentrationTelemetryAndInterruption(List<Long> interruptions, Telemetry<Integer> temporalTelemetryCo2Consumption, GreenhouseConfiguration configuration, boolean skipTelemetry) {
+        if (skipTelemetry) {
+            return new Telemetry<>("skip");
+        }
+        Telemetry<Integer> result = new Telemetry<>("concentration");
+
+        int startLevel = 1000;
+        int minLevel = 800;
+        int raiseLevel = 400;
+
+        Map<Timestamp, Telemetry.Point<Integer>> co2ConsumptionMap = temporalTelemetryCo2Consumption.getPoints()
+                .stream()
+                .collect(Collectors.toMap(Telemetry.Point::getTs, Functions.identity()));
+
+        ZonedDateTime startDate = DateTimeUtils.fromTs(configuration.getStartTs()).truncatedTo(ChronoUnit.HOURS);
+        ZonedDateTime endDate = DateTimeUtils.fromTs(configuration.getEndTs()).truncatedTo(ChronoUnit.HOURS);
+        ZonedDateTime iteratedDate = startDate;
+        int currentLevel = startLevel;
+        while (iteratedDate.isBefore(endDate)) {
+            long iteratedTs = DateTimeUtils.toTs(iteratedDate);
+            Integer co2Consumption = co2ConsumptionMap.get(Timestamp.of(iteratedTs)).getValue();
+
+            currentLevel -= co2Consumption;
+            if (currentLevel <= minLevel) {
+                interruptions.add(iteratedTs);
+                currentLevel += raiseLevel;
+            }
+
+            result.add(new Telemetry.Point<>(Timestamp.of(iteratedTs), currentLevel));
+            iteratedDate = iteratedDate.plus(1, ChronoUnit.HOURS);
+
+        }
+
+        return result;
+    }
+
+    private Telemetry<Integer> createTemporalTelemetryCo2Consumption(Telemetry<Integer> outsideLightTelemetry, Telemetry<Integer> insideLightTelemetry, GreenhouseConfiguration configuration, boolean skipTelemetry) {
+        if (skipTelemetry) {
+            return new Telemetry<>("skip");
+        }
+        Telemetry<Integer> result = new Telemetry<>("temporal__co2_concentration");
+
+        int nightConsumption = 50;
+        int zeroConsumptionLightLevel = 14000;
+
+        Map<Timestamp, Telemetry.Point<Integer>> outsideLightTelemetryMap = outsideLightTelemetry.getPoints()
+                .stream()
+                .collect(Collectors.toMap(Telemetry.Point::getTs, Functions.identity()));
+
+        Map<Timestamp, Telemetry.Point<Integer>> insideLightTelemetryMap = insideLightTelemetry.getPoints()
+                .stream()
+                .collect(Collectors.toMap(Telemetry.Point::getTs, Functions.identity()));
+
+        ZonedDateTime startDate = DateTimeUtils.fromTs(configuration.getStartTs()).truncatedTo(ChronoUnit.HOURS);
+        ZonedDateTime endDate = DateTimeUtils.fromTs(configuration.getEndTs()).truncatedTo(ChronoUnit.HOURS);
+        ZonedDateTime iteratedDate = startDate;
+        while (iteratedDate.isBefore(endDate)) {
+            long iteratedTs = DateTimeUtils.toTs(iteratedDate);
+
+            int outsideLight = outsideLightTelemetryMap.get(Timestamp.of(iteratedTs)).getValue();
+            int insideLight = insideLightTelemetryMap.get(Timestamp.of(iteratedTs)).getValue();
+            int light = outsideLight + insideLight;
+
+            int consumption = (int) (Math.round((-1.0 * nightConsumption * light) / zeroConsumptionLightLevel) + zeroConsumptionLightLevel);
+
+            result.add(new Telemetry.Point<>(Timestamp.of(iteratedTs), consumption));
             iteratedDate = iteratedDate.plus(1, ChronoUnit.HOURS);
         }
 
@@ -1373,21 +1450,25 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
                         return createTemporalTelemetryPlantNitrogenConsumptionTomatoSungold(startDate, endDate);
                     case "Cherry":
                         return createTemporalTelemetryPlantNitrogenConsumptionTomatoCherry(startDate, endDate);
-                    default: throw new IllegalArgumentException("Unsupported plant variety: " + plantType + ", " + variety);
+                    default:
+                        throw new IllegalArgumentException("Unsupported plant variety: " + plantType + ", " + variety);
                 }
             case CUCUMBER:
                 switch (variety) {
                     case "English":
                         return createTemporalTelemetryPlantNitrogenConsumptionCucumberEnglish(startDate, endDate);
-                    default: throw new IllegalArgumentException("Unsupported plant variety: " + plantType + ", " + variety);
+                    default:
+                        throw new IllegalArgumentException("Unsupported plant variety: " + plantType + ", " + variety);
                 }
             case ONION:
                 switch (variety) {
                     case "Sweet Spanish":
                         return createTemporalTelemetryPlantNitrogenConsumptionOnionSweetSpanish(startDate, endDate);
-                    default: throw new IllegalArgumentException("Unsupported plant variety: " + plantType + ", " + variety);
+                    default:
+                        throw new IllegalArgumentException("Unsupported plant variety: " + plantType + ", " + variety);
                 }
-            default: throw new IllegalArgumentException("Unsupported plant: " + plantType);
+            default:
+                throw new IllegalArgumentException("Unsupported plant: " + plantType);
         }
     }
 
@@ -1399,21 +1480,25 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
                         return createTemporalTelemetryPlantPhosphorusConsumptionTomatoSungold(startDate, endDate);
                     case "Cherry":
                         return createTemporalTelemetryPlantPhosphorusConsumptionTomatoCherry(startDate, endDate);
-                    default: throw new IllegalArgumentException("Unsupported plant variety: " + plantType + ", " + variety);
+                    default:
+                        throw new IllegalArgumentException("Unsupported plant variety: " + plantType + ", " + variety);
                 }
             case CUCUMBER:
                 switch (variety) {
                     case "English":
                         return createTemporalTelemetryPlantPhosphorusConsumptionCucumberEnglish(startDate, endDate);
-                    default: throw new IllegalArgumentException("Unsupported plant variety: " + plantType + ", " + variety);
+                    default:
+                        throw new IllegalArgumentException("Unsupported plant variety: " + plantType + ", " + variety);
                 }
             case ONION:
                 switch (variety) {
                     case "Sweet Spanish":
                         return createTemporalTelemetryPlantPhosphorusConsumptionOnionSweetSpanish(startDate, endDate);
-                    default: throw new IllegalArgumentException("Unsupported plant variety: " + plantType + ", " + variety);
+                    default:
+                        throw new IllegalArgumentException("Unsupported plant variety: " + plantType + ", " + variety);
                 }
-            default: throw new IllegalArgumentException("Unsupported plant: " + plantType);
+            default:
+                throw new IllegalArgumentException("Unsupported plant: " + plantType);
         }
     }
 
@@ -1425,21 +1510,25 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
                         return createTemporalTelemetryPlantPotassiumConsumptionTomatoSungold(startDate, endDate);
                     case "Cherry":
                         return createTemporalTelemetryPlantPotassiumConsumptionTomatoCherry(startDate, endDate);
-                    default: throw new IllegalArgumentException("Unsupported plant variety: " + plantType + ", " + variety);
+                    default:
+                        throw new IllegalArgumentException("Unsupported plant variety: " + plantType + ", " + variety);
                 }
             case CUCUMBER:
                 switch (variety) {
                     case "English":
                         return createTemporalTelemetryPlantPotassiumConsumptionCucumberEnglish(startDate, endDate);
-                    default: throw new IllegalArgumentException("Unsupported plant variety: " + plantType + ", " + variety);
+                    default:
+                        throw new IllegalArgumentException("Unsupported plant variety: " + plantType + ", " + variety);
                 }
             case ONION:
                 switch (variety) {
                     case "Sweet Spanish":
                         return createTemporalTelemetryPlantPotassiumConsumptionOnionSweetSpanish(startDate, endDate);
-                    default: throw new IllegalArgumentException("Unsupported plant variety: " + plantType + ", " + variety);
+                    default:
+                        throw new IllegalArgumentException("Unsupported plant variety: " + plantType + ", " + variety);
                 }
-            default: throw new IllegalArgumentException("Unsupported plant: " + plantType);
+            default:
+                throw new IllegalArgumentException("Unsupported plant: " + plantType);
         }
     }
 
@@ -1604,7 +1693,6 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
         }
         return result;
     }
-
 
 
     private Asset createPlant(Plant plant, UUID ownerId, UUID assetGroupId) {
