@@ -1259,15 +1259,14 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
         int dayLevel = 14000;
         int nightLevel = 3000;
 
-        ZonedDateTime startDate = DateTimeUtils.fromTs(configuration.getStartTs());
-        ZonedDateTime endDate = DateTimeUtils.fromTs(configuration.getEndTs());
+        ZonedDateTime startDate = DateTimeUtils.fromTs(configuration.getStartTs()).truncatedTo(ChronoUnit.HOURS);
+        ZonedDateTime endDate = DateTimeUtils.fromTs(configuration.getEndTs()).truncatedTo(ChronoUnit.HOURS);
         ZonedDateTime iteratedDate = startDate;
-        Telemetry.Point<Integer> outsideLightPoint = outsideLightTelemetry.getPoints().iterator().next();
         while (iteratedDate.isBefore(endDate)) {
             long iteratedTs = DateTimeUtils.toTs(iteratedDate);
             int hour = iteratedDate.getHour();
 
-            outsideLightPoint = outsideLightTelemetryMap.getOrDefault(Timestamp.of(iteratedTs), outsideLightPoint);
+            Telemetry.Point<Integer> outsideLightPoint = outsideLightTelemetryMap.get(Timestamp.of(iteratedTs));
             int outsideValue = outsideLightPoint.getValue();
 
             int currentNeededLevel = (dayModeStartHour <= hour && hour < nightModeStartHour)
