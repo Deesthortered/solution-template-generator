@@ -1350,7 +1350,7 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
             int insideLight = insideLightTelemetryMap.get(Timestamp.of(iteratedTs)).getValue();
             int light = outsideLight + insideLight;
 
-            int consumption = (int) (Math.round((-1.0 * nightConsumption * light) / zeroConsumptionLightLevel) + zeroConsumptionLightLevel);
+            int consumption = (int) (Math.round((-1.0 * nightConsumption * light) / zeroConsumptionLightLevel) + nightConsumption);
 
             result.add(new Telemetry.Point<>(Timestamp.of(iteratedTs), consumption));
             iteratedDate = iteratedDate.plus(1, ChronoUnit.HOURS);
