@@ -1289,9 +1289,10 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
         }
         Telemetry<Integer> result = new Telemetry<>("concentration");
 
-        double maxLevel = configuration.getPlant().getMaxCo2Concentration();
         double startLevel = 1000;
-        double decreaseLevel = 400;
+        double minLevel = configuration.getPlant().getMinCo2Concentration();
+        double maxLevel = configuration.getPlant().getMaxCo2Concentration();
+        double decreaseLevel = (minLevel + maxLevel) / 2;
 
         Map<Timestamp, Telemetry.Point<Integer>> co2ConsumptionMap = temporalTelemetryCo2Consumption.getPoints()
                 .stream()
