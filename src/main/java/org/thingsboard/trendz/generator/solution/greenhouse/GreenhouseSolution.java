@@ -335,98 +335,12 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
                 .map(city -> Pair.of(city, loadWeatherData(city, startYear, skipTelemetry)))
                 .collect(Collectors.toMap(Pair::getKey, Pair::getValue));
 
+        Plant plantTomatoSungold = createPlantTomatoSungold();
+        Plant plantTomatoCherry = createPlantTomatoCherry();
+        Plant plantCucumberEnglish = createPlantCucumberEnglish();
+        Plant plantOnionSweetSpanish = createPlantOnionSweetSpanish();
         Set<Plant> plants = MySortedSet.of(
-                Plant.builder()
-                        .systemName("Tomato - Sungold")
-                        .systemLabel("")
-                        .name("Tomato")
-                        .variety("Sungold")
-                        .minRipeningCycleDays(28)
-                        .maxRipeningCycleDays(42)
-                        .dayMinTemperature(21)
-                        .dayMaxTemperature(29)
-                        .nightMinTemperature(15)
-                        .nightMaxTemperature(21)
-                        .minAirHumidity(40)
-                        .maxAirHumidity(70)
-                        .minSoilMoisture(20)
-                        .maxSoilMoisture(60)
-                        .minCo2Concentration(350)
-                        .maxCo2Concentration(1000)
-                        .minLight(7000)
-                        .maxLight(120000)
-                        .minPh(5.5)
-                        .maxPh(7.5)
-                        .build(),
-
-                Plant.builder()
-                        .systemName("Cucumber - English")
-                        .systemLabel("")
-                        .name("Cucumber")
-                        .variety("English")
-                        .minRipeningCycleDays(28)
-                        .maxRipeningCycleDays(42)
-                        .dayMinTemperature(22)
-                        .dayMaxTemperature(27)
-                        .nightMinTemperature(16)
-                        .nightMaxTemperature(21)
-                        .minAirHumidity(60)
-                        .maxAirHumidity(70)
-                        .minSoilMoisture(60)
-                        .maxSoilMoisture(80)
-                        .minCo2Concentration(300)
-                        .maxCo2Concentration(1000)
-                        .minLight(10000)
-                        .maxLight(20000)
-                        .minPh(6.0)
-                        .maxPh(7.0)
-                        .build(),
-
-                Plant.builder()
-                        .systemName("Onion - Sweet Spanish")
-                        .systemLabel("")
-                        .name("Onion")
-                        .variety("Sweet Spanish")
-                        .minRipeningCycleDays(28)
-                        .maxRipeningCycleDays(42)
-                        .dayMinTemperature(21)
-                        .dayMaxTemperature(29)
-                        .nightMinTemperature(13)
-                        .nightMaxTemperature(21)
-                        .minAirHumidity(50)
-                        .maxAirHumidity(70)
-                        .minSoilMoisture(60)
-                        .maxSoilMoisture(80)
-                        .minCo2Concentration(300)
-                        .maxCo2Concentration(1000)
-                        .minLight(10000)
-                        .maxLight(20000)
-                        .minPh(6.0)
-                        .maxPh(7.0)
-                        .build(),
-
-                Plant.builder()
-                        .systemName("Tomato - Cherry")
-                        .systemLabel("")
-                        .name("Tomato")
-                        .variety("Cherry")
-                        .minRipeningCycleDays(28)
-                        .maxRipeningCycleDays(42)
-                        .dayMinTemperature(21)
-                        .dayMaxTemperature(29)
-                        .nightMinTemperature(15)
-                        .nightMaxTemperature(21)
-                        .minAirHumidity(50)
-                        .maxAirHumidity(70)
-                        .minSoilMoisture(40)
-                        .maxSoilMoisture(70)
-                        .minCo2Concentration(350)
-                        .maxCo2Concentration(1000)
-                        .minLight(7000)
-                        .maxLight(120000)
-                        .minPh(5.5)
-                        .maxPh(6.8)
-                        .build()
+                plantTomatoSungold, plantTomatoCherry, plantCucumberEnglish, plantOnionSweetSpanish
         );
 
         Set<GreenhouseConfiguration> greenhouseConfigurations = MySortedSet.of(
@@ -439,10 +353,24 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
                         .address("Svyatoshyns'ka St, 34 к, Kyiv, 02000")
                         .latitude(50.446603)
                         .longitude(30.386447)
-                        .plantType(PlantType.TOMATO)
-                        .variety("Sungold")
+                        .plant(plantTomatoSungold)
                         .sectionHeight(5)
                         .sectionWidth(7)
+                        .sectionArea(3)
+                        .build(),
+
+                GreenhouseConfiguration.builder()
+                        .order(4)
+                        .startTs(startTs)
+                        .endTs(now)
+                        .name("Greenhouse in Stuttgart")
+                        .stationCity(StationCity.STUTTGART)
+                        .address("Augsburger Str. 500, 70327 Stuttgart, Germany")
+                        .latitude(48.774252)
+                        .longitude(9.259500)
+                        .plant(plantTomatoCherry)
+                        .sectionHeight(3)
+                        .sectionWidth(5)
                         .sectionArea(3)
                         .build(),
 
@@ -455,8 +383,7 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
                         .address("Zielona 18, 32-087 Bibice, Poland")
                         .latitude(50.121765)
                         .longitude(19.946134)
-                        .plantType(PlantType.CUCUMBER)
-                        .variety("English")
+                        .plant(plantCucumberEnglish)
                         .sectionHeight(3)
                         .sectionWidth(4)
                         .sectionArea(5)
@@ -471,27 +398,10 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
                         .address("Ojca Aniceta 28, 03-264 Warszawa, Poland")
                         .latitude(52.306237)
                         .longitude(21.039917)
-                        .plantType(PlantType.ONION)
-                        .variety("Sweet Spanish")
+                        .plant(plantOnionSweetSpanish)
                         .sectionHeight(2)
                         .sectionWidth(6)
                         .sectionArea(4)
-                        .build(),
-
-                GreenhouseConfiguration.builder()
-                        .order(4)
-                        .startTs(startTs)
-                        .endTs(now)
-                        .name("Greenhouse in Stuttgart")
-                        .stationCity(StationCity.STUTTGART)
-                        .address("Augsburger Str. 500, 70327 Stuttgart, Germany")
-                        .latitude(48.774252)
-                        .longitude(9.259500)
-                        .plantType(PlantType.TOMATO)
-                        .variety("Cherry")
-                        .sectionHeight(3)
-                        .sectionWidth(5)
-                        .sectionArea(3)
                         .build()
         );
 
@@ -527,13 +437,6 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
         }
 
         Set<Plant> plants = mapToPlants(data);
-
-        Map<String, Map<String, Plant>> plantsMap = plants
-                .stream()
-                .collect(Collectors.groupingBy(
-                        Plant::getName, Collectors.toMap(Plant::getVariety, i -> i)
-                ));
-
         for (Plant plant : plants) {
             Asset plantAsset = createPlant(plant, ownerId, assetGroupId);
         }
@@ -573,14 +476,8 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
             this.tbRestClient.createRelation(RelationType.CONTAINS.getType(), greenhouseAsset.getId(), energyMeter.getId());
             this.tbRestClient.createRelation(RelationType.CONTAINS.getType(), greenhouseAsset.getId(), waterMeter.getId());
 
-            if (plantsMap.containsKey(greenhouse.getPlantType().toString())) {
-                Map<String, Plant> varieties = plantsMap.get(greenhouse.getPlantType().toString());
-                if (varieties.containsKey(greenhouse.getVariety())) {
-                    Plant plant = varieties.get(greenhouse.getVariety());
-                    UUID plantUuid = this.plantToIdMap.get(plant);
-                    this.tbRestClient.createRelation(RelationType.CONTAINS.getType(), new AssetId(plantUuid), greenhouseAsset.getId());
-                }
-            }
+            UUID plantUuid = this.plantToIdMap.get(greenhouse.getPlant());
+            this.tbRestClient.createRelation(RelationType.CONTAINS.getType(), new AssetId(plantUuid), greenhouseAsset.getId());
         }
     }
 
@@ -909,8 +806,7 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
         return Greenhouse.builder()
                 .systemName("Greenhouse " + configuration.getName())
                 .systemLabel("")
-                .plantType(configuration.getPlantType())
-                .variety(configuration.getVariety())
+                .plant(configuration.getPlant())
                 .sections(sections)
                 .insideAirWarmHumiditySensor(insideAirWarmHumiditySensor)
                 .insideLightSensor(insideLightSensor)
@@ -919,6 +815,107 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
                 .outsideLightSensor(outsideLightSensor)
                 .energyMeter(energyMeter)
                 .waterMeter(waterMeter)
+                .build();
+    }
+
+
+    private Plant createPlantTomatoSungold() {
+        return Plant.builder()
+                .systemName("Tomato - Sungold")
+                .systemLabel("")
+                .name(PlantName.TOMATO)
+                .variety("Sungold")
+                .minRipeningCycleDays(28)
+                .maxRipeningCycleDays(42)
+                .dayMinTemperature(21)
+                .dayMaxTemperature(29)
+                .nightMinTemperature(15)
+                .nightMaxTemperature(21)
+                .minAirHumidity(40)
+                .maxAirHumidity(70)
+                .minSoilMoisture(20)
+                .maxSoilMoisture(60)
+                .minCo2Concentration(350)
+                .maxCo2Concentration(1000)
+                .minLight(7000)
+                .maxLight(120000)
+                .minPh(5.5)
+                .maxPh(7.5)
+                .build();
+    }
+
+    private Plant createPlantTomatoCherry() {
+        return Plant.builder()
+                .systemName("Tomato - Cherry")
+                .systemLabel("")
+                .name(PlantName.TOMATO)
+                .variety("Cherry")
+                .minRipeningCycleDays(28)
+                .maxRipeningCycleDays(42)
+                .dayMinTemperature(21)
+                .dayMaxTemperature(29)
+                .nightMinTemperature(15)
+                .nightMaxTemperature(21)
+                .minAirHumidity(50)
+                .maxAirHumidity(70)
+                .minSoilMoisture(40)
+                .maxSoilMoisture(70)
+                .minCo2Concentration(350)
+                .maxCo2Concentration(1000)
+                .minLight(7000)
+                .maxLight(120000)
+                .minPh(5.5)
+                .maxPh(6.8)
+                .build();
+    }
+
+    private Plant createPlantCucumberEnglish() {
+        return Plant.builder()
+                .systemName("Cucumber - English")
+                .systemLabel("")
+                .name(PlantName.CUCUMBER)
+                .variety("English")
+                .minRipeningCycleDays(28)
+                .maxRipeningCycleDays(42)
+                .dayMinTemperature(22)
+                .dayMaxTemperature(27)
+                .nightMinTemperature(16)
+                .nightMaxTemperature(21)
+                .minAirHumidity(60)
+                .maxAirHumidity(70)
+                .minSoilMoisture(60)
+                .maxSoilMoisture(80)
+                .minCo2Concentration(300)
+                .maxCo2Concentration(1000)
+                .minLight(10000)
+                .maxLight(20000)
+                .minPh(6.0)
+                .maxPh(7.0)
+                .build();
+    }
+
+    private Plant createPlantOnionSweetSpanish() {
+        return Plant.builder()
+                .systemName("Onion - Sweet Spanish")
+                .systemLabel("")
+                .name(PlantName.ONION)
+                .variety("Sweet Spanish")
+                .minRipeningCycleDays(28)
+                .maxRipeningCycleDays(42)
+                .dayMinTemperature(21)
+                .dayMaxTemperature(29)
+                .nightMinTemperature(13)
+                .nightMaxTemperature(21)
+                .minAirHumidity(50)
+                .maxAirHumidity(70)
+                .minSoilMoisture(60)
+                .maxSoilMoisture(80)
+                .minCo2Concentration(300)
+                .maxCo2Concentration(1000)
+                .minLight(10000)
+                .maxLight(20000)
+                .minPh(6.0)
+                .maxPh(7.0)
                 .build();
     }
 
@@ -1495,11 +1492,11 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
         if (skipTelemetry) {
             return new Telemetry<>("skip");
         }
-        PlantType plantType = configuration.getPlantType();
-        String variety = configuration.getVariety();
+        PlantName plantName = configuration.getPlant().getName();
+        String variety = configuration.getPlant().getVariety();
         ZonedDateTime startDate = DateTimeUtils.fromTs(configuration.getStartTs());
         ZonedDateTime endDate = DateTimeUtils.fromTs(configuration.getEndTs());
-        Telemetry<Double> consumption = createTemporalTelemetryPlantNitrogenConsumption(plantType, variety, startDate, endDate);
+        Telemetry<Double> consumption = createTemporalTelemetryPlantNitrogenConsumption(plantName, variety, startDate, endDate);
 
         String name = "nitrogen";
         double startLevel = RandomUtils.getRandomNumber(150, 200);
@@ -1513,11 +1510,11 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
         if (skipTelemetry) {
             return new Telemetry<>("skip");
         }
-        PlantType plantType = configuration.getPlantType();
-        String variety = configuration.getVariety();
+        PlantName plantName = configuration.getPlant().getName();
+        String variety = configuration.getPlant().getVariety();
         ZonedDateTime startDate = DateTimeUtils.fromTs(configuration.getStartTs());
         ZonedDateTime endDate = DateTimeUtils.fromTs(configuration.getEndTs());
-        Telemetry<Double> consumption = createTemporalTelemetryPlantPhosphorusConsumption(plantType, variety, startDate, endDate);
+        Telemetry<Double> consumption = createTemporalTelemetryPlantPhosphorusConsumption(plantName, variety, startDate, endDate);
 
         String name = "phosphorus";
         double startLevel = RandomUtils.getRandomNumber(40, 140) * 0.1;
@@ -1531,11 +1528,11 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
         if (skipTelemetry) {
             return new Telemetry<>("skip");
         }
-        PlantType plantType = configuration.getPlantType();
-        String variety = configuration.getVariety();
+        PlantName plantName = configuration.getPlant().getName();
+        String variety = configuration.getPlant().getVariety();
         ZonedDateTime startDate = DateTimeUtils.fromTs(configuration.getStartTs());
         ZonedDateTime endDate = DateTimeUtils.fromTs(configuration.getEndTs());
-        Telemetry<Double> consumption = createTemporalTelemetryPlantPotassiumConsumption(plantType, variety, startDate, endDate);
+        Telemetry<Double> consumption = createTemporalTelemetryPlantPotassiumConsumption(plantName, variety, startDate, endDate);
 
         String name = "potassium";
         double startLevel = RandomUtils.getRandomNumber(150, 200);
@@ -1573,8 +1570,8 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
     }
 
 
-    private Telemetry<Double> createTemporalTelemetryPlantNitrogenConsumption(PlantType plantType, String variety, ZonedDateTime startDate, ZonedDateTime endDate) {
-        switch (plantType) {
+    private Telemetry<Double> createTemporalTelemetryPlantNitrogenConsumption(PlantName plantName, String variety, ZonedDateTime startDate, ZonedDateTime endDate) {
+        switch (plantName) {
             case TOMATO:
                 switch (variety) {
                     case "Sungold":
@@ -1582,29 +1579,29 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
                     case "Cherry":
                         return createTemporalTelemetryPlantNitrogenConsumptionTomatoCherry(startDate, endDate);
                     default:
-                        throw new IllegalArgumentException("Unsupported plant variety: " + plantType + ", " + variety);
+                        throw new IllegalArgumentException("Unsupported plant variety: " + plantName + ", " + variety);
                 }
             case CUCUMBER:
                 switch (variety) {
                     case "English":
                         return createTemporalTelemetryPlantNitrogenConsumptionCucumberEnglish(startDate, endDate);
                     default:
-                        throw new IllegalArgumentException("Unsupported plant variety: " + plantType + ", " + variety);
+                        throw new IllegalArgumentException("Unsupported plant variety: " + plantName + ", " + variety);
                 }
             case ONION:
                 switch (variety) {
                     case "Sweet Spanish":
                         return createTemporalTelemetryPlantNitrogenConsumptionOnionSweetSpanish(startDate, endDate);
                     default:
-                        throw new IllegalArgumentException("Unsupported plant variety: " + plantType + ", " + variety);
+                        throw new IllegalArgumentException("Unsupported plant variety: " + plantName + ", " + variety);
                 }
             default:
-                throw new IllegalArgumentException("Unsupported plant: " + plantType);
+                throw new IllegalArgumentException("Unsupported plant: " + plantName);
         }
     }
 
-    private Telemetry<Double> createTemporalTelemetryPlantPhosphorusConsumption(PlantType plantType, String variety, ZonedDateTime startDate, ZonedDateTime endDate) {
-        switch (plantType) {
+    private Telemetry<Double> createTemporalTelemetryPlantPhosphorusConsumption(PlantName plantName, String variety, ZonedDateTime startDate, ZonedDateTime endDate) {
+        switch (plantName) {
             case TOMATO:
                 switch (variety) {
                     case "Sungold":
@@ -1612,29 +1609,29 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
                     case "Cherry":
                         return createTemporalTelemetryPlantPhosphorusConsumptionTomatoCherry(startDate, endDate);
                     default:
-                        throw new IllegalArgumentException("Unsupported plant variety: " + plantType + ", " + variety);
+                        throw new IllegalArgumentException("Unsupported plant variety: " + plantName + ", " + variety);
                 }
             case CUCUMBER:
                 switch (variety) {
                     case "English":
                         return createTemporalTelemetryPlantPhosphorusConsumptionCucumberEnglish(startDate, endDate);
                     default:
-                        throw new IllegalArgumentException("Unsupported plant variety: " + plantType + ", " + variety);
+                        throw new IllegalArgumentException("Unsupported plant variety: " + plantName + ", " + variety);
                 }
             case ONION:
                 switch (variety) {
                     case "Sweet Spanish":
                         return createTemporalTelemetryPlantPhosphorusConsumptionOnionSweetSpanish(startDate, endDate);
                     default:
-                        throw new IllegalArgumentException("Unsupported plant variety: " + plantType + ", " + variety);
+                        throw new IllegalArgumentException("Unsupported plant variety: " + plantName + ", " + variety);
                 }
             default:
-                throw new IllegalArgumentException("Unsupported plant: " + plantType);
+                throw new IllegalArgumentException("Unsupported plant: " + plantName);
         }
     }
 
-    private Telemetry<Double> createTemporalTelemetryPlantPotassiumConsumption(PlantType plantType, String variety, ZonedDateTime startDate, ZonedDateTime endDate) {
-        switch (plantType) {
+    private Telemetry<Double> createTemporalTelemetryPlantPotassiumConsumption(PlantName plantName, String variety, ZonedDateTime startDate, ZonedDateTime endDate) {
+        switch (plantName) {
             case TOMATO:
                 switch (variety) {
                     case "Sungold":
@@ -1642,24 +1639,24 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
                     case "Cherry":
                         return createTemporalTelemetryPlantPotassiumConsumptionTomatoCherry(startDate, endDate);
                     default:
-                        throw new IllegalArgumentException("Unsupported plant variety: " + plantType + ", " + variety);
+                        throw new IllegalArgumentException("Unsupported plant variety: " + plantName + ", " + variety);
                 }
             case CUCUMBER:
                 switch (variety) {
                     case "English":
                         return createTemporalTelemetryPlantPotassiumConsumptionCucumberEnglish(startDate, endDate);
                     default:
-                        throw new IllegalArgumentException("Unsupported plant variety: " + plantType + ", " + variety);
+                        throw new IllegalArgumentException("Unsupported plant variety: " + plantName + ", " + variety);
                 }
             case ONION:
                 switch (variety) {
                     case "Sweet Spanish":
                         return createTemporalTelemetryPlantPotassiumConsumptionOnionSweetSpanish(startDate, endDate);
                     default:
-                        throw new IllegalArgumentException("Unsupported plant variety: " + plantType + ", " + variety);
+                        throw new IllegalArgumentException("Unsupported plant variety: " + plantName + ", " + variety);
                 }
             default:
-                throw new IllegalArgumentException("Unsupported plant: " + plantType);
+                throw new IllegalArgumentException("Unsupported plant: " + plantName);
         }
     }
 
@@ -1875,11 +1872,6 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
             asset = tbRestClient.createAsset(name, entityType);
             tbRestClient.assignAssetToCustomer(ownerId, asset.getUuidId());
         }
-
-        Set<Attribute<?>> attributes = Set.of(
-                new Attribute<>("plant_type", greenhouse.getPlantType().toString())
-        );
-        tbRestClient.setEntityAttributes(asset.getUuidId(), EntityType.ASSET, Attribute.Scope.SERVER_SCOPE, attributes);
 
         this.greenhouseToIdMap.put(greenhouse, asset.getUuidId());
         return asset;

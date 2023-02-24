@@ -23,7 +23,7 @@ public class Plant extends ModelEntity {
     private String systemName;
     private String systemLabel;
 
-    private String name;
+    private PlantName name;
     private String variety;
     private int minRipeningCycleDays;
     private int maxRipeningCycleDays;

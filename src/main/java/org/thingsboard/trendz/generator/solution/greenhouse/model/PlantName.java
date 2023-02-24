@@ -1,6 +1,6 @@
 package org.thingsboard.trendz.generator.solution.greenhouse.model;
 
-public enum PlantType {
+public enum PlantName {
     TOMATO("Tomato"),
     CUCUMBER("Cucumber"),
     ONION("Onion"),
@@ -9,7 +9,7 @@ public enum PlantType {
 
     private final String name;
 
-    PlantType(String name) {
+    PlantName(String name) {
         this.name = name;
     }
 

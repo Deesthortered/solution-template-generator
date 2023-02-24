@@ -24,8 +24,7 @@ public class Greenhouse extends ModelEntity {
     private String systemName;
     private String systemLabel;
 
-    private PlantType plantType;
-    private String variety;
+    private Plant plant;
     private String address;
     private double latitude;
     private double longitude;
