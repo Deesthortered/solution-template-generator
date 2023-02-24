@@ -832,14 +832,16 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
                 .dayMaxTemperature(29)
                 .nightMinTemperature(15)
                 .nightMaxTemperature(21)
+                .dayMinLight(8000)
+                .dayMaxLight(10000)
+                .nightMinLight(0)
+                .nightMaxLight(20)
                 .minAirHumidity(40)
                 .maxAirHumidity(70)
                 .minSoilMoisture(20)
                 .maxSoilMoisture(60)
                 .minCo2Concentration(350)
                 .maxCo2Concentration(1000)
-                .minLight(7000)
-                .maxLight(120000)
                 .minPh(5.5)
                 .maxPh(7.5)
                 .build();
@@ -857,14 +859,16 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
                 .dayMaxTemperature(29)
                 .nightMinTemperature(15)
                 .nightMaxTemperature(21)
+                .dayMinLight(7000)
+                .dayMaxLight(8000)
+                .nightMinLight(1000)
+                .nightMaxLight(2000)
                 .minAirHumidity(50)
                 .maxAirHumidity(70)
                 .minSoilMoisture(40)
                 .maxSoilMoisture(70)
                 .minCo2Concentration(350)
                 .maxCo2Concentration(1000)
-                .minLight(7000)
-                .maxLight(120000)
                 .minPh(5.5)
                 .maxPh(6.8)
                 .build();
@@ -882,14 +886,16 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
                 .dayMaxTemperature(27)
                 .nightMinTemperature(16)
                 .nightMaxTemperature(21)
+                .dayMinLight(12000)
+                .dayMaxLight(15000)
+                .nightMinLight(1000)
+                .nightMaxLight(1500)
                 .minAirHumidity(60)
                 .maxAirHumidity(70)
                 .minSoilMoisture(60)
                 .maxSoilMoisture(80)
                 .minCo2Concentration(300)
                 .maxCo2Concentration(1000)
-                .minLight(10000)
-                .maxLight(20000)
                 .minPh(6.0)
                 .maxPh(7.0)
                 .build();
@@ -907,14 +913,16 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
                 .dayMaxTemperature(29)
                 .nightMinTemperature(13)
                 .nightMaxTemperature(21)
+                .dayMinLight(10000)
+                .dayMaxLight(12000)
+                .nightMinLight(0)
+                .nightMaxLight(2)
                 .minAirHumidity(50)
                 .maxAirHumidity(70)
                 .minSoilMoisture(60)
                 .maxSoilMoisture(80)
                 .minCo2Concentration(300)
                 .maxCo2Concentration(1000)
-                .minLight(10000)
-                .maxLight(20000)
                 .minPh(6.0)
                 .maxPh(7.0)
                 .build();
@@ -1256,8 +1264,8 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
 
         int dayModeStartHour = 8;
         int nightModeStartHour = 20;
-        double dayLevel = configuration.getPlant().getMaxLight();
-        double nightLevel = configuration.getPlant().getMinLight();
+        double dayLevel = configuration.getPlant().getDayMaxLight();
+        double nightLevel = configuration.getPlant().getDayMinLight();
 
         ZonedDateTime startDate = DateTimeUtils.fromTs(configuration.getStartTs()).truncatedTo(ChronoUnit.HOURS);
         ZonedDateTime endDate = DateTimeUtils.fromTs(configuration.getEndTs()).truncatedTo(ChronoUnit.HOURS);
@@ -1851,8 +1859,10 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
                 new Attribute<>("maxAirHumidity", plant.getMaxAirHumidity()),
                 new Attribute<>("minCo2Concentration", plant.getMinCo2Concentration()),
                 new Attribute<>("maxCo2Concentration", plant.getMaxCo2Concentration()),
-                new Attribute<>("minLight", plant.getMinLight()),
-                new Attribute<>("maxLight", plant.getMaxLight()),
+                new Attribute<>("dayMinLight", plant.getDayMinLight()),
+                new Attribute<>("dayMaxLight", plant.getDayMaxLight()),
+                new Attribute<>("nightMinLight", plant.getDayMinLight()),
+                new Attribute<>("nightMaxLight", plant.getDayMaxLight()),
                 new Attribute<>("minPh", plant.getMinPh()),
                 new Attribute<>("maxPh", plant.getMaxPh())
         );

@@ -31,14 +31,16 @@ public class Plant extends ModelEntity {
     private double dayMaxTemperature;
     private double nightMinTemperature;
     private double nightMaxTemperature;
+    private double dayMinLight;
+    private double dayMaxLight;
+    private double nightMinLight;
+    private double nightMaxLight;
     private double minAirHumidity;
     private double maxAirHumidity;
     private double minSoilMoisture;
     private double maxSoilMoisture;
     private double minCo2Concentration;
     private double maxCo2Concentration;
-    private double minLight;
-    private double maxLight;
     private double minPh;
     private double maxPh;
 }
