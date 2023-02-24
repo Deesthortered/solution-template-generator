@@ -801,9 +801,11 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
         Telemetry<Integer> temporalTelemetryCo2Consumption = createTemporalTelemetryCo2Consumption(outsideLightTelemetry, insideLightTelemetry, configuration, skipTelemetry);
         Telemetry<Integer> co2ConcetracionTelemetry = createCo2ConcentrationTelemetryAndInterruption(aerations, temporalTelemetryCo2Consumption, configuration, skipTelemetry);
 
+        Set<Long> heatings = new HashSet<>();
+        Set<Long> coolings = new HashSet<>();
         Set<Long> humidifications = new HashSet<>();
-        Telemetry<Integer> insideHumidityTelemetry = createInsideHumidityTelemetry(aerations, humidifications, configuration, skipTelemetry);
-        Telemetry<Integer> insideTemperatureTelemetry = createInsideTemperatureTelemetry(aerations, configuration, skipTelemetry);
+        Telemetry<Integer> insideTemperatureTelemetry = createInsideTemperatureTelemetry(aerations, heatings, coolings, outsideTemperatureTelemetry, configuration, skipTelemetry);
+        Telemetry<Integer> insideHumidityTelemetry = createInsideHumidityTelemetry(aerations, heatings, humidifications, outsideHumidityTelemetry, configuration, skipTelemetry);
 
         Set<Section> sections = new TreeSet<>();
         for (int height = 1; height <= configuration.getSectionHeight(); height++) {
@@ -1356,16 +1358,79 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
     }
 
 
-    private Telemetry<Integer> createInsideTemperatureTelemetry(Set<Long> aerations, GreenhouseConfiguration configuration, boolean skipTelemetry) {
+    private Telemetry<Integer> createInsideTemperatureTelemetry(Set<Long> aerations, Set<Long> heatings, Set<Long> coolings, Telemetry<Integer> outsideTemperatureTelemetry, GreenhouseConfiguration configuration, boolean skipTelemetry) {
         if (skipTelemetry) {
             return new Telemetry<>("skip");
         }
         Telemetry<Integer> result = new Telemetry<>("temperature_in");
 
+        double startLevel = 15;
+        int dayModeStartHour = 8;
+        int nightModeStartHour = 20;
+
+        double defaultCoefficient = 0.2;
+        double aerationCoefficient = 0.4;
+
+        boolean heatingMode = false;
+        boolean coolingMode = false;
+
+        double heatingIncreaseValue = 3;
+        double coolingDecreaseValue = 3;
+
+        double heatingDayLowLevel = 25;
+        double coolingDayHighLevel = 35;
+        double dayOkLevel = 30;
+        double heatingNightLowLevel = 15;
+        double coolingNightHighLevel = 20;
+        double nightOkLevel = 27;
+
+        Map<Timestamp, Telemetry.Point<Integer>> outsideTemperatureTelemetryMap = outsideTemperatureTelemetry.getPoints()
+                .stream()
+                .collect(Collectors.toMap(Telemetry.Point::getTs, Functions.identity()));
+
+        ZonedDateTime startDate = DateTimeUtils.fromTs(configuration.getStartTs()).truncatedTo(ChronoUnit.HOURS);
+        ZonedDateTime endDate = DateTimeUtils.fromTs(configuration.getEndTs()).truncatedTo(ChronoUnit.HOURS);
+        ZonedDateTime iteratedDate = startDate;
+        double currentLevel = startLevel;
+        while (iteratedDate.isBefore(endDate)) {
+            long iteratedTs = DateTimeUtils.toTs(iteratedDate);
+            int hour = iteratedDate.getHour();
+
+            boolean day = (dayModeStartHour <= hour && hour < nightModeStartHour);
+            boolean aeration = aerations.contains(iteratedTs);
+            double lowLevel = (day) ? heatingDayLowLevel : heatingNightLowLevel;
+            double highLevel = (day) ? coolingDayHighLevel : coolingNightHighLevel;
+            double okLevel = (day) ? dayOkLevel : nightOkLevel;
+
+            double outsideTemperature = outsideTemperatureTelemetryMap.get(Timestamp.of(iteratedTs)).getValue();
+            double diff = outsideTemperature - currentLevel;
+
+            if (okLevel <= currentLevel && currentLevel <= okLevel) {
+                heatingMode = false;
+                coolingMode = false;
+            }
+            if (currentLevel < lowLevel) {
+                heatingMode = true;
+                heatings.add(iteratedTs);
+            }
+            if (highLevel < currentLevel) {
+                coolingMode = true;
+                coolings.add(iteratedTs);
+            }
+
+            currentLevel += diff * defaultCoefficient;
+            currentLevel += (aeration) ? diff * aerationCoefficient : 0;
+            currentLevel += (coolingMode) ? coolingDecreaseValue : 0;
+            currentLevel += (heatingMode) ? heatingIncreaseValue : 0;
+
+            result.add(new Telemetry.Point<>(Timestamp.of(iteratedTs), (int) currentLevel));
+            iteratedDate = iteratedDate.plus(1, ChronoUnit.HOURS);
+        }
+
         return result;
     }
 
-    private Telemetry<Integer> createInsideHumidityTelemetry(Set<Long> aerations, Set<Long> humidifications, GreenhouseConfiguration configuration, boolean skipTelemetry) {
+    private Telemetry<Integer> createInsideHumidityTelemetry(Set<Long> aerations, Set<Long> heatings, Set<Long> humidifications, Telemetry<Integer> outsideHumidityTelemetry, GreenhouseConfiguration configuration, boolean skipTelemetry) {
         if (skipTelemetry) {
             return new Telemetry<>("skip");
         }
@@ -1378,7 +1443,11 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
         boolean humidificationMode = false;
         double humidificationIncreaseValue = 4;
         double humidificationLowLevel = 35;
-        double humidificationHighLevel = 70;
+        double humidificationHighLevel = 60;
+
+        Map<Timestamp, Telemetry.Point<Integer>> outsideHumidityTelemetryMap = outsideHumidityTelemetry.getPoints()
+                .stream()
+                .collect(Collectors.toMap(Telemetry.Point::getTs, Functions.identity()));
 
         ZonedDateTime startDate = DateTimeUtils.fromTs(configuration.getStartTs()).truncatedTo(ChronoUnit.HOURS);
         ZonedDateTime endDate = DateTimeUtils.fromTs(configuration.getEndTs()).truncatedTo(ChronoUnit.HOURS);
@@ -1386,7 +1455,10 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
         double currentLevel = startLevel;
         while (iteratedDate.isBefore(endDate)) {
             long iteratedTs = DateTimeUtils.toTs(iteratedDate);
-            boolean interrupt = aerations.contains(iteratedTs);
+
+            boolean heating = heatings.contains(iteratedTs);
+            boolean aeration = aerations.contains(iteratedTs);
+            int outsideHumidity = outsideHumidityTelemetryMap.get(Timestamp.of(iteratedTs)).getValue();
 
             if (currentLevel <= humidificationLowLevel) {
                 humidificationMode = true;
@@ -1397,8 +1469,19 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
             }
 
             currentLevel += increaseLevel;
-            currentLevel -= (interrupt) ? interruptionDecreaseLevel : 0;
             currentLevel += (humidificationMode) ? humidificationIncreaseValue : 0;
+            if (aeration) {
+                double sign = Math.signum(outsideHumidity - currentLevel);
+                currentLevel += sign * interruptionDecreaseLevel;
+                if (sign < 0) {
+                    currentLevel = Math.max(currentLevel, outsideHumidity);
+                } else {
+                    currentLevel = Math.min(currentLevel, outsideHumidity);
+                }
+            }
+
+            currentLevel = Math.min(currentLevel, 100);
+            currentLevel = Math.max(currentLevel, 0);
 
             result.add(new Telemetry.Point<>(Timestamp.of(iteratedTs), (int) currentLevel));
             iteratedDate = iteratedDate.plus(1, ChronoUnit.HOURS);
