@@ -1867,8 +1867,8 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
                 new Attribute<>("maxCo2Concentration", plant.getMaxCo2Concentration()),
                 new Attribute<>("dayMinLight", plant.getDayMinLight()),
                 new Attribute<>("dayMaxLight", plant.getDayMaxLight()),
-                new Attribute<>("nightMinLight", plant.getDayMinLight()),
-                new Attribute<>("nightMaxLight", plant.getDayMaxLight()),
+                new Attribute<>("nightMinLight", plant.getNightMinLight()),
+                new Attribute<>("nightMaxLight", plant.getNightMaxLight()),
                 new Attribute<>("minPh", plant.getMinPh()),
                 new Attribute<>("maxPh", plant.getMaxPh())
         );
