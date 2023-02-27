@@ -1390,8 +1390,8 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
         boolean heatingMode = false;
         boolean coolingMode = false;
 
-        double heatingIncreaseValue = 3;
-        double coolingDecreaseValue = 3;
+        double heatingIncreaseValue = 8;
+        double coolingDecreaseValue = 8;
 
         double dayLowLevel = configuration.getPlant().getDayMinTemperature();
         double dayHighLevel = configuration.getPlant().getDayMaxTemperature();
@@ -1421,9 +1421,14 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
             double outsideTemperature = outsideTemperatureTelemetryMap.get(Timestamp.of(iteratedTs)).getValue();
             double diff = outsideTemperature - currentLevel;
 
-            if (Math.abs(currentLevel - okLevel) <= 1) {
-                heatingMode = false;
+            currentLevel += diff * defaultCoefficient;
+            currentLevel += (aeration) ? diff * aerationCoefficient : 0;
+
+            if (currentLevel <= okLevel) {
                 coolingMode = false;
+            }
+            if (okLevel <= currentLevel) {
+                heatingMode = false;
             }
             if (currentLevel < lowLevel) {
                 heatingMode = true;
@@ -1434,10 +1439,15 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
                 coolings.add(iteratedTs);
             }
 
-            currentLevel += diff * defaultCoefficient;
-            currentLevel += (aeration) ? diff * aerationCoefficient : 0;
-            currentLevel += (coolingMode) ? coolingDecreaseValue : 0;
-            currentLevel += (heatingMode) ? heatingIncreaseValue : 0;
+            if (aeration) {
+                heatingMode = true;
+                heatings.add(iteratedTs);
+            }
+
+            currentLevel -= (coolingMode) ? Math.min(coolingDecreaseValue, Math.abs(currentLevel - okLevel)) : 0;
+            currentLevel += (heatingMode) ? Math.min(heatingIncreaseValue, Math.abs(currentLevel - okLevel)) : 0;
+
+            currentLevel += RandomUtils.getRandomNumber(-2, 2);
 
             result.add(new Telemetry.Point<>(Timestamp.of(iteratedTs), (int) currentLevel));
             iteratedDate = iteratedDate.plus(1, ChronoUnit.HOURS);
