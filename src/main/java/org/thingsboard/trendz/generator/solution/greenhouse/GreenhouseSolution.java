@@ -76,6 +76,7 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
 
     private static final int DAY_START_HOUR = 8;
     private static final int NIGHT_START_HOUR = 20;
+    private static final int MIN_WORD_CO2_CONCENTRATION = 400;
 
     private final TbRestClient tbRestClient;
     private final FileService fileService;
@@ -1329,6 +1330,8 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
                 currentLevel -= decreaseLevel;
             }
 
+            currentLevel = Math.max(MIN_WORD_CO2_CONCENTRATION, currentLevel);
+
             result.add(new Telemetry.Point<>(Timestamp.of(iteratedTs), (int) currentLevel));
             iteratedDate = iteratedDate.plus(1, ChronoUnit.HOURS);
         }
@@ -1343,7 +1346,7 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
         Telemetry<Integer> result = new Telemetry<>("temporal__co2_concentration");
 
         int nightConsumption = 50;
-        int zeroConsumptionLightLevel = 14000;
+        double zeroConsumptionLightLevel = configuration.getPlant().getDayMinLight();
 
         Map<Timestamp, Telemetry.Point<Integer>> outsideLightTelemetryMap = outsideLightTelemetry.getPoints()
                 .stream()
