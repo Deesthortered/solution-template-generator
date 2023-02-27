@@ -16,7 +16,17 @@ public class RandomUtils {
         return random;
     }
 
+    public static boolean getBooleanByProbability(double probability) {
+        if (probability < 0 || 1 < probability) {
+            throw new IllegalArgumentException();
+        }
+        return random.nextDouble() < probability;
+    }
+
     public static long getRandomNumber(long from, long to) {
+        if (to < from) {
+            throw new IllegalArgumentException();
+        }
         if (from == to) {
             return to;
         }

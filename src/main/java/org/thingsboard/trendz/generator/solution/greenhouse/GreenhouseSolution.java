@@ -1432,22 +1432,27 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
             }
             if (currentLevel < lowLevel) {
                 heatingMode = true;
-                heatings.add(iteratedTs);
             }
             if (highLevel < currentLevel) {
                 coolingMode = true;
-                coolings.add(iteratedTs);
             }
 
             if (aeration) {
                 heatingMode = true;
-                heatings.add(iteratedTs);
             }
 
-            currentLevel -= (coolingMode) ? Math.min(coolingDecreaseValue, Math.abs(currentLevel - okLevel)) : 0;
-            currentLevel += (heatingMode) ? Math.min(heatingIncreaseValue, Math.abs(currentLevel - okLevel)) : 0;
+            if (heatingMode) {
+                heatings.add(iteratedTs);
+                currentLevel += Math.min(heatingIncreaseValue, Math.abs(currentLevel - okLevel));
+            }
+            if (coolingMode) {
+                coolings.add(iteratedTs);
+                currentLevel -= Math.min(coolingDecreaseValue, Math.abs(currentLevel - okLevel));
+            }
 
-            currentLevel += RandomUtils.getRandomNumber(-2, 2);
+            if (RandomUtils.getBooleanByProbability(0.2)) {
+                currentLevel += RandomUtils.getRandomNumber(-2, 2);
+            }
 
             result.add(new Telemetry.Point<>(Timestamp.of(iteratedTs), (int) currentLevel));
             iteratedDate = iteratedDate.plus(1, ChronoUnit.HOURS);
@@ -1463,13 +1468,18 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
         Telemetry<Integer> result = new Telemetry<>("humidity_in");
 
         double startLevel = 30;
-        double increaseLevel = 0.4;
-        double interruptionDecreaseLevel = 30;
+        double increaseLevel = 3;
+        double aerationDecreaseValue = 30;
+        double heatingIncreaseValue = 2;
+        double coolingDecreaseValue = 5;
+        double humidificationIncreaseValue = 10;
+        double dehumidificationDecreaseValue = 10;
 
         boolean humidificationMode = false;
-        double humidificationIncreaseValue = 4;
-        double humidificationLowLevel = 35;
-        double humidificationHighLevel = 60;
+        boolean dehumidificationMode = false;
+        double lowLevel = configuration.getPlant().getMinAirHumidity();
+        double highLevel = configuration.getPlant().getMaxAirHumidity();
+        double okLevel = (lowLevel + highLevel) / 2;
 
         Map<Timestamp, Telemetry.Point<Integer>> outsideHumidityTelemetryMap = outsideHumidityTelemetry.getPoints()
                 .stream()
@@ -1482,28 +1492,42 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
         while (iteratedDate.isBefore(endDate)) {
             long iteratedTs = DateTimeUtils.toTs(iteratedDate);
 
-            boolean heating = heatings.contains(iteratedTs);
             boolean aeration = aerations.contains(iteratedTs);
-            int outsideHumidity = outsideHumidityTelemetryMap.get(Timestamp.of(iteratedTs)).getValue();
+            boolean heating = heatings.contains(iteratedTs);
+            boolean cooling = coolings.contains(iteratedTs);
 
-            if (currentLevel <= humidificationLowLevel) {
-                humidificationMode = true;
-                humidifications.add(iteratedTs);
-            }
-            if (humidificationHighLevel <= currentLevel) {
-                humidificationMode = false;
-            }
+            int outsideHumidity = outsideHumidityTelemetryMap.get(Timestamp.of(iteratedTs)).getValue();
+            double diff = outsideHumidity - currentLevel;
 
             currentLevel += increaseLevel;
-            currentLevel += (humidificationMode) ? humidificationIncreaseValue : 0;
-            if (aeration) {
-                double sign = Math.signum(outsideHumidity - currentLevel);
-                currentLevel += sign * interruptionDecreaseLevel;
-                if (sign < 0) {
-                    currentLevel = Math.max(currentLevel, outsideHumidity);
-                } else {
-                    currentLevel = Math.min(currentLevel, outsideHumidity);
-                }
+            currentLevel += (aeration) ? Math.signum(diff) * Math.min(aerationDecreaseValue, Math.abs(diff)) : 0;
+            currentLevel += (heating) ? heatingIncreaseValue : 0;
+            currentLevel -= (cooling) ? coolingDecreaseValue : 0;
+
+            if (currentLevel <= okLevel) {
+                dehumidificationMode = false;
+            }
+            if (okLevel <= currentLevel) {
+                humidificationMode = false;
+            }
+            if (currentLevel < lowLevel) {
+                humidificationMode = true;
+            }
+            if (highLevel < currentLevel) {
+                dehumidificationMode = true;
+            }
+
+            if (humidificationMode) {
+                humidifications.add(iteratedTs);
+                currentLevel += Math.min(humidificationIncreaseValue, Math.abs(currentLevel - okLevel)) + RandomUtils.getRandomNumber(-1, 1);
+            }
+            if (dehumidificationMode) {
+                dehumidifications.add(iteratedTs);
+                currentLevel -= Math.min(dehumidificationDecreaseValue, Math.abs(currentLevel - okLevel)) + RandomUtils.getRandomNumber(-1, 1);
+            }
+
+            if (RandomUtils.getBooleanByProbability(0.3)) {
+                currentLevel += RandomUtils.getRandomNumber(0, 1);
             }
 
             currentLevel = Math.min(currentLevel, 100);
