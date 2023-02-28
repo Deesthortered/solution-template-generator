@@ -6,7 +6,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
 import org.thingsboard.trendz.generator.model.ConfigurationEntity;
-import org.thingsboard.trendz.generator.solution.greenhouse.model.Plant;
 
 @Getter
 @ToString
@@ -25,7 +24,7 @@ public class GreenhouseConfiguration extends ConfigurationEntity {
     private double latitude;
     private double longitude;
 
-    private Plant plant;
+    private PlantConfiguration plantConfiguration;
     private int sectionHeight;
     private int sectionWidth;
     private int sectionArea;

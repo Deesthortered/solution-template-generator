@@ -1,29 +1,23 @@
-package org.thingsboard.trendz.generator.solution.greenhouse.model;
+package org.thingsboard.trendz.generator.solution.greenhouse.configuration;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
-import org.thingsboard.trendz.generator.model.ModelEntity;
+import org.thingsboard.trendz.generator.model.ConfigurationEntity;
+import org.thingsboard.trendz.generator.solution.greenhouse.model.PlantName;
 
 @Getter
 @ToString
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class Plant extends ModelEntity {
+public class PlantConfiguration extends ConfigurationEntity {
 
-    // special asset for saving plant properties
-    @Override
-    public String entityType() {
-        return "GR) plant";
-    }
+    private int order;
 
-    private String systemName;
-    private String systemLabel;
-
-    private String name;
+    private PlantName name;
     private String variety;
     private int minRipeningCycleDays;
     private int maxRipeningCycleDays;

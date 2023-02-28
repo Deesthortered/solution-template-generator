@@ -40,6 +40,7 @@ import org.thingsboard.trendz.generator.service.rest.TbRestClient;
 import org.thingsboard.trendz.generator.service.roolchain.RuleChainBuildingService;
 import org.thingsboard.trendz.generator.solution.SolutionTemplateGenerator;
 import org.thingsboard.trendz.generator.solution.greenhouse.configuration.GreenhouseConfiguration;
+import org.thingsboard.trendz.generator.solution.greenhouse.configuration.PlantConfiguration;
 import org.thingsboard.trendz.generator.solution.greenhouse.configuration.StationCity;
 import org.thingsboard.trendz.generator.solution.greenhouse.configuration.WeatherData;
 import org.thingsboard.trendz.generator.solution.greenhouse.model.*;
@@ -83,6 +84,8 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
     private final AnomalyService anomalyService;
     private final RuleChainBuildingService ruleChainBuildingService;
     private final DashboardService dashboardService;
+
+    private final Map<PlantConfiguration, Plant> configurationToPlantMap = new HashMap<>();
 
     private final Map<Greenhouse, UUID> greenhouseToIdMap = new HashMap<>();
     private final Map<Plant, UUID> plantToIdMap = new HashMap<>();
@@ -339,79 +342,45 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
                 .map(city -> Pair.of(city, loadWeatherData(city, startYear, skipTelemetry)))
                 .collect(Collectors.toMap(Pair::getKey, Pair::getValue));
 
-        Plant plantTomatoSungold = createPlantTomatoSungold();
-        Plant plantTomatoCherry = createPlantTomatoCherry();
-        Plant plantCucumberEnglish = createPlantCucumberEnglish();
-        Plant plantOnionSweetSpanish = createPlantOnionSweetSpanish();
-        Set<Plant> plants = MySortedSet.of(
-                plantTomatoSungold, plantTomatoCherry, plantCucumberEnglish, plantOnionSweetSpanish
+        int order = 0;
+
+        PlantConfiguration plantConfigurationTomatoSungold = createPlantTomatoSungold(order++);
+        PlantConfiguration plantConfigurationTomatoCherry = createPlantTomatoCherry(order++);
+        PlantConfiguration plantConfigurationCucumberEnglish = createPlantCucumberEnglish(order++);
+        PlantConfiguration plantConfigurationOnionSweetSpanish = createPlantOnionSweetSpanish(order++);
+
+        Set<PlantConfiguration> plantConfigurations = MySortedSet.of(
+                plantConfigurationTomatoSungold,
+                plantConfigurationTomatoCherry,
+                plantConfigurationCucumberEnglish,
+                plantConfigurationOnionSweetSpanish
         );
 
+
+        GreenhouseConfiguration greenhouseConfigurationKyiv = makeKyivGreenhouse(startTs, now, plantConfigurationTomatoSungold, order++);
+        GreenhouseConfiguration greenhouseConfigurationStuttgart = makeStuttgartGreenhouse(startTs, now, plantConfigurationTomatoCherry, order++);
+        GreenhouseConfiguration greenhouseConfigurationKrakow = makeKrakowGreenhouse(startTs, now, plantConfigurationCucumberEnglish, order++);
+        GreenhouseConfiguration greenhouseConfigurationWarszawa = makeWarszawaGreenhouse(startTs, now, plantConfigurationOnionSweetSpanish, order++);
+
         Set<GreenhouseConfiguration> greenhouseConfigurations = MySortedSet.of(
-                GreenhouseConfiguration.builder()
-                        .order(1)
-                        .startTs(startTs)
-                        .endTs(now)
-                        .name("Greenhouse in Kyiv")
-                        .stationCity(StationCity.KYIV)
-                        .address("Svyatoshyns'ka St, 34 к, Kyiv, 02000")
-                        .latitude(50.446603)
-                        .longitude(30.386447)
-                        .plant(plantTomatoSungold)
-                        .sectionHeight(5)
-                        .sectionWidth(7)
-                        .sectionArea(3)
-                        .build(),
-
-                GreenhouseConfiguration.builder()
-                        .order(4)
-                        .startTs(startTs)
-                        .endTs(now)
-                        .name("Greenhouse in Stuttgart")
-                        .stationCity(StationCity.STUTTGART)
-                        .address("Augsburger Str. 500, 70327 Stuttgart, Germany")
-                        .latitude(48.774252)
-                        .longitude(9.259500)
-                        .plant(plantTomatoCherry)
-                        .sectionHeight(3)
-                        .sectionWidth(5)
-                        .sectionArea(3)
-                        .build(),
-
-                GreenhouseConfiguration.builder()
-                        .order(2)
-                        .startTs(startTs)
-                        .endTs(now)
-                        .name("Greenhouse in Krakow")
-                        .stationCity(StationCity.KRAKOW)
-                        .address("Zielona 18, 32-087 Bibice, Poland")
-                        .latitude(50.121765)
-                        .longitude(19.946134)
-                        .plant(plantCucumberEnglish)
-                        .sectionHeight(3)
-                        .sectionWidth(4)
-                        .sectionArea(5)
-                        .build(),
-
-                GreenhouseConfiguration.builder()
-                        .order(3)
-                        .startTs(startTs)
-                        .endTs(now)
-                        .name("Greenhouse in Warszawa")
-                        .stationCity(StationCity.WARSZAWA)
-                        .address("Ojca Aniceta 28, 03-264 Warszawa, Poland")
-                        .latitude(52.306237)
-                        .longitude(21.039917)
-                        .plant(plantOnionSweetSpanish)
-                        .sectionHeight(2)
-                        .sectionWidth(6)
-                        .sectionArea(4)
-                        .build()
+                greenhouseConfigurationKyiv,
+                greenhouseConfigurationStuttgart,
+                greenhouseConfigurationKrakow,
+                greenhouseConfigurationWarszawa
         );
 
 
         Set<ModelEntity> entities = MySortedSet.of();
-        entities.addAll(plants);
+        entities.addAll(
+                plantConfigurations
+                        .stream()
+                        .map(configuration -> {
+                            Plant plant = makePlantByConfiguration(configuration);
+                            this.configurationToPlantMap.put(configuration, plant);
+                            return plant;
+                        })
+                        .collect(Collectors.toList())
+        );
         entities.addAll(
                 greenhouseConfigurations
                         .stream()
@@ -420,7 +389,6 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
                         ))
                         .collect(Collectors.toList())
         );
-
 
         return ModelData.builder()
                 .data(entities)
@@ -690,6 +658,207 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
     }
 
 
+    private PlantConfiguration createPlantTomatoSungold(int order) {
+        return PlantConfiguration.builder()
+                .order(order)
+                .name(PlantName.TOMATO)
+                .variety("Sungold")
+                .minRipeningCycleDays(28)
+                .maxRipeningCycleDays(42)
+                .dayMinTemperature(21)
+                .dayMaxTemperature(29)
+                .nightMinTemperature(15)
+                .nightMaxTemperature(21)
+                .dayMinLight(8000)
+                .dayMaxLight(10000)
+                .nightMinLight(0)
+                .nightMaxLight(20)
+                .minAirHumidity(40)
+                .maxAirHumidity(70)
+                .minSoilMoisture(20)
+                .maxSoilMoisture(60)
+                .minCo2Concentration(350)
+                .maxCo2Concentration(1000)
+                .minPh(5.5)
+                .maxPh(7.5)
+                .build();
+    }
+
+    private PlantConfiguration createPlantTomatoCherry(int order) {
+        return PlantConfiguration.builder()
+                .order(order)
+                .name(PlantName.TOMATO)
+                .variety("Cherry")
+                .minRipeningCycleDays(28)
+                .maxRipeningCycleDays(42)
+                .dayMinTemperature(21)
+                .dayMaxTemperature(29)
+                .nightMinTemperature(15)
+                .nightMaxTemperature(21)
+                .dayMinLight(7000)
+                .dayMaxLight(8000)
+                .nightMinLight(1000)
+                .nightMaxLight(2000)
+                .minAirHumidity(50)
+                .maxAirHumidity(70)
+                .minSoilMoisture(40)
+                .maxSoilMoisture(70)
+                .minCo2Concentration(350)
+                .maxCo2Concentration(1000)
+                .minPh(5.5)
+                .maxPh(6.8)
+                .build();
+    }
+
+    private PlantConfiguration createPlantCucumberEnglish(int order) {
+        return PlantConfiguration.builder()
+                .order(order)
+                .name(PlantName.CUCUMBER)
+                .variety("English")
+                .minRipeningCycleDays(28)
+                .maxRipeningCycleDays(42)
+                .dayMinTemperature(22)
+                .dayMaxTemperature(27)
+                .nightMinTemperature(16)
+                .nightMaxTemperature(21)
+                .dayMinLight(12000)
+                .dayMaxLight(15000)
+                .nightMinLight(1000)
+                .nightMaxLight(1500)
+                .minAirHumidity(60)
+                .maxAirHumidity(70)
+                .minSoilMoisture(60)
+                .maxSoilMoisture(80)
+                .minCo2Concentration(300)
+                .maxCo2Concentration(1000)
+                .minPh(6.0)
+                .maxPh(7.0)
+                .build();
+    }
+
+    private PlantConfiguration createPlantOnionSweetSpanish(int order) {
+        return PlantConfiguration.builder()
+                .order(order)
+                .name(PlantName.ONION)
+                .variety("Sweet Spanish")
+                .minRipeningCycleDays(28)
+                .maxRipeningCycleDays(42)
+                .dayMinTemperature(21)
+                .dayMaxTemperature(29)
+                .nightMinTemperature(13)
+                .nightMaxTemperature(21)
+                .dayMinLight(10000)
+                .dayMaxLight(12000)
+                .nightMinLight(0)
+                .nightMaxLight(2)
+                .minAirHumidity(50)
+                .maxAirHumidity(70)
+                .minSoilMoisture(60)
+                .maxSoilMoisture(80)
+                .minCo2Concentration(300)
+                .maxCo2Concentration(1000)
+                .minPh(6.0)
+                .maxPh(7.0)
+                .build();
+    }
+
+
+    private GreenhouseConfiguration makeKyivGreenhouse(long startTs, long endTs, PlantConfiguration plantConfiguration, int order) {
+        return GreenhouseConfiguration.builder()
+                .order(order)
+                .startTs(startTs)
+                .endTs(endTs)
+                .name("Greenhouse in Kyiv")
+                .stationCity(StationCity.KYIV)
+                .address("Svyatoshyns'ka St, 34 к, Kyiv, 02000")
+                .latitude(50.446603)
+                .longitude(30.386447)
+                .plantConfiguration(plantConfiguration)
+                .sectionHeight(5)
+                .sectionWidth(7)
+                .sectionArea(3)
+                .build();
+    }
+
+    private GreenhouseConfiguration makeStuttgartGreenhouse(long startTs, long endTs, PlantConfiguration plantConfiguration, int order) {
+        return GreenhouseConfiguration.builder()
+                .order(order)
+                .startTs(startTs)
+                .endTs(endTs)
+                .name("Greenhouse in Stuttgart")
+                .stationCity(StationCity.STUTTGART)
+                .address("Augsburger Str. 500, 70327 Stuttgart, Germany")
+                .latitude(48.774252)
+                .longitude(9.259500)
+                .plantConfiguration(plantConfiguration)
+                .sectionHeight(3)
+                .sectionWidth(5)
+                .sectionArea(3)
+                .build();
+    }
+
+    private GreenhouseConfiguration makeKrakowGreenhouse(long startTs, long endTs, PlantConfiguration plantConfiguration, int order) {
+        return GreenhouseConfiguration.builder()
+                .order(order)
+                .startTs(startTs)
+                .endTs(endTs)
+                .name("Greenhouse in Krakow")
+                .stationCity(StationCity.KRAKOW)
+                .address("Zielona 18, 32-087 Bibice, Poland")
+                .latitude(50.121765)
+                .longitude(19.946134)
+                .plantConfiguration(plantConfiguration)
+                .sectionHeight(3)
+                .sectionWidth(4)
+                .sectionArea(5)
+                .build();
+    }
+
+    private GreenhouseConfiguration makeWarszawaGreenhouse(long startTs, long endTs, PlantConfiguration plantConfiguration, int order) {
+        return GreenhouseConfiguration.builder()
+                .order(order)
+                .startTs(startTs)
+                .endTs(endTs)
+                .name("Greenhouse in Warszawa")
+                .stationCity(StationCity.WARSZAWA)
+                .address("Ojca Aniceta 28, 03-264 Warszawa, Poland")
+                .latitude(52.306237)
+                .longitude(21.039917)
+                .plantConfiguration(plantConfiguration)
+                .sectionHeight(2)
+                .sectionWidth(6)
+                .sectionArea(4)
+                .build();
+    }
+
+
+    private Plant makePlantByConfiguration(PlantConfiguration configuration) {
+        return Plant.builder()
+                .systemName(configuration.getName() + " - " + configuration.getVariety())
+                .systemLabel("")
+                .name(configuration.getName().toString())
+                .variety(configuration.getVariety())
+                .minRipeningCycleDays(configuration.getMinRipeningCycleDays())
+                .maxRipeningCycleDays(configuration.getMaxRipeningCycleDays())
+                .dayMinTemperature(configuration.getDayMinTemperature())
+                .dayMaxTemperature(configuration.getDayMaxTemperature())
+                .nightMinTemperature(configuration.getNightMinTemperature())
+                .nightMaxTemperature(configuration.getNightMaxTemperature())
+                .dayMinLight(configuration.getDayMinLight())
+                .dayMaxLight(configuration.getDayMaxLight())
+                .nightMinLight(configuration.getNightMinLight())
+                .nightMaxLight(configuration.getNightMaxLight())
+                .minAirHumidity(configuration.getMinAirHumidity())
+                .maxAirHumidity(configuration.getMaxAirHumidity())
+                .minSoilMoisture(configuration.getMinSoilMoisture())
+                .maxSoilMoisture(configuration.getMaxSoilMoisture())
+                .minCo2Concentration(configuration.getMinCo2Concentration())
+                .maxCo2Concentration(configuration.getMaxCo2Concentration())
+                .minPh(configuration.getMinPh())
+                .maxPh(configuration.getMaxPh())
+                .build();
+    }
+
     private Greenhouse makeGreenhouseByConfiguration(GreenhouseConfiguration configuration, Map<Long, WeatherData> weatherDataMap, boolean skipTelemetry) {
 
         Telemetry<Integer> outsideLightTelemetry = createOutsideLightTelemetry(weatherDataMap, configuration, skipTelemetry);
@@ -808,10 +977,11 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
                 .consumptionWater(new Telemetry<>("consumptionWater", MySortedSet.of(new Telemetry.Point<>(Timestamp.of(0), 0))))
                 .build();
 
+        Plant plant = this.configurationToPlantMap.get(configuration.getPlantConfiguration());
         return Greenhouse.builder()
                 .systemName("Greenhouse " + configuration.getName())
                 .systemLabel("")
-                .plant(configuration.getPlant())
+                .plant(plant)
                 .sections(sections)
                 .insideAirWarmHumiditySensor(insideAirWarmHumiditySensor)
                 .insideLightSensor(insideLightSensor)
@@ -824,113 +994,6 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
     }
 
 
-    private Plant createPlantTomatoSungold() {
-        return Plant.builder()
-                .systemName("Tomato - Sungold")
-                .systemLabel("")
-                .name(PlantName.TOMATO)
-                .variety("Sungold")
-                .minRipeningCycleDays(28)
-                .maxRipeningCycleDays(42)
-                .dayMinTemperature(21)
-                .dayMaxTemperature(29)
-                .nightMinTemperature(15)
-                .nightMaxTemperature(21)
-                .dayMinLight(8000)
-                .dayMaxLight(10000)
-                .nightMinLight(0)
-                .nightMaxLight(20)
-                .minAirHumidity(40)
-                .maxAirHumidity(70)
-                .minSoilMoisture(20)
-                .maxSoilMoisture(60)
-                .minCo2Concentration(350)
-                .maxCo2Concentration(1000)
-                .minPh(5.5)
-                .maxPh(7.5)
-                .build();
-    }
-
-    private Plant createPlantTomatoCherry() {
-        return Plant.builder()
-                .systemName("Tomato - Cherry")
-                .systemLabel("")
-                .name(PlantName.TOMATO)
-                .variety("Cherry")
-                .minRipeningCycleDays(28)
-                .maxRipeningCycleDays(42)
-                .dayMinTemperature(21)
-                .dayMaxTemperature(29)
-                .nightMinTemperature(15)
-                .nightMaxTemperature(21)
-                .dayMinLight(7000)
-                .dayMaxLight(8000)
-                .nightMinLight(1000)
-                .nightMaxLight(2000)
-                .minAirHumidity(50)
-                .maxAirHumidity(70)
-                .minSoilMoisture(40)
-                .maxSoilMoisture(70)
-                .minCo2Concentration(350)
-                .maxCo2Concentration(1000)
-                .minPh(5.5)
-                .maxPh(6.8)
-                .build();
-    }
-
-    private Plant createPlantCucumberEnglish() {
-        return Plant.builder()
-                .systemName("Cucumber - English")
-                .systemLabel("")
-                .name(PlantName.CUCUMBER)
-                .variety("English")
-                .minRipeningCycleDays(28)
-                .maxRipeningCycleDays(42)
-                .dayMinTemperature(22)
-                .dayMaxTemperature(27)
-                .nightMinTemperature(16)
-                .nightMaxTemperature(21)
-                .dayMinLight(12000)
-                .dayMaxLight(15000)
-                .nightMinLight(1000)
-                .nightMaxLight(1500)
-                .minAirHumidity(60)
-                .maxAirHumidity(70)
-                .minSoilMoisture(60)
-                .maxSoilMoisture(80)
-                .minCo2Concentration(300)
-                .maxCo2Concentration(1000)
-                .minPh(6.0)
-                .maxPh(7.0)
-                .build();
-    }
-
-    private Plant createPlantOnionSweetSpanish() {
-        return Plant.builder()
-                .systemName("Onion - Sweet Spanish")
-                .systemLabel("")
-                .name(PlantName.ONION)
-                .variety("Sweet Spanish")
-                .minRipeningCycleDays(28)
-                .maxRipeningCycleDays(42)
-                .dayMinTemperature(21)
-                .dayMaxTemperature(29)
-                .nightMinTemperature(13)
-                .nightMaxTemperature(21)
-                .dayMinLight(10000)
-                .dayMaxLight(12000)
-                .nightMinLight(0)
-                .nightMaxLight(2)
-                .minAirHumidity(50)
-                .maxAirHumidity(70)
-                .minSoilMoisture(60)
-                .maxSoilMoisture(80)
-                .minCo2Concentration(300)
-                .maxCo2Concentration(1000)
-                .minPh(6.0)
-                .maxPh(7.0)
-                .build();
-    }
 
 
     private Map<Long, WeatherData> loadWeatherData(StationCity city, ZonedDateTime startYear, boolean skipTelemetry) {
@@ -1270,10 +1333,10 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
                 .stream()
                 .collect(Collectors.toMap(Telemetry.Point::getTs, Functions.identity()));
 
-        double dayMinLevel = configuration.getPlant().getDayMinLight();
-        double dayMaxLevel = configuration.getPlant().getDayMaxLight();
-        double nightMinLevel = configuration.getPlant().getNightMinLight();
-        double nightMaxLevel = configuration.getPlant().getNightMaxLight();
+        double dayMinLevel = configuration.getPlantConfiguration().getDayMinLight();
+        double dayMaxLevel = configuration.getPlantConfiguration().getDayMaxLight();
+        double nightMinLevel = configuration.getPlantConfiguration().getNightMinLight();
+        double nightMaxLevel = configuration.getPlantConfiguration().getNightMaxLight();
         double dayLevel = (dayMinLevel + dayMaxLevel) / 2;
         double nightLevel = (nightMinLevel + nightMaxLevel) / 2;
 
@@ -1308,8 +1371,8 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
         Telemetry<Integer> result = new Telemetry<>("concentration");
 
         double startLevel = 1000;
-        double minLevel = configuration.getPlant().getMinCo2Concentration();
-        double maxLevel = configuration.getPlant().getMaxCo2Concentration();
+        double minLevel = configuration.getPlantConfiguration().getMinCo2Concentration();
+        double maxLevel = configuration.getPlantConfiguration().getMaxCo2Concentration();
         double decreaseLevel = maxLevel - minLevel;
 
         Map<Timestamp, Telemetry.Point<Integer>> co2ConsumptionMap = temporalTelemetryCo2Generation.getPoints()
@@ -1346,7 +1409,7 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
         Telemetry<Integer> result = new Telemetry<>("temporal__co2_concentration");
 
         int nightConsumption = 50;
-        double zeroConsumptionLightLevel = configuration.getPlant().getDayMinLight();
+        double zeroConsumptionLightLevel = configuration.getPlantConfiguration().getDayMinLight();
 
         Map<Timestamp, Telemetry.Point<Integer>> outsideLightTelemetryMap = outsideLightTelemetry.getPoints()
                 .stream()
@@ -1393,11 +1456,11 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
         double heatingIncreaseValue = 8;
         double coolingDecreaseValue = 8;
 
-        double dayLowLevel = configuration.getPlant().getDayMinTemperature();
-        double dayHighLevel = configuration.getPlant().getDayMaxTemperature();
+        double dayLowLevel = configuration.getPlantConfiguration().getDayMinTemperature();
+        double dayHighLevel = configuration.getPlantConfiguration().getDayMaxTemperature();
         double dayOkLevel = (dayLowLevel + dayHighLevel) / 2;
-        double nightLowLevel = configuration.getPlant().getNightMinTemperature();
-        double nightHighLevel = configuration.getPlant().getNightMaxTemperature();
+        double nightLowLevel = configuration.getPlantConfiguration().getNightMinTemperature();
+        double nightHighLevel = configuration.getPlantConfiguration().getNightMaxTemperature();
         double nightOkLevel = (nightLowLevel + nightHighLevel) / 2;
 
         Map<Timestamp, Telemetry.Point<Integer>> outsideTemperatureTelemetryMap = outsideTemperatureTelemetry.getPoints()
@@ -1477,8 +1540,8 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
 
         boolean humidificationMode = false;
         boolean dehumidificationMode = false;
-        double lowLevel = configuration.getPlant().getMinAirHumidity();
-        double highLevel = configuration.getPlant().getMaxAirHumidity();
+        double lowLevel = configuration.getPlantConfiguration().getMinAirHumidity();
+        double highLevel = configuration.getPlantConfiguration().getMaxAirHumidity();
         double okLevel = (lowLevel + highLevel) / 2;
 
         Map<Timestamp, Telemetry.Point<Integer>> outsideHumidityTelemetryMap = outsideHumidityTelemetry.getPoints()
@@ -1545,8 +1608,8 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
         if (skipTelemetry) {
             return new Telemetry<>("skip");
         }
-        PlantName plantName = configuration.getPlant().getName();
-        String variety = configuration.getPlant().getVariety();
+        PlantName plantName = configuration.getPlantConfiguration().getName();
+        String variety = configuration.getPlantConfiguration().getVariety();
         ZonedDateTime startDate = DateTimeUtils.fromTs(configuration.getStartTs());
         ZonedDateTime endDate = DateTimeUtils.fromTs(configuration.getEndTs());
         Telemetry<Double> consumption = createTemporalTelemetryPlantNitrogenConsumption(plantName, variety, startDate, endDate);
@@ -1563,8 +1626,8 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
         if (skipTelemetry) {
             return new Telemetry<>("skip");
         }
-        PlantName plantName = configuration.getPlant().getName();
-        String variety = configuration.getPlant().getVariety();
+        PlantName plantName = configuration.getPlantConfiguration().getName();
+        String variety = configuration.getPlantConfiguration().getVariety();
         ZonedDateTime startDate = DateTimeUtils.fromTs(configuration.getStartTs());
         ZonedDateTime endDate = DateTimeUtils.fromTs(configuration.getEndTs());
         Telemetry<Double> consumption = createTemporalTelemetryPlantPhosphorusConsumption(plantName, variety, startDate, endDate);
@@ -1581,8 +1644,8 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
         if (skipTelemetry) {
             return new Telemetry<>("skip");
         }
-        PlantName plantName = configuration.getPlant().getName();
-        String variety = configuration.getPlant().getVariety();
+        PlantName plantName = configuration.getPlantConfiguration().getName();
+        String variety = configuration.getPlantConfiguration().getVariety();
         ZonedDateTime startDate = DateTimeUtils.fromTs(configuration.getStartTs());
         ZonedDateTime endDate = DateTimeUtils.fromTs(configuration.getEndTs());
         Telemetry<Double> consumption = createTemporalTelemetryPlantPotassiumConsumption(plantName, variety, startDate, endDate);
