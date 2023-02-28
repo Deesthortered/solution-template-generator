@@ -663,8 +663,6 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
                 .order(order)
                 .name(PlantName.TOMATO)
                 .variety("Sungold")
-                .minRipeningCycleDays(28)
-                .maxRipeningCycleDays(42)
                 .dayMinTemperature(21)
                 .dayMaxTemperature(29)
                 .nightMinTemperature(15)
@@ -681,6 +679,12 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
                 .maxCo2Concentration(1000)
                 .minPh(5.5)
                 .maxPh(7.5)
+                .minRipeningCycleDays(90)
+                .maxRipeningCycleDays(110)
+                .growthPeriodsDayList(List.of(30, 60, 100))
+                .growthPeriodsNitrogenConsumption(List.of(150.0, 230.0, 300.0))
+                .growthPeriodsPhosphorusConsumption(List.of(8.0, 12.0, 22.0))
+                .growthPeriodsPotassiumConsumption(List.of(80.0, 200.0, 350.0))
                 .build();
     }
 
@@ -689,8 +693,6 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
                 .order(order)
                 .name(PlantName.TOMATO)
                 .variety("Cherry")
-                .minRipeningCycleDays(28)
-                .maxRipeningCycleDays(42)
                 .dayMinTemperature(21)
                 .dayMaxTemperature(29)
                 .nightMinTemperature(15)
@@ -707,6 +709,12 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
                 .maxCo2Concentration(1000)
                 .minPh(5.5)
                 .maxPh(6.8)
+                .minRipeningCycleDays(65)
+                .maxRipeningCycleDays(75)
+                .growthPeriodsDayList(List.of(30, 50, 70))
+                .growthPeriodsNitrogenConsumption(List.of(150.0, 200.0, 260.0))
+                .growthPeriodsPhosphorusConsumption(List.of(5.0, 15.0, 23.0))
+                .growthPeriodsPotassiumConsumption(List.of(90.0, 250.0, 340.0))
                 .build();
     }
 
@@ -715,8 +723,6 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
                 .order(order)
                 .name(PlantName.CUCUMBER)
                 .variety("English")
-                .minRipeningCycleDays(28)
-                .maxRipeningCycleDays(42)
                 .dayMinTemperature(22)
                 .dayMaxTemperature(27)
                 .nightMinTemperature(16)
@@ -733,6 +739,12 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
                 .maxCo2Concentration(1000)
                 .minPh(6.0)
                 .maxPh(7.0)
+                .minRipeningCycleDays(55)
+                .maxRipeningCycleDays(65)
+                .growthPeriodsDayList(List.of(15, 30, 45, 60))
+                .growthPeriodsNitrogenConsumption(List.of(100.0, 220.0, 300.0, 360.0))
+                .growthPeriodsPhosphorusConsumption(List.of(3.0, 8.0, 20.0, 28.0))
+                .growthPeriodsPotassiumConsumption(List.of(80.0, 120.0, 250.0, 380.0))
                 .build();
     }
 
@@ -741,8 +753,6 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
                 .order(order)
                 .name(PlantName.ONION)
                 .variety("Sweet Spanish")
-                .minRipeningCycleDays(28)
-                .maxRipeningCycleDays(42)
                 .dayMinTemperature(21)
                 .dayMaxTemperature(29)
                 .nightMinTemperature(13)
@@ -759,6 +769,12 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
                 .maxCo2Concentration(1000)
                 .minPh(6.0)
                 .maxPh(7.0)
+                .minRipeningCycleDays(80)
+                .maxRipeningCycleDays(100)
+                .growthPeriodsDayList(List.of(15, 30, 60, 90))
+                .growthPeriodsNitrogenConsumption(List.of(75.0, 190.0, 309.0, 400.0))
+                .growthPeriodsPhosphorusConsumption(List.of(4.0, 10.0, 25.0, 33.0))
+                .growthPeriodsPotassiumConsumption(List.of(39.0, 59.0, 158.0, 360.0))
                 .build();
     }
 
@@ -992,8 +1008,6 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
                 .waterMeter(waterMeter)
                 .build();
     }
-
-
 
 
     private Map<Long, WeatherData> loadWeatherData(StationCity city, ZonedDateTime startYear, boolean skipTelemetry) {
@@ -1608,11 +1622,11 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
         if (skipTelemetry) {
             return new Telemetry<>("skip");
         }
-        PlantName plantName = configuration.getPlantConfiguration().getName();
-        String variety = configuration.getPlantConfiguration().getVariety();
+
+        PlantConfiguration plantConfiguration = configuration.getPlantConfiguration();
         ZonedDateTime startDate = DateTimeUtils.fromTs(configuration.getStartTs());
         ZonedDateTime endDate = DateTimeUtils.fromTs(configuration.getEndTs());
-        Telemetry<Double> consumption = createTemporalTelemetryPlantNitrogenConsumption(plantName, variety, startDate, endDate);
+        Telemetry<Double> consumption = createTemporalTelemetryPlantNitrogenConsumption(plantConfiguration, startDate, endDate);
 
         String name = "nitrogen";
         double startLevel = RandomUtils.getRandomNumber(150, 200);
@@ -1626,11 +1640,11 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
         if (skipTelemetry) {
             return new Telemetry<>("skip");
         }
-        PlantName plantName = configuration.getPlantConfiguration().getName();
-        String variety = configuration.getPlantConfiguration().getVariety();
+
+        PlantConfiguration plantConfiguration = configuration.getPlantConfiguration();
         ZonedDateTime startDate = DateTimeUtils.fromTs(configuration.getStartTs());
         ZonedDateTime endDate = DateTimeUtils.fromTs(configuration.getEndTs());
-        Telemetry<Double> consumption = createTemporalTelemetryPlantPhosphorusConsumption(plantName, variety, startDate, endDate);
+        Telemetry<Double> consumption = createTemporalTelemetryPlantPhosphorusConsumption(plantConfiguration, startDate, endDate);
 
         String name = "phosphorus";
         double startLevel = RandomUtils.getRandomNumber(40, 140) * 0.1;
@@ -1644,11 +1658,11 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
         if (skipTelemetry) {
             return new Telemetry<>("skip");
         }
-        PlantName plantName = configuration.getPlantConfiguration().getName();
-        String variety = configuration.getPlantConfiguration().getVariety();
+
+        PlantConfiguration plantConfiguration = configuration.getPlantConfiguration();
         ZonedDateTime startDate = DateTimeUtils.fromTs(configuration.getStartTs());
         ZonedDateTime endDate = DateTimeUtils.fromTs(configuration.getEndTs());
-        Telemetry<Double> consumption = createTemporalTelemetryPlantPotassiumConsumption(plantName, variety, startDate, endDate);
+        Telemetry<Double> consumption = createTemporalTelemetryPlantPotassiumConsumption(plantConfiguration, startDate, endDate);
 
         String name = "potassium";
         double startLevel = RandomUtils.getRandomNumber(150, 200);
@@ -1686,219 +1700,38 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
     }
 
 
-    private Telemetry<Double> createTemporalTelemetryPlantNitrogenConsumption(PlantName plantName, String variety, ZonedDateTime startDate, ZonedDateTime endDate) {
-        switch (plantName) {
-            case TOMATO:
-                switch (variety) {
-                    case "Sungold":
-                        return createTemporalTelemetryPlantNitrogenConsumptionTomatoSungold(startDate, endDate);
-                    case "Cherry":
-                        return createTemporalTelemetryPlantNitrogenConsumptionTomatoCherry(startDate, endDate);
-                    default:
-                        throw new IllegalArgumentException("Unsupported plant variety: " + plantName + ", " + variety);
-                }
-            case CUCUMBER:
-                switch (variety) {
-                    case "English":
-                        return createTemporalTelemetryPlantNitrogenConsumptionCucumberEnglish(startDate, endDate);
-                    default:
-                        throw new IllegalArgumentException("Unsupported plant variety: " + plantName + ", " + variety);
-                }
-            case ONION:
-                switch (variety) {
-                    case "Sweet Spanish":
-                        return createTemporalTelemetryPlantNitrogenConsumptionOnionSweetSpanish(startDate, endDate);
-                    default:
-                        throw new IllegalArgumentException("Unsupported plant variety: " + plantName + ", " + variety);
-                }
-            default:
-                throw new IllegalArgumentException("Unsupported plant: " + plantName);
-        }
-    }
-
-    private Telemetry<Double> createTemporalTelemetryPlantPhosphorusConsumption(PlantName plantName, String variety, ZonedDateTime startDate, ZonedDateTime endDate) {
-        switch (plantName) {
-            case TOMATO:
-                switch (variety) {
-                    case "Sungold":
-                        return createTemporalTelemetryPlantPhosphorusConsumptionTomatoSungold(startDate, endDate);
-                    case "Cherry":
-                        return createTemporalTelemetryPlantPhosphorusConsumptionTomatoCherry(startDate, endDate);
-                    default:
-                        throw new IllegalArgumentException("Unsupported plant variety: " + plantName + ", " + variety);
-                }
-            case CUCUMBER:
-                switch (variety) {
-                    case "English":
-                        return createTemporalTelemetryPlantPhosphorusConsumptionCucumberEnglish(startDate, endDate);
-                    default:
-                        throw new IllegalArgumentException("Unsupported plant variety: " + plantName + ", " + variety);
-                }
-            case ONION:
-                switch (variety) {
-                    case "Sweet Spanish":
-                        return createTemporalTelemetryPlantPhosphorusConsumptionOnionSweetSpanish(startDate, endDate);
-                    default:
-                        throw new IllegalArgumentException("Unsupported plant variety: " + plantName + ", " + variety);
-                }
-            default:
-                throw new IllegalArgumentException("Unsupported plant: " + plantName);
-        }
-    }
-
-    private Telemetry<Double> createTemporalTelemetryPlantPotassiumConsumption(PlantName plantName, String variety, ZonedDateTime startDate, ZonedDateTime endDate) {
-        switch (plantName) {
-            case TOMATO:
-                switch (variety) {
-                    case "Sungold":
-                        return createTemporalTelemetryPlantPotassiumConsumptionTomatoSungold(startDate, endDate);
-                    case "Cherry":
-                        return createTemporalTelemetryPlantPotassiumConsumptionTomatoCherry(startDate, endDate);
-                    default:
-                        throw new IllegalArgumentException("Unsupported plant variety: " + plantName + ", " + variety);
-                }
-            case CUCUMBER:
-                switch (variety) {
-                    case "English":
-                        return createTemporalTelemetryPlantPotassiumConsumptionCucumberEnglish(startDate, endDate);
-                    default:
-                        throw new IllegalArgumentException("Unsupported plant variety: " + plantName + ", " + variety);
-                }
-            case ONION:
-                switch (variety) {
-                    case "Sweet Spanish":
-                        return createTemporalTelemetryPlantPotassiumConsumptionOnionSweetSpanish(startDate, endDate);
-                    default:
-                        throw new IllegalArgumentException("Unsupported plant variety: " + plantName + ", " + variety);
-                }
-            default:
-                throw new IllegalArgumentException("Unsupported plant: " + plantName);
-        }
-    }
-
-
-    private Telemetry<Double> createTemporalTelemetryPlantNitrogenConsumptionTomatoSungold(ZonedDateTime startDate, ZonedDateTime endDate) {
+    private Telemetry<Double> createTemporalTelemetryPlantNitrogenConsumption(PlantConfiguration configuration, ZonedDateTime startDate, ZonedDateTime endDate) {
         int noiseAmplitude = 3;
         double noiseCoefficient = 1.0;
-        int totalPeriodDays = 100;
-        List<Integer> periodDays = List.of(30, 60, 100);
-        List<Double> periodValues = List.of(150.0, 230.0, 300.0);
-
-        return createTemporalTelemetryPlantConsumption("temporal__nitrogen_consumption__tomato_sungold", startDate, endDate, noiseAmplitude, noiseCoefficient, totalPeriodDays, periodDays, periodValues);
+        String name = "temporal__" + configuration.getName().toString().toLowerCase() + "_" + configuration.getVariety().toLowerCase();
+        int totalPeriodDays = (configuration.getMinRipeningCycleDays() + configuration.getMaxRipeningCycleDays()) / 2;
+        return createTemporalTelemetryPlantConsumption(
+                name, startDate, endDate, noiseAmplitude, noiseCoefficient, totalPeriodDays,
+                configuration.getGrowthPeriodsDayList(), configuration.getGrowthPeriodsNitrogenConsumption()
+        );
     }
 
-    private Telemetry<Double> createTemporalTelemetryPlantNitrogenConsumptionTomatoCherry(ZonedDateTime startDate, ZonedDateTime endDate) {
-        int noiseAmplitude = 3;
-        double noiseCoefficient = 1.0;
-        int totalPeriodDays = 70;
-        List<Integer> periodDays = List.of(30, 50, 70);
-        List<Double> periodValues = List.of(150.0, 200.0, 260.0);
-
-        return createTemporalTelemetryPlantConsumption("temporal__nitrogen_consumption__tomato_cherry", startDate, endDate, noiseAmplitude, noiseCoefficient, totalPeriodDays, periodDays, periodValues);
-    }
-
-    private Telemetry<Double> createTemporalTelemetryPlantNitrogenConsumptionCucumberEnglish(ZonedDateTime startDate, ZonedDateTime endDate) {
-        int noiseAmplitude = 3;
-        double noiseCoefficient = 1.0;
-        int totalPeriodDays = 60;
-        List<Integer> periodDays = List.of(15, 30, 45, 60);
-        List<Double> periodValues = List.of(100.0, 220.0, 300.0, 360.0);
-
-        return createTemporalTelemetryPlantConsumption("temporal__nitrogen_consumption__cucumber_english", startDate, endDate, noiseAmplitude, noiseCoefficient, totalPeriodDays, periodDays, periodValues);
-    }
-
-    private Telemetry<Double> createTemporalTelemetryPlantNitrogenConsumptionOnionSweetSpanish(ZonedDateTime startDate, ZonedDateTime endDate) {
-        int noiseAmplitude = 3;
-        double noiseCoefficient = 1.0;
-        int totalPeriodDays = 90;
-        List<Integer> periodDays = List.of(15, 30, 60, 90);
-        List<Double> periodValues = List.of(75.0, 190.0, 309.0, 400.0);
-
-        return createTemporalTelemetryPlantConsumption("temporal__nitrogen_consumption__sweet_spanish", startDate, endDate, noiseAmplitude, noiseCoefficient, totalPeriodDays, periodDays, periodValues);
-    }
-
-
-    private Telemetry<Double> createTemporalTelemetryPlantPhosphorusConsumptionTomatoSungold(ZonedDateTime startDate, ZonedDateTime endDate) {
+    private Telemetry<Double> createTemporalTelemetryPlantPhosphorusConsumption(PlantConfiguration configuration, ZonedDateTime startDate, ZonedDateTime endDate) {
         int noiseAmplitude = 1;
         double noiseCoefficient = 0.01;
-        int totalPeriodDays = 100;
-        List<Integer> periodDays = List.of(30, 60, 100);
-        List<Double> periodValues = List.of(8.0, 12.0, 22.0);
-
-        return createTemporalTelemetryPlantConsumption("temporal__phosphorus_consumption__tomato_sungold", startDate, endDate, noiseAmplitude, noiseCoefficient, totalPeriodDays, periodDays, periodValues);
+        String name = "temporal__" + configuration.getName().toString().toLowerCase() + "_" + configuration.getVariety().toLowerCase();
+        int totalPeriodDays = (configuration.getMinRipeningCycleDays() + configuration.getMaxRipeningCycleDays()) / 2;
+        return createTemporalTelemetryPlantConsumption(
+                name, startDate, endDate, noiseAmplitude, noiseCoefficient, totalPeriodDays,
+                configuration.getGrowthPeriodsDayList(), configuration.getGrowthPeriodsPhosphorusConsumption()
+        );
     }
 
-    private Telemetry<Double> createTemporalTelemetryPlantPhosphorusConsumptionTomatoCherry(ZonedDateTime startDate, ZonedDateTime endDate) {
-        int noiseAmplitude = 1;
-        double noiseCoefficient = 0.01;
-        int totalPeriodDays = 70;
-        List<Integer> periodDays = List.of(30, 50, 70);
-        List<Double> periodValues = List.of(5.0, 15.0, 23.0);
-
-        return createTemporalTelemetryPlantConsumption("temporal__phosphorus_consumption__tomato_cherry", startDate, endDate, noiseAmplitude, noiseCoefficient, totalPeriodDays, periodDays, periodValues);
-    }
-
-    private Telemetry<Double> createTemporalTelemetryPlantPhosphorusConsumptionCucumberEnglish(ZonedDateTime startDate, ZonedDateTime endDate) {
-        int noiseAmplitude = 1;
-        double noiseCoefficient = 0.01;
-        int totalPeriodDays = 60;
-        List<Integer> periodDays = List.of(15, 30, 45, 60);
-        List<Double> periodValues = List.of(3.0, 8.0, 20.0, 28.0);
-
-        return createTemporalTelemetryPlantConsumption("temporal__phosphorus_consumption__cucumber_english", startDate, endDate, noiseAmplitude, noiseCoefficient, totalPeriodDays, periodDays, periodValues);
-    }
-
-    private Telemetry<Double> createTemporalTelemetryPlantPhosphorusConsumptionOnionSweetSpanish(ZonedDateTime startDate, ZonedDateTime endDate) {
-        int noiseAmplitude = 1;
-        double noiseCoefficient = 0.01;
-        int totalPeriodDays = 90;
-        List<Integer> periodDays = List.of(15, 30, 60, 90);
-        List<Double> periodValues = List.of(4.0, 10.0, 25.0, 33.0);
-
-        return createTemporalTelemetryPlantConsumption("temporal__phosphorus_consumption__sweet_spanish", startDate, endDate, noiseAmplitude, noiseCoefficient, totalPeriodDays, periodDays, periodValues);
-    }
-
-
-    private Telemetry<Double> createTemporalTelemetryPlantPotassiumConsumptionTomatoSungold(ZonedDateTime startDate, ZonedDateTime endDate) {
+    private Telemetry<Double> createTemporalTelemetryPlantPotassiumConsumption(PlantConfiguration configuration, ZonedDateTime startDate, ZonedDateTime endDate) {
         int noiseAmplitude = 3;
         double noiseCoefficient = 1.0;
-        int totalPeriodDays = 100;
-        List<Integer> periodDays = List.of(30, 60, 100);
-        List<Double> periodValues = List.of(80.0, 200.0, 350.0);
-
-        return createTemporalTelemetryPlantConsumption("temporal__potassium_consumption__tomato_sungold", startDate, endDate, noiseAmplitude, noiseCoefficient, totalPeriodDays, periodDays, periodValues);
+        String name = "temporal__" + configuration.getName().toString().toLowerCase() + "_" + configuration.getVariety().toLowerCase();
+        int totalPeriodDays = (configuration.getMinRipeningCycleDays() + configuration.getMaxRipeningCycleDays()) / 2;
+        return createTemporalTelemetryPlantConsumption(
+                name, startDate, endDate, noiseAmplitude, noiseCoefficient, totalPeriodDays,
+                configuration.getGrowthPeriodsDayList(), configuration.getGrowthPeriodsPotassiumConsumption()
+        );
     }
-
-    private Telemetry<Double> createTemporalTelemetryPlantPotassiumConsumptionTomatoCherry(ZonedDateTime startDate, ZonedDateTime endDate) {
-        int noiseAmplitude = 3;
-        double noiseCoefficient = 1.0;
-        int totalPeriodDays = 70;
-        List<Integer> periodDays = List.of(30, 50, 70);
-        List<Double> periodValues = List.of(90.0, 250.0, 340.0);
-
-        return createTemporalTelemetryPlantConsumption("temporal__potassium_consumption__tomato_cherry", startDate, endDate, noiseAmplitude, noiseCoefficient, totalPeriodDays, periodDays, periodValues);
-    }
-
-    private Telemetry<Double> createTemporalTelemetryPlantPotassiumConsumptionCucumberEnglish(ZonedDateTime startDate, ZonedDateTime endDate) {
-        int noiseAmplitude = 3;
-        double noiseCoefficient = 1.0;
-        int totalPeriodDays = 60;
-        List<Integer> periodDays = List.of(15, 30, 45, 60);
-        List<Double> periodValues = List.of(80.0, 120.0, 250.0, 380.0);
-
-        return createTemporalTelemetryPlantConsumption("temporal__potassium_consumption__cucumber_english", startDate, endDate, noiseAmplitude, noiseCoefficient, totalPeriodDays, periodDays, periodValues);
-    }
-
-    private Telemetry<Double> createTemporalTelemetryPlantPotassiumConsumptionOnionSweetSpanish(ZonedDateTime startDate, ZonedDateTime endDate) {
-        int noiseAmplitude = 3;
-        double noiseCoefficient = 1.0;
-        int totalPeriodDays = 90;
-        List<Integer> periodDays = List.of(15, 30, 60, 90);
-        List<Double> periodValues = List.of(39.0, 59.0, 158.0, 360.0);
-
-        return createTemporalTelemetryPlantConsumption("temporal__potassium_consumption__sweet_spanish", startDate, endDate, noiseAmplitude, noiseCoefficient, totalPeriodDays, periodDays, periodValues);
-    }
-
 
     private Telemetry<Double> createTemporalTelemetryPlantConsumption(String name, ZonedDateTime startDate, ZonedDateTime endDate, int noiseAmplitude, double noiseCoefficient, int totalPeriodDays, List<Integer> periodDays, List<Double> periodValues) {
         Telemetry<Double> result = new Telemetry<>(name);

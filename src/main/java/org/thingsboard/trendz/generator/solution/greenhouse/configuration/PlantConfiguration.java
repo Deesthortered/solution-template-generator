@@ -8,6 +8,8 @@ import lombok.ToString;
 import org.thingsboard.trendz.generator.model.ConfigurationEntity;
 import org.thingsboard.trendz.generator.solution.greenhouse.model.PlantName;
 
+import java.util.List;
+
 @Getter
 @ToString
 @Builder
@@ -37,4 +39,9 @@ public class PlantConfiguration extends ConfigurationEntity {
     private double maxCo2Concentration;
     private double minPh;
     private double maxPh;
+
+    private List<Integer> growthPeriodsDayList;
+    private List<Double> growthPeriodsNitrogenConsumption;
+    private List<Double> growthPeriodsPhosphorusConsumption;
+    private List<Double> growthPeriodsPotassiumConsumption;
 }
