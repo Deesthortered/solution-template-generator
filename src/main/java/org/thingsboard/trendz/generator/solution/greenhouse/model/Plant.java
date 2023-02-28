@@ -25,8 +25,6 @@ public class Plant extends ModelEntity {
 
     private String name;
     private String variety;
-    private int minRipeningCycleDays;
-    private int maxRipeningCycleDays;
     private double dayMinTemperature;
     private double dayMaxTemperature;
     private double nightMinTemperature;
@@ -43,4 +41,12 @@ public class Plant extends ModelEntity {
     private double maxCo2Concentration;
     private double minPh;
     private double maxPh;
+    private int minRipeningCycleDays;
+    private int maxRipeningCycleDays;
+    private double minNitrogenLevel;
+    private double maxNitrogenLevel;
+    private double minPhosphorusLevel;
+    private double maxPhosphorusLevel;
+    private double minPotassiumLevel;
+    private double maxPotassiumLevel;
 }

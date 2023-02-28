@@ -167,15 +167,15 @@ public class WaterMeteringSolution implements SolutionTemplateGenerator {
 
     private void checkRandomStability() {
         int count = 5;
-        List<Long> actual = new ArrayList<>();
+        List<Double> actual = new ArrayList<>();
         for (int i = 0; i < count; i++) {
             actual.add(RandomUtils.getRandomNumber(0, 100));
         }
 
-        List<Long> expected = List.of(38L, 67L, 29L, 81L, 92L);
+        List<Double> expected = List.of(38.0, 67.0, 29.0, 81.0, 92.0);
 
         for (int i = 0; i < count; i++) {
-            if (Long.compare(expected.get(i), actual.get(i)) != 0) {
+            if (Double.compare(expected.get(i), actual.get(i)) != 0) {
                 log.warn("Random Stability check is failed");
                 break;
             }
@@ -872,8 +872,8 @@ public class WaterMeteringSolution implements SolutionTemplateGenerator {
         long used = 0;
 
         while (used < interval) {
-            long length = RandomUtils.getRandomNumber(minLength, maxLength);
-            long value = RandomUtils.getRandomNumber(minValue, maxValue);
+            long length = (long) RandomUtils.getRandomNumber(minLength, maxLength);
+            long value = (long) RandomUtils.getRandomNumber(minValue, maxValue);
             used += length;
             result.add(Pair.of(used, value));
         }

@@ -681,6 +681,12 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
                 .maxPh(7.5)
                 .minRipeningCycleDays(90)
                 .maxRipeningCycleDays(110)
+                .minNitrogenLevel(150)
+                .maxNitrogenLevel(250)
+                .minPhosphorusLevel(30)
+                .maxPhosphorusLevel(60)
+                .minPotassiumLevel(250)
+                .maxPotassiumLevel(450)
                 .growthPeriodsDayList(List.of(30, 60, 100))
                 .growthPeriodsNitrogenConsumption(List.of(150.0, 230.0, 300.0))
                 .growthPeriodsPhosphorusConsumption(List.of(8.0, 12.0, 22.0))
@@ -711,6 +717,12 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
                 .maxPh(6.8)
                 .minRipeningCycleDays(65)
                 .maxRipeningCycleDays(75)
+                .minNitrogenLevel(150)
+                .maxNitrogenLevel(250)
+                .minPhosphorusLevel(70)
+                .maxPhosphorusLevel(120)
+                .minPotassiumLevel(200)
+                .maxPotassiumLevel(300)
                 .growthPeriodsDayList(List.of(30, 50, 70))
                 .growthPeriodsNitrogenConsumption(List.of(150.0, 200.0, 260.0))
                 .growthPeriodsPhosphorusConsumption(List.of(5.0, 15.0, 23.0))
@@ -741,6 +753,12 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
                 .maxPh(7.0)
                 .minRipeningCycleDays(55)
                 .maxRipeningCycleDays(65)
+                .minNitrogenLevel(100)
+                .maxNitrogenLevel(200)
+                .minPhosphorusLevel(20)
+                .maxPhosphorusLevel(50)
+                .minPotassiumLevel(200)
+                .maxPotassiumLevel(400)
                 .growthPeriodsDayList(List.of(15, 30, 45, 60))
                 .growthPeriodsNitrogenConsumption(List.of(100.0, 220.0, 300.0, 360.0))
                 .growthPeriodsPhosphorusConsumption(List.of(3.0, 8.0, 20.0, 28.0))
@@ -771,6 +789,12 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
                 .maxPh(7.0)
                 .minRipeningCycleDays(80)
                 .maxRipeningCycleDays(100)
+                .minNitrogenLevel(150)
+                .maxNitrogenLevel(250)
+                .minPhosphorusLevel(35)
+                .maxPhosphorusLevel(70)
+                .minPotassiumLevel(200)
+                .maxPotassiumLevel(400)
                 .growthPeriodsDayList(List.of(15, 30, 60, 90))
                 .growthPeriodsNitrogenConsumption(List.of(75.0, 190.0, 309.0, 400.0))
                 .growthPeriodsPhosphorusConsumption(List.of(4.0, 10.0, 25.0, 33.0))
@@ -854,8 +878,6 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
                 .systemLabel("")
                 .name(configuration.getName().toString())
                 .variety(configuration.getVariety())
-                .minRipeningCycleDays(configuration.getMinRipeningCycleDays())
-                .maxRipeningCycleDays(configuration.getMaxRipeningCycleDays())
                 .dayMinTemperature(configuration.getDayMinTemperature())
                 .dayMaxTemperature(configuration.getDayMaxTemperature())
                 .nightMinTemperature(configuration.getNightMinTemperature())
@@ -872,6 +894,14 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
                 .maxCo2Concentration(configuration.getMaxCo2Concentration())
                 .minPh(configuration.getMinPh())
                 .maxPh(configuration.getMaxPh())
+                .minRipeningCycleDays(configuration.getMinRipeningCycleDays())
+                .maxRipeningCycleDays(configuration.getMaxRipeningCycleDays())
+                .minNitrogenLevel(configuration.getMinNitrogenLevel())
+                .maxNitrogenLevel(configuration.getMaxNitrogenLevel())
+                .minPhosphorusLevel(configuration.getMinPhosphorusLevel())
+                .maxPhosphorusLevel(configuration.getMaxPhosphorusLevel())
+                .minPotassiumLevel(configuration.getMinPotassiumLevel())
+                .maxPotassiumLevel(configuration.getMaxPotassiumLevel())
                 .build();
     }
 
@@ -1120,7 +1150,7 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
             int hourLux = getHourLuxValues(hour);
             int yearLux = getYearLuxCycleValue(day);
             double percents = mapWeatherConditionToLuxValuesInPercents(condition);
-            long noise = RandomUtils.getRandomNumber(-1000, 1000);
+            int noise = (int) RandomUtils.getRandomNumber(-1000, 1000);
             int value = (int) ((hourLux + yearLux) * percents + noise);
             value = Math.max(0, value);
 
@@ -1629,9 +1659,9 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
         Telemetry<Double> consumption = createTemporalTelemetryPlantNitrogenConsumption(plantConfiguration, startDate, endDate);
 
         String name = "nitrogen";
-        double startLevel = RandomUtils.getRandomNumber(150, 200);
-        double minLevel = 50;
-        double raiseValue = 150;
+        double startLevel = RandomUtils.getRandomNumber((long) plantConfiguration.getMinNitrogenLevel(), (long) plantConfiguration.getMaxNitrogenLevel());
+        double minLevel = plantConfiguration.getMinNitrogenLevel();
+        double raiseValue = plantConfiguration.getMaxNitrogenLevel() - plantConfiguration.getMinNitrogenLevel();
 
         return createSoilLevel(name, startLevel, minLevel, raiseValue, consumption);
     }
@@ -1647,9 +1677,9 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
         Telemetry<Double> consumption = createTemporalTelemetryPlantPhosphorusConsumption(plantConfiguration, startDate, endDate);
 
         String name = "phosphorus";
-        double startLevel = RandomUtils.getRandomNumber(40, 140) * 0.1;
-        double minLevel = 4;
-        double raiseValue = 8;
+        double startLevel = RandomUtils.getRandomNumber((long) plantConfiguration.getMinPhosphorusLevel(), (long) plantConfiguration.getMaxPhosphorusLevel());
+        double minLevel = plantConfiguration.getMinPhosphorusLevel();
+        double raiseValue = plantConfiguration.getMaxPhosphorusLevel() - plantConfiguration.getMinPhosphorusLevel();
 
         return createSoilLevel(name, startLevel, minLevel, raiseValue, consumption);
     }
@@ -1665,9 +1695,9 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
         Telemetry<Double> consumption = createTemporalTelemetryPlantPotassiumConsumption(plantConfiguration, startDate, endDate);
 
         String name = "potassium";
-        double startLevel = RandomUtils.getRandomNumber(150, 200);
-        double minLevel = 50;
-        double raiseValue = 200;
+        double startLevel = RandomUtils.getRandomNumber((long) plantConfiguration.getMinPotassiumLevel(), (long) plantConfiguration.getMaxPotassiumLevel());
+        double minLevel = plantConfiguration.getMinPotassiumLevel();
+        double raiseValue = plantConfiguration.getMaxPotassiumLevel() - plantConfiguration.getMinPotassiumLevel();
 
         return createSoilLevel(name, startLevel, minLevel, raiseValue, consumption);
     }
@@ -1788,8 +1818,6 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
         Set<Attribute<?>> attributes = Set.of(
                 new Attribute<>("name", plant.getName()),
                 new Attribute<>("variety", plant.getVariety()),
-                new Attribute<>("minRipeningPeriodDay", plant.getMinRipeningCycleDays()),
-                new Attribute<>("maxRipeningPeriodDay", plant.getMaxRipeningCycleDays()),
                 new Attribute<>("dayMinTemperature", plant.getDayMinTemperature()),
                 new Attribute<>("dayMaxTemperature", plant.getDayMaxTemperature()),
                 new Attribute<>("nightMinTemperature", plant.getNightMinTemperature()),
@@ -1803,7 +1831,15 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
                 new Attribute<>("nightMinLight", plant.getNightMinLight()),
                 new Attribute<>("nightMaxLight", plant.getNightMaxLight()),
                 new Attribute<>("minPh", plant.getMinPh()),
-                new Attribute<>("maxPh", plant.getMaxPh())
+                new Attribute<>("maxPh", plant.getMaxPh()),
+                new Attribute<>("minRipeningPeriodDay", plant.getMinRipeningCycleDays()),
+                new Attribute<>("maxRipeningPeriodDay", plant.getMaxRipeningCycleDays()),
+                new Attribute<>("minNitrogenLevel", plant.getMinNitrogenLevel()),
+                new Attribute<>("maxNitrogenLevel", plant.getMaxNitrogenLevel()),
+                new Attribute<>("minPhosphorusLevel", plant.getMinPhosphorusLevel()),
+                new Attribute<>("maxPhosphorusLevel", plant.getMaxPhosphorusLevel()),
+                new Attribute<>("minPotassiumLevel", plant.getMinPotassiumLevel()),
+                new Attribute<>("maxPotassiumLevel", plant.getMaxPotassiumLevel())
         );
         tbRestClient.setEntityAttributes(asset.getUuidId(), EntityType.ASSET, Attribute.Scope.SERVER_SCOPE, attributes);
 

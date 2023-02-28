@@ -41,7 +41,7 @@ public class ShiftedDataAnomalyCreator implements AnomalyCreator {
                     double shift = anomalyInfo.getShiftValue();
                     double coeff = anomalyInfo.getCoefficient();
                     long amplitude = (long) anomalyInfo.getNoiseAmplitude();
-                    long noise = RandomUtils.getRandomNumber(-amplitude, amplitude);
+                    double noise = RandomUtils.getRandomNumber(-amplitude, amplitude);
 
                     double value = old_value.doubleValue();
                     value = value * coeff + shift + noise;

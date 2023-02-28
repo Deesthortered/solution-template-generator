@@ -21,8 +21,6 @@ public class PlantConfiguration extends ConfigurationEntity {
 
     private PlantName name;
     private String variety;
-    private int minRipeningCycleDays;
-    private int maxRipeningCycleDays;
     private double dayMinTemperature;
     private double dayMaxTemperature;
     private double nightMinTemperature;
@@ -39,6 +37,14 @@ public class PlantConfiguration extends ConfigurationEntity {
     private double maxCo2Concentration;
     private double minPh;
     private double maxPh;
+    private int minRipeningCycleDays;
+    private int maxRipeningCycleDays;
+    private double minNitrogenLevel;
+    private double maxNitrogenLevel;
+    private double minPhosphorusLevel;
+    private double maxPhosphorusLevel;
+    private double minPotassiumLevel;
+    private double maxPotassiumLevel;
 
     private List<Integer> growthPeriodsDayList;
     private List<Double> growthPeriodsNitrogenConsumption;

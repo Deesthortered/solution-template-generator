@@ -23,14 +23,14 @@ public class RandomUtils {
         return random.nextDouble() < probability;
     }
 
-    public static long getRandomNumber(long from, long to) {
+    public static double getRandomNumber(double from, double to) {
         if (to < from) {
             throw new IllegalArgumentException();
         }
         if (from == to) {
             return to;
         }
-        long i = Math.abs(getRandom().nextLong());
+        double i = Math.abs(getRandom().nextDouble());
         return from + (i % (to - from));
     }
 

@@ -166,15 +166,15 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
 
     private void checkRandomStability() {
         int count = 5;
-        List<Long> actual = new ArrayList<>();
+        List<Double> actual = new ArrayList<>();
         for (int i = 0; i < count; i++) {
             actual.add(RandomUtils.getRandomNumber(0, 100));
         }
 
-        List<Long> expected = List.of(57L, 31L, 51L, 36L, 58L);
+        List<Double> expected = List.of(57.0, 31.0, 51.0, 36.0, 58.0);
 
         for (int i = 0; i < count; i++) {
-            if (Long.compare(expected.get(i), actual.get(i)) != 0) {
+            if (Double.compare(expected.get(i), actual.get(i)) != 0) {
                 log.warn("Random Stability check if failed");
                 break;
             }
@@ -839,11 +839,11 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
 
 
     private long createRandomDateBias() {
-        return RandomUtils.getRandomNumber(dateRangeFrom, dateRangeTo);
+        return (long) RandomUtils.getRandomNumber(dateRangeFrom, dateRangeTo);
     }
 
     private long createRandomSerialNumber() {
-        return RandomUtils.getRandomNumber(serialRangeFrom, serialRangeTo);
+        return (long) RandomUtils.getRandomNumber(serialRangeFrom, serialRangeTo);
     }
 
     private int createRandomAreaByLevel(int level) {
@@ -890,7 +890,7 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
                     while (iteratedDate.isBefore(nowDate)) {
                         long iteratedTs = DateTimeUtils.toTs(iteratedDate);
                         long argument = iteratedDate.getHour() - 12;
-                        long noise = RandomUtils.getRandomNumber(-noiseAmplitude, noiseAmplitude) * noiseWidth;
+                        long noise = (long) (RandomUtils.getRandomNumber(-noiseAmplitude, noiseAmplitude) * noiseWidth);
                         long value = minValue + noise + Math.round(amplitude * Math.sin(phase + koeff * argument));
 
                         result.add(iteratedTs, value);
@@ -912,7 +912,7 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
                     while (iteratedDate.isBefore(nowDate)) {
                         long iteratedTs = DateTimeUtils.toTs(iteratedDate);
                         long argument = iteratedDate.getHour() - 12;
-                        long noise = RandomUtils.getRandomNumber(-noiseAmplitude, noiseAmplitude) * noiseWidth;
+                        long noise = (long) (RandomUtils.getRandomNumber(-noiseAmplitude, noiseAmplitude) * noiseWidth);
                         long value = minValue + noise + Math.round(amplitude * Math.sin(phase + koeff * argument));
 
                         result.add(iteratedTs, value);
@@ -936,7 +936,7 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
                         long iteratedTs = DateTimeUtils.toTs(iteratedDate);
                         long argumentDay = iteratedDate.getDayOfWeek().getValue() * 2L - 7;
                         long argumentHour = iteratedDate.getHour() - 12;
-                        long noise = RandomUtils.getRandomNumber(-noiseAmplitude, noiseAmplitude) * noiseWidth;
+                        long noise = (long) (RandomUtils.getRandomNumber(-noiseAmplitude, noiseAmplitude) * noiseWidth);
                         long value = minValue + noise + Math.round(amplitude * Math.sin(phase + koeffDay * argumentDay + koeffHour * argumentHour));
 
                         result.add(iteratedTs, value);
@@ -961,7 +961,7 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
             while (iteratedDate.isBefore(nowDate)) {
                 long iteratedTs = DateTimeUtils.toTs(iteratedDate);
                 long argument = iteratedDate.getHour() - 12;
-                long noise = RandomUtils.getRandomNumber(-noiseAmplitude, noiseAmplitude) * noiseWidth;
+                long noise = (long) (RandomUtils.getRandomNumber(-noiseAmplitude, noiseAmplitude) * noiseWidth);
                 long value = minValue + noise + Math.round(amplitude * Math.sin(phase + koeff * argument));
 
                 result.add(iteratedTs, value);
@@ -1084,7 +1084,7 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
             int day = iteratedDate.getDayOfYear();
 
             long value;
-            long noise = RandomUtils.getRandomNumber(-shiftedNoiseAmplitude, shiftedNoiseAmplitude) * noiseWidth;
+            long noise = (long) (RandomUtils.getRandomNumber(-shiftedNoiseAmplitude, shiftedNoiseAmplitude) * noiseWidth);
             if (day <= dayColdTimeEnd || day > dayColdTimeStart) {
                 // Cold Time
                 value = valueColdTime;
