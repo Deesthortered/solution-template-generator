@@ -938,6 +938,9 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
 
                 Telemetry<Integer> telemetrySoilTemperature = createTelemetrySoilTemperature(configuration, insideTemperatureTelemetry, sectionIrrigations, skipTelemetry);
 
+                Set<Long> acidification = new HashSet<>();
+                Telemetry<Double> telemetrySoilAcidity = createTelemetrySoilAcidity(configuration, sectionIrrigations, acidification, skipTelemetry);
+
                 Telemetry<Double> nitrogenLevelTelemetry = createTelemetrySoilNitrogenLevel(configuration, skipTelemetry);
                 Telemetry<Double> phosphorusLevelTelemetry = createTelemetrySoilPhosphorusLevel(configuration, skipTelemetry);
                 Telemetry<Double> potassiumLevelTelemetry = createTelemetrySoilPotassiumLevel(configuration, skipTelemetry);
@@ -951,7 +954,6 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
                         .potassium(potassiumLevelTelemetry)
                         .build();
 
-
                 SoilWarmMoistureSensor soilWarmMoistureSensor = SoilWarmMoistureSensor.builder()
                         .systemName("Soil Warm-Moisture Sensor: " + configuration.getName() + ", " + String.format("%s-%s", height, width))
                         .systemLabel("")
@@ -962,9 +964,8 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
                 SoilAciditySensor soilAciditySensor = SoilAciditySensor.builder()
                         .systemName("Soil Acidity: " + configuration.getName() + ", " + String.format("%s-%s", height, width))
                         .systemLabel("")
-                        .acidity(new Telemetry<>("acidity", MySortedSet.of(new Telemetry.Point<>(Timestamp.of(0), 0))))
+                        .acidity(telemetrySoilAcidity)
                         .build();
-
 
                 HarvestReporter harvestReporter = HarvestReporter.builder()
                         .systemName("Harvester: " + configuration.getName() + ", " + String.format("%s-%s", height, width))
@@ -972,7 +973,6 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
                         .cropWeight(new Telemetry<>("cropWeight", MySortedSet.of(new Telemetry.Point<>(Timestamp.of(0), 0))))
                         .workerInCharge(new Telemetry<>("workerInCharge", MySortedSet.of(new Telemetry.Point<>(Timestamp.of(0), "1"))))
                         .build();
-
 
                 Section section = Section.builder()
                         .systemName(sectionName)
@@ -1916,6 +1916,48 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
             currentLevel -= (irrigation) ? decreaseIrrigationLevel : 0;
 
             result.add(new Telemetry.Point<>(Timestamp.of(iteratedTs), (int) currentLevel));
+            iteratedDate = iteratedDate.plus(1, ChronoUnit.HOURS);
+        }
+
+        return result;
+    }
+
+
+    private Telemetry<Double> createTelemetrySoilAcidity(GreenhouseConfiguration configuration, Set<Long> sectionIrrigations, Set<Long> acidification, boolean skipTelemetry) {
+        if (skipTelemetry) {
+            return new Telemetry<>("skip");
+        }
+        Telemetry<Double> result = new Telemetry<>("acidity");
+
+        PlantConfiguration plantConfiguration = configuration.getPlantConfiguration();
+        int period = plantConfiguration.getMaxRipeningCycleDays() * 24;
+        double minLevel = plantConfiguration.getMinPh();
+        double maxLevel = plantConfiguration.getMaxPh();
+        double startLevel = RandomUtils.getRandomNumber(minLevel, maxLevel);
+
+        double increaseLevel = (maxLevel - minLevel) / period;
+        double irrigationIncreaseLevel = (maxLevel - minLevel) / period * 24 * 5;
+        double acidificationDecreaseLevel = (maxLevel - minLevel);
+
+        ZonedDateTime startDate = DateTimeUtils.fromTs(configuration.getStartTs()).truncatedTo(ChronoUnit.HOURS);
+        ZonedDateTime endDate = DateTimeUtils.fromTs(configuration.getEndTs()).truncatedTo(ChronoUnit.HOURS);
+        ZonedDateTime iteratedDate = startDate;
+        double currentLevel = startLevel;
+        while (iteratedDate.isBefore(endDate)) {
+            long iteratedTs = DateTimeUtils.toTs(iteratedDate);
+            boolean irrigation = sectionIrrigations.contains(iteratedTs);
+
+            currentLevel -= increaseLevel;
+            currentLevel -= (irrigation) ? irrigationIncreaseLevel : 0;
+
+            if (currentLevel <= minLevel) {
+                acidification.add(iteratedTs);
+                currentLevel += acidificationDecreaseLevel;
+            }
+
+            currentLevel += RandomUtils.getRandomNumber(-0.03, 0.03);
+
+            result.add(new Telemetry.Point<>(Timestamp.of(iteratedTs), currentLevel));
             iteratedDate = iteratedDate.plus(1, ChronoUnit.HOURS);
         }
 

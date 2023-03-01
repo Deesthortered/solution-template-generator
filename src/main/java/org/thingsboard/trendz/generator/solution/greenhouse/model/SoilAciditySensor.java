@@ -23,5 +23,5 @@ public class SoilAciditySensor extends ModelEntity {
     private String systemName;
     private String systemLabel;
 
-    private Telemetry<Integer> acidity;
+    private Telemetry<Double> acidity;
 }
