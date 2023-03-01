@@ -933,7 +933,7 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
                 String sectionName = String.format(configuration.getName() + ", section %s-%s", height, width);
                 Set<Long> sectionIrrigations = irrigations.computeIfAbsent(sectionName, key -> new HashSet<>());
 
-                Telemetry<Integer> temporalTelemetrySoilWaterConsumption = createTemporalTelemetrySoilWaterConsumption(configuration, skipTelemetry);
+                Telemetry<Double> temporalTelemetrySoilWaterConsumption = createTemporalTelemetrySoilWaterConsumption(configuration, skipTelemetry);
                 Telemetry<Integer> soilMoisture = createTelemetrySoilMoisture(configuration, temporalTelemetrySoilWaterConsumption, sectionIrrigations, skipTelemetry);
 
                 Telemetry<Double> nitrogenLevelTelemetry = createTelemetrySoilNitrogenLevel(configuration, skipTelemetry);
@@ -1811,7 +1811,7 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
     }
 
 
-    private Telemetry<Integer> createTelemetrySoilMoisture(GreenhouseConfiguration configuration, Telemetry<Integer> temporalTelemetrySoilWaterConsumption, Set<Long> sectionIrrigations, boolean skipTelemetry) {
+    private Telemetry<Integer> createTelemetrySoilMoisture(GreenhouseConfiguration configuration, Telemetry<Double> temporalTelemetrySoilWaterConsumption, Set<Long> sectionIrrigations, boolean skipTelemetry) {
         if (skipTelemetry) {
             return new Telemetry<>("skip");
         }
@@ -1822,7 +1822,7 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
         double maxLevel = plantConfiguration.getMaxSoilMoisture();
         double startLevel = RandomUtils.getRandomNumber(minLevel, maxLevel);
 
-        Map<Timestamp, Telemetry.Point<Integer>> waterConsumptionMap = temporalTelemetrySoilWaterConsumption.getPoints()
+        Map<Timestamp, Telemetry.Point<Double>> waterConsumptionMap = temporalTelemetrySoilWaterConsumption.getPoints()
                 .stream()
                 .collect(Collectors.toMap(Telemetry.Point::getTs, Functions.identity()));
 
@@ -1832,12 +1832,12 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
         double currentLevel = startLevel;
         while (iteratedDate.isBefore(endDate)) {
             long iteratedTs = DateTimeUtils.toTs(iteratedDate);
-            int waterConsumption = waterConsumptionMap.get(Timestamp.of(iteratedTs)).getValue();
+            double waterConsumption = waterConsumptionMap.get(Timestamp.of(iteratedTs)).getValue();
 
             currentLevel -= waterConsumption;
             if (currentLevel <= minLevel) {
-               currentLevel += (maxLevel - minLevel);
-               sectionIrrigations.add(iteratedTs);
+                currentLevel += (maxLevel - minLevel);
+                sectionIrrigations.add(iteratedTs);
             }
 
             currentLevel = Math.min(currentLevel, 100);
@@ -1850,18 +1850,16 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
         return result;
     }
 
-    private Telemetry<Integer> createTemporalTelemetrySoilWaterConsumption(GreenhouseConfiguration configuration, boolean skipTelemetry) {
+    private Telemetry<Double> createTemporalTelemetrySoilWaterConsumption(GreenhouseConfiguration configuration, boolean skipTelemetry) {
         if (skipTelemetry) {
             return new Telemetry<>("skip");
         }
-        Telemetry<Integer> result = new Telemetry<>("temporal__soil_water_consumption");
+        Telemetry<Double> result = new Telemetry<>("temporal__soil_water_consumption");
 
         PlantConfiguration plantConfiguration = configuration.getPlantConfiguration();
         double minLevel = plantConfiguration.getMinSoilMoisture();
         double maxLevel = plantConfiguration.getMaxSoilMoisture();
         long period = 24L * (plantConfiguration.getMinRipeningCycleDays() + plantConfiguration.getMaxRipeningCycleDays()) / 2;
-
-        double coeff = -1.0 * Math.pow(maxLevel - minLevel, 2) + (period / 5.0);
 
         ZonedDateTime startDate = DateTimeUtils.fromTs(configuration.getStartTs()).truncatedTo(ChronoUnit.HOURS);
         ZonedDateTime endDate = DateTimeUtils.fromTs(configuration.getEndTs()).truncatedTo(ChronoUnit.HOURS);
@@ -1870,9 +1868,13 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
             long iteratedTs = DateTimeUtils.toTs(iteratedDate);
             long hoursBetween = ChronoUnit.HOURS.between(startDate, iteratedDate);
             long hourCycle = (hoursBetween % period) + 1;
-            long consumption = (long) (Math.sqrt(hourCycle - coeff) + minLevel);
 
-            result.add(new Telemetry.Point<>(Timestamp.of(iteratedTs), (int) consumption));
+            long step = hourCycle / (period / 3) + 1;
+
+            double consumption = Math.pow(0.8, step) * (minLevel + maxLevel) / period;
+            consumption += RandomUtils.getRandomNumber(0, 1);
+
+            result.add(new Telemetry.Point<>(Timestamp.of(iteratedTs), consumption));
             iteratedDate = iteratedDate.plus(1, ChronoUnit.HOURS);
         }
 
