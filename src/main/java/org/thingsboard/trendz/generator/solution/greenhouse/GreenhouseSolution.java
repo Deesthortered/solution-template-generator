@@ -933,7 +933,7 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
                 String sectionName = String.format(configuration.getName() + ", section %s-%s", height, width);
                 Set<Long> sectionIrrigations = irrigations.computeIfAbsent(sectionName, key -> new HashSet<>());
 
-                Telemetry<Integer> temporalTelemetrySoilWaterConsumption = createTemporalTelemetrySoilWaterConsumption(configuration);
+                Telemetry<Integer> temporalTelemetrySoilWaterConsumption = createTemporalTelemetrySoilWaterConsumption(configuration, skipTelemetry);
                 Telemetry<Integer> soilMoisture = createTelemetrySoilMoisture(configuration, temporalTelemetrySoilWaterConsumption, sectionIrrigations, skipTelemetry);
 
                 Telemetry<Double> nitrogenLevelTelemetry = createTelemetrySoilNitrogenLevel(configuration, skipTelemetry);
@@ -1815,7 +1815,7 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
         if (skipTelemetry) {
             return new Telemetry<>("skip");
         }
-        Telemetry<Integer> result = new Telemetry<>("consumptionWater");
+        Telemetry<Integer> result = new Telemetry<>("moisture");
 
         PlantConfiguration plantConfiguration = configuration.getPlantConfiguration();
         double minLevel = plantConfiguration.getMinSoilMoisture();
@@ -1850,7 +1850,10 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
         return result;
     }
 
-    private Telemetry<Integer> createTemporalTelemetrySoilWaterConsumption(GreenhouseConfiguration configuration) {
+    private Telemetry<Integer> createTemporalTelemetrySoilWaterConsumption(GreenhouseConfiguration configuration, boolean skipTelemetry) {
+        if (skipTelemetry) {
+            return new Telemetry<>("skip");
+        }
         Telemetry<Integer> result = new Telemetry<>("temporal__soil_water_consumption");
 
         PlantConfiguration plantConfiguration = configuration.getPlantConfiguration();
