@@ -972,7 +972,8 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
 
                 Telemetry<Double> telemetryCropWeight = new Telemetry<>("cropWeight");
                 Telemetry<String> telemetryWorkerInCharge = new Telemetry<>("workerInCharge");
-                createTelemetryHarvestReporter(telemetryCropWeight, telemetryWorkerInCharge, configuration, height, width, skipTelemetry);
+                createTelemetryHarvestReporter(telemetryCropWeight, telemetryWorkerInCharge, configuration, skipTelemetry);
+
 
                 SoilNpkSensor soilNpkSensor = SoilNpkSensor.builder()
                         .systemName("Soil NPK Sensor: " + configuration.getName() + ", " + String.format("%s-%s", height, width))
@@ -1018,6 +1019,13 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
             }
         }
 
+        Telemetry<Double> telemetryConsumptionEnergy = createTelemetryConsumptionEnergy(
+                insideLightTelemetry, aerations, heatings, coolings, humidifications, dehumidifications, irrigations, configuration, skipTelemetry
+        );
+        Telemetry<Double> telemetryConsumptionWater = createTelemetryConsumptionWater(
+                humidifications, irrigations, configuration, skipTelemetry
+        );
+
         OutsideAirWarmHumiditySensor outsideAirWarmHumiditySensor = OutsideAirWarmHumiditySensor.builder()
                 .systemName(configuration.getName() + ": Air Warm-Humidity Sensor (Outside)")
                 .systemLabel("")
@@ -1053,13 +1061,13 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
         EnergyMeter energyMeter = EnergyMeter.builder()
                 .systemName(configuration.getName() + ": Energy Meter")
                 .systemLabel("")
-                .consumptionEnergy(new Telemetry<>("consumptionEnergy", MySortedSet.of(new Telemetry.Point<>(Timestamp.of(0), 0))))
+                .consumptionEnergy(telemetryConsumptionEnergy)
                 .build();
 
         WaterMeter waterMeter = WaterMeter.builder()
                 .systemName(configuration.getName() + ": Water Meter")
                 .systemLabel("")
-                .consumptionWater(new Telemetry<>("consumptionWater", MySortedSet.of(new Telemetry.Point<>(Timestamp.of(0), 0))))
+                .consumptionWater(telemetryConsumptionWater)
                 .build();
 
         Plant plant = this.configurationToPlantMap.get(configuration.getPlantConfiguration());
@@ -1993,7 +2001,7 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
     }
 
 
-    private void createTelemetryHarvestReporter(Telemetry<Double> telemetryCropWeight, Telemetry<String> telemetryWorkerInCharge, GreenhouseConfiguration configuration, int height, int width, boolean skipTelemetry) {
+    private void createTelemetryHarvestReporter(Telemetry<Double> telemetryCropWeight, Telemetry<String> telemetryWorkerInCharge, GreenhouseConfiguration configuration, boolean skipTelemetry) {
         if (skipTelemetry) {
             return;
         }
@@ -2042,6 +2050,25 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
             }
             iteratedDate = iteratedDate.plus(1, ChronoUnit.DAYS);
         }
+    }
+
+
+    private Telemetry<Double> createTelemetryConsumptionEnergy(Telemetry<Integer> insideLightTelemetry, Set<Long> aerations, Set<Long> heatings, Set<Long> cooling, Set<Long> humidifications, Set<Long> dehumidifications, Map<String, Set<Long>> irrigations, GreenhouseConfiguration configuration, boolean skipTelemetry) {
+        if (skipTelemetry) {
+            return new Telemetry<>("skip");
+        }
+        Telemetry<Double> result = new Telemetry<>("consumptionEnergy");
+
+        return result;
+    }
+
+    private Telemetry<Double> createTelemetryConsumptionWater(Set<Long> humidifications, Map<String, Set<Long>> irrigations, GreenhouseConfiguration configuration, boolean skipTelemetry) {
+        if (skipTelemetry) {
+            return new Telemetry<>("skip");
+        }
+        Telemetry<Double> result = new Telemetry<>("consumptionWater");
+
+        return result;
     }
 
 
