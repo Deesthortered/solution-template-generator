@@ -692,6 +692,7 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
                 .growthPeriodsNitrogenConsumption(List.of(150.0, 230.0, 300.0))
                 .growthPeriodsPhosphorusConsumption(List.of(8.0, 12.0, 22.0))
                 .growthPeriodsPotassiumConsumption(List.of(80.0, 200.0, 350.0))
+                .averageCropWeight(15)
                 .build();
     }
 
@@ -728,6 +729,7 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
                 .growthPeriodsNitrogenConsumption(List.of(150.0, 200.0, 260.0))
                 .growthPeriodsPhosphorusConsumption(List.of(5.0, 15.0, 23.0))
                 .growthPeriodsPotassiumConsumption(List.of(90.0, 250.0, 340.0))
+                .averageCropWeight(8)
                 .build();
     }
 
@@ -764,6 +766,7 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
                 .growthPeriodsNitrogenConsumption(List.of(100.0, 220.0, 300.0, 360.0))
                 .growthPeriodsPhosphorusConsumption(List.of(3.0, 8.0, 20.0, 28.0))
                 .growthPeriodsPotassiumConsumption(List.of(80.0, 120.0, 250.0, 380.0))
+                .averageCropWeight(10)
                 .build();
     }
 
@@ -800,6 +803,7 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
                 .growthPeriodsNitrogenConsumption(List.of(75.0, 190.0, 309.0, 400.0))
                 .growthPeriodsPhosphorusConsumption(List.of(4.0, 10.0, 25.0, 33.0))
                 .growthPeriodsPotassiumConsumption(List.of(39.0, 59.0, 158.0, 360.0))
+                .averageCropWeight(5)
                 .build();
     }
 
@@ -818,10 +822,10 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
                 .sectionHeight(5)
                 .sectionWidth(7)
                 .sectionArea(3)
-                .workersInCharge(MySortedSet.of(
-                    WorkerInChargeName.IGOR_PETROVICH,
-                    WorkerInChargeName.PETRO_VYNNYCHENKO,
-                    WorkerInChargeName.KYRYLLO_BONDARENKO
+                .workersInCharge(List.of(
+                        WorkerInChargeName.IGOR_PETROVICH,
+                        WorkerInChargeName.PETRO_VYNNYCHENKO,
+                        WorkerInChargeName.KYRYLLO_BONDARENKO
                 ))
                 .build();
     }
@@ -840,7 +844,7 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
                 .sectionHeight(3)
                 .sectionWidth(5)
                 .sectionArea(3)
-                .workersInCharge(MySortedSet.of(
+                .workersInCharge(List.of(
                         WorkerInChargeName.DANIEL_KRUGGER,
                         WorkerInChargeName.MARK_ZELTER,
                         WorkerInChargeName.LUIS_WITT
@@ -862,7 +866,7 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
                 .sectionHeight(3)
                 .sectionWidth(4)
                 .sectionArea(5)
-                .workersInCharge(MySortedSet.of(
+                .workersInCharge(List.of(
                         WorkerInChargeName.ANJEY_MANISKII,
                         WorkerInChargeName.LECH_PAWLOWSKI,
                         WorkerInChargeName.BOGUSLAW_VISHNEVSKII
@@ -884,7 +888,7 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
                 .sectionHeight(2)
                 .sectionWidth(6)
                 .sectionArea(4)
-                .workersInCharge(MySortedSet.of(
+                .workersInCharge(List.of(
                         WorkerInChargeName.MIROSLAW_MORACHEVSKII,
                         WorkerInChargeName.ZIEMOWIT_YANKOVSKII,
                         WorkerInChargeName.WOJCIECH_DUNAEVSKII
@@ -1995,25 +1999,48 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
         }
 
         PlantConfiguration plantConfiguration = configuration.getPlantConfiguration();
-        int periodMin = plantConfiguration.getMinRipeningCycleDays() * 24;
-        int periodMax = plantConfiguration.getMaxRipeningCycleDays() * 24;
-        Set<WorkerInChargeName> workersInCharge = configuration.getWorkersInCharge();
+        int periodMin = plantConfiguration.getMinRipeningCycleDays();
+        int periodMax = plantConfiguration.getMaxRipeningCycleDays();
+        double averageCropWeight = plantConfiguration.getAverageCropWeight();
+        double cropWeightNoiseAmplitude = averageCropWeight / 5;
+        List<WorkerInChargeName> workersInCharge = configuration.getWorkersInCharge();
 
-        ZonedDateTime startDate = DateTimeUtils.fromTs(configuration.getStartTs()).truncatedTo(ChronoUnit.HOURS);
-        ZonedDateTime endDate = DateTimeUtils.fromTs(configuration.getEndTs()).truncatedTo(ChronoUnit.HOURS);
+        double currentLevel = 0;
+        boolean skip = true;
+
+        ZonedDateTime startDate = DateTimeUtils.fromTs(configuration.getStartTs()).truncatedTo(ChronoUnit.DAYS);
+        ZonedDateTime endDate = DateTimeUtils.fromTs(configuration.getEndTs()).truncatedTo(ChronoUnit.DAYS);
         ZonedDateTime iteratedDate = startDate;
         while (iteratedDate.isBefore(endDate)) {
             long iteratedTs = DateTimeUtils.toTs(iteratedDate);
-            long hoursBetween = ChronoUnit.HOURS.between(startDate, iteratedDate);
-            long hoursPeriod = hoursBetween % periodMax;
+            long daysBetween = ChronoUnit.DAYS.between(startDate, iteratedDate);
+            long daysPeriod = daysBetween % periodMax;
 
-            if (periodMin < hoursBetween) {
-                double value = 0;
+            if (periodMin < daysPeriod) {
+                if (skip) {
+                    skip = false;
+                    currentLevel = averageCropWeight;
+                    currentLevel += RandomUtils.getRandomNumber(-cropWeightNoiseAmplitude, cropWeightNoiseAmplitude);
+                }
+                int workerIndex = (int) RandomUtils.getRandomNumber(0, workersInCharge.size());
+                WorkerInChargeName worker = workersInCharge.get(workerIndex);
 
-//                telemetryCropWeight.add(new Telemetry.Point<>(Timestamp.of(iteratedTs), currentLevel));
-//                telemetryWorkerInCharge.add(new Telemetry.Point<>(Timestamp.of(iteratedTs), currentLevel));
+                double value = RandomUtils.getRandomNumber(0.5, 0.5 + currentLevel);
+                value = (double) Math.round(value * 100d) / 100d;
+
+                if (currentLevel < value) {
+                    value = currentLevel;
+                }
+                currentLevel -= value;
+
+                if (0 < value) {
+                    telemetryCropWeight.add(new Telemetry.Point<>(Timestamp.of(iteratedTs), value));
+                    telemetryWorkerInCharge.add(new Telemetry.Point<>(Timestamp.of(iteratedTs), worker.toString()));
+                }
+            } else {
+                skip = true;
             }
-            iteratedDate = iteratedDate.plus(1, ChronoUnit.HOURS);
+            iteratedDate = iteratedDate.plus(1, ChronoUnit.DAYS);
         }
     }
 

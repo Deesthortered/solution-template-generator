@@ -50,4 +50,6 @@ public class PlantConfiguration extends ConfigurationEntity {
     private List<Double> growthPeriodsNitrogenConsumption;
     private List<Double> growthPeriodsPhosphorusConsumption;
     private List<Double> growthPeriodsPotassiumConsumption;
+
+    private double averageCropWeight;
 }

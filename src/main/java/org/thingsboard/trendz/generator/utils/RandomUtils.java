@@ -18,20 +18,22 @@ public class RandomUtils {
 
     public static boolean getBooleanByProbability(double probability) {
         if (probability < 0 || 1 < probability) {
-            throw new IllegalArgumentException();
+            throw new IllegalArgumentException(
+                    String.format("Probablity must be in range [0, 1], given = %s", probability)
+            );
         }
         return random.nextDouble() < probability;
     }
 
     public static double getRandomNumber(double from, double to) {
         if (to < from) {
-            throw new IllegalArgumentException();
+            throw new IllegalArgumentException(String.format("'From' value is bigger than 'to' (%s, %s).", from, to));
         }
         if (from == to) {
             return to;
         }
         double i = Math.abs(getRandom().nextDouble());
-        return from + (i % (to - from));
+        return from + (i * (to - from));
     }
 
     public static UUID getRandonUUID() {
