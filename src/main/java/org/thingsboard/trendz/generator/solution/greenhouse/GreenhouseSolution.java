@@ -43,6 +43,7 @@ import org.thingsboard.trendz.generator.solution.greenhouse.configuration.Greenh
 import org.thingsboard.trendz.generator.solution.greenhouse.configuration.PlantConfiguration;
 import org.thingsboard.trendz.generator.solution.greenhouse.configuration.StationCity;
 import org.thingsboard.trendz.generator.solution.greenhouse.configuration.WeatherData;
+import org.thingsboard.trendz.generator.solution.greenhouse.configuration.WorkerInChargeName;
 import org.thingsboard.trendz.generator.solution.greenhouse.model.*;
 import org.thingsboard.trendz.generator.utils.DateTimeUtils;
 import org.thingsboard.trendz.generator.utils.MySortedSet;
@@ -817,6 +818,11 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
                 .sectionHeight(5)
                 .sectionWidth(7)
                 .sectionArea(3)
+                .workersInCharge(MySortedSet.of(
+                    WorkerInChargeName.IGOR_PETROVICH,
+                    WorkerInChargeName.PETRO_VYNNYCHENKO,
+                    WorkerInChargeName.KYRYLLO_BONDARENKO
+                ))
                 .build();
     }
 
@@ -834,6 +840,11 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
                 .sectionHeight(3)
                 .sectionWidth(5)
                 .sectionArea(3)
+                .workersInCharge(MySortedSet.of(
+                        WorkerInChargeName.DANIEL_KRUGGER,
+                        WorkerInChargeName.MARK_ZELTER,
+                        WorkerInChargeName.LUIS_WITT
+                ))
                 .build();
     }
 
@@ -851,6 +862,11 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
                 .sectionHeight(3)
                 .sectionWidth(4)
                 .sectionArea(5)
+                .workersInCharge(MySortedSet.of(
+                        WorkerInChargeName.ANJEY_MANISKII,
+                        WorkerInChargeName.LECH_PAWLOWSKI,
+                        WorkerInChargeName.BOGUSLAW_VISHNEVSKII
+                ))
                 .build();
     }
 
@@ -868,6 +884,11 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
                 .sectionHeight(2)
                 .sectionWidth(6)
                 .sectionArea(4)
+                .workersInCharge(MySortedSet.of(
+                        WorkerInChargeName.MIROSLAW_MORACHEVSKII,
+                        WorkerInChargeName.ZIEMOWIT_YANKOVSKII,
+                        WorkerInChargeName.WOJCIECH_DUNAEVSKII
+                ))
                 .build();
     }
 
@@ -945,6 +966,9 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
                 Telemetry<Double> phosphorusLevelTelemetry = createTelemetrySoilPhosphorusLevel(configuration, skipTelemetry);
                 Telemetry<Double> potassiumLevelTelemetry = createTelemetrySoilPotassiumLevel(configuration, skipTelemetry);
 
+                Telemetry<Double> telemetryCropWeight = new Telemetry<>("cropWeight");
+                Telemetry<String> telemetryWorkerInCharge = new Telemetry<>("workerInCharge");
+                createTelemetryHarvestReporter(telemetryCropWeight, telemetryWorkerInCharge, configuration, height, width, skipTelemetry);
 
                 SoilNpkSensor soilNpkSensor = SoilNpkSensor.builder()
                         .systemName("Soil NPK Sensor: " + configuration.getName() + ", " + String.format("%s-%s", height, width))
@@ -970,8 +994,8 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
                 HarvestReporter harvestReporter = HarvestReporter.builder()
                         .systemName("Harvester: " + configuration.getName() + ", " + String.format("%s-%s", height, width))
                         .systemLabel("")
-                        .cropWeight(new Telemetry<>("cropWeight", MySortedSet.of(new Telemetry.Point<>(Timestamp.of(0), 0))))
-                        .workerInCharge(new Telemetry<>("workerInCharge", MySortedSet.of(new Telemetry.Point<>(Timestamp.of(0), "1"))))
+                        .cropWeight(telemetryCropWeight)
+                        .workerInCharge(telemetryWorkerInCharge)
                         .build();
 
                 Section section = Section.builder()
@@ -1962,6 +1986,35 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
         }
 
         return result;
+    }
+
+
+    private void createTelemetryHarvestReporter(Telemetry<Double> telemetryCropWeight, Telemetry<String> telemetryWorkerInCharge, GreenhouseConfiguration configuration, int height, int width, boolean skipTelemetry) {
+        if (skipTelemetry) {
+            return;
+        }
+
+        PlantConfiguration plantConfiguration = configuration.getPlantConfiguration();
+        int periodMin = plantConfiguration.getMinRipeningCycleDays() * 24;
+        int periodMax = plantConfiguration.getMaxRipeningCycleDays() * 24;
+        Set<WorkerInChargeName> workersInCharge = configuration.getWorkersInCharge();
+
+        ZonedDateTime startDate = DateTimeUtils.fromTs(configuration.getStartTs()).truncatedTo(ChronoUnit.HOURS);
+        ZonedDateTime endDate = DateTimeUtils.fromTs(configuration.getEndTs()).truncatedTo(ChronoUnit.HOURS);
+        ZonedDateTime iteratedDate = startDate;
+        while (iteratedDate.isBefore(endDate)) {
+            long iteratedTs = DateTimeUtils.toTs(iteratedDate);
+            long hoursBetween = ChronoUnit.HOURS.between(startDate, iteratedDate);
+            long hoursPeriod = hoursBetween % periodMax;
+
+            if (periodMin < hoursBetween) {
+                double value = 0;
+
+//                telemetryCropWeight.add(new Telemetry.Point<>(Timestamp.of(iteratedTs), currentLevel));
+//                telemetryWorkerInCharge.add(new Telemetry.Point<>(Timestamp.of(iteratedTs), currentLevel));
+            }
+            iteratedDate = iteratedDate.plus(1, ChronoUnit.HOURS);
+        }
     }
 
 

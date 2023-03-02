@@ -24,5 +24,5 @@ public class HarvestReporter extends ModelEntity {
     private String systemLabel;
 
     private Telemetry<String> workerInCharge;
-    private Telemetry<Integer> cropWeight;
+    private Telemetry<Double> cropWeight;
 }

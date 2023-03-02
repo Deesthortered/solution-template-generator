@@ -7,6 +7,8 @@ import lombok.NoArgsConstructor;
 import lombok.ToString;
 import org.thingsboard.trendz.generator.model.ConfigurationEntity;
 
+import java.util.Set;
+
 @Getter
 @ToString
 @Builder
@@ -28,4 +30,6 @@ public class GreenhouseConfiguration extends ConfigurationEntity {
     private int sectionHeight;
     private int sectionWidth;
     private int sectionArea;
+
+    private Set<WorkerInChargeName> workersInCharge;
 }
