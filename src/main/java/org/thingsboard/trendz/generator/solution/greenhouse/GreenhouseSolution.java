@@ -57,6 +57,7 @@ import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -2053,11 +2054,39 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
     }
 
 
-    private Telemetry<Double> createTelemetryConsumptionEnergy(Telemetry<Integer> insideLightTelemetry, Set<Long> aerations, Set<Long> heatings, Set<Long> cooling, Set<Long> humidifications, Set<Long> dehumidifications, Map<String, Set<Long>> irrigations, GreenhouseConfiguration configuration, boolean skipTelemetry) {
+    private Telemetry<Double> createTelemetryConsumptionEnergy(Telemetry<Integer> insideLightTelemetry, Set<Long> aerations, Set<Long> heatings, Set<Long> coolings, Set<Long> humidifications, Set<Long> dehumidifications, Map<String, Set<Long>> irrigations, GreenhouseConfiguration configuration, boolean skipTelemetry) {
         if (skipTelemetry) {
             return new Telemetry<>("skip");
         }
         Telemetry<Double> result = new Telemetry<>("consumptionEnergy");
+
+        Map<Timestamp, Telemetry.Point<Integer>> insideLightTelemetryMap = insideLightTelemetry.getPoints()
+                .stream()
+                .collect(Collectors.toMap(Telemetry.Point::getTs, Functions.identity()));
+
+        Map<Long, Long> irrigationCountMap = irrigations.values()
+                .stream()
+                .flatMap(Collection::stream)
+                .collect(Collectors.groupingBy(Function.identity(), Collectors.counting()));
+
+        ZonedDateTime startDate = DateTimeUtils.fromTs(configuration.getStartTs()).truncatedTo(ChronoUnit.HOURS);
+        ZonedDateTime endDate = DateTimeUtils.fromTs(configuration.getEndTs()).truncatedTo(ChronoUnit.HOURS);
+        ZonedDateTime iteratedDate = startDate;
+
+        while (iteratedDate.isBefore(endDate)) {
+            long iteratedTs = DateTimeUtils.toTs(iteratedDate);
+
+            int light = insideLightTelemetryMap.get(Timestamp.of(iteratedTs)).getValue();
+            boolean aeration = aerations.contains(iteratedTs);
+            boolean heating = heatings.contains(iteratedTs);
+            boolean cooling = coolings.contains(iteratedTs);
+            boolean humidification = humidifications.contains(iteratedTs);
+            boolean dehumidification = dehumidifications.contains(iteratedTs);
+            long irrigationCount = irrigationCountMap.get(iteratedTs);
+
+            result.add(new Telemetry.Point<>(Timestamp.of(iteratedTs), 0d));
+            iteratedDate = iteratedDate.plus(1, ChronoUnit.HOURS);
+        }
 
         return result;
     }
@@ -2067,6 +2096,25 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
             return new Telemetry<>("skip");
         }
         Telemetry<Double> result = new Telemetry<>("consumptionWater");
+
+        Map<Long, Long> irrigationCountMap = irrigations.values()
+                .stream()
+                .flatMap(Collection::stream)
+                .collect(Collectors.groupingBy(Function.identity(), Collectors.counting()));
+
+        ZonedDateTime startDate = DateTimeUtils.fromTs(configuration.getStartTs()).truncatedTo(ChronoUnit.HOURS);
+        ZonedDateTime endDate = DateTimeUtils.fromTs(configuration.getEndTs()).truncatedTo(ChronoUnit.HOURS);
+        ZonedDateTime iteratedDate = startDate;
+        while (iteratedDate.isBefore(endDate)) {
+            long iteratedTs = DateTimeUtils.toTs(iteratedDate);
+
+            boolean humidification = humidifications.contains(iteratedTs);
+            long irrigationCount = irrigationCountMap.get(iteratedTs);
+
+
+            result.add(new Telemetry.Point<>(Timestamp.of(iteratedTs), 0d));
+            iteratedDate = iteratedDate.plus(1, ChronoUnit.HOURS);
+        }
 
         return result;
     }
