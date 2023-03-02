@@ -2082,9 +2082,21 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
             boolean cooling = coolings.contains(iteratedTs);
             boolean humidification = humidifications.contains(iteratedTs);
             boolean dehumidification = dehumidifications.contains(iteratedTs);
-            long irrigationCount = irrigationCountMap.get(iteratedTs);
+            long irrigationCount = irrigationCountMap.computeIfAbsent(iteratedTs, key -> 0L);
 
-            result.add(new Telemetry.Point<>(Timestamp.of(iteratedTs), 0d));
+            double value = 0;
+            value += light * 0.05;
+            value += (aeration) ? 20 : 0;
+            value += (heating) ? 200 : 0;
+            value += (cooling) ? 100 : 0;
+            value += (humidification) ? 20 : 0;
+            value += (dehumidification) ? 50 : 0;
+            value += irrigationCount * 100;
+
+            value += RandomUtils.getRandomNumber(-2, 2);
+            value = Math.max(0, value);
+
+            result.add(new Telemetry.Point<>(Timestamp.of(iteratedTs), value));
             iteratedDate = iteratedDate.plus(1, ChronoUnit.HOURS);
         }
 
@@ -2109,10 +2121,16 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
             long iteratedTs = DateTimeUtils.toTs(iteratedDate);
 
             boolean humidification = humidifications.contains(iteratedTs);
-            long irrigationCount = irrigationCountMap.get(iteratedTs);
+            long irrigationCount = irrigationCountMap.computeIfAbsent(iteratedTs, key -> 0L);
 
+            double value = 0;
+            value += (humidification) ? 0.5 : 0;
+            value += irrigationCount * 2.5;
 
-            result.add(new Telemetry.Point<>(Timestamp.of(iteratedTs), 0d));
+            value += RandomUtils.getRandomNumber(-0.5, 0.5);
+            value = Math.max(0, value);
+
+            result.add(new Telemetry.Point<>(Timestamp.of(iteratedTs), value));
             iteratedDate = iteratedDate.plus(1, ChronoUnit.HOURS);
         }
 
