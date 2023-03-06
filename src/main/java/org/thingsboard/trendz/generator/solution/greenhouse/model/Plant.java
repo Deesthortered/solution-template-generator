@@ -49,4 +49,5 @@ public class Plant extends ModelEntity {
     private double maxPhosphorusLevel;
     private double minPotassiumLevel;
     private double maxPotassiumLevel;
+    private double averageCropWeight;
 }

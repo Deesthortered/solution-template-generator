@@ -928,6 +928,7 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
                 .maxPhosphorusLevel(configuration.getMaxPhosphorusLevel())
                 .minPotassiumLevel(configuration.getMinPotassiumLevel())
                 .maxPotassiumLevel(configuration.getMaxPotassiumLevel())
+                .averageCropWeight(configuration.getAverageCropWeight())
                 .build();
     }
 
@@ -2178,7 +2179,8 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
                 new Attribute<>("minPhosphorusLevel", plant.getMinPhosphorusLevel()),
                 new Attribute<>("maxPhosphorusLevel", plant.getMaxPhosphorusLevel()),
                 new Attribute<>("minPotassiumLevel", plant.getMinPotassiumLevel()),
-                new Attribute<>("maxPotassiumLevel", plant.getMaxPotassiumLevel())
+                new Attribute<>("maxPotassiumLevel", plant.getMaxPotassiumLevel()),
+                new Attribute<>("averageCropWeight", plant.getAverageCropWeight())
         );
         tbRestClient.setEntityAttributes(asset.getUuidId(), EntityType.ASSET, Attribute.Scope.SERVER_SCOPE, attributes);
 
