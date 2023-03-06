@@ -17,7 +17,7 @@ public class Plant extends ModelEntity {
     // special asset for saving plant properties
     @Override
     public String entityType() {
-        return "GR) plant";
+        return "GR plant";
     }
 
     private String systemName;

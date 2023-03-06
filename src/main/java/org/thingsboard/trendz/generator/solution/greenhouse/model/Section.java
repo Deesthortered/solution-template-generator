@@ -16,7 +16,7 @@ public class Section extends ModelEntity {
 
     @Override
     public String entityType() {
-        return "GR) section";
+        return "GR section";
     }
 
     private String systemName;

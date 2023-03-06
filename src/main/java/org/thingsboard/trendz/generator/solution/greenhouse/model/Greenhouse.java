@@ -18,7 +18,7 @@ public class Greenhouse extends ModelEntity {
 
     @Override
     public String entityType() {
-        return "GR) greenhouse";
+        return "GR greenhouse";
     }
 
     private String systemName;

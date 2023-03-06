@@ -17,7 +17,7 @@ public class InsideCO2Sensor extends ModelEntity {
 
     @Override
     public String entityType() {
-        return "GR) inside co2 sensor";
+        return "GR inside co2 sensor";
     }
 
     private String systemName;

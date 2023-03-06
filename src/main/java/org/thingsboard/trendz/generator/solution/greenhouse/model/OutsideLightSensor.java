@@ -17,7 +17,7 @@ public class OutsideLightSensor extends ModelEntity {
 
     @Override
     public String entityType() {
-        return "GR) outside light sensor";
+        return "GR outside light sensor";
     }
 
     private String systemName;

@@ -17,7 +17,7 @@ public class HarvestReporter extends ModelEntity {
 
     @Override
     public String entityType() {
-        return "GR) harvest reporter";
+        return "GR harvest reporter";
     }
 
     private String systemName;

@@ -17,7 +17,7 @@ public class SoilNpkSensor extends ModelEntity {
 
     @Override
     public String entityType() {
-        return "GR) soil npk sensor";
+        return "GR soil npk sensor";
     }
 
     private String systemName;

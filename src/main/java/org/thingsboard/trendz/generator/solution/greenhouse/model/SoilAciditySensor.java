@@ -17,7 +17,7 @@ public class SoilAciditySensor extends ModelEntity {
 
     @Override
     public String entityType() {
-        return "GR) soil acidity sensor";
+        return "GR soil acidity sensor";
     }
 
     private String systemName;

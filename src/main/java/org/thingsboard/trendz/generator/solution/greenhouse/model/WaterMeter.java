@@ -17,7 +17,7 @@ public class WaterMeter extends ModelEntity {
 
     @Override
     public String entityType() {
-        return "GR) water meter";
+        return "GR water meter";
     }
 
     private String systemName;

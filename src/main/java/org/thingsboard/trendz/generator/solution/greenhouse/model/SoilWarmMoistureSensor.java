@@ -17,7 +17,7 @@ public class SoilWarmMoistureSensor extends ModelEntity {
 
     @Override
     public String entityType() {
-        return "GR) soil warm moisture sensor";
+        return "GR soil warm moisture sensor";
     }
 
     private String systemName;

@@ -17,7 +17,7 @@ public class OutsideAirWarmHumiditySensor extends ModelEntity {
 
     @Override
     public String entityType() {
-        return "GR) outside air warm humidity sensor";
+        return "GR outside air warm humidity sensor";
     }
 
     private String systemName;
