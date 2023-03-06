@@ -2227,7 +2227,8 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
 
         Set<Attribute<?>> attributes = Set.of(
                 new Attribute<>("position_height", section.getPositionHeight()),
-                new Attribute<>("position_width", section.getPositionWidth())
+                new Attribute<>("position_width", section.getPositionWidth()),
+                new Attribute<>("area", section.getArea())
         );
         tbRestClient.setEntityAttributes(asset.getUuidId(), EntityType.ASSET, Attribute.Scope.SERVER_SCOPE, attributes);
 
