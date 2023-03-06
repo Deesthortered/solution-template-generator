@@ -1076,6 +1076,9 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
                 .systemName(configuration.getName())
                 .systemLabel("")
                 .plant(plant)
+                .address(configuration.getAddress())
+                .latitude(configuration.getLatitude())
+                .longitude(configuration.getLongitude())
                 .sections(sections)
                 .insideAirWarmHumiditySensor(insideAirWarmHumiditySensor)
                 .insideLightSensor(insideLightSensor)
@@ -2195,6 +2198,13 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
             asset = tbRestClient.createAsset(name, entityType);
             tbRestClient.assignAssetToCustomer(ownerId, asset.getUuidId());
         }
+
+        Set<Attribute<?>> attributes = Set.of(
+                new Attribute<>("address", greenhouse.getAddress()),
+                new Attribute<>("latitude", greenhouse.getLatitude()),
+                new Attribute<>("longitude", greenhouse.getLongitude())
+        );
+        tbRestClient.setEntityAttributes(asset.getUuidId(), EntityType.ASSET, Attribute.Scope.SERVER_SCOPE, attributes);
 
         this.greenhouseToIdMap.put(greenhouse, asset.getUuidId());
         return asset;
