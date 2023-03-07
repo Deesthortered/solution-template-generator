@@ -104,7 +104,7 @@ var makeNecessaryData = function () {
 
     return {
         'ts' : ts,
-        'light' : light
+        'light_out' : light
     };
 };
 
