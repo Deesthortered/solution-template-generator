@@ -254,6 +254,17 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
                         getNodePositionY(greenhouseCounter)
                 );
 
+                RuleNode greenhousePlantAttributesNode = this.ruleChainBuildingService.createOriginatorAttributesNode(
+                        "",
+                        Collections.emptyList(),
+                        Collections.emptyList(),
+                        List.of("dayMinTemperature","dayMaxTemperature","nightMinTemperature","nightMaxTemperature","minAirHumidity","maxAirHumidity","minCo2Concentration","maxCo2Concentration","dayMinLight","dayMaxLight","nightMinLight","nightMaxLight","minPh","maxPh","minRipeningPeriodDay","maxRipeningPeriodDay","minNitrogenLevel","maxNitrogenLevel","minPhosphorusLevel","maxPhosphorusLevel","minPotassiumLevel","maxPotassiumLevel","averageCropWeight"),
+                        Collections.emptyList(),
+                        false,
+                        getNodePositionX(greenhouseCounter),
+                        getNodePositionY(greenhouseCounter)
+                );
+
                 RuleNode greenhouseWeatherApiCallNode = this.ruleChainBuildingService.createRestApiCallNode(
                         "",
                         WEATHER_API_URL,

@@ -58,7 +58,7 @@ public class RuleChainBuildingService {
         return createRuleNode(name, TbMsgTimeseriesNode.class, saveConfiguration, (int) gridX, (int) gridY);
     }
 
-    public RuleNode createGeneratorNode(String name, UUID entityId, String code, double gridX, double gridY) throws IOException {
+    public RuleNode createGeneratorNode(String name, UUID entityId, String code, double gridX, double gridY) {
         TbMsgGeneratorNodeConfiguration generatorConfiguration = new TbMsgGeneratorNodeConfiguration();
         generatorConfiguration.setOriginatorType(EntityType.DEVICE);
         generatorConfiguration.setOriginatorId(entityId.toString());
@@ -69,10 +69,13 @@ public class RuleChainBuildingService {
         return createRuleNode(name, TbMsgGeneratorNode.class, generatorConfiguration, (int) gridX, (int) gridY);
     }
 
-    public RuleNode createLatestTelemetryLoadNode(String name, String telemetryName, double gridX, double gridY) {
+    public RuleNode createOriginatorAttributesNode(String name, List<String> clientAttributes, List<String> sharedAttributes, List<String> serverAttributes, List<String> telemetries, boolean withTs, double gridX, double gridY) {
         TbGetAttributesNodeConfiguration configuration = new TbGetAttributesNodeConfiguration();
-        configuration.setLatestTsKeyNames(List.of(telemetryName));
-        configuration.setGetLatestValueWithTs(true);
+        configuration.setClientAttributeNames(clientAttributes);
+        configuration.setSharedAttributeNames(sharedAttributes);
+        configuration.setServerAttributeNames(serverAttributes);
+        configuration.setLatestTsKeyNames(telemetries);
+        configuration.setGetLatestValueWithTs(withTs);
 
         return createRuleNode(name, TbGetAttributesNode.class, configuration, (int) gridX, (int) gridY);
     }

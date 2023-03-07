@@ -250,9 +250,13 @@ public class WaterMeteringSolution implements SolutionTemplateGenerator {
                                 getPositionX(consumerCounter, 1),
                                 getPositionY(consumerCounter, 1)
                         );
-                        RuleNode latestTelemetryLoadNode1 = ruleChainBuildingService.createLatestTelemetryLoadNode(
+                        RuleNode latestTelemetryLoadNode1 = ruleChainBuildingService.createOriginatorAttributesNode(
                                 region.getSystemName() + ": latest telemetry node (" + consumer.getSystemName() + ")",
-                                "full_consumption",
+                                Collections.emptyList(),
+                                Collections.emptyList(),
+                                Collections.emptyList(),
+                                List.of("full_consumption"),
+                                true,
                                 getPositionX(consumerCounter, 2),
                                 getPositionY(consumerCounter, 2)
                         );

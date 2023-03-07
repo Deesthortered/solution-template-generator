@@ -50,6 +50,7 @@ import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -258,9 +259,13 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
                     connections.add(ruleChainBuildingService.createRuleConnection(index + 1, index));
 
 
-                    RuleNode energyMeterGetLatestConsumptionNode = ruleChainBuildingService.createLatestTelemetryLoadNode(
+                    RuleNode energyMeterGetLatestConsumptionNode = ruleChainBuildingService.createOriginatorAttributesNode(
                             energyMeter.getSystemName() + ": energyConsAbsolute (1/2)",
-                            "energyConsAbsolute",
+                            Collections.emptyList(),
+                            Collections.emptyList(),
+                            Collections.emptyList(),
+                            List.of("energyConsAbsolute"),
+                            true,
                             getNodePositionX(false),
                             getNodePositionY(index, 2)
                     );
@@ -300,9 +305,13 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
                     connections.add(ruleChainBuildingService.createRuleConnection(index + 5, index));
 
 
-                    RuleNode heatMeterGetLatestConsumptionNode = ruleChainBuildingService.createLatestTelemetryLoadNode(
+                    RuleNode heatMeterGetLatestConsumptionNode = ruleChainBuildingService.createOriginatorAttributesNode(
                             heatMeter.getSystemName() + ": heatConsAbsolute (1/2)",
-                            "heatConsAbsolute",
+                            Collections.emptyList(),
+                            Collections.emptyList(),
+                            Collections.emptyList(),
+                            List.of("heatConsAbsolute"),
+                            true,
                             getNodePositionX(true),
                             getNodePositionY(index, 2)
                     );
