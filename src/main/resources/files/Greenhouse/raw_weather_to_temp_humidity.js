@@ -8,8 +8,8 @@ var makeNecessaryData = function () {
 
     return {
         'ts' : ts,
-        'temperature' : temperature,
-        'humidity' : humidity
+        'temperature_out' : temperature,
+        'humidity_out' : humidity
     };
 };
 
