@@ -270,7 +270,7 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
                         String.format("%s: Get Plant Attributes", greenhouseName),
                         Collections.emptyList(),
                         Collections.emptyList(),
-                        List.of("dayMinTemperature","dayMaxTemperature","nightMinTemperature","nightMaxTemperature","minAirHumidity","maxAirHumidity","minCo2Concentration","maxCo2Concentration","dayMinLight","dayMaxLight","nightMinLight","nightMaxLight","minPh","maxPh","minRipeningPeriodDay","maxRipeningPeriodDay","minNitrogenLevel","maxNitrogenLevel","minPhosphorusLevel","maxPhosphorusLevel","minPotassiumLevel","maxPotassiumLevel","averageCropWeight"),
+                        List.of("dayMinTemperature", "dayMaxTemperature", "nightMinTemperature", "nightMaxTemperature", "minAirHumidity", "maxAirHumidity", "minCo2Concentration", "maxCo2Concentration", "dayMinLight", "dayMaxLight", "nightMinLight", "nightMaxLight", "minPh", "maxPh", "minRipeningPeriodDay", "maxRipeningPeriodDay", "minNitrogenLevel", "maxNitrogenLevel", "minPhosphorusLevel", "maxPhosphorusLevel", "minPotassiumLevel", "maxPotassiumLevel", "averageCropWeight"),
                         Collections.emptyList(),
                         false,
                         getNodePositionX(greenhouseCounter),
@@ -1060,8 +1060,14 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
             }
         }
 
-        Telemetry<Double> telemetryConsumptionEnergy = createTelemetryConsumptionEnergy(
-                insideLightTelemetry, aerations, heatings, coolings, humidifications, dehumidifications, irrigations, configuration, skipTelemetry
+        Telemetry<Double> energyConsumptionLight = new Telemetry<>("energyConsumptionLight");
+        Telemetry<Double> energyConsumptionHeating = new Telemetry<>("energyConsumptionHeating");
+        Telemetry<Double> energyConsumptionCooling = new Telemetry<>("energyConsumptionCooling");
+        Telemetry<Double> energyConsumptionAirControl = new Telemetry<>("energyConsumptionAirControl");
+        Telemetry<Double> energyConsumptionIrrigation = new Telemetry<>("energyConsumptionIrrigation");
+        createTelemetryConsumptionEnergy(
+                insideLightTelemetry, aerations, heatings, coolings, humidifications, dehumidifications, irrigations, configuration, skipTelemetry,
+                energyConsumptionLight, energyConsumptionHeating, energyConsumptionCooling, energyConsumptionAirControl, energyConsumptionIrrigation
         );
         Telemetry<Double> telemetryConsumptionWater = createTelemetryConsumptionWater(
                 humidifications, irrigations, configuration, skipTelemetry
@@ -1102,7 +1108,11 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
         EnergyMeter energyMeter = EnergyMeter.builder()
                 .systemName(configuration.getName() + ": Energy Meter")
                 .systemLabel("")
-                .consumptionEnergy(telemetryConsumptionEnergy)
+                .energyConsumptionLight(energyConsumptionLight)
+                .energyConsumptionHeating(energyConsumptionHeating)
+                .energyConsumptionCooling(energyConsumptionCooling)
+                .energyConsumptionAirControl(energyConsumptionAirControl)
+                .energyConsumptionIrrigation(energyConsumptionIrrigation)
                 .build();
 
         WaterMeter waterMeter = WaterMeter.builder()
@@ -2097,11 +2107,10 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
     }
 
 
-    private Telemetry<Double> createTelemetryConsumptionEnergy(Telemetry<Integer> insideLightTelemetry, Set<Long> aerations, Set<Long> heatings, Set<Long> coolings, Set<Long> humidifications, Set<Long> dehumidifications, Map<String, Set<Long>> irrigations, GreenhouseConfiguration configuration, boolean skipTelemetry) {
+    private void createTelemetryConsumptionEnergy(Telemetry<Integer> insideLightTelemetry, Set<Long> aerations, Set<Long> heatings, Set<Long> coolings, Set<Long> humidifications, Set<Long> dehumidifications, Map<String, Set<Long>> irrigations, GreenhouseConfiguration configuration, boolean skipTelemetry, Telemetry<Double> energyConsumptionLight, Telemetry<Double> energyConsumptionHeating, Telemetry<Double> energyConsumptionCooling, Telemetry<Double> energyConsumptionAirControl, Telemetry<Double> energyConsumptionIrrigation) {
         if (skipTelemetry) {
-            return new Telemetry<>("skip");
+            return;
         }
-        Telemetry<Double> result = new Telemetry<>("consumptionEnergy");
 
         Map<Timestamp, Telemetry.Point<Integer>> insideLightTelemetryMap = insideLightTelemetry.getPoints()
                 .stream()
@@ -2127,23 +2136,42 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
             boolean dehumidification = dehumidifications.contains(iteratedTs);
             long irrigationCount = irrigationCountMap.computeIfAbsent(iteratedTs, key -> 0L);
 
-            double value = 0;
-            value += light * 0.05;
-            value += (aeration) ? 20 : 0;
-            value += (heating) ? 200 : 0;
-            value += (cooling) ? 100 : 0;
-            value += (humidification) ? 20 : 0;
-            value += (dehumidification) ? 50 : 0;
-            value += irrigationCount * 100;
+            double valueLight = 0;
+            valueLight += light * 0.05;
+            valueLight += RandomUtils.getRandomNumber(-2, 2);
+            valueLight = Math.max(0, valueLight);
 
-            value += RandomUtils.getRandomNumber(-2, 2);
-            value = Math.max(0, value);
+            double valueHeating = 0;
+            valueHeating += (heating) ? 200 : 0;
+            valueHeating += RandomUtils.getRandomNumber(-2, 2);
+            valueHeating = Math.max(0, valueHeating);
 
-            result.add(new Telemetry.Point<>(Timestamp.of(iteratedTs), value));
+            double valueCooling = 0;
+            valueCooling += (cooling) ? 100 : 0;
+            valueCooling += RandomUtils.getRandomNumber(-2, 2);
+            valueCooling = Math.max(0, valueCooling);
+
+            double valueAirControl = 0;
+            valueAirControl += (aeration) ? 20 : 0;
+            valueAirControl += (humidification) ? 20 : 0;
+            valueAirControl += (dehumidification) ? 50 : 0;
+            valueAirControl += RandomUtils.getRandomNumber(-2, 2);
+            valueAirControl = Math.max(0, valueAirControl);
+
+            double valueIrrigation = 0;
+            valueIrrigation += irrigationCount * 100;
+            valueIrrigation += RandomUtils.getRandomNumber(-2, 2);
+            valueIrrigation = Math.max(0, valueIrrigation);
+
+            Timestamp timestamp = Timestamp.of(iteratedTs);
+            energyConsumptionLight.add(new Telemetry.Point<>(timestamp, valueLight));
+            energyConsumptionHeating.add(new Telemetry.Point<>(timestamp, valueHeating));
+            energyConsumptionCooling.add(new Telemetry.Point<>(timestamp, valueCooling));
+            energyConsumptionAirControl.add(new Telemetry.Point<>(timestamp, valueAirControl));
+            energyConsumptionIrrigation.add(new Telemetry.Point<>(timestamp, valueIrrigation));
+
             iteratedDate = iteratedDate.plus(1, ChronoUnit.HOURS);
         }
-
-        return result;
     }
 
     private Telemetry<Double> createTelemetryConsumptionWater(Set<Long> humidifications, Map<String, Set<Long>> irrigations, GreenhouseConfiguration configuration, boolean skipTelemetry) {
@@ -2440,7 +2468,11 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
         DeviceCredentials deviceCredentials = tbRestClient.getDeviceCredentials(device.getUuidId());
 
 
-        tbRestClient.pushTelemetry(deviceCredentials.getCredentialsId(), energyMeter.getConsumptionEnergy());
+        tbRestClient.pushTelemetry(deviceCredentials.getCredentialsId(), energyMeter.getEnergyConsumptionLight());
+        tbRestClient.pushTelemetry(deviceCredentials.getCredentialsId(), energyMeter.getEnergyConsumptionHeating());
+        tbRestClient.pushTelemetry(deviceCredentials.getCredentialsId(), energyMeter.getEnergyConsumptionCooling());
+        tbRestClient.pushTelemetry(deviceCredentials.getCredentialsId(), energyMeter.getEnergyConsumptionAirControl());
+        tbRestClient.pushTelemetry(deviceCredentials.getCredentialsId(), energyMeter.getEnergyConsumptionIrrigation());
 
         this.energyMeterToIdMap.put(energyMeter, device.getUuidId());
         return device;

@@ -23,5 +23,9 @@ public class EnergyMeter extends ModelEntity {
     private String systemName;
     private String systemLabel;
 
-    private Telemetry<Double> consumptionEnergy;
+    private Telemetry<Double> energyConsumptionLight;
+    private Telemetry<Double> energyConsumptionHeating;
+    private Telemetry<Double> energyConsumptionCooling;
+    private Telemetry<Double> energyConsumptionAirControl;
+    private Telemetry<Double> energyConsumptionIrrigation;
 }
