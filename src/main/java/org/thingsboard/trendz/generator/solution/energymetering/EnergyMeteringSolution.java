@@ -64,7 +64,7 @@ import java.util.stream.Collectors;
 public class EnergyMeteringSolution implements SolutionTemplateGenerator {
 
     private static final String CUSTOMER_TITLE = "Energy Metering Customer";
-    private static final String CUSTOMER_USER_EMAIL = "energymetering1@thingsboard.io";
+    private static final String CUSTOMER_USER_EMAIL = "energymetering@thingsboard.io";
     private static final String CUSTOMER_USER_PASSWORD = "password";
     private static final String CUSTOMER_USER_FIRST_NAME = "Energy Metering Solution";
     private static final String CUSTOMER_USER_LAST_NAME = "";
