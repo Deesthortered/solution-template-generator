@@ -17,7 +17,7 @@ public class EnergyMeter extends ModelEntity {
 
     @Override
     public String entityType() {
-        return "EM) energy meter";
+        return "EM energy meter";
     }
 
     private String systemName;

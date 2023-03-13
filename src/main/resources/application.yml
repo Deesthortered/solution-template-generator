@@ -11,6 +11,6 @@ tb:
 
 generator:
   mode: "${GENERATOR_MODE:generate}"  # generate, remove
-  solutions: Greenhouse
+  solutions: EnergyMetering
   skipTelemetry: false
   startYear: 2022

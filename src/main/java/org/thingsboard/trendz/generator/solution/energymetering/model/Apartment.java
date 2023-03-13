@@ -16,7 +16,7 @@ public class Apartment extends ModelEntity {
 
     @Override
     public String entityType() {
-        return "EM) apartment";
+        return "EM apartment";
     }
 
     private String systemName;

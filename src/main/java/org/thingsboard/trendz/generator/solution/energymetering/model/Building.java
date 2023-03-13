@@ -18,7 +18,7 @@ public class Building extends ModelEntity {
 
     @Override
     public String entityType() {
-        return "EM) building";
+        return "EM building";
     }
 
     private String systemName;
