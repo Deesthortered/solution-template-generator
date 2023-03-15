@@ -33,6 +33,8 @@ public class PlantConfiguration extends ConfigurationEntity {
     private double maxAirHumidity;
     private double minSoilMoisture;
     private double maxSoilMoisture;
+    private double minSoilTemperature;
+    private double maxSoilTemperature;
     private double minCo2Concentration;
     private double maxCo2Concentration;
     private double minPh;

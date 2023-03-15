@@ -716,6 +716,8 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
                 .maxAirHumidity(70)
                 .minSoilMoisture(20)
                 .maxSoilMoisture(60)
+                .minSoilTemperature(15)
+                .maxSoilTemperature(25)
                 .minCo2Concentration(350)
                 .maxCo2Concentration(1000)
                 .minPh(5.5)
@@ -753,6 +755,8 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
                 .maxAirHumidity(70)
                 .minSoilMoisture(40)
                 .maxSoilMoisture(70)
+                .minSoilTemperature(15)
+                .maxSoilTemperature(30)
                 .minCo2Concentration(350)
                 .maxCo2Concentration(1000)
                 .minPh(5.5)
@@ -790,6 +794,8 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
                 .maxAirHumidity(70)
                 .minSoilMoisture(60)
                 .maxSoilMoisture(80)
+                .minSoilTemperature(10)
+                .maxSoilTemperature(30)
                 .minCo2Concentration(300)
                 .maxCo2Concentration(1000)
                 .minPh(6.0)
@@ -827,6 +833,8 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
                 .maxAirHumidity(70)
                 .minSoilMoisture(60)
                 .maxSoilMoisture(80)
+                .minSoilTemperature(10)
+                .maxSoilTemperature(30)
                 .minCo2Concentration(300)
                 .maxCo2Concentration(1000)
                 .minPh(6.0)
@@ -955,6 +963,8 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
                 .maxAirHumidity(configuration.getMaxAirHumidity())
                 .minSoilMoisture(configuration.getMinSoilMoisture())
                 .maxSoilMoisture(configuration.getMaxSoilMoisture())
+                .minSoilTemperature(configuration.getMinSoilTemperature())
+                .maxSoilTemperature(configuration.getMaxSoilTemperature())
                 .minCo2Concentration(configuration.getMinCo2Concentration())
                 .maxCo2Concentration(configuration.getMaxCo2Concentration())
                 .minPh(configuration.getMinPh())
@@ -2237,6 +2247,8 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
                 new Attribute<>("maxAirHumidity", plant.getMaxAirHumidity()),
                 new Attribute<>("minSoilMoisture", plant.getMinSoilMoisture()),
                 new Attribute<>("maxSoilMoisture", plant.getMaxSoilMoisture()),
+                new Attribute<>("minSoilTemperature", plant.getMinSoilTemperature()),
+                new Attribute<>("maxSoilTemperature", plant.getMaxSoilTemperature()),
                 new Attribute<>("minCo2Concentration", plant.getMinCo2Concentration()),
                 new Attribute<>("maxCo2Concentration", plant.getMaxCo2Concentration()),
                 new Attribute<>("minPh", plant.getMinPh()),
