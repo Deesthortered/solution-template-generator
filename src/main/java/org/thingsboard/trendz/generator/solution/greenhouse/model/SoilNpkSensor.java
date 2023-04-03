@@ -22,6 +22,7 @@ public class SoilNpkSensor extends ModelEntity {
 
     private String systemName;
     private String systemLabel;
+    private String fromGreenhouse;
 
     private Telemetry<Double> nitrogen;
     private Telemetry<Double> phosphorus;

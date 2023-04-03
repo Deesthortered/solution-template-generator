@@ -22,7 +22,7 @@ public class InsideLightSensor extends ModelEntity {
 
     private String systemName;
     private String systemLabel;
+    private String fromGreenhouse;
 
-    private Telemetry<Integer> light;
-
+    private Telemetry<Integer> lightIn;
 }

@@ -22,6 +22,7 @@ public class SoilWarmMoistureSensor extends ModelEntity {
 
     private String systemName;
     private String systemLabel;
+    private String fromGreenhouse;
 
     private Telemetry<Integer> temperature;
     private Telemetry<Integer> moisture;

@@ -22,7 +22,8 @@ public class OutsideAirWarmHumiditySensor extends ModelEntity {
 
     private String systemName;
     private String systemLabel;
+    private String fromGreenhouse;
 
-    private Telemetry<Integer> temperature;
-    private Telemetry<Integer> humidity;
+    private Telemetry<Integer> temperatureOut;
+    private Telemetry<Integer> humidityOut;
 }

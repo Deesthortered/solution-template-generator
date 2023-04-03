@@ -22,6 +22,7 @@ public class InsideCO2Sensor extends ModelEntity {
 
     private String systemName;
     private String systemLabel;
+    private String fromGreenhouse;
 
     private Telemetry<Integer> concentration;
 }

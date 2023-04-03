@@ -1029,6 +1029,7 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
                 SoilNpkSensor soilNpkSensor = SoilNpkSensor.builder()
                         .systemName("Soil NPK Sensor: " + configuration.getName() + ", " + String.format("%s-%s", height, width))
                         .systemLabel("")
+                        .fromGreenhouse(configuration.getName())
                         .nitrogen(nitrogenLevelTelemetry)
                         .phosphorus(phosphorusLevelTelemetry)
                         .potassium(potassiumLevelTelemetry)
@@ -1037,6 +1038,7 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
                 SoilWarmMoistureSensor soilWarmMoistureSensor = SoilWarmMoistureSensor.builder()
                         .systemName("Soil Warm-Moisture Sensor: " + configuration.getName() + ", " + String.format("%s-%s", height, width))
                         .systemLabel("")
+                        .fromGreenhouse(configuration.getName())
                         .temperature(telemetrySoilTemperature)
                         .moisture(soilMoisture)
                         .build();
@@ -1044,12 +1046,14 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
                 SoilAciditySensor soilAciditySensor = SoilAciditySensor.builder()
                         .systemName("Soil Acidity: " + configuration.getName() + ", " + String.format("%s-%s", height, width))
                         .systemLabel("")
+                        .fromGreenhouse(configuration.getName())
                         .acidity(telemetrySoilAcidity)
                         .build();
 
                 HarvestReporter harvestReporter = HarvestReporter.builder()
                         .systemName("Harvester: " + configuration.getName() + ", " + String.format("%s-%s", height, width))
                         .systemLabel("")
+                        .fromGreenhouse(configuration.getName())
                         .cropWeight(telemetryCropWeight)
                         .workerInCharge(telemetryWorkerInCharge)
                         .build();
@@ -1057,6 +1061,7 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
                 Section section = Section.builder()
                         .systemName(sectionName)
                         .systemLabel("")
+                        .fromGreenhouse(configuration.getName())
                         .positionHeight(height)
                         .positionWidth(width)
                         .area(configuration.getSectionArea())
@@ -1086,38 +1091,44 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
         OutsideAirWarmHumiditySensor outsideAirWarmHumiditySensor = OutsideAirWarmHumiditySensor.builder()
                 .systemName(configuration.getName() + ": Air Warm-Humidity Sensor (Outside)")
                 .systemLabel("")
-                .temperature(outsideTemperatureTelemetry)
-                .humidity(outsideHumidityTelemetry)
+                .fromGreenhouse(configuration.getName())
+                .temperatureOut(outsideTemperatureTelemetry)
+                .humidityOut(outsideHumidityTelemetry)
                 .build();
 
         OutsideLightSensor outsideLightSensor = OutsideLightSensor.builder()
                 .systemName(configuration.getName() + ": Light Sensor (Outside)")
                 .systemLabel("")
-                .light(outsideLightTelemetry)
+                .fromGreenhouse(configuration.getName())
+                .lightOut(outsideLightTelemetry)
                 .build();
 
         InsideAirWarmHumiditySensor insideAirWarmHumiditySensor = InsideAirWarmHumiditySensor.builder()
                 .systemName(configuration.getName() + ": Air Warm-Humidity Sensor (Inside)")
                 .systemLabel("")
-                .temperature(insideTemperatureTelemetry)
-                .humidity(insideHumidityTelemetry)
+                .fromGreenhouse(configuration.getName())
+                .temperatureIn(insideTemperatureTelemetry)
+                .humidityIn(insideHumidityTelemetry)
                 .build();
 
         InsideLightSensor insideLightSensor = InsideLightSensor.builder()
                 .systemName(configuration.getName() + ": Light Sensor (Inside)")
                 .systemLabel("")
-                .light(insideLightTelemetry)
+                .fromGreenhouse(configuration.getName())
+                .lightIn(insideLightTelemetry)
                 .build();
 
         InsideCO2Sensor insideCO2Sensor = InsideCO2Sensor.builder()
                 .systemName(configuration.getName() + ": CO2 Sensor (Inside)")
                 .systemLabel("")
+                .fromGreenhouse(configuration.getName())
                 .concentration(co2ConcetracionTelemetry)
                 .build();
 
         EnergyMeter energyMeter = EnergyMeter.builder()
                 .systemName(configuration.getName() + ": Energy Meter")
                 .systemLabel("")
+                .fromGreenhouse(configuration.getName())
                 .energyConsumptionLight(energyConsumptionLight)
                 .energyConsumptionHeating(energyConsumptionHeating)
                 .energyConsumptionCooling(energyConsumptionCooling)
@@ -1128,6 +1139,7 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
         WaterMeter waterMeter = WaterMeter.builder()
                 .systemName(configuration.getName() + ": Water Meter")
                 .systemLabel("")
+                .fromGreenhouse(configuration.getName())
                 .consumptionWater(telemetryConsumptionWater)
                 .build();
 
@@ -1471,6 +1483,7 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
 
             case "Fair":
             case "Fair / Windy":
+            case "":
                 return 1.0;
             default:
                 throw new IllegalArgumentException("Unsupported condition: " + condition);
@@ -2309,7 +2322,8 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
         Set<Attribute<?>> attributes = Set.of(
                 new Attribute<>("position_height", section.getPositionHeight()),
                 new Attribute<>("position_width", section.getPositionWidth()),
-                new Attribute<>("area", section.getArea())
+                new Attribute<>("area", section.getArea()),
+                new Attribute<>("from_greenhouse", section.getFromGreenhouse())
         );
         tbRestClient.setEntityAttributes(asset.getUuidId(), EntityType.ASSET, Attribute.Scope.SERVER_SCOPE, attributes);
 
@@ -2330,7 +2344,11 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
         }
         DeviceCredentials deviceCredentials = tbRestClient.getDeviceCredentials(device.getUuidId());
 
+        Set<Attribute<?>> attributes = Set.of(
+                new Attribute<>("from_greenhouse", soilNpkSensor.getFromGreenhouse())
+        );
 
+        tbRestClient.setEntityAttributes(device.getUuidId(), EntityType.DEVICE, Attribute.Scope.SERVER_SCOPE, attributes);
         tbRestClient.pushTelemetry(deviceCredentials.getCredentialsId(), soilNpkSensor.getNitrogen());
         tbRestClient.pushTelemetry(deviceCredentials.getCredentialsId(), soilNpkSensor.getPotassium());
         tbRestClient.pushTelemetry(deviceCredentials.getCredentialsId(), soilNpkSensor.getPhosphorus());
@@ -2353,7 +2371,11 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
         }
         DeviceCredentials deviceCredentials = tbRestClient.getDeviceCredentials(device.getUuidId());
 
+        Set<Attribute<?>> attributes = Set.of(
+                new Attribute<>("from_greenhouse", soilWarmMoistureSensor.getFromGreenhouse())
+        );
 
+        tbRestClient.setEntityAttributes(device.getUuidId(), EntityType.DEVICE, Attribute.Scope.SERVER_SCOPE, attributes);
         tbRestClient.pushTelemetry(deviceCredentials.getCredentialsId(), soilWarmMoistureSensor.getTemperature());
         tbRestClient.pushTelemetry(deviceCredentials.getCredentialsId(), soilWarmMoistureSensor.getMoisture());
 
@@ -2375,6 +2397,11 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
         }
         DeviceCredentials deviceCredentials = tbRestClient.getDeviceCredentials(device.getUuidId());
 
+        Set<Attribute<?>> attributes = Set.of(
+                new Attribute<>("from_greenhouse", soilAciditySensor.getFromGreenhouse())
+        );
+
+        tbRestClient.setEntityAttributes(device.getUuidId(), EntityType.DEVICE, Attribute.Scope.SERVER_SCOPE, attributes);
         tbRestClient.pushTelemetry(deviceCredentials.getCredentialsId(), soilAciditySensor.getAcidity());
 
         this.soilAciditySensorToIdMap.put(soilAciditySensor, device.getUuidId());
@@ -2395,9 +2422,13 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
         }
         DeviceCredentials deviceCredentials = tbRestClient.getDeviceCredentials(device.getUuidId());
 
+        Set<Attribute<?>> attributes = Set.of(
+                new Attribute<>("from_greenhouse", insideAirWarmHumiditySensor.getFromGreenhouse())
+        );
 
-        tbRestClient.pushTelemetry(deviceCredentials.getCredentialsId(), insideAirWarmHumiditySensor.getTemperature());
-        tbRestClient.pushTelemetry(deviceCredentials.getCredentialsId(), insideAirWarmHumiditySensor.getHumidity());
+        tbRestClient.setEntityAttributes(device.getUuidId(), EntityType.DEVICE, Attribute.Scope.SERVER_SCOPE, attributes);
+        tbRestClient.pushTelemetry(deviceCredentials.getCredentialsId(), insideAirWarmHumiditySensor.getTemperatureIn());
+        tbRestClient.pushTelemetry(deviceCredentials.getCredentialsId(), insideAirWarmHumiditySensor.getHumidityIn());
 
         this.insideAirWarmHumiditySensorToIdMap.put(insideAirWarmHumiditySensor, device.getUuidId());
         return device;
@@ -2417,7 +2448,11 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
         }
         DeviceCredentials deviceCredentials = tbRestClient.getDeviceCredentials(device.getUuidId());
 
+        Set<Attribute<?>> attributes = Set.of(
+                new Attribute<>("from_greenhouse", insideCO2Sensor.getFromGreenhouse())
+        );
 
+        tbRestClient.setEntityAttributes(device.getUuidId(), EntityType.DEVICE, Attribute.Scope.SERVER_SCOPE, attributes);
         tbRestClient.pushTelemetry(deviceCredentials.getCredentialsId(), insideCO2Sensor.getConcentration());
 
         this.insideCO2SensorToIdMap.put(insideCO2Sensor, device.getUuidId());
@@ -2438,8 +2473,12 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
         }
         DeviceCredentials deviceCredentials = tbRestClient.getDeviceCredentials(device.getUuidId());
 
+        Set<Attribute<?>> attributes = Set.of(
+                new Attribute<>("from_greenhouse", insideLightSensor.getFromGreenhouse())
+        );
 
-        tbRestClient.pushTelemetry(deviceCredentials.getCredentialsId(), insideLightSensor.getLight());
+        tbRestClient.setEntityAttributes(device.getUuidId(), EntityType.DEVICE, Attribute.Scope.SERVER_SCOPE, attributes);
+        tbRestClient.pushTelemetry(deviceCredentials.getCredentialsId(), insideLightSensor.getLightIn());
 
         this.insideLightSensorToIdMap.put(insideLightSensor, device.getUuidId());
         return device;
@@ -2459,7 +2498,11 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
         }
         DeviceCredentials deviceCredentials = tbRestClient.getDeviceCredentials(device.getUuidId());
 
+        Set<Attribute<?>> attributes = Set.of(
+                new Attribute<>("from_greenhouse", harvestReporter.getFromGreenhouse())
+        );
 
+        tbRestClient.setEntityAttributes(device.getUuidId(), EntityType.DEVICE, Attribute.Scope.SERVER_SCOPE, attributes);
         tbRestClient.pushTelemetry(deviceCredentials.getCredentialsId(), harvestReporter.getCropWeight());
         tbRestClient.pushTelemetry(deviceCredentials.getCredentialsId(), harvestReporter.getWorkerInCharge());
 
@@ -2481,7 +2524,11 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
         }
         DeviceCredentials deviceCredentials = tbRestClient.getDeviceCredentials(device.getUuidId());
 
+        Set<Attribute<?>> attributes = Set.of(
+                new Attribute<>("from_greenhouse", energyMeter.getFromGreenhouse())
+        );
 
+        tbRestClient.setEntityAttributes(device.getUuidId(), EntityType.DEVICE, Attribute.Scope.SERVER_SCOPE, attributes);
         tbRestClient.pushTelemetry(deviceCredentials.getCredentialsId(), energyMeter.getEnergyConsumptionLight());
         tbRestClient.pushTelemetry(deviceCredentials.getCredentialsId(), energyMeter.getEnergyConsumptionHeating());
         tbRestClient.pushTelemetry(deviceCredentials.getCredentialsId(), energyMeter.getEnergyConsumptionCooling());
@@ -2506,7 +2553,11 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
         }
         DeviceCredentials deviceCredentials = tbRestClient.getDeviceCredentials(device.getUuidId());
 
+        Set<Attribute<?>> attributes = Set.of(
+                new Attribute<>("from_greenhouse", waterMeter.getFromGreenhouse())
+        );
 
+        tbRestClient.setEntityAttributes(device.getUuidId(), EntityType.DEVICE, Attribute.Scope.SERVER_SCOPE, attributes);
         tbRestClient.pushTelemetry(deviceCredentials.getCredentialsId(), waterMeter.getConsumptionWater());
 
         this.waterMeterToIdMap.put(waterMeter, device.getUuidId());
@@ -2527,9 +2578,13 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
         }
         DeviceCredentials deviceCredentials = tbRestClient.getDeviceCredentials(device.getUuidId());
 
+        Set<Attribute<?>> attributes = Set.of(
+                new Attribute<>("from_greenhouse", outsideAirWarmHumiditySensor.getFromGreenhouse())
+        );
 
-        tbRestClient.pushTelemetry(deviceCredentials.getCredentialsId(), outsideAirWarmHumiditySensor.getTemperature());
-        tbRestClient.pushTelemetry(deviceCredentials.getCredentialsId(), outsideAirWarmHumiditySensor.getHumidity());
+        tbRestClient.setEntityAttributes(device.getUuidId(), EntityType.DEVICE, Attribute.Scope.SERVER_SCOPE, attributes);
+        tbRestClient.pushTelemetry(deviceCredentials.getCredentialsId(), outsideAirWarmHumiditySensor.getTemperatureOut());
+        tbRestClient.pushTelemetry(deviceCredentials.getCredentialsId(), outsideAirWarmHumiditySensor.getHumidityOut());
 
         this.outsideAirWarmHumiditySensorToIdMap.put(outsideAirWarmHumiditySensor, device.getUuidId());
         return device;
@@ -2549,8 +2604,12 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
         }
         DeviceCredentials deviceCredentials = tbRestClient.getDeviceCredentials(device.getUuidId());
 
+        Set<Attribute<?>> attributes = Set.of(
+                new Attribute<>("from_greenhouse", outsideLightSensor.getFromGreenhouse())
+        );
 
-        tbRestClient.pushTelemetry(deviceCredentials.getCredentialsId(), outsideLightSensor.getLight());
+        tbRestClient.setEntityAttributes(device.getUuidId(), EntityType.DEVICE, Attribute.Scope.SERVER_SCOPE, attributes);
+        tbRestClient.pushTelemetry(deviceCredentials.getCredentialsId(), outsideLightSensor.getLightOut());
 
         this.outsideLightSensorToIdMap.put(outsideLightSensor, device.getUuidId());
         return device;

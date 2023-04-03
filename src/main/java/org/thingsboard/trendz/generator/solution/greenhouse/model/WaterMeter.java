@@ -22,6 +22,7 @@ public class WaterMeter extends ModelEntity {
 
     private String systemName;
     private String systemLabel;
+    private String fromGreenhouse;
 
     private Telemetry<Double> consumptionWater;
 }

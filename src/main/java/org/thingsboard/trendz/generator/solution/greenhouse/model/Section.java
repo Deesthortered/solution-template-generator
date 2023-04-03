@@ -21,6 +21,7 @@ public class Section extends ModelEntity {
 
     private String systemName;
     private String systemLabel;
+    private String fromGreenhouse;
 
     private int positionHeight;
     private int positionWidth;
