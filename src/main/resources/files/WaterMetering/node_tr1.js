@@ -7,11 +7,20 @@ var point_value = prev_point.values.consumption;
 var old_ts = old_data.ts;
 var old_value = old_data.value;
 
+
 var newMsg = {
-    "ts" : Math.max(point_ts, old_ts),
+    "ts" : old_ts,
     "values": {
         "full_consumption" : old_value + point_value
     }
+};
+if (old_ts < point_ts) {
+    newMsg = {
+        "ts" : point_ts,
+        "values": {
+            "full_consumption" : point_value
+        }
+    };
 }
 
 return {
