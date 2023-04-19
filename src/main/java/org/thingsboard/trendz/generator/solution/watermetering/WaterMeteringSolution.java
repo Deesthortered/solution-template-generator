@@ -239,6 +239,7 @@ public class WaterMeteringSolution implements SolutionTemplateGenerator {
                         RuleNode generatorNode = ruleChainBuildingService.createGeneratorNode(
                                 consumer.getSystemName() + ": generate node",
                                 consumerId,
+                                EntityType.DEVICE,
                                 fileContent,
                                 getPositionX(consumerCounter, 0),
                                 getPositionY(consumerCounter, 0)

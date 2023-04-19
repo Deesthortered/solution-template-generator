@@ -25,7 +25,9 @@ var makeNecessaryData = function () {
 
     return {
         'ts' : ts,
-        'light_in' : diff
+        'values' : {
+            'light_in' : diff
+        }
     };
 };
 

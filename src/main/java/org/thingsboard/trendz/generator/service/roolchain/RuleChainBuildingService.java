@@ -25,6 +25,7 @@ import org.thingsboard.trendz.generator.service.FileService;
 import org.thingsboard.trendz.generator.utils.JsonUtils;
 
 import java.io.IOException;
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
@@ -58,9 +59,9 @@ public class RuleChainBuildingService {
         return createRuleNode(name, TbMsgTimeseriesNode.class, saveConfiguration, (int) gridX, (int) gridY);
     }
 
-    public RuleNode createGeneratorNode(String name, UUID entityId, String code, double gridX, double gridY) {
+    public RuleNode createGeneratorNode(String name, UUID entityId, EntityType entityType, String code, double gridX, double gridY) {
         TbMsgGeneratorNodeConfiguration generatorConfiguration = new TbMsgGeneratorNodeConfiguration();
-        generatorConfiguration.setOriginatorType(EntityType.DEVICE);
+        generatorConfiguration.setOriginatorType(entityType);
         generatorConfiguration.setOriginatorId(entityId.toString());
         generatorConfiguration.setMsgCount(0);
         generatorConfiguration.setPeriodInSeconds(3600);
@@ -103,6 +104,7 @@ public class RuleChainBuildingService {
         TbRestApiCallNodeConfiguration configuration = new TbRestApiCallNodeConfiguration();
         configuration.setRestEndpointUrlPattern(urlPattern);
         configuration.setRequestMethod(requestMethod);
+        configuration.setHeaders(Collections.emptyMap());
 
         return createRuleNode(name, TbRestApiCallNode.class, configuration, (int) gridX, (int) gridY);
     }

@@ -251,6 +251,7 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
                     RuleNode energyMeterConsumptionGeneratorNode = ruleChainBuildingService.createGeneratorNode(
                             energyMeter.getSystemName() + ": energyConsumption",
                             energyMeterId,
+                            EntityType.DEVICE,
                             fileContentEnergyConsumption,
                             getNodePositionX(false),
                             getNodePositionY(index, 1)
@@ -286,6 +287,7 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
                     RuleNode heatMeterTemperatureGeneratorNode = ruleChainBuildingService.createGeneratorNode(
                             heatMeter.getSystemName() + ": temperature",
                             heatMeterId,
+                            EntityType.DEVICE,
                             fileContentTemperature,
                             getNodePositionX(true),
                             getNodePositionY(index, 0)
@@ -297,6 +299,7 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
                     RuleNode heatMeterConsumptionGeneratorNode = ruleChainBuildingService.createGeneratorNode(
                             heatMeter.getSystemName() + ": heatConsumption",
                             heatMeterId,
+                            EntityType.DEVICE,
                             fileContentHeatConsumption,
                             getNodePositionX(true),
                             getNodePositionY(index, 1)

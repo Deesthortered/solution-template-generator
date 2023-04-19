@@ -242,6 +242,7 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
 
                 Plant plant = greenhouse.getPlant();
                 String plantName = plant.getSystemName();
+                UUID plantId = this.plantToIdMap.get(plant);
 
                 OutsideAirWarmHumiditySensor outsideAirWarmHumiditySensor = greenhouse.getOutsideAirWarmHumiditySensor();
                 UUID outsideAirWarmHumiditySensorId = this.outsideAirWarmHumiditySensorToIdMap.get(outsideAirWarmHumiditySensor);
@@ -262,7 +263,8 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
                 String greenhouseGeneratorCode = getGreenhouseGeneratorCode(greenhouse.getLatitude(), greenhouse.getLongitude(), WEATHER_API_TOKEN);
                 RuleNode greenhouseGeneratorNode = this.ruleChainBuildingService.createGeneratorNode(
                         String.format("%s, %s: Generator", greenhouseName, plantName),
-                        greenhouseId,
+                        plantId,
+                        EntityType.ASSET,
                         greenhouseGeneratorCode,
                         getNodePositionX(greenhouseCounter, 0.5, 2),
                         getNodePositionY(greenhouseCounter, 0.5, 2)
@@ -2663,7 +2665,7 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
 
 
     private double getNodePositionX(int greenhouseCounter, double x, double y) {
-        return 250 + RuleNodeAdditionalInfo.CELL_SIZE * 9 * x;
+        return 200 + RuleNodeAdditionalInfo.CELL_SIZE * 9 * x;
     }
 
     private double getNodePositionY(int greenhouseCounter, double x, double y) {
