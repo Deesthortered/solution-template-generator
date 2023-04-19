@@ -262,8 +262,8 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
                         String.format("%s, %s: Generator", greenhouseName, plantName),
                         greenhouseId,
                         greenhouseGeneratorCode,
-                        getNodePositionX(greenhouseCounter),
-                        getNodePositionY(greenhouseCounter)
+                        getNodePositionX(greenhouseCounter, 0, 0),
+                        getNodePositionY(greenhouseCounter, 0, 0)
                 );
 
                 RuleNode greenhousePlantAttributesNode = this.ruleChainBuildingService.createOriginatorAttributesNode(
@@ -273,71 +273,81 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
                         List.of("dayMinTemperature", "dayMaxTemperature", "nightMinTemperature", "nightMaxTemperature", "minAirHumidity", "maxAirHumidity", "minCo2Concentration", "maxCo2Concentration", "dayMinLight", "dayMaxLight", "nightMinLight", "nightMaxLight", "minPh", "maxPh", "minRipeningPeriodDay", "maxRipeningPeriodDay", "minNitrogenLevel", "maxNitrogenLevel", "minPhosphorusLevel", "maxPhosphorusLevel", "minPotassiumLevel", "maxPotassiumLevel", "averageCropWeight"),
                         Collections.emptyList(),
                         false,
-                        getNodePositionX(greenhouseCounter),
-                        getNodePositionY(greenhouseCounter)
+                        getNodePositionX(greenhouseCounter, 0, 1),
+                        getNodePositionY(greenhouseCounter, 0, 1)
                 );
 
                 RuleNode greenhouseWeatherApiCallNode = this.ruleChainBuildingService.createRestApiCallNode(
                         String.format("%s: Get Weather", greenhouseName),
                         WEATHER_API_URL,
                         "GET",
-                        getNodePositionX(greenhouseCounter),
-                        getNodePositionY(greenhouseCounter)
+                        getNodePositionX(greenhouseCounter, 0, 2),
+                        getNodePositionY(greenhouseCounter, 0, 2)
                 );
 
                 RuleNode greenhouseMakeTempHumidityTelemetryNode = this.ruleChainBuildingService.createTransformationNode(
                         getSolutionName(),
                         String.format("%s: Map To Temp+Humidity Out", greenhouseName),
                         "raw_weather_to_temp_humidity.js",
-                        getNodePositionX(greenhouseCounter),
-                        getNodePositionY(greenhouseCounter)
+                        getNodePositionX(greenhouseCounter, 1, 0),
+                        getNodePositionY(greenhouseCounter, 1, 0)
                 );
 
                 RuleNode greenhouseMakeLightInTelemetryNode = this.ruleChainBuildingService.createTransformationNode(
                         getSolutionName(),
                         String.format("%s: Map To Light-Out", greenhouseName),
                         "raw_weather_to_light.js",
-                        getNodePositionX(greenhouseCounter),
-                        getNodePositionY(greenhouseCounter)
+                        getNodePositionX(greenhouseCounter, 2, 0),
+                        getNodePositionY(greenhouseCounter, 2, 0)
                 );
 
                 RuleNode outsideAirWamHumidityOriginatorNode = this.ruleChainBuildingService.createChangeOriginatorNode(
                         String.format("%s: To Temp+Humidity Out Sensor", greenhouseName),
                         outsideAirWarmHumiditySensor.getSystemName(),
                         EntityType.DEVICE,
-                        getNodePositionX(greenhouseCounter),
-                        getNodePositionY(greenhouseCounter)
+                        getNodePositionX(greenhouseCounter, 1, 1),
+                        getNodePositionY(greenhouseCounter, 1, 1)
                 );
 
                 RuleNode outsideLightInOriginatorNode = this.ruleChainBuildingService.createChangeOriginatorNode(
                         String.format("%s: To Light-Out Sensor", greenhouseName),
                         outsideLightSensor.getSystemName(),
                         EntityType.DEVICE,
-                        getNodePositionX(greenhouseCounter),
-                        getNodePositionY(greenhouseCounter)
+                        getNodePositionX(greenhouseCounter, 2, 1),
+                        getNodePositionY(greenhouseCounter, 2, 1)
                 );
 
                 RuleNode greenhouseMakeLightOutTelemetryNode = this.ruleChainBuildingService.createTransformationNode(
                         getSolutionName(),
                         String.format("%s: Map To Light-In", greenhouseName),
                         "light_out_to_light_in.js",
-                        getNodePositionX(greenhouseCounter),
-                        getNodePositionY(greenhouseCounter)
+                        getNodePositionX(greenhouseCounter, 2, 2),
+                        getNodePositionY(greenhouseCounter, 2, 2)
                 );
 
                 RuleNode outsideLightOutOriginatorNode = this.ruleChainBuildingService.createChangeOriginatorNode(
                         String.format("%s: To Light-In Sensor", greenhouseName),
                         insideLightSensor.getSystemName(),
                         EntityType.DEVICE,
-                        getNodePositionX(greenhouseCounter),
-                        getNodePositionY(greenhouseCounter)
+                        getNodePositionX(greenhouseCounter, 2, 3),
+                        getNodePositionY(greenhouseCounter, 2, 3)
                 );
 
-                RuleNode outsideSensorsSaveNode = this.ruleChainBuildingService.createSaveNode(
-                        String.format("%s: Save Telemetry", greenhouseName),
-                        getNodePositionX(greenhouseCounter),
-                        getNodePositionY(greenhouseCounter)
-                );
+//                RuleNode outsideSensorsSaveNode = this.ruleChainBuildingService.createSaveNode(
+//                        String.format("%s: Save Telemetry", greenhouseName),
+//                        getNodePositionX(greenhouseCounter),
+//                        getNodePositionY(greenhouseCounter)
+//                );
+
+                nodes.add(greenhouseGeneratorNode);
+                nodes.add(greenhousePlantAttributesNode);
+                nodes.add(greenhouseWeatherApiCallNode);
+                nodes.add(greenhouseMakeTempHumidityTelemetryNode);
+                nodes.add(greenhouseMakeLightInTelemetryNode);
+                nodes.add(outsideAirWamHumidityOriginatorNode);
+                nodes.add(outsideLightInOriginatorNode);
+                nodes.add(greenhouseMakeLightOutTelemetryNode);
+                nodes.add(outsideLightOutOriginatorNode);
 
                 for (Section section : greenhouse.getSections()) {
                     SoilWarmMoistureSensor soilWarmMoistureSensor = section.getSoilWarmMoistureSensor();
@@ -2616,12 +2626,12 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
     }
 
 
-    private double getNodePositionX(int greenhouseCounter) {
-        return RuleNodeAdditionalInfo.CELL_SIZE * 3;
+    private double getNodePositionX(int greenhouseCounter, int x, int y) {
+        return 250 + RuleNodeAdditionalInfo.CELL_SIZE * 9 * x;
     }
 
-    private double getNodePositionY(int greenhouseCounter) {
-        return RuleNodeAdditionalInfo.CELL_SIZE * 13;
+    private double getNodePositionY(int greenhouseCounter, int x, int y) {
+        return 250 + greenhouseCounter * RuleNodeAdditionalInfo.CELL_SIZE * 20 + RuleNodeAdditionalInfo.CELL_SIZE * 3 * y;
     }
 
     private String getGreenhouseGeneratorCode(double latitude, double longitude, String apiId) throws IOException {
