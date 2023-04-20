@@ -14,7 +14,7 @@ var makeNecessaryData = function () {
     var dayLevel = (dayMinLevel + dayMaxLevel) / 2;
     var nightLevel = (nightMinLevel + nightMaxLevel) / 2;
 
-    var outsideValue = msg.light_out;
+    var outsideValue = msg.values.light_out;
 
     var currentNeededLevel = (DAY_START_HOUR <= hour && hour < NIGHT_START_HOUR)
         ? dayLevel

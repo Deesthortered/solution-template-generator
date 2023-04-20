@@ -340,22 +340,22 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
                         getSolutionName(),
                         String.format("%s: Map To Light-In", greenhouseName),
                         "light_out_to_light_in.js",
-                        getNodePositionX(greenhouseCounter, 4, 0),
-                        getNodePositionY(greenhouseCounter, 4, 0)
+                        getNodePositionX(greenhouseCounter, 4, 1),
+                        getNodePositionY(greenhouseCounter, 4, 1)
                 );
 
                 RuleNode insideLightOriginatorNode = this.ruleChainBuildingService.createChangeOriginatorNode(
                         String.format("%s: To Light-In Sensor", greenhouseName),
                         insideLightSensor.getSystemName(),
                         EntityType.DEVICE,
-                        getNodePositionX(greenhouseCounter, 4, 1),
-                        getNodePositionY(greenhouseCounter, 4, 1)
+                        getNodePositionX(greenhouseCounter, 4, 2),
+                        getNodePositionY(greenhouseCounter, 4, 2)
                 );
 
                 RuleNode insideLightSaveNode = this.ruleChainBuildingService.createSaveNode(
                         String.format("%s: Save Telemetry (Light-In)", greenhouseName),
-                        getNodePositionX(greenhouseCounter, 4, 2),
-                        getNodePositionY(greenhouseCounter, 4, 2)
+                        getNodePositionX(greenhouseCounter, 4, 3),
+                        getNodePositionY(greenhouseCounter, 4, 3)
                 );
 
                 ////
@@ -376,12 +376,12 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
                 connections.add(ruleChainBuildingService.createRuleConnection(index + 1, index + 2));
                 connections.add(ruleChainBuildingService.createRuleConnection(index + 2, index + 3));
                 connections.add(ruleChainBuildingService.createRuleConnection(index + 2, index + 6));
-                connections.add(ruleChainBuildingService.createRuleConnection(index + 2, index + 9));
 
                 connections.add(ruleChainBuildingService.createRuleConnection(index + 3, index + 4));
                 connections.add(ruleChainBuildingService.createRuleConnection(index + 4, index + 5));
 
                 connections.add(ruleChainBuildingService.createRuleConnection(index + 6, index + 7));
+                connections.add(ruleChainBuildingService.createRuleConnection(index + 6, index + 9));
                 connections.add(ruleChainBuildingService.createRuleConnection(index + 7, index + 8));
 
                 connections.add(ruleChainBuildingService.createRuleConnection(index + 9, index + 10));
