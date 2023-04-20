@@ -300,7 +300,7 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
                 );
 
 
-                RuleNode plantToCo2SensorOriginatorNode = this.ruleChainBuildingService.createChangeOriginatorNode(
+                RuleNode toCo2SensorOriginatorNode = this.ruleChainBuildingService.createChangeOriginatorNode(
                         String.format("%s: To CO2 Sensor", greenhouseName),
                         insideCO2Sensor.getSystemName(),
                         EntityType.DEVICE,
@@ -319,36 +319,63 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
                         getNodePositionY(greenhouseCounter, 0, 5)
                 );
 
+                RuleNode toWarmHumidityInSensorOriginatorNode = this.ruleChainBuildingService.createChangeOriginatorNode(
+                        String.format("%s: To Warm-Humidity In Sensor", greenhouseName),
+                        insideAirWarmHumiditySensor.getSystemName(),
+                        EntityType.DEVICE,
+                        getNodePositionX(greenhouseCounter, 0, 6),
+                        getNodePositionY(greenhouseCounter, 0, 6)
+                );
+
+                RuleNode WarmHumidityInSensorAttributesNode = this.ruleChainBuildingService.createOriginatorAttributesNode(
+                        String.format("%s: Get Warm-Humidity In Attributes", greenhouseName),
+                        Collections.emptyList(),
+                        Collections.emptyList(),
+                        Collections.emptyList(),
+                        List.of("temperature_in", "humidity_in"),
+                        false,
+                        getNodePositionX(greenhouseCounter, 0, 7),
+                        getNodePositionY(greenhouseCounter, 0, 7)
+                );
+
                 RuleNode outsideAirTempHumidityTelemetryNode = this.ruleChainBuildingService.createTransformationNode(
                         getSolutionName(),
                         String.format("%s: Map To Temp+Humidity Out", greenhouseName),
                         "raw_weather_to_temp_humidity.js",
-                        getNodePositionX(greenhouseCounter, 0, 6),
-                        getNodePositionY(greenhouseCounter, 0, 6)
+                        getNodePositionX(greenhouseCounter, 0, 8),
+                        getNodePositionY(greenhouseCounter, 0, 8)
                 );
 
                 RuleNode outsideLightTelemetryNode = this.ruleChainBuildingService.createTransformationNode(
                         getSolutionName(),
                         String.format("%s: Map To Light-Out", greenhouseName),
                         "raw_weather_to_light.js",
-                        getNodePositionX(greenhouseCounter, 0, 7),
-                        getNodePositionY(greenhouseCounter, 0, 7)
+                        getNodePositionX(greenhouseCounter, 0, 9),
+                        getNodePositionY(greenhouseCounter, 0, 9)
                 );
 
                 RuleNode insideLightTelemetryNode = this.ruleChainBuildingService.createTransformationNode(
                         getSolutionName(),
                         String.format("%s: Map To Light-In", greenhouseName),
-                        "light_out_to_light_in.js",
-                        getNodePositionX(greenhouseCounter, 0, 8),
-                        getNodePositionY(greenhouseCounter, 0, 8)
+                        "light_in.js",
+                        getNodePositionX(greenhouseCounter, 0, 10),
+                        getNodePositionY(greenhouseCounter, 0, 10)
                 );
 
                 RuleNode co2TelemetryNode = this.ruleChainBuildingService.createTransformationNode(
                         getSolutionName(),
                         String.format("%s: Map To CO2", greenhouseName),
                         "co2.js",
-                        getNodePositionX(greenhouseCounter, 0, 9),
-                        getNodePositionY(greenhouseCounter, 0, 9)
+                        getNodePositionX(greenhouseCounter, 0, 11),
+                        getNodePositionY(greenhouseCounter, 0, 11)
+                );
+
+                RuleNode temperatureInTelemetryNode = this.ruleChainBuildingService.createTransformationNode(
+                        getSolutionName(),
+                        String.format("%s: Map To Temperature In", greenhouseName),
+                        "temperature_in.js",
+                        getNodePositionX(greenhouseCounter, 0, 12),
+                        getNodePositionY(greenhouseCounter, 0, 12)
                 );
 
 
@@ -360,16 +387,19 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
 
 
                 ////
-                nodes.add(greenhouseGeneratorNode);             // 0
-                nodes.add(greenhouseWeatherApiCallNode);        // 1
-                nodes.add(greenhouseToPlantOriginatorNode);     // 2
-                nodes.add(greenhousePlantAttributesNode);       // 3
-                nodes.add(plantToCo2SensorOriginatorNode);      // 4
-                nodes.add(Co2SensorAttributesNode);             // 5
-                nodes.add(outsideAirTempHumidityTelemetryNode); // 6
-                nodes.add(outsideLightTelemetryNode);           // 7
-                nodes.add(insideLightTelemetryNode);            // 8
-                nodes.add(co2TelemetryNode);                    // 9
+                nodes.add(greenhouseGeneratorNode);                 // 0
+                nodes.add(greenhouseWeatherApiCallNode);            // 1
+                nodes.add(greenhouseToPlantOriginatorNode);         // 2
+                nodes.add(greenhousePlantAttributesNode);           // 3
+                nodes.add(toCo2SensorOriginatorNode);               // 4
+                nodes.add(Co2SensorAttributesNode);                 // 5
+                nodes.add(toWarmHumidityInSensorOriginatorNode);    // 6
+                nodes.add(WarmHumidityInSensorAttributesNode);      // 7
+                nodes.add(outsideAirTempHumidityTelemetryNode);     // 8
+                nodes.add(outsideLightTelemetryNode);               // 9
+                nodes.add(insideLightTelemetryNode);                // 10
+                nodes.add(co2TelemetryNode);                        // 11
+                nodes.add(temperatureInTelemetryNode);              // 12
 
                 connections.add(ruleChainBuildingService.createRuleConnection(index, index + 1));
                 connections.add(ruleChainBuildingService.createRuleConnection(index + 1, index + 2));
@@ -381,6 +411,9 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
                 connections.add(ruleChainBuildingService.createRuleConnection(index + 6, index + 7));
                 connections.add(ruleChainBuildingService.createRuleConnection(index + 7, index + 8));
                 connections.add(ruleChainBuildingService.createRuleConnection(index + 8, index + 9));
+                connections.add(ruleChainBuildingService.createRuleConnection(index + 9, index + 10));
+                connections.add(ruleChainBuildingService.createRuleConnection(index + 10, index + 11));
+                connections.add(ruleChainBuildingService.createRuleConnection(index + 11, index + 12));
 
                 for (Section section : greenhouse.getSections()) {
                     SoilWarmMoistureSensor soilWarmMoistureSensor = section.getSoilWarmMoistureSensor();
