@@ -378,6 +378,13 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
                         getNodePositionY(greenhouseCounter, 0, 12)
                 );
 
+                RuleNode humidityInTelemetryNode = this.ruleChainBuildingService.createTransformationNode(
+                        getSolutionName(),
+                        String.format("%s: Map To Humidity In", greenhouseName),
+                        "humidity_in.js",
+                        getNodePositionX(greenhouseCounter, 0, 13),
+                        getNodePositionY(greenhouseCounter, 0, 13)
+                );
 
 //                RuleNode outsideAirWamHumiditySaveNode = this.ruleChainBuildingService.createSaveNode(
 //                        String.format("%s: Save Telemetry (Temp+Humidity Out)", greenhouseName),
@@ -387,6 +394,7 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
 
 
                 ////
+
                 nodes.add(greenhouseGeneratorNode);                 // 0
                 nodes.add(greenhouseWeatherApiCallNode);            // 1
                 nodes.add(greenhouseToPlantOriginatorNode);         // 2
@@ -400,6 +408,7 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
                 nodes.add(insideLightTelemetryNode);                // 10
                 nodes.add(co2TelemetryNode);                        // 11
                 nodes.add(temperatureInTelemetryNode);              // 12
+                nodes.add(humidityInTelemetryNode);                 // 13
 
                 connections.add(ruleChainBuildingService.createRuleConnection(index, index + 1));
                 connections.add(ruleChainBuildingService.createRuleConnection(index + 1, index + 2));
@@ -414,6 +423,7 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
                 connections.add(ruleChainBuildingService.createRuleConnection(index + 9, index + 10));
                 connections.add(ruleChainBuildingService.createRuleConnection(index + 10, index + 11));
                 connections.add(ruleChainBuildingService.createRuleConnection(index + 11, index + 12));
+                connections.add(ruleChainBuildingService.createRuleConnection(index + 12, index + 13));
 
                 for (Section section : greenhouse.getSections()) {
                     SoilWarmMoistureSensor soilWarmMoistureSensor = section.getSoilWarmMoistureSensor();
