@@ -6,15 +6,9 @@ var makeNecessaryData = function () {
     var temperature = msg.main.temp;
     var humidity = msg.main.humidity;
 
-    return {
-        'ts' : ts,
-        'values' : {
-            'temperature_out' : temperature,
-            'humidity_out' : humidity
-        }
-    };
+    metadata.values.temperature_out = temperature;
+    metadata.values.humidity_out = humidity;
 };
 
-var newMsg = makeNecessaryData();
-
-return {msg: newMsg, metadata: metadata, msgType: msgType};
+makeNecessaryData();
+return {msg: msg, metadata: metadata, msgType: msgType};

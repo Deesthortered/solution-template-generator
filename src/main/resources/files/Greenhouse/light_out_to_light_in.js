@@ -21,15 +21,8 @@ var makeNecessaryData = function () {
         : nightLevel;
 
     var diff = Math.max(0, currentNeededLevel - outsideValue);
-
-
-    return {
-        'ts' : ts,
-        'values' : {
-            'light_in' : diff
-        }
-    };
+    metadata.values.light_in = diff;
 };
 
-var newMsg = makeNecessaryData();
-return {msg: newMsg, metadata: metadata, msgType: msgType};
+makeNecessaryData();
+return {msg: msg, metadata: metadata, msgType: msgType};

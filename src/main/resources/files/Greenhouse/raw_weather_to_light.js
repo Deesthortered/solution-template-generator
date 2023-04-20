@@ -102,14 +102,8 @@ var makeNecessaryData = function () {
     var ts = date.getTime();
     var light = makeLightData(date, msg.clouds.all);
 
-    return {
-        'ts' : ts,
-        'values' : {
-            'light_out' : light
-        }
-    };
+    metadata.values.light_out = light;
 };
 
-var newMsg = makeNecessaryData();
-
-return {msg: newMsg, metadata: metadata, msgType: msgType};
+makeNecessaryData();
+return {msg: msg, metadata: metadata, msgType: msgType};

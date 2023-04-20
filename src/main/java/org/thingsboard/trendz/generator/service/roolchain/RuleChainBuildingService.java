@@ -5,6 +5,8 @@ import org.springframework.stereotype.Service;
 import org.thingsboard.rule.engine.api.NodeConfiguration;
 import org.thingsboard.rule.engine.debug.TbMsgGeneratorNode;
 import org.thingsboard.rule.engine.debug.TbMsgGeneratorNodeConfiguration;
+import org.thingsboard.rule.engine.delay.TbMsgDelayNode;
+import org.thingsboard.rule.engine.delay.TbMsgDelayNodeConfiguration;
 import org.thingsboard.rule.engine.metadata.TbGetAttributesNode;
 import org.thingsboard.rule.engine.metadata.TbGetAttributesNodeConfiguration;
 import org.thingsboard.rule.engine.rest.TbRestApiCallNode;
@@ -107,6 +109,14 @@ public class RuleChainBuildingService {
         configuration.setHeaders(Collections.emptyMap());
 
         return createRuleNode(name, TbRestApiCallNode.class, configuration, (int) gridX, (int) gridY);
+    }
+
+    public RuleNode createDelayNode(String name, int periodSeconds, double gridX, double gridY) {
+        TbMsgDelayNodeConfiguration configuration = new TbMsgDelayNodeConfiguration();
+        configuration.setPeriodInSeconds(periodSeconds);
+        configuration.setMaxPendingMsgs(100);
+
+        return createRuleNode(name, TbMsgDelayNode.class, configuration, (int) gridX, (int) gridY);
     }
 
 
