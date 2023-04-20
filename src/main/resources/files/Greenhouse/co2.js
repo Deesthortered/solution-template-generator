@@ -16,13 +16,22 @@ var makeCo2ConsumptionData = function () {
     return Math.round((-1.0 * nightConsumption * light) / zeroConsumptionLightLevel) + nightConsumption;
 };
 
-var makeCo2ConcentrationData = function (date) {
-    var hour = date.getHours();
-    var day = getDayofYear(date);
+var makeCo2ConcentrationData = function () {
+    var MIN_WORD_CO2_CONCENTRATION = 400;
+    var minLevel = metadata.ss_minCo2Concentration;
+    var maxLevel = metadata.ss_maxCo2Concentration;
+    var decreaseLevel = maxLevel - minLevel;
 
+    var currentLevel = metadata.concentration;
     var co2Consumption = makeCo2ConsumptionData();
+    currentLevel += co2Consumption;
+    if (maxLevel <= currentLevel) {
+        metadata.values_aeration = true;
+        currentLevel -= decreaseLevel;
+    }
+    currentLevel = Math.max(MIN_WORD_CO2_CONCENTRATION, currentLevel);
 
-    return 0;
+    return currentLevel;
 };
 
 var makeNecessaryData = function () {
