@@ -1,8 +1,4 @@
 var makeNecessaryData = function () {
-    var date = new Date();
-    date.setMinutes(0, 0, 0);
-
-    var ts = date.getTime();
     var temperature = msg.main.temp;
     var humidity = msg.main.humidity;
 

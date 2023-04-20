@@ -98,12 +98,9 @@ var getHourLuxValues = function(hour) {
 var makeNecessaryData = function () {
     var date = new Date();
     date.setMinutes(0, 0, 0);
-
-    var ts = date.getTime();
-    var light = makeLightData(date, msg.clouds.all);
-
-    metadata.values_light_out = light;
+    return makeLightData(date, msg.clouds.all);
 };
 
-makeNecessaryData();
+metadata.values_light_out = makeNecessaryData();
+
 return {msg: msg, metadata: metadata, msgType: msgType};

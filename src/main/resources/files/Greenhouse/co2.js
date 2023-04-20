@@ -1,11 +1,3 @@
-var getDayofYear = function (date) {
-    var start = new Date(date.getFullYear(), 0, 0);
-    var diff = date - start;
-    var oneDay = 1000 * 60 * 60 * 24;
-    var day = Math.floor(diff / oneDay);
-    return day;
-};
-
 var makeCo2ConsumptionData = function () {
     var nightConsumption = 50;
     var zeroConsumptionLightLevel = parseInt(metadata.ss_dayMinLight);
@@ -22,7 +14,7 @@ var makeCo2ConcentrationData = function () {
     var maxLevel = metadata.ss_maxCo2Concentration;
     var decreaseLevel = maxLevel - minLevel;
 
-    var currentLevel = metadata.concentration;
+    var currentLevel = parseInt(metadata.concentration);
     var co2Consumption = makeCo2ConsumptionData();
     currentLevel += co2Consumption;
     if (maxLevel <= currentLevel) {
@@ -34,14 +26,6 @@ var makeCo2ConcentrationData = function () {
     return currentLevel;
 };
 
-var makeNecessaryData = function () {
-    var date = new Date();
-    date.setMinutes(0, 0, 0);
+metadata.values_concentration = makeCo2ConcentrationData();
 
-    var ts = date.getTime();
-    var concentration = makeCo2ConcentrationData(date);
-    metadata.values_concentration = concentration;
-};
-
-makeNecessaryData();
 return {msg: msg, metadata: metadata, msgType: msgType};

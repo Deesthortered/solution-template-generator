@@ -1,4 +1,4 @@
-var makeNecessaryData = function () {
+var makeLightInData = function () {
     var date = new Date();
     date.setMinutes(0, 0, 0);
     var ts = date.getTime();
@@ -20,9 +20,9 @@ var makeNecessaryData = function () {
         ? dayLevel
         : nightLevel;
 
-    var diff = Math.max(0, currentNeededLevel - outsideValue);
-    metadata.values_light_in = diff;
+    return Math.max(0, currentNeededLevel - outsideValue);
 };
 
-makeNecessaryData();
+metadata.values_light_in = makeLightInData();
+
 return {msg: msg, metadata: metadata, msgType: msgType};
