@@ -102,7 +102,7 @@ var makeNecessaryData = function () {
     var ts = date.getTime();
     var light = makeLightData(date, msg.clouds.all);
 
-    metadata.values.light_out = light;
+    metadata.values_light_out = light;
 };
 
 makeNecessaryData();

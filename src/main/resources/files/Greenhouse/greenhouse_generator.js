@@ -11,8 +11,7 @@ var metadata = {
     'latitude' : latitude,
     'longitude' : longitude,
     'appId': appId,
-    'ts': ts,
-    'values' : {}
+    'ts': ts
 };
 var msgType = "POST_TELEMETRY_REQUEST";
 

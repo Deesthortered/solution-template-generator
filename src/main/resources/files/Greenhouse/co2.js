@@ -19,7 +19,7 @@ var makeNecessaryData = function () {
 
     var ts = date.getTime();
     var concentration = makeCo2ConcentrationData(date);
-    metadata.values.concentration = concentration;
+    metadata.values_concentration = concentration;
 };
 
 makeNecessaryData();

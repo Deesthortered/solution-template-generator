@@ -14,14 +14,14 @@ var makeNecessaryData = function () {
     var dayLevel = (dayMinLevel + dayMaxLevel) / 2;
     var nightLevel = (nightMinLevel + nightMaxLevel) / 2;
 
-    var outsideValue = msg.values.light_out;
+    var outsideValue = metadata.values_light_out;
 
     var currentNeededLevel = (DAY_START_HOUR <= hour && hour < NIGHT_START_HOUR)
         ? dayLevel
         : nightLevel;
 
     var diff = Math.max(0, currentNeededLevel - outsideValue);
-    metadata.values.light_in = diff;
+    metadata.values_light_in = diff;
 };
 
 makeNecessaryData();
