@@ -44,7 +44,21 @@ import org.thingsboard.trendz.generator.solution.greenhouse.configuration.PlantC
 import org.thingsboard.trendz.generator.solution.greenhouse.configuration.StationCity;
 import org.thingsboard.trendz.generator.solution.greenhouse.configuration.WeatherData;
 import org.thingsboard.trendz.generator.solution.greenhouse.configuration.WorkerInChargeName;
-import org.thingsboard.trendz.generator.solution.greenhouse.model.*;
+import org.thingsboard.trendz.generator.solution.greenhouse.model.EnergyMeter;
+import org.thingsboard.trendz.generator.solution.greenhouse.model.Greenhouse;
+import org.thingsboard.trendz.generator.solution.greenhouse.model.HarvestReporter;
+import org.thingsboard.trendz.generator.solution.greenhouse.model.InsideAirWarmHumiditySensor;
+import org.thingsboard.trendz.generator.solution.greenhouse.model.InsideCO2Sensor;
+import org.thingsboard.trendz.generator.solution.greenhouse.model.InsideLightSensor;
+import org.thingsboard.trendz.generator.solution.greenhouse.model.OutsideAirWarmHumiditySensor;
+import org.thingsboard.trendz.generator.solution.greenhouse.model.OutsideLightSensor;
+import org.thingsboard.trendz.generator.solution.greenhouse.model.Plant;
+import org.thingsboard.trendz.generator.solution.greenhouse.model.PlantName;
+import org.thingsboard.trendz.generator.solution.greenhouse.model.Section;
+import org.thingsboard.trendz.generator.solution.greenhouse.model.SoilAciditySensor;
+import org.thingsboard.trendz.generator.solution.greenhouse.model.SoilNpkSensor;
+import org.thingsboard.trendz.generator.solution.greenhouse.model.SoilWarmMoistureSensor;
+import org.thingsboard.trendz.generator.solution.greenhouse.model.WaterMeter;
 import org.thingsboard.trendz.generator.utils.DateTimeUtils;
 import org.thingsboard.trendz.generator.utils.MySortedSet;
 import org.thingsboard.trendz.generator.utils.RandomUtils;
@@ -55,7 +69,17 @@ import java.io.Reader;
 import java.nio.file.Path;
 import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.TreeSet;
+import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -298,8 +322,8 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
                                 "maxCo2Concentration",
                                 "minPh",
                                 "maxPh",
-                                "minRipeningCycleDays",
-                                "maxRipeningCycleDays",
+                                "minRipeningPeriodDays",
+                                "maxRipeningPeriodDays",
                                 "minNitrogenLevel",
                                 "maxNitrogenLevel",
                                 "minPhosphorusLevel",
@@ -939,8 +963,8 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
                 .maxCo2Concentration(1000)
                 .minPh(5.5)
                 .maxPh(7.5)
-                .minRipeningCycleDays(90)
-                .maxRipeningCycleDays(110)
+                .minRipeningPeriodDays(90)
+                .maxRipeningPeriodDays(110)
                 .minNitrogenLevel(150)
                 .maxNitrogenLevel(250)
                 .minPhosphorusLevel(30)
@@ -978,8 +1002,8 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
                 .maxCo2Concentration(1000)
                 .minPh(5.5)
                 .maxPh(6.8)
-                .minRipeningCycleDays(65)
-                .maxRipeningCycleDays(75)
+                .minRipeningPeriodDays(65)
+                .maxRipeningPeriodDays(75)
                 .minNitrogenLevel(150)
                 .maxNitrogenLevel(250)
                 .minPhosphorusLevel(70)
@@ -1017,8 +1041,8 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
                 .maxCo2Concentration(1000)
                 .minPh(6.0)
                 .maxPh(7.0)
-                .minRipeningCycleDays(55)
-                .maxRipeningCycleDays(65)
+                .minRipeningPeriodDays(55)
+                .maxRipeningPeriodDays(65)
                 .minNitrogenLevel(100)
                 .maxNitrogenLevel(200)
                 .minPhosphorusLevel(20)
@@ -1056,8 +1080,8 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
                 .maxCo2Concentration(1000)
                 .minPh(6.0)
                 .maxPh(7.0)
-                .minRipeningCycleDays(80)
-                .maxRipeningCycleDays(100)
+                .minRipeningPeriodDays(80)
+                .maxRipeningPeriodDays(100)
                 .minNitrogenLevel(150)
                 .maxNitrogenLevel(250)
                 .minPhosphorusLevel(35)
@@ -1186,8 +1210,8 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
                 .maxCo2Concentration(configuration.getMaxCo2Concentration())
                 .minPh(configuration.getMinPh())
                 .maxPh(configuration.getMaxPh())
-                .minRipeningCycleDays(configuration.getMinRipeningCycleDays())
-                .maxRipeningCycleDays(configuration.getMaxRipeningCycleDays())
+                .minRipeningPeriodDays(configuration.getMinRipeningPeriodDays())
+                .maxRipeningPeriodDays(configuration.getMaxRipeningPeriodDays())
                 .minNitrogenLevel(configuration.getMinNitrogenLevel())
                 .maxNitrogenLevel(configuration.getMaxNitrogenLevel())
                 .minPhosphorusLevel(configuration.getMinPhosphorusLevel())
@@ -2076,7 +2100,7 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
         int noiseAmplitude = 3;
         double noiseCoefficient = 1.0;
         String name = "temporal__" + configuration.getName().toString().toLowerCase() + "_" + configuration.getVariety().toLowerCase();
-        int totalPeriodDays = (configuration.getMinRipeningCycleDays() + configuration.getMaxRipeningCycleDays()) / 2;
+        int totalPeriodDays = (configuration.getMinRipeningPeriodDays() + configuration.getMaxRipeningPeriodDays()) / 2;
         return createTemporalTelemetryPlantConsumption(
                 name, startDate, endDate, noiseAmplitude, noiseCoefficient, totalPeriodDays,
                 configuration.getGrowthPeriodsDayList(), configuration.getGrowthPeriodsNitrogenConsumption()
@@ -2087,7 +2111,7 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
         int noiseAmplitude = 1;
         double noiseCoefficient = 0.01;
         String name = "temporal__" + configuration.getName().toString().toLowerCase() + "_" + configuration.getVariety().toLowerCase();
-        int totalPeriodDays = (configuration.getMinRipeningCycleDays() + configuration.getMaxRipeningCycleDays()) / 2;
+        int totalPeriodDays = (configuration.getMinRipeningPeriodDays() + configuration.getMaxRipeningPeriodDays()) / 2;
         return createTemporalTelemetryPlantConsumption(
                 name, startDate, endDate, noiseAmplitude, noiseCoefficient, totalPeriodDays,
                 configuration.getGrowthPeriodsDayList(), configuration.getGrowthPeriodsPhosphorusConsumption()
@@ -2098,7 +2122,7 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
         int noiseAmplitude = 3;
         double noiseCoefficient = 1.0;
         String name = "temporal__" + configuration.getName().toString().toLowerCase() + "_" + configuration.getVariety().toLowerCase();
-        int totalPeriodDays = (configuration.getMinRipeningCycleDays() + configuration.getMaxRipeningCycleDays()) / 2;
+        int totalPeriodDays = (configuration.getMinRipeningPeriodDays() + configuration.getMaxRipeningPeriodDays()) / 2;
         return createTemporalTelemetryPlantConsumption(
                 name, startDate, endDate, noiseAmplitude, noiseCoefficient, totalPeriodDays,
                 configuration.getGrowthPeriodsDayList(), configuration.getGrowthPeriodsPotassiumConsumption()
@@ -2192,7 +2216,7 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
         PlantConfiguration plantConfiguration = configuration.getPlantConfiguration();
         double minLevel = plantConfiguration.getMinSoilMoisture();
         double maxLevel = plantConfiguration.getMaxSoilMoisture();
-        long period = 24L * (plantConfiguration.getMinRipeningCycleDays() + plantConfiguration.getMaxRipeningCycleDays()) / 2;
+        long period = 24L * (plantConfiguration.getMinRipeningPeriodDays() + plantConfiguration.getMaxRipeningPeriodDays()) / 2;
 
         ZonedDateTime startDate = DateTimeUtils.fromTs(configuration.getStartTs()).truncatedTo(ChronoUnit.HOURS);
         ZonedDateTime endDate = DateTimeUtils.fromTs(configuration.getEndTs()).truncatedTo(ChronoUnit.HOURS);
@@ -2261,7 +2285,7 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
         Telemetry<Double> result = new Telemetry<>("acidity");
 
         PlantConfiguration plantConfiguration = configuration.getPlantConfiguration();
-        int period = plantConfiguration.getMaxRipeningCycleDays() * 24;
+        int period = plantConfiguration.getMaxRipeningPeriodDays() * 24;
         double minLevel = plantConfiguration.getMinPh();
         double maxLevel = plantConfiguration.getMaxPh();
         double startLevel = RandomUtils.getRandomNumber(minLevel, maxLevel);
@@ -2302,8 +2326,8 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
         }
 
         PlantConfiguration plantConfiguration = configuration.getPlantConfiguration();
-        int periodMin = plantConfiguration.getMinRipeningCycleDays();
-        int periodMax = plantConfiguration.getMaxRipeningCycleDays();
+        int periodMin = plantConfiguration.getMinRipeningPeriodDays();
+        int periodMax = plantConfiguration.getMaxRipeningPeriodDays();
         double averageCropWeight = plantConfiguration.getAverageCropWeight();
         double cropWeightNoiseAmplitude = averageCropWeight / 5;
         List<WorkerInChargeName> workersInCharge = configuration.getWorkersInCharge();
@@ -2484,8 +2508,8 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
                 new Attribute<>("maxCo2Concentration", plant.getMaxCo2Concentration()),
                 new Attribute<>("minPh", plant.getMinPh()),
                 new Attribute<>("maxPh", plant.getMaxPh()),
-                new Attribute<>("minRipeningPeriodDay", plant.getMinRipeningCycleDays()),
-                new Attribute<>("maxRipeningPeriodDay", plant.getMaxRipeningCycleDays()),
+                new Attribute<>("minRipeningPeriodDays", plant.getMinRipeningPeriodDays()),
+                new Attribute<>("maxRipeningPeriodDays", plant.getMaxRipeningPeriodDays()),
                 new Attribute<>("minNitrogenLevel", plant.getMinNitrogenLevel()),
                 new Attribute<>("maxNitrogenLevel", plant.getMaxNitrogenLevel()),
                 new Attribute<>("minPhosphorusLevel", plant.getMinPhosphorusLevel()),

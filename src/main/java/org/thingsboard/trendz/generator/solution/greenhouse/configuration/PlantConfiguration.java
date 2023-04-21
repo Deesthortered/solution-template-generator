@@ -39,8 +39,8 @@ public class PlantConfiguration extends ConfigurationEntity {
     private double maxCo2Concentration;
     private double minPh;
     private double maxPh;
-    private int minRipeningCycleDays;
-    private int maxRipeningCycleDays;
+    private int minRipeningPeriodDays;
+    private int maxRipeningPeriodDays;
     private double minNitrogenLevel;
     private double maxNitrogenLevel;
     private double minPhosphorusLevel;

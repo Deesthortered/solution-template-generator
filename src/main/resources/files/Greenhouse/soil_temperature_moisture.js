@@ -16,9 +16,9 @@ function getHoursBetweenDates(date1, date2) {
 var makeMoistureConsumptionData = function () {
     var minLevel = parseInt(metadata.ss_minSoilMoisture);
     var maxLevel = parseInt(metadata.ss_maxSoilMoisture);
-    var minRipeningCycleDays = parseInt(metadata.ss_minRipeningCycleDays);
-    var maxRipeningCycleDays = parseInt(metadata.ss_maxRipeningCycleDays);
-    var period = 24 * (minRipeningCycleDays + maxRipeningCycleDays) / 2;
+    var minRipeningPeriodDays = parseInt(metadata.ss_minRipeningPeriodDays);
+    var maxRipeningPeriodDays = parseInt(metadata.ss_maxRipeningPeriodDays);
+    var period = 24 * (minRipeningPeriodDays + maxRipeningPeriodDays) / 2;
 
     var startDate = new Date();
     startDate.setHours(0, 0, 0, 0);
@@ -80,5 +80,5 @@ var makeNecessaryData = function () {
     metadata.values_temperature = temperature;
 };
 
-
+makeNecessaryData();
 return {msg: msg, metadata: metadata, msgType: msgType};
