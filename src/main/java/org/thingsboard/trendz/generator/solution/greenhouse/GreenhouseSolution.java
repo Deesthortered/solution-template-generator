@@ -241,27 +241,14 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
                 String greenhouseName = greenhouse.getSystemName();
 
                 Plant plant = greenhouse.getPlant();
-                UUID plantId = this.plantToIdMap.get(plant);
-
                 OutsideAirWarmHumiditySensor outsideAirWarmHumiditySensor = greenhouse.getOutsideAirWarmHumiditySensor();
-                UUID outsideAirWarmHumiditySensorId = this.outsideAirWarmHumiditySensorToIdMap.get(outsideAirWarmHumiditySensor);
-
                 OutsideLightSensor outsideLightSensor = greenhouse.getOutsideLightSensor();
-                UUID outsideLightSensorId = this.outsideLightSensorToIdMap.get(outsideLightSensor);
-
                 InsideAirWarmHumiditySensor insideAirWarmHumiditySensor = greenhouse.getInsideAirWarmHumiditySensor();
-                UUID insideAirWarmHumiditySensorId = this.insideAirWarmHumiditySensorToIdMap.get(insideAirWarmHumiditySensor);
-
                 InsideLightSensor insideLightSensor = greenhouse.getInsideLightSensor();
-                UUID insideLightSensorId = this.insideLightSensorToIdMap.get(insideLightSensor);
-
                 InsideCO2Sensor insideCO2Sensor = greenhouse.getInsideCO2Sensor();
-                UUID insideCO2SensorId = this.insideCO2SensorToIdMap.get(insideCO2Sensor);
-
                 EnergyMeter energyMeter = greenhouse.getEnergyMeter();
                 WaterMeter waterMeter = greenhouse.getWaterMeter();
 
-                ////
                 String greenhouseGeneratorCode = getGreenhouseGeneratorCode(greenhouse.getLatitude(), greenhouse.getLongitude(), WEATHER_API_TOKEN);
                 RuleNode greenhouseGeneratorNode = this.ruleChainBuildingService.createGeneratorNode(
                         String.format("%s, %s: Generator", greenhouseName, plant.getSystemName()),
@@ -386,6 +373,14 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
                         getNodePositionY(greenhouseCounter, 0, 13)
                 );
 
+                RuleNode mapToSectionsNode = this.ruleChainBuildingService.createTransformationNode(
+                        getSolutionName(),
+                        String.format("%s: Go to Sections", greenhouseName),
+                        "mapper.js",
+                        getNodePositionX(greenhouseCounter, 1, 0),
+                        getNodePositionY(greenhouseCounter, 1, 0)
+                );
+
 //                RuleNode outsideAirWamHumiditySaveNode = this.ruleChainBuildingService.createSaveNode(
 //                        String.format("%s: Save Telemetry (Temp+Humidity Out)", greenhouseName),
 //                        getNodePositionX(greenhouseCounter, 2, 2),
@@ -409,6 +404,7 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
                 nodes.add(co2TelemetryNode);                        // 11
                 nodes.add(temperatureInTelemetryNode);              // 12
                 nodes.add(humidityInTelemetryNode);                 // 13
+                nodes.add(mapToSectionsNode);                       // 14
 
                 connections.add(ruleChainBuildingService.createRuleConnection(index, index + 1));
                 connections.add(ruleChainBuildingService.createRuleConnection(index + 1, index + 2));
@@ -424,14 +420,44 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
                 connections.add(ruleChainBuildingService.createRuleConnection(index + 10, index + 11));
                 connections.add(ruleChainBuildingService.createRuleConnection(index + 11, index + 12));
                 connections.add(ruleChainBuildingService.createRuleConnection(index + 12, index + 13));
+                connections.add(ruleChainBuildingService.createRuleConnection(index + 13, index + 14));
 
+                int sectionCounter = 0;
                 for (Section section : greenhouse.getSections()) {
                     SoilWarmMoistureSensor soilWarmMoistureSensor = section.getSoilWarmMoistureSensor();
                     SoilAciditySensor soilAciditySensor = section.getSoilAciditySensor();
                     SoilNpkSensor soilNpkSensor = section.getSoilNpkSensor();
                     HarvestReporter harvestReporter = section.getHarvestReporter();
 
+                    List<RuleNode> sectionNodes = new ArrayList<>();
 
+                    RuleNode toSoilWarmMoistureSensorOriginatorNode = this.ruleChainBuildingService.createChangeOriginatorNode(
+                            String.format("%s: To Soil Warm-Moisture In Sensor", greenhouseName),
+                            soilWarmMoistureSensor.getSystemName(),
+                            EntityType.DEVICE,
+                            getNodePositionX(greenhouseCounter, 2 + sectionCounter, 1),
+                            getNodePositionY(greenhouseCounter, 2 + sectionCounter, 1)
+                    );
+
+                    RuleNode soilWarmMoistureSensorAttributesNode = this.ruleChainBuildingService.createOriginatorAttributesNode(
+                            String.format("%s: Get Soil Warm-Moisture Attributes", greenhouseName),
+                            Collections.emptyList(),
+                            Collections.emptyList(),
+                            Collections.emptyList(),
+                            List.of("temperature", "moisture"),
+                            false,
+                            getNodePositionX(greenhouseCounter, 2 + sectionCounter, 2),
+                            getNodePositionY(greenhouseCounter, 2 + sectionCounter, 2)
+                    );
+
+                    sectionNodes.add(toSoilWarmMoistureSensorOriginatorNode);
+                    sectionNodes.add(soilWarmMoistureSensorAttributesNode);
+                    nodes.addAll(sectionNodes);
+
+                    int sectionIndex = index + 14 + sectionCounter * sectionNodes.size();
+                    connections.add(ruleChainBuildingService.createRuleConnection(index + 14, sectionIndex + 1));
+                    connections.add(ruleChainBuildingService.createRuleConnection(sectionIndex + 1, sectionIndex + 2));
+                    sectionCounter++;
                 }
                 greenhouseCounter++;
             }
