@@ -432,7 +432,7 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
                     List<RuleNode> sectionNodes = new ArrayList<>();
 
                     RuleNode toSoilWarmMoistureSensorOriginatorNode = this.ruleChainBuildingService.createChangeOriginatorNode(
-                            String.format("%s: To Soil Warm-Moisture In Sensor", greenhouseName),
+                            String.format("%s: To Soil Warm-Moisture Sensor", greenhouseName),
                             soilWarmMoistureSensor.getSystemName(),
                             EntityType.DEVICE,
                             getNodePositionX(greenhouseCounter, 2 + sectionCounter, 1),
@@ -450,13 +450,59 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
                             getNodePositionY(greenhouseCounter, 2 + sectionCounter, 2)
                     );
 
+                    RuleNode toSoilAciditySensorOriginatorNode = this.ruleChainBuildingService.createChangeOriginatorNode(
+                            String.format("%s: To Soil Acidity Sensor", greenhouseName),
+                            soilAciditySensor.getSystemName(),
+                            EntityType.DEVICE,
+                            getNodePositionX(greenhouseCounter, 2 + sectionCounter, 3),
+                            getNodePositionY(greenhouseCounter, 2 + sectionCounter, 3)
+                    );
+
+                    RuleNode soilAciditySensorAttributesNode = this.ruleChainBuildingService.createOriginatorAttributesNode(
+                            String.format("%s: Get Soil Acidity Attributes", greenhouseName),
+                            Collections.emptyList(),
+                            Collections.emptyList(),
+                            Collections.emptyList(),
+                            List.of("acidity"),
+                            false,
+                            getNodePositionX(greenhouseCounter, 2 + sectionCounter, 4),
+                            getNodePositionY(greenhouseCounter, 2 + sectionCounter, 4)
+                    );
+
+                    RuleNode toSoilNpkSensorOriginatorNode = this.ruleChainBuildingService.createChangeOriginatorNode(
+                            String.format("%s: To Soil Т Sensor", greenhouseName),
+                            soilNpkSensor.getSystemName(),
+                            EntityType.DEVICE,
+                            getNodePositionX(greenhouseCounter, 2 + sectionCounter, 3),
+                            getNodePositionY(greenhouseCounter, 2 + sectionCounter, 3)
+                    );
+
+                    RuleNode soilNpkSensorAttributesNode = this.ruleChainBuildingService.createOriginatorAttributesNode(
+                            String.format("%s: Get Soil Acidity Attributes", greenhouseName),
+                            Collections.emptyList(),
+                            Collections.emptyList(),
+                            Collections.emptyList(),
+                            List.of("nitrogen", "phosphorus", "potassium"),
+                            false,
+                            getNodePositionX(greenhouseCounter, 2 + sectionCounter, 4),
+                            getNodePositionY(greenhouseCounter, 2 + sectionCounter, 4)
+                    );
+
                     sectionNodes.add(toSoilWarmMoistureSensorOriginatorNode);
                     sectionNodes.add(soilWarmMoistureSensorAttributesNode);
+                    sectionNodes.add(toSoilAciditySensorOriginatorNode);
+                    sectionNodes.add(soilAciditySensorAttributesNode);
+                    sectionNodes.add(toSoilNpkSensorOriginatorNode);
+                    sectionNodes.add(soilNpkSensorAttributesNode);
                     nodes.addAll(sectionNodes);
 
                     int sectionIndex = index + 14 + sectionCounter * sectionNodes.size();
                     connections.add(ruleChainBuildingService.createRuleConnection(index + 14, sectionIndex + 1));
                     connections.add(ruleChainBuildingService.createRuleConnection(sectionIndex + 1, sectionIndex + 2));
+                    connections.add(ruleChainBuildingService.createRuleConnection(sectionIndex + 2, sectionIndex + 3));
+                    connections.add(ruleChainBuildingService.createRuleConnection(sectionIndex + 3, sectionIndex + 4));
+                    connections.add(ruleChainBuildingService.createRuleConnection(sectionIndex + 4, sectionIndex + 5));
+                    connections.add(ruleChainBuildingService.createRuleConnection(sectionIndex + 5, sectionIndex + 6));
                     sectionCounter++;
                 }
                 greenhouseCounter++;
