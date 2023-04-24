@@ -20,8 +20,9 @@ var makeNecessaryData = function () {
     var cropWeightNoiseAmplitude = averageCropWeight / 5;
     var workersInCharge = "WORKER_IN_CHARGE_PLACEHOLDER";
 
-    var currentLevel = 0;
-    var skip = true;
+    var currentLevel = metadata.values_harverstReporter_currentLevel !== null
+        ? parseInt(metadata.values_harverstReporter_currentLevel)
+        : 0;
 
     var startDate = new Date();
     startDate.setHours(0, 0, 0, 0);
@@ -31,8 +32,7 @@ var makeNecessaryData = function () {
     var daysPeriod = daysBetween % periodMax;
 
     if (periodMin < daysPeriod) {
-        if (skip) {
-            // skip = false;
+        if (periodMin === daysPeriod) {
             currentLevel = averageCropWeight;
             currentLevel += getRandomInt(-cropWeightNoiseAmplitude, cropWeightNoiseAmplitude);
         }
@@ -46,18 +46,19 @@ var makeNecessaryData = function () {
             value = currentLevel;
         }
         currentLevel -= value;
+        metadata.values_harverstReporter_currentLevel = currentLevel;
 
         if (0 < value) {
-            // value
-            // worker
+            metadata.values_cropWeight = value;
+            metadata.values_workerInCharge = worker;
+        } else {
+            metadata.values_cropWeight = 0;
+            metadata.values_workerInCharge = "None";
         }
     } else {
-        skip = true;
+        metadata.values_cropWeight = 0;
+        metadata.values_workerInCharge = "None";
     }
-
-
-    metadata.values_cropWeight = null;
-    metadata.values_workerInCharge = null;
 };
 
 makeNecessaryData();
