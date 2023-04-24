@@ -26,7 +26,6 @@ import org.thingsboard.trendz.generator.model.tb.RuleNodeAdditionalInfo;
 import org.thingsboard.trendz.generator.service.FileService;
 import org.thingsboard.trendz.generator.utils.JsonUtils;
 
-import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
@@ -83,12 +82,10 @@ public class RuleChainBuildingService {
         return createRuleNode(name, TbGetAttributesNode.class, configuration, (int) gridX, (int) gridY);
     }
 
-    public RuleNode createTransformationNode(String solutionName, String name, String scriptFileName, double gridX, double gridY) throws IOException {
-        String fileContent = this.fileService.getFileContent(solutionName, scriptFileName);
-
+    public RuleNode createTransformationNode(String name, String script, double gridX, double gridY) {
         TbTransformMsgNodeConfiguration configuration = new TbTransformMsgNodeConfiguration();
         configuration.setScriptLang(ScriptLanguage.JS);
-        configuration.setJsScript(fileContent);
+        configuration.setJsScript(script);
 
         return createRuleNode(name, TbTransformMsgNode.class, configuration, (int) gridX, (int) gridY);
     }

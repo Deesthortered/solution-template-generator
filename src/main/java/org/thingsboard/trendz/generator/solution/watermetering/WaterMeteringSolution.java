@@ -16,22 +16,12 @@ import org.thingsboard.server.common.data.rule.RuleChain;
 import org.thingsboard.server.common.data.rule.RuleChainMetaData;
 import org.thingsboard.server.common.data.rule.RuleNode;
 import org.thingsboard.server.common.data.security.DeviceCredentials;
-import org.thingsboard.trendz.generator.exception.AssetAlreadyExistException;
-import org.thingsboard.trendz.generator.exception.CustomerAlreadyExistException;
-import org.thingsboard.trendz.generator.exception.DeviceAlreadyExistException;
-import org.thingsboard.trendz.generator.exception.RuleChainAlreadyExistException;
-import org.thingsboard.trendz.generator.exception.SolutionValidationException;
+import org.thingsboard.trendz.generator.exception.*;
 import org.thingsboard.trendz.generator.model.ModelData;
 import org.thingsboard.trendz.generator.model.ModelEntity;
 import org.thingsboard.trendz.generator.model.anomaly.AnomalyInfo;
 import org.thingsboard.trendz.generator.model.anomaly.AnomalyType;
-import org.thingsboard.trendz.generator.model.tb.Attribute;
-import org.thingsboard.trendz.generator.model.tb.CustomerData;
-import org.thingsboard.trendz.generator.model.tb.CustomerUser;
-import org.thingsboard.trendz.generator.model.tb.RelationType;
-import org.thingsboard.trendz.generator.model.tb.RuleNodeAdditionalInfo;
-import org.thingsboard.trendz.generator.model.tb.Telemetry;
-import org.thingsboard.trendz.generator.model.tb.Timestamp;
+import org.thingsboard.trendz.generator.model.tb.*;
 import org.thingsboard.trendz.generator.service.FileService;
 import org.thingsboard.trendz.generator.service.anomaly.AnomalyService;
 import org.thingsboard.trendz.generator.service.dashboard.DashboardService;
@@ -42,11 +32,7 @@ import org.thingsboard.trendz.generator.solution.watermetering.configuration.Cit
 import org.thingsboard.trendz.generator.solution.watermetering.configuration.ConsumerConfiguration;
 import org.thingsboard.trendz.generator.solution.watermetering.configuration.PumpStationConfiguration;
 import org.thingsboard.trendz.generator.solution.watermetering.configuration.RegionConfiguration;
-import org.thingsboard.trendz.generator.solution.watermetering.model.City;
-import org.thingsboard.trendz.generator.solution.watermetering.model.Consumer;
-import org.thingsboard.trendz.generator.solution.watermetering.model.ConsumerType;
-import org.thingsboard.trendz.generator.solution.watermetering.model.PumpStation;
-import org.thingsboard.trendz.generator.solution.watermetering.model.Region;
+import org.thingsboard.trendz.generator.solution.watermetering.model.*;
 import org.thingsboard.trendz.generator.utils.DateTimeUtils;
 import org.thingsboard.trendz.generator.utils.MySortedSet;
 import org.thingsboard.trendz.generator.utils.RandomUtils;
@@ -54,15 +40,7 @@ import org.thingsboard.trendz.generator.utils.RandomUtils;
 import java.time.DayOfWeek;
 import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.TreeSet;
-import java.util.UUID;
+import java.util.*;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
@@ -261,10 +239,11 @@ public class WaterMeteringSolution implements SolutionTemplateGenerator {
                                 getPositionX(consumerCounter, 2),
                                 getPositionY(consumerCounter, 2)
                         );
+
+                        String scriptTransformation2 = this.fileService.getFileContent(getSolutionName(), "node_tr1.js");
                         RuleNode transformationNode2 = ruleChainBuildingService.createTransformationNode(
-                                getSolutionName(),
                                 region.getSystemName() + ": transform node (" + consumer.getSystemName() + ")",
-                                "node_tr1.js",
+                                scriptTransformation2,
                                 getPositionX(consumerCounter, 3),
                                 getPositionY(consumerCounter, 3)
                         );
@@ -275,10 +254,11 @@ public class WaterMeteringSolution implements SolutionTemplateGenerator {
                                 getPositionX(consumerCounter, 4),
                                 getPositionY(consumerCounter, 4)
                         );
+
+                        String scriptTransformation3 = this.fileService.getFileContent(getSolutionName(), "node_tr2.js");
                         RuleNode transformationNode3 = ruleChainBuildingService.createTransformationNode(
-                                getSolutionName(),
                                 region.getSystemName() + " Pump Station: transform node (" + consumer.getSystemName() + ")",
-                                "node_tr2.js",
+                                scriptTransformation3,
                                 getPositionX(consumerCounter, 5),
                                 getPositionY(consumerCounter, 5)
                         );

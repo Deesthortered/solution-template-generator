@@ -254,10 +254,10 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
                         getNodePositionY(greenhouseCounter, 0, 1)
                 );
 
+                String scriptClearRestMetadata = this.fileService.getFileContent(getSolutionName(), "clear_rest_metadata.js");
                 RuleNode clearRestMatadataNode = this.ruleChainBuildingService.createTransformationNode(
-                        getSolutionName(),
                         String.format("%s: Clear REST Metadata", greenhouseName),
-                        "clear_rest_metadata.js",
+                        scriptClearRestMetadata,
                         getNodePositionX(greenhouseCounter, 0, 2),
                         getNodePositionY(greenhouseCounter, 0, 2)
                 );
@@ -352,58 +352,58 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
                         getNodePositionY(greenhouseCounter, 0, 8)
                 );
 
+                String scriptWeatherToHumidityTemperature = this.fileService.getFileContent(getSolutionName(), "raw_weather_to_temp_humidity.js");
                 RuleNode outsideAirTempHumidityTelemetryNode = this.ruleChainBuildingService.createTransformationNode(
-                        getSolutionName(),
                         String.format("%s: Map To Temp+Humidity Out", greenhouseName),
-                        "raw_weather_to_temp_humidity.js",
+                        scriptWeatherToHumidityTemperature,
                         getNodePositionX(greenhouseCounter, 0, 9),
                         getNodePositionY(greenhouseCounter, 0, 9)
                 );
 
+                String scriptWeatherToLight = this.fileService.getFileContent(getSolutionName(), "raw_weather_to_light.js");
                 RuleNode outsideLightTelemetryNode = this.ruleChainBuildingService.createTransformationNode(
-                        getSolutionName(),
                         String.format("%s: Map To Light-Out", greenhouseName),
-                        "raw_weather_to_light.js",
+                        scriptWeatherToLight,
                         getNodePositionX(greenhouseCounter, 0, 10),
                         getNodePositionY(greenhouseCounter, 0, 10)
                 );
 
+                String scriptLightIn = this.fileService.getFileContent(getSolutionName(), "light_in.js");
                 RuleNode insideLightTelemetryNode = this.ruleChainBuildingService.createTransformationNode(
-                        getSolutionName(),
                         String.format("%s: Map To Light-In", greenhouseName),
-                        "light_in.js",
+                        scriptLightIn,
                         getNodePositionX(greenhouseCounter, 0, 11),
                         getNodePositionY(greenhouseCounter, 0, 11)
                 );
 
+                String scriptCo2 = this.fileService.getFileContent(getSolutionName(), "co2.js");
                 RuleNode co2TelemetryNode = this.ruleChainBuildingService.createTransformationNode(
-                        getSolutionName(),
                         String.format("%s: Map To CO2", greenhouseName),
-                        "co2.js",
+                        scriptCo2,
                         getNodePositionX(greenhouseCounter, 0, 12),
                         getNodePositionY(greenhouseCounter, 0, 12)
                 );
 
+                String scriptTemperatureIn = this.fileService.getFileContent(getSolutionName(), "temperature_in.js");
                 RuleNode temperatureInTelemetryNode = this.ruleChainBuildingService.createTransformationNode(
-                        getSolutionName(),
                         String.format("%s: Map To Temperature In", greenhouseName),
-                        "temperature_in.js",
+                        scriptTemperatureIn,
                         getNodePositionX(greenhouseCounter, 0, 13),
                         getNodePositionY(greenhouseCounter, 0, 13)
                 );
 
+                String scriptHumidityIn = this.fileService.getFileContent(getSolutionName(), "humidity_in.js");
                 RuleNode humidityInTelemetryNode = this.ruleChainBuildingService.createTransformationNode(
-                        getSolutionName(),
                         String.format("%s: Map To Humidity In", greenhouseName),
-                        "humidity_in.js",
+                        scriptHumidityIn,
                         getNodePositionX(greenhouseCounter, 0, 14),
                         getNodePositionY(greenhouseCounter, 0, 14)
                 );
 
+                String scriptMapper = this.fileService.getFileContent(getSolutionName(), "mapper.js");
                 RuleNode mapToSectionsNode = this.ruleChainBuildingService.createTransformationNode(
-                        getSolutionName(),
                         String.format("%s: Go to Sections", greenhouseName),
-                        "mapper.js",
+                        scriptMapper,
                         getNodePositionX(greenhouseCounter, 1, 0),
                         getNodePositionY(greenhouseCounter, 1, 0)
                 );
@@ -517,26 +517,26 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
                             getNodePositionY(greenhouseCounter, 2 + sectionCounter, 6)
                     );
 
+                    String scriptSoilTemperatureMoisture = this.fileService.getFileContent(getSolutionName(), "soil_temperature_moisture.js");
                     RuleNode soilTemperatureMoistureTelemetryNode = this.ruleChainBuildingService.createTransformationNode(
-                            getSolutionName(),
                             String.format("%s: Map To Soil Warm-Moisture", greenhouseName),
-                            "soil_temperature_moisture.js",
+                            scriptSoilTemperatureMoisture,
                             getNodePositionX(greenhouseCounter, 2 + sectionCounter, 7),
                             getNodePositionY(greenhouseCounter, 2 + sectionCounter, 7)
                     );
 
+                    String scriptSoilAcidity = this.fileService.getFileContent(getSolutionName(), "soil_acidity.js");
                     RuleNode soilAcidityTelemetryNode = this.ruleChainBuildingService.createTransformationNode(
-                            getSolutionName(),
                             String.format("%s: Map To Soil Acidity", greenhouseName),
-                            "soil_acidity.js",
+                            scriptSoilAcidity,
                             getNodePositionX(greenhouseCounter, 2 + sectionCounter, 8),
                             getNodePositionY(greenhouseCounter, 2 + sectionCounter, 8)
                     );
 
+                    String scriptSoilNpk = this.fileService.getFileContent(getSolutionName(), "soil_npk.js");
                     RuleNode soilNpkTelemetryNode = this.ruleChainBuildingService.createTransformationNode(
-                            getSolutionName(),
                             String.format("%s: Map To Soil NPK", greenhouseName),
-                            "soil_npk.js",
+                            scriptSoilNpk,
                             getNodePositionX(greenhouseCounter, 2 + sectionCounter, 9),
                             getNodePositionY(greenhouseCounter, 2 + sectionCounter, 9)
                     );
