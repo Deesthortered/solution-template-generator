@@ -7,41 +7,116 @@ var getRandomInt = function (min, max) {
     return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
-function getBooleanByProbability(probability) {
-    if (probability < 0 || 1 < probability) {
-        throw new Error('Probability must be in range [0, 1], given = ${probability}');
+function getDaysBetweenDates(date1, date2) {
+    var diffInMs = Math.abs(date2.getTime() - date1.getTime());
+    return diffInMs / (1000 * 60 * 60 * 24);
+}
+
+
+var makeConsumptionData = function (prevValue, noiseAmplitude, noiseCoefficient, totalPeriodDays, periodDays, periodValues) {
+    var startDate = new Date();
+    startDate.setHours(0, 0, 0, 0);
+    var iteratedDate = new Date(parseInt(metadata.ts));
+
+    var daysBetween = getDaysBetweenDates(startDate, iteratedDate);
+
+    var currentDayCycle = daysBetween % totalPeriodDays;
+    if (currentDayCycle === 0) {
+        prevValue = 0;
     }
-    return Math.random() < probability;
+
+    var periodDayPrev = 0;
+    var periodValuePrev = 0;
+    for (var i = 0; i < periodDays.length; i++) {
+        var periodDay = periodDays[i];
+        var periodValue = periodValues[i];
+        if (currentDayCycle < periodDay) {
+            var value = periodValuePrev + ((currentDayCycle - periodDayPrev) * (periodValue - periodValuePrev)) / (periodDay - periodDayPrev);
+            value += getRandomInt(0, noiseAmplitude) * noiseCoefficient;
+            value = Math.max(prevValue, value);
+            return value;
+        }
+        periodDayPrev = periodDay;
+        periodValuePrev = periodValue;
+    }
+
+    return 0;
 }
 
 
 var makeNitrogenConsumptionData = function () {
-    return 0;
+    var prevValue = 0;
+    var noiseAmplitude = 3;
+    var noiseCoefficient = 1.0;
+    var totalPeriodDays = (parseInt(metadata.ss_minRipeningPeriodDays) + parseInt(metadata.ss_maxRipeningPeriodDays)) / 2;
+    var periodDays = 0;
+    var periodValues = 0;
+    return makeConsumptionData(prevValue, noiseAmplitude, noiseCoefficient, totalPeriodDays, periodDays, periodValues);
 }
 var makePhosphorusConsumptionData = function () {
-    return 0;
+    var prevValue = 0;
+    var noiseAmplitude = 1;
+    var noiseCoefficient = 0.01;
+    var totalPeriodDays = (parseInt(metadata.ss_minRipeningPeriodDays) + parseInt(metadata.ss_maxRipeningPeriodDays)) / 2;
+    var periodDays = 0;
+    var periodValues = 0;
+    return makeConsumptionData(prevValue, noiseAmplitude, noiseCoefficient, totalPeriodDays, periodDays, periodValues);
 }
 var makePotassiumConsumptionData = function () {
-    return 0;
+    var prevValue = 0;
+    var noiseAmplitude = 3;
+    var noiseCoefficient = 1.0;
+    var totalPeriodDays = (parseInt(metadata.ss_minRipeningPeriodDays) + parseInt(metadata.ss_maxRipeningPeriodDays)) / 2;
+    var periodDays = 0;
+    var periodValues = 0;
+    return makeConsumptionData(prevValue, noiseAmplitude, noiseCoefficient, totalPeriodDays, periodDays, periodValues);
 }
 
+
+var makeData = function (prevValue, minLevel, raiseValue, consumption) {
+    var value = consumption;
+
+    var delta = value - prevValue;
+    if (delta < 0) {
+        delta = value;
+    }
+
+    var currentLevel = prevValue;
+    currentLevel -= delta;
+
+    if (currentLevel <= minLevel) {
+        currentLevel += raiseValue;
+    }
+    return currentLevel;
+}
 
 var makeNitrogenData = function () {
+    var prevValue = parseInt(metadata.nitrogen);
+    var minLevel = parseInt(metadata.ss_minNitrogenLevel);
+    var raiseValue = parseInt(metadata.ss_maxNitrogenLevel) - parseInt(metadata.ss_minNitrogenLevel);
     var consumption = makeNitrogenConsumptionData();
-    return 0;
+    
+    return makeData(prevValue, minLevel, raiseValue, consumption);
 }
 var makePhosphorusData = function () {
+    var prevValue = parseInt(metadata.phosphorus);
+    var minLevel = parseInt(metadata.ss_minPhosphorusLevel);
+    var raiseValue = parseInt(metadata.ss_maxPhosphorusLevel) - parseInt(metadata.ss_minPhosphorusLevel);
     var consumption = makePhosphorusConsumptionData();
-    return 0;
+
+    return makeData(prevValue, minLevel, raiseValue, consumption);
 }
 var makePotassiumData = function () {
+    var prevValue = parseInt(metadata.potassium);
+    var minLevel = parseInt(metadata.ss_minPotassiumLevel);
+    var raiseValue = parseInt(metadata.ss_maxPotassiumLevel) - parseInt(metadata.ss_minPotassiumLevel);
     var consumption = makePotassiumConsumptionData();
-    return 0;
+
+    return makeData(prevValue, minLevel, raiseValue, consumption);
 }
 
 
 var makeNecessaryData = function () {
-
     metadata.values_nitrogen = makeNitrogenData();
     metadata.values_phosphorus = makePhosphorusData();
     metadata.values_potassium = makePotassiumData();

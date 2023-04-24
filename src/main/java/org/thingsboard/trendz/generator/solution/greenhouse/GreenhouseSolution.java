@@ -2104,8 +2104,8 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
     private Telemetry<Double> createTemporalTelemetryPlantConsumption(String name, ZonedDateTime startDate, ZonedDateTime endDate, int noiseAmplitude, double noiseCoefficient, int totalPeriodDays, List<Integer> periodDays, List<Double> periodValues) {
         Telemetry<Double> result = new Telemetry<>(name);
 
-        startDate = startDate.truncatedTo(ChronoUnit.HOURS);
-        endDate = endDate.truncatedTo(ChronoUnit.HOURS);
+        startDate = startDate.truncatedTo(ChronoUnit.DAYS);
+        endDate = endDate.truncatedTo(ChronoUnit.DAYS);
         ZonedDateTime iteratedDate = startDate;
         double prevValue = 0;
         while (iteratedDate.isBefore(endDate)) {
