@@ -45,31 +45,40 @@ var makeConsumptionData = function (prevValue, noiseAmplitude, noiseCoefficient,
 
 
 var makeNitrogenConsumptionData = function () {
-    var prevValue = 0;
+    var prevValue = metadata.values_nitrogen_consumption !== null ? metadata.values_nitrogen_consumption : 0;
     var noiseAmplitude = 3;
     var noiseCoefficient = 1.0;
     var totalPeriodDays = (parseInt(metadata.ss_minRipeningPeriodDays) + parseInt(metadata.ss_maxRipeningPeriodDays)) / 2;
     var periodDays = 0;
     var periodValues = 0;
-    return makeConsumptionData(prevValue, noiseAmplitude, noiseCoefficient, totalPeriodDays, periodDays, periodValues);
+
+    var result = makeConsumptionData(prevValue, noiseAmplitude, noiseCoefficient, totalPeriodDays, periodDays, periodValues);
+    metadata.values_nitrogen_consumption = result;
+    return result;
 }
 var makePhosphorusConsumptionData = function () {
-    var prevValue = 0;
+    var prevValue = metadata.values_phosphorus_consumption !== null ? metadata.values_phosphorus_consumption : 0;
     var noiseAmplitude = 1;
     var noiseCoefficient = 0.01;
     var totalPeriodDays = (parseInt(metadata.ss_minRipeningPeriodDays) + parseInt(metadata.ss_maxRipeningPeriodDays)) / 2;
     var periodDays = 0;
     var periodValues = 0;
-    return makeConsumptionData(prevValue, noiseAmplitude, noiseCoefficient, totalPeriodDays, periodDays, periodValues);
+
+    var result = makeConsumptionData(prevValue, noiseAmplitude, noiseCoefficient, totalPeriodDays, periodDays, periodValues);
+    metadata.values_phosphorus_consumption = result;
+    return result;
 }
 var makePotassiumConsumptionData = function () {
-    var prevValue = 0;
+    var prevValue = metadata.values_potassium_consumption !== null ? metadata.values_potassium_consumption : 0;
     var noiseAmplitude = 3;
     var noiseCoefficient = 1.0;
     var totalPeriodDays = (parseInt(metadata.ss_minRipeningPeriodDays) + parseInt(metadata.ss_maxRipeningPeriodDays)) / 2;
     var periodDays = 0;
     var periodValues = 0;
-    return makeConsumptionData(prevValue, noiseAmplitude, noiseCoefficient, totalPeriodDays, periodDays, periodValues);
+
+    var result = makeConsumptionData(prevValue, noiseAmplitude, noiseCoefficient, totalPeriodDays, periodDays, periodValues);
+    metadata.values_potassium_consumption = result;
+    return result;
 }
 
 
