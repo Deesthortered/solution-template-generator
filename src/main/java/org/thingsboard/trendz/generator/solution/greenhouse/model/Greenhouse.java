@@ -1,10 +1,6 @@
 package org.thingsboard.trendz.generator.solution.greenhouse.model;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.ToString;
+import lombok.*;
 import org.thingsboard.trendz.generator.model.ModelEntity;
 
 import java.util.Set;
@@ -37,4 +33,6 @@ public class Greenhouse extends ModelEntity {
     private OutsideLightSensor outsideLightSensor;
     private EnergyMeter energyMeter;
     private WaterMeter waterMeter;
+
+    private String workersInCharge;
 }

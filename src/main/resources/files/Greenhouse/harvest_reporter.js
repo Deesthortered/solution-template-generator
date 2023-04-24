@@ -18,7 +18,7 @@ var makeNecessaryData = function () {
     var periodMax = parseInt(metadata.ss_maxRipeningPeriodDays);
     var averageCropWeight = parseInt(metadata.ss_averageCropWeight);
     var cropWeightNoiseAmplitude = averageCropWeight / 5;
-    var workersInCharge = configuration.getWorkersInCharge();
+    var workersInCharge = "WORKER_IN_CHARGE_PLACEHOLDER";
 
     var currentLevel = 0;
     var skip = true;
@@ -32,15 +32,15 @@ var makeNecessaryData = function () {
 
     if (periodMin < daysPeriod) {
         if (skip) {
-            skip = false;
+            // skip = false;
             currentLevel = averageCropWeight;
             currentLevel += getRandomInt(-cropWeightNoiseAmplitude, cropWeightNoiseAmplitude);
         }
-        int workerIndex = (int) RandomUtils.getRandomNumber(0, workersInCharge.size());
-        WorkerInChargeName worker = workersInCharge.get(workerIndex);
+        var workerIndex = getRandomInt(0, workersInCharge.length);
+        var worker = workersInCharge[workerIndex];
 
-        double value = RandomUtils.getRandomNumber(0.5, 0.5 + currentLevel);
-        value = (double) Math.round(value * 100d) / 100d;
+        var value = getRandomInt(0.5, 0.5 + currentLevel);
+        value = Math.round(value * 100) / 100;
 
         if (currentLevel < value) {
             value = currentLevel;
@@ -48,8 +48,8 @@ var makeNecessaryData = function () {
         currentLevel -= value;
 
         if (0 < value) {
-            telemetryCropWeight.add(new Telemetry.Point<>(Timestamp.of(iteratedTs), value));
-            telemetryWorkerInCharge.add(new Telemetry.Point<>(Timestamp.of(iteratedTs), worker.toString()));
+            // value
+            // worker
         }
     } else {
         skip = true;

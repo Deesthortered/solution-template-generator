@@ -541,6 +541,15 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
                             getNodePositionY(greenhouseCounter, 2 + sectionCounter, 9)
                     );
 
+                    String scriptHarvestReporter = this.fileService.getFileContent(getSolutionName(), "harvest_reporter.js");
+                    scriptHarvestReporter = scriptHarvestReporter.replaceAll("\"WORKER_IN_CHARGE_PLACEHOLDER\"", greenhouse.getWorkersInCharge());
+                    RuleNode harvestReporterTelemetryNode = this.ruleChainBuildingService.createTransformationNode(
+                            String.format("%s: Map To Harvest Reporter In", greenhouseName),
+                            scriptHarvestReporter,
+                            getNodePositionX(greenhouseCounter, 2 + sectionCounter, 10),
+                            getNodePositionY(greenhouseCounter, 2 + sectionCounter, 10)
+                    );
+
 
                     sectionNodes.add(toSoilWarmMoistureSensorOriginatorNode);
                     sectionNodes.add(soilWarmMoistureSensorAttributesNode);
@@ -551,6 +560,7 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
                     sectionNodes.add(soilTemperatureMoistureTelemetryNode);
                     sectionNodes.add(soilAcidityTelemetryNode);
                     sectionNodes.add(soilNpkTelemetryNode);
+                    sectionNodes.add(harvestReporterTelemetryNode);
                     nodes.addAll(sectionNodes);
 
                     int sectionIndex = index + 15 + sectionCounter * sectionNodes.size();
@@ -563,6 +573,7 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
                     connections.add(ruleChainBuildingService.createRuleConnection(sectionIndex + 6, sectionIndex + 7));
                     connections.add(ruleChainBuildingService.createRuleConnection(sectionIndex + 7, sectionIndex + 8));
                     connections.add(ruleChainBuildingService.createRuleConnection(sectionIndex + 8, sectionIndex + 9));
+                    connections.add(ruleChainBuildingService.createRuleConnection(sectionIndex + 9, sectionIndex + 10));
                     sectionCounter++;
                 }
                 greenhouseCounter++;
@@ -1366,6 +1377,7 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
                 .build();
 
         Plant plant = this.configurationToPlantMap.get(configuration.getPlantConfiguration());
+        String workersInCharge = JsonUtils.toJson(configuration.getWorkersInCharge());
         return Greenhouse.builder()
                 .systemName(configuration.getName())
                 .systemLabel("")
@@ -1381,6 +1393,7 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
                 .outsideLightSensor(outsideLightSensor)
                 .energyMeter(energyMeter)
                 .waterMeter(waterMeter)
+                .workersInCharge(workersInCharge)
                 .build();
     }
 
@@ -2525,7 +2538,8 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
         Set<Attribute<?>> attributes = Set.of(
                 new Attribute<>("address", greenhouse.getAddress()),
                 new Attribute<>("latitude", greenhouse.getLatitude()),
-                new Attribute<>("longitude", greenhouse.getLongitude())
+                new Attribute<>("longitude", greenhouse.getLongitude()),
+                new Attribute<>("workersInCharge", greenhouse.getWorkersInCharge())
         );
         tbRestClient.setEntityAttributes(asset.getUuidId(), EntityType.ASSET, Attribute.Scope.SERVER_SCOPE, attributes);
 
