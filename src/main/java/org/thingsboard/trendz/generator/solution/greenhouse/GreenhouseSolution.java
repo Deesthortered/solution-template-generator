@@ -32,6 +32,7 @@ import org.thingsboard.trendz.generator.solution.SolutionTemplateGenerator;
 import org.thingsboard.trendz.generator.solution.greenhouse.configuration.*;
 import org.thingsboard.trendz.generator.solution.greenhouse.model.*;
 import org.thingsboard.trendz.generator.utils.DateTimeUtils;
+import org.thingsboard.trendz.generator.utils.JsonUtils;
 import org.thingsboard.trendz.generator.utils.MySortedSet;
 import org.thingsboard.trendz.generator.utils.RandomUtils;
 
@@ -300,7 +301,11 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
                                 "maxPhosphorusLevel",
                                 "minPotassiumLevel",
                                 "maxPotassiumLevel",
-                                "averageCropWeight"
+                                "averageCropWeight",
+                                "growthPeriodsDayList",
+                                "growthPeriodsNitrogenConsumption",
+                                "growthPeriodsPhosphorusConsumption",
+                                "growthPeriodsPotassiumConsumption"
                         ),
                         Collections.emptyList(),
                         false,
@@ -1191,6 +1196,10 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
                 .minPotassiumLevel(configuration.getMinPotassiumLevel())
                 .maxPotassiumLevel(configuration.getMaxPotassiumLevel())
                 .averageCropWeight(configuration.getAverageCropWeight())
+                .growthPeriodsDayList(JsonUtils.toJson(configuration.getGrowthPeriodsDayList()))
+                .growthPeriodsNitrogenConsumption(JsonUtils.toJson(configuration.getGrowthPeriodsNitrogenConsumption()))
+                .growthPeriodsPhosphorusConsumption(JsonUtils.toJson(configuration.getGrowthPeriodsPhosphorusConsumption()))
+                .growthPeriodsPotassiumConsumption(JsonUtils.toJson(configuration.getGrowthPeriodsPotassiumConsumption()))
                 .build();
     }
 
@@ -2488,7 +2497,11 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
                 new Attribute<>("maxPhosphorusLevel", plant.getMaxPhosphorusLevel()),
                 new Attribute<>("minPotassiumLevel", plant.getMinPotassiumLevel()),
                 new Attribute<>("maxPotassiumLevel", plant.getMaxPotassiumLevel()),
-                new Attribute<>("averageCropWeight", plant.getAverageCropWeight())
+                new Attribute<>("averageCropWeight", plant.getAverageCropWeight()),
+                new Attribute<>("growthPeriodsDayList", plant.getGrowthPeriodsDayList()),
+                new Attribute<>("growthPeriodsNitrogenConsumption", plant.getGrowthPeriodsNitrogenConsumption()),
+                new Attribute<>("growthPeriodsPhosphorusConsumption", plant.getGrowthPeriodsPhosphorusConsumption()),
+                new Attribute<>("growthPeriodsPotassiumConsumption", plant.getGrowthPeriodsPotassiumConsumption())
         );
         tbRestClient.setEntityAttributes(asset.getUuidId(), EntityType.ASSET, Attribute.Scope.SERVER_SCOPE, attributes);
 

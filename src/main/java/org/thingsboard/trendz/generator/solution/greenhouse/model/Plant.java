@@ -1,10 +1,6 @@
 package org.thingsboard.trendz.generator.solution.greenhouse.model;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.ToString;
+import lombok.*;
 import org.thingsboard.trendz.generator.model.ModelEntity;
 
 @Getter
@@ -52,4 +48,9 @@ public class Plant extends ModelEntity {
     private double minPotassiumLevel;
     private double maxPotassiumLevel;
     private double averageCropWeight;
+
+    private String growthPeriodsDayList;
+    private String growthPeriodsNitrogenConsumption;
+    private String growthPeriodsPhosphorusConsumption;
+    private String growthPeriodsPotassiumConsumption;
 }
