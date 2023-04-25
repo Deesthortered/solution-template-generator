@@ -446,6 +446,52 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
                         getNodePositionY(greenhouseCounter, 1, 0)
                 );
 
+                String scriptEnergyWaterMeter = this.fileService.getFileContent(getSolutionName(), "energy_water_meter.js");
+                RuleNode mapToEnergyWaterMeterTelemetryNode = this.ruleChainBuildingService.createTransformationNode(
+                        String.format("%s: Map To Energy & Water Meter", greenhouseName),
+                        scriptEnergyWaterMeter,
+                        getNodePositionX(greenhouseCounter, 1, 3),
+                        getNodePositionY(greenhouseCounter, 1, 3)
+                );
+
+                RuleNode toEnergyMeterOriginatorNode = this.ruleChainBuildingService.createChangeOriginatorNode(
+                        String.format("%s: To Energy Meter", greenhouseName),
+                        energyMeter.getSystemName(),
+                        EntityType.DEVICE,
+                        getNodePositionX(greenhouseCounter, 1, 4),
+                        getNodePositionY(greenhouseCounter, 1, 4)
+                );
+
+                String scriptFinishEnergyMeter = this.fileService.getFileContent(getSolutionName(), "finish_energy_meter.js");
+                RuleNode finishEnergyMeterTelemetryNode = this.ruleChainBuildingService.createTransformationNode(
+                        String.format("%s: Finish - Energy Meter", greenhouseName),
+                        scriptFinishEnergyMeter,
+                        getNodePositionX(greenhouseCounter, 1, 5),
+                        getNodePositionY(greenhouseCounter, 1, 5)
+                );
+
+                RuleNode toWaterMeterOriginatorNode = this.ruleChainBuildingService.createChangeOriginatorNode(
+                        String.format("%s: To Water Meter", greenhouseName),
+                        waterMeter.getSystemName(),
+                        EntityType.DEVICE,
+                        getNodePositionX(greenhouseCounter, 1, 6),
+                        getNodePositionY(greenhouseCounter, 1, 6)
+                );
+
+                String scriptFinishWaterMeter = this.fileService.getFileContent(getSolutionName(), "finish_water_meter.js");
+                RuleNode finishWaterMeterTelemetryNode = this.ruleChainBuildingService.createTransformationNode(
+                        String.format("%s: Finish - Water Meter", greenhouseName),
+                        scriptFinishWaterMeter,
+                        getNodePositionX(greenhouseCounter, 1, 7),
+                        getNodePositionY(greenhouseCounter, 1, 7)
+                );
+
+                RuleNode metersSaveNode = this.ruleChainBuildingService.createSaveNode(
+                        String.format("%s: Save Meter Telemetry", greenhouseName),
+                        getNodePositionX(greenhouseCounter, 1, 8),
+                        getNodePositionY(greenhouseCounter, 1, 8)
+                );
+
                 nodes.add(greenhouseGeneratorNode);                 // 0
                 nodes.add(greenhouseWeatherApiCallNode);            // 1
                 nodes.add(clearRestMatadataNode);                   // 2
@@ -462,6 +508,12 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
                 nodes.add(temperatureInTelemetryNode);              // 13
                 nodes.add(humidityInTelemetryNode);                 // 14
                 nodes.add(mapToSectionsNode);                       // 15
+                nodes.add(mapToEnergyWaterMeterTelemetryNode);      // 16
+                nodes.add(toEnergyMeterOriginatorNode);             // 17
+                nodes.add(finishEnergyMeterTelemetryNode);          // 18
+                nodes.add(toWaterMeterOriginatorNode);              // 19
+                nodes.add(finishWaterMeterTelemetryNode);           // 20
+                nodes.add(metersSaveNode);                          // 21
 
                 connections.add(ruleChainBuildingService.createRuleConnection(index, index + 1));
                 connections.add(ruleChainBuildingService.createRuleConnection(index + 1, index + 2));
@@ -479,6 +531,14 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
                 connections.add(ruleChainBuildingService.createRuleConnection(index + 12, index + 13));
                 connections.add(ruleChainBuildingService.createRuleConnection(index + 13, index + 14));
                 connections.add(ruleChainBuildingService.createRuleConnection(index + 14, index + 15));
+
+                connections.add(ruleChainBuildingService.createRuleConnection(index + 16, index + 17));
+                connections.add(ruleChainBuildingService.createRuleConnection(index + 17, index + 18));
+                connections.add(ruleChainBuildingService.createRuleConnection(index + 18, index + 21));
+
+                connections.add(ruleChainBuildingService.createRuleConnection(index + 16, index + 19));
+                connections.add(ruleChainBuildingService.createRuleConnection(index + 19, index + 20));
+                connections.add(ruleChainBuildingService.createRuleConnection(index + 20, index + 21));
 
                 int sectionCounter = 0;
                 for (Section section : greenhouse.getSections()) {
@@ -647,6 +707,13 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
                             getNodePositionY(greenhouseCounter, 2 + sectionCounter, 18)
                     );
 
+                    RuleNode sectionDelayNode = this.ruleChainBuildingService.createDelayNode(
+                            String.format("%s: Finish - Delay Node", greenhouseName),
+                            (sectionCounter + 1) * 60,
+                            getNodePositionX(greenhouseCounter, 2 + sectionCounter, 19),
+                            getNodePositionY(greenhouseCounter, 2 + sectionCounter, 19)
+                    );
+
 
                     sectionNodes.add(toSoilWarmMoistureSensorOriginatorNode);       // 1
                     sectionNodes.add(soilWarmMoistureSensorAttributesNode);         // 2
@@ -666,9 +733,10 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
                     sectionNodes.add(finishHarvestReporterSensorOriginatorNode);    // 16
                     sectionNodes.add(finishHarvestReporterTelemetryNode);           // 17
                     sectionNodes.add(sectionSaveNode);                              // 18
+                    sectionNodes.add(sectionDelayNode);                             // 19
                     nodes.addAll(sectionNodes);
 
-                    int sectionIndex = index + 15 + sectionCounter * sectionNodes.size();
+                    int sectionIndex = index + 21 + sectionCounter * sectionNodes.size();
                     connections.add(ruleChainBuildingService.createRuleConnection(index + 15, sectionIndex + 1));
                     connections.add(ruleChainBuildingService.createRuleConnection(sectionIndex + 1, sectionIndex + 2));
                     connections.add(ruleChainBuildingService.createRuleConnection(sectionIndex + 2, sectionIndex + 3));
@@ -695,6 +763,8 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
                     connections.add(ruleChainBuildingService.createRuleConnection(sectionIndex + 16, sectionIndex + 17));
                     connections.add(ruleChainBuildingService.createRuleConnection(sectionIndex + 17, sectionIndex + 18));
 
+                    connections.add(ruleChainBuildingService.createRuleConnection(sectionIndex + 10, sectionIndex + 19));
+                    connections.add(ruleChainBuildingService.createRuleConnection(sectionIndex + 19, index + 16));
                     sectionCounter++;
                 }
                 greenhouseCounter++;
