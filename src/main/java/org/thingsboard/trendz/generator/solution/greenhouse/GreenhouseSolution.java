@@ -707,9 +707,10 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
                             getNodePositionY(greenhouseCounter, 2 + sectionCounter, 18)
                     );
 
+                    int sectionQuantity = greenhouse.getSections().size();
                     RuleNode sectionDelayNode = this.ruleChainBuildingService.createDelayNode(
                             String.format("%s: Finish - Delay Node", greenhouseName),
-                            (sectionCounter + 1) * 60,
+                            (sectionCounter + 1) * (3600 - 20) / sectionQuantity,
                             getNodePositionX(greenhouseCounter, 2 + sectionCounter, 19),
                             getNodePositionY(greenhouseCounter, 2 + sectionCounter, 19)
                     );
@@ -3053,7 +3054,7 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
     }
 
     private double getNodePositionY(int greenhouseCounter, double x, double y) {
-        return 250 + greenhouseCounter * RuleNodeAdditionalInfo.CELL_SIZE * 100 + RuleNodeAdditionalInfo.CELL_SIZE * 3 * y;
+        return 250 + greenhouseCounter * RuleNodeAdditionalInfo.CELL_SIZE * 65 + RuleNodeAdditionalInfo.CELL_SIZE * 3 * y;
     }
 
     private String getGreenhouseGeneratorCode(double latitude, double longitude, String apiId) throws IOException {
