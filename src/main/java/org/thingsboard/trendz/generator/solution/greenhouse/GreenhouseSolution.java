@@ -625,7 +625,7 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
 
 
                     RuleNode finishHarvestReporterSensorOriginatorNode = this.ruleChainBuildingService.createChangeOriginatorNode(
-                            String.format("%s: Finish - To HarvestReporter Sensor", greenhouseName),
+                            String.format("%s: Finish - To Harvest Reporter Sensor", greenhouseName),
                             harvestReporter.getSystemName(),
                             EntityType.DEVICE,
                             getNodePositionX(greenhouseCounter, 2 + sectionCounter, 16),
@@ -634,7 +634,7 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
 
                     String scriptFinishHarvestReporter = this.fileService.getFileContent(getSolutionName(), "finish_harvest_reporter.js");
                     RuleNode finishHarvestReporterTelemetryNode = this.ruleChainBuildingService.createTransformationNode(
-                            String.format("%s: Finish - Map To HarvestReporter", greenhouseName),
+                            String.format("%s: Finish - Map To Harvest Reporter", greenhouseName),
                             scriptFinishHarvestReporter,
                             getNodePositionX(greenhouseCounter, 2 + sectionCounter, 17),
                             getNodePositionY(greenhouseCounter, 2 + sectionCounter, 17)
