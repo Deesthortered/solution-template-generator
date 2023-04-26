@@ -62,9 +62,9 @@ var makeTemperatureData = function () {
     var irrigation = metadata.values_irrigation !== null ? metadata.values_irrigation : false;
     var insideTemperature = parseInt(metadata.values_temperature_in);
 
+    var currentLevel = parseInt(metadata.values_temperature);
     var diff = insideTemperature - currentLevel;
 
-    var currentLevel = parseInt(metadata.values_temperature);
     currentLevel += diff * increaseLevel;
     currentLevel -= (irrigation) ? decreaseIrrigationLevel : 0;
 
