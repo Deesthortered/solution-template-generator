@@ -570,10 +570,10 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
                 connections.add(ruleChainBuildingService.createRuleConnection(index + 14, index + 18));
 
                 connections.add(ruleChainBuildingService.createRuleConnection(index + 15, index + 20));
+
                 connections.add(ruleChainBuildingService.createRuleConnection(index + 16, index + 17));
                 connections.add(ruleChainBuildingService.createRuleConnection(index + 17, index + 20));
 
-                connections.add(ruleChainBuildingService.createRuleConnection(index + 15, index + 18));
                 connections.add(ruleChainBuildingService.createRuleConnection(index + 18, index + 19));
                 connections.add(ruleChainBuildingService.createRuleConnection(index + 19, index + 20));
 
@@ -584,7 +584,8 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
                 connections.add(ruleChainBuildingService.createRuleConnection(index + 24, index + 25));
                 connections.add(ruleChainBuildingService.createRuleConnection(index + 25, index + 28));
 
-                connections.add(ruleChainBuildingService.createRuleConnection(index + 24, index + 27));
+                connections.add(ruleChainBuildingService.createRuleConnection(index + 24, index + 26));
+                connections.add(ruleChainBuildingService.createRuleConnection(index + 26, index + 27));
                 connections.add(ruleChainBuildingService.createRuleConnection(index + 27, index + 28));
 
                 int sectionCounter = 0;
@@ -805,11 +806,11 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
                     connections.add(ruleChainBuildingService.createRuleConnection(sectionIndex + 13, sectionIndex + 14));
                     connections.add(ruleChainBuildingService.createRuleConnection(sectionIndex + 14, sectionIndex + 19));
 
-                    connections.add(ruleChainBuildingService.createRuleConnection(sectionIndex + 12, sectionIndex + 15));
+                    connections.add(ruleChainBuildingService.createRuleConnection(sectionIndex + 11, sectionIndex + 15));
                     connections.add(ruleChainBuildingService.createRuleConnection(sectionIndex + 15, sectionIndex + 16));
                     connections.add(ruleChainBuildingService.createRuleConnection(sectionIndex + 16, sectionIndex + 19));
 
-                    connections.add(ruleChainBuildingService.createRuleConnection(sectionIndex + 12, sectionIndex + 17));
+                    connections.add(ruleChainBuildingService.createRuleConnection(sectionIndex + 11, sectionIndex + 17));
                     connections.add(ruleChainBuildingService.createRuleConnection(sectionIndex + 17, sectionIndex + 18));
                     connections.add(ruleChainBuildingService.createRuleConnection(sectionIndex + 18, sectionIndex + 19));
                     sectionCounter++;
