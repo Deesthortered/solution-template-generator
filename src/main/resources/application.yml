@@ -13,4 +13,4 @@ generator:
   mode: "${GENERATOR_MODE:generate}"  # generate, remove
   solutions: Greenhouse
   skipTelemetry: false
-  startYear: 2023
+  startYear: 2022
