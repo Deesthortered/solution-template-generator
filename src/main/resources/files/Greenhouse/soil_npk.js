@@ -126,6 +126,11 @@ var makePotassiumData = function () {
 
 
 var makeNecessaryData = function () {
+    var iteratedDate = new Date(parseInt(metadata.ts));
+    if (iteratedDate.getHours() > 0) {
+        return;
+    }
+
     metadata.values_nitrogen = makeNitrogenData();
     metadata.values_phosphorus = makePhosphorusData();
     metadata.values_potassium = makePotassiumData();

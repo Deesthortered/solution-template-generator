@@ -14,6 +14,13 @@ function getDaysBetweenDates(date1, date2) {
 
 
 var makeNecessaryData = function () {
+    var startDate = new Date();
+    startDate.setHours(0, 0, 0, 0);
+    var iteratedDate = new Date(parseInt(metadata.ts));
+    if (iteratedDate.getHours() > 0) {
+        return;
+    }
+
     var periodMin = parseInt(metadata.ss_minRipeningPeriodDays);
     var periodMax = parseInt(metadata.ss_maxRipeningPeriodDays);
     var averageCropWeight = parseInt(metadata.ss_averageCropWeight);
@@ -23,10 +30,6 @@ var makeNecessaryData = function () {
     var currentLevel = metadata.values_harverstReporter_currentLevel !== null
         ? parseInt(metadata.values_harverstReporter_currentLevel)
         : 0;
-
-    var startDate = new Date();
-    startDate.setHours(0, 0, 0, 0);
-    var iteratedDate = new Date(parseInt(metadata.ts));
 
     var daysBetween = getDaysBetweenDates(startDate, iteratedDate);
     var daysPeriod = daysBetween % periodMax;
