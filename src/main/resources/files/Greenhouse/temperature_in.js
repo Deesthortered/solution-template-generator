@@ -27,18 +27,18 @@ var makeTemperatureInData = function () {
     var heatingIncreaseValue = 8;
     var coolingDecreaseValue = 8;
 
-    var dayLowLevel = parseInt(metadata.dayMinTemperature);
-    var dayHighLevel = parseInt(metadata.dayMaxTemperature);
+    var dayLowLevel = parseInt(metadata.ss_dayMinTemperature);
+    var dayHighLevel = parseInt(metadata.ss_dayMaxTemperature);
     var dayOkLevel = (dayLowLevel + dayHighLevel) / 2;
-    var nightLowLevel = parseInt(metadata.nightMinTemperature);
-    var nightHighLevel = parseInt(metadata.nightMaxTemperature);
+    var nightLowLevel = parseInt(metadata.ss_nightMinTemperature);
+    var nightHighLevel = parseInt(metadata.ss_nightMaxTemperature);
     var nightOkLevel = (nightLowLevel + nightHighLevel) / 2;
 
     var hour = new Date(metadata.ts).getHours();
     var currentLevel = parseInt(metadata.temperature_in);
 
     var day = (DAY_START_HOUR <= hour && hour < NIGHT_START_HOUR);
-    var aeration = metadata.values_aeration !== null ? metadata.values_aeration : false;
+    var aeration = metadata.values_aeration != null ? metadata.values_aeration : false;
     var lowLevel = (day) ? dayLowLevel : nightLowLevel;
     var highLevel = (day) ? dayHighLevel : nightHighLevel;
     var okLevel = (day) ? dayOkLevel : nightOkLevel;
