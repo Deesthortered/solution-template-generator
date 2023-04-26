@@ -656,7 +656,7 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
                             Collections.emptyList(),
                             Collections.emptyList(),
                             Collections.emptyList(),
-                            List.of("nitrogen", "phosphorus", "potassium"),
+                            List.of("nitrogen", "phosphorus", "potassium", "nitrogen_consumption", "phosphorus_consumption", "potassium_consumption"),
                             false,
                             getNodePositionX(greenhouseCounter, 2 + sectionCounter, 7),
                             getNodePositionY(greenhouseCounter, 2 + sectionCounter, 7)
