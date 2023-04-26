@@ -485,6 +485,7 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
                 nodes.add(temperatureInTelemetryNode);              // 13
                 nodes.add(humidityInTelemetryNode);                 // 14
                 nodes.add(mapToSectionsNode);                       // 15
+
                 nodes.add(toWaterMeterOriginatorNode);              // 16
                 nodes.add(waterMeterNode);                          // 17
                 nodes.add(mapToEnergyWaterMeterTelemetryNode);      // 18
@@ -509,7 +510,7 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
                 connections.add(ruleChainBuildingService.createRuleConnection(index + 12, index + 13));
                 connections.add(ruleChainBuildingService.createRuleConnection(index + 13, index + 14));
                 connections.add(ruleChainBuildingService.createRuleConnection(index + 14, index + 15));
-                connections.add(ruleChainBuildingService.createRuleConnection(index + 15, index + 16));
+
                 connections.add(ruleChainBuildingService.createRuleConnection(index + 16, index + 17));
                 connections.add(ruleChainBuildingService.createRuleConnection(index + 17, index + 18));
 
@@ -715,7 +716,7 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
                     sectionNodes.add(sectionSaveNode);                              // 19
                     nodes.addAll(sectionNodes);
 
-                    int sectionIndex = index + 21 + sectionCounter * sectionNodes.size();
+                    int sectionIndex = index + 22 + sectionCounter * sectionNodes.size();
                     connections.add(ruleChainBuildingService.createRuleConnection(index + 15, sectionIndex + 1));
                     connections.add(ruleChainBuildingService.createRuleConnection(sectionIndex + 1, sectionIndex + 2));
                     connections.add(ruleChainBuildingService.createRuleConnection(sectionIndex + 2, sectionIndex + 3));
