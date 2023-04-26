@@ -19,46 +19,18 @@ import org.thingsboard.server.common.data.rule.RuleChain;
 import org.thingsboard.server.common.data.rule.RuleChainMetaData;
 import org.thingsboard.server.common.data.rule.RuleNode;
 import org.thingsboard.server.common.data.security.DeviceCredentials;
-import org.thingsboard.trendz.generator.exception.AssetAlreadyExistException;
-import org.thingsboard.trendz.generator.exception.CustomerAlreadyExistException;
-import org.thingsboard.trendz.generator.exception.DeviceAlreadyExistException;
-import org.thingsboard.trendz.generator.exception.RuleChainAlreadyExistException;
-import org.thingsboard.trendz.generator.exception.SolutionValidationException;
+import org.thingsboard.trendz.generator.exception.*;
 import org.thingsboard.trendz.generator.model.ModelData;
 import org.thingsboard.trendz.generator.model.ModelEntity;
-import org.thingsboard.trendz.generator.model.tb.Attribute;
-import org.thingsboard.trendz.generator.model.tb.CustomerData;
-import org.thingsboard.trendz.generator.model.tb.CustomerUser;
-import org.thingsboard.trendz.generator.model.tb.RelationType;
-import org.thingsboard.trendz.generator.model.tb.RuleNodeAdditionalInfo;
-import org.thingsboard.trendz.generator.model.tb.Telemetry;
-import org.thingsboard.trendz.generator.model.tb.Timestamp;
+import org.thingsboard.trendz.generator.model.tb.*;
 import org.thingsboard.trendz.generator.service.FileService;
 import org.thingsboard.trendz.generator.service.anomaly.AnomalyService;
 import org.thingsboard.trendz.generator.service.dashboard.DashboardService;
 import org.thingsboard.trendz.generator.service.rest.TbRestClient;
 import org.thingsboard.trendz.generator.service.roolchain.RuleChainBuildingService;
 import org.thingsboard.trendz.generator.solution.SolutionTemplateGenerator;
-import org.thingsboard.trendz.generator.solution.greenhouse.configuration.GreenhouseConfiguration;
-import org.thingsboard.trendz.generator.solution.greenhouse.configuration.PlantConfiguration;
-import org.thingsboard.trendz.generator.solution.greenhouse.configuration.StationCity;
-import org.thingsboard.trendz.generator.solution.greenhouse.configuration.WeatherData;
-import org.thingsboard.trendz.generator.solution.greenhouse.configuration.WorkerInChargeName;
-import org.thingsboard.trendz.generator.solution.greenhouse.model.EnergyMeter;
-import org.thingsboard.trendz.generator.solution.greenhouse.model.Greenhouse;
-import org.thingsboard.trendz.generator.solution.greenhouse.model.HarvestReporter;
-import org.thingsboard.trendz.generator.solution.greenhouse.model.InsideAirWarmHumiditySensor;
-import org.thingsboard.trendz.generator.solution.greenhouse.model.InsideCO2Sensor;
-import org.thingsboard.trendz.generator.solution.greenhouse.model.InsideLightSensor;
-import org.thingsboard.trendz.generator.solution.greenhouse.model.OutsideAirWarmHumiditySensor;
-import org.thingsboard.trendz.generator.solution.greenhouse.model.OutsideLightSensor;
-import org.thingsboard.trendz.generator.solution.greenhouse.model.Plant;
-import org.thingsboard.trendz.generator.solution.greenhouse.model.PlantName;
-import org.thingsboard.trendz.generator.solution.greenhouse.model.Section;
-import org.thingsboard.trendz.generator.solution.greenhouse.model.SoilAciditySensor;
-import org.thingsboard.trendz.generator.solution.greenhouse.model.SoilNpkSensor;
-import org.thingsboard.trendz.generator.solution.greenhouse.model.SoilWarmMoistureSensor;
-import org.thingsboard.trendz.generator.solution.greenhouse.model.WaterMeter;
+import org.thingsboard.trendz.generator.solution.greenhouse.configuration.*;
+import org.thingsboard.trendz.generator.solution.greenhouse.model.*;
 import org.thingsboard.trendz.generator.utils.DateTimeUtils;
 import org.thingsboard.trendz.generator.utils.JsonUtils;
 import org.thingsboard.trendz.generator.utils.MySortedSet;
@@ -70,17 +42,7 @@ import java.io.Reader;
 import java.nio.file.Path;
 import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.TreeSet;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -446,42 +408,57 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
                         getNodePositionY(greenhouseCounter, 1, 0)
                 );
 
-                String scriptEnergyWaterMeter = this.fileService.getFileContent(getSolutionName(), "energy_water_meter.js");
-                RuleNode mapToEnergyWaterMeterTelemetryNode = this.ruleChainBuildingService.createTransformationNode(
-                        String.format("%s: Map To Energy & Water Meter", greenhouseName),
-                        scriptEnergyWaterMeter,
-                        getNodePositionX(greenhouseCounter, 1, 3),
-                        getNodePositionY(greenhouseCounter, 1, 3)
-                );
-
-                RuleNode toEnergyMeterOriginatorNode = this.ruleChainBuildingService.createChangeOriginatorNode(
-                        String.format("%s: To Energy Meter", greenhouseName),
-                        energyMeter.getSystemName(),
-                        EntityType.DEVICE,
-                        getNodePositionX(greenhouseCounter, 1, 4),
-                        getNodePositionY(greenhouseCounter, 1, 4)
-                );
-
-                String scriptFinishEnergyMeter = this.fileService.getFileContent(getSolutionName(), "finish_energy_meter.js");
-                RuleNode finishEnergyMeterTelemetryNode = this.ruleChainBuildingService.createTransformationNode(
-                        String.format("%s: Finish - Energy Meter", greenhouseName),
-                        scriptFinishEnergyMeter,
-                        getNodePositionX(greenhouseCounter, 1, 5),
-                        getNodePositionY(greenhouseCounter, 1, 5)
-                );
-
                 RuleNode toWaterMeterOriginatorNode = this.ruleChainBuildingService.createChangeOriginatorNode(
                         String.format("%s: To Water Meter", greenhouseName),
                         waterMeter.getSystemName(),
                         EntityType.DEVICE,
-                        getNodePositionX(greenhouseCounter, 1, 6),
-                        getNodePositionY(greenhouseCounter, 1, 6)
+                        getNodePositionX(greenhouseCounter, 1, 2),
+                        getNodePositionY(greenhouseCounter, 1, 2)
+                );
+
+                RuleNode waterMeterNode = this.ruleChainBuildingService.createOriginatorAttributesNode(
+                        String.format("%s: Get Water Meter Temp Telemetry", greenhouseName),
+                        Collections.emptyList(),
+                        Collections.emptyList(),
+                        Collections.emptyList(),
+                        List.of(
+                                "temp_irrigations",
+                                "temp_ts"
+                        ),
+                        false,
+                        getNodePositionX(greenhouseCounter, 0, 3),
+                        getNodePositionY(greenhouseCounter, 0, 3)
+                );
+
+
+                String scriptEnergyWaterMeter = this.fileService.getFileContent(getSolutionName(), "energy_water_meter.js");
+                RuleNode mapToEnergyWaterMeterTelemetryNode = this.ruleChainBuildingService.createTransformationNode(
+                        String.format("%s: Map To Energy & Water Meter", greenhouseName),
+                        scriptEnergyWaterMeter,
+                        getNodePositionX(greenhouseCounter, 1, 4),
+                        getNodePositionY(greenhouseCounter, 1, 4)
                 );
 
                 String scriptFinishWaterMeter = this.fileService.getFileContent(getSolutionName(), "finish_water_meter.js");
                 RuleNode finishWaterMeterTelemetryNode = this.ruleChainBuildingService.createTransformationNode(
                         String.format("%s: Finish - Water Meter", greenhouseName),
                         scriptFinishWaterMeter,
+                        getNodePositionX(greenhouseCounter, 1, 5),
+                        getNodePositionY(greenhouseCounter, 1, 5)
+                );
+
+                RuleNode toEnergyMeterOriginatorNode = this.ruleChainBuildingService.createChangeOriginatorNode(
+                        String.format("%s: To Energy Meter", greenhouseName),
+                        energyMeter.getSystemName(),
+                        EntityType.DEVICE,
+                        getNodePositionX(greenhouseCounter, 1, 6),
+                        getNodePositionY(greenhouseCounter, 1, 6)
+                );
+
+                String scriptFinishEnergyMeter = this.fileService.getFileContent(getSolutionName(), "finish_energy_meter.js");
+                RuleNode finishEnergyMeterTelemetryNode = this.ruleChainBuildingService.createTransformationNode(
+                        String.format("%s: Finish - Energy Meter", greenhouseName),
+                        scriptFinishEnergyMeter,
                         getNodePositionX(greenhouseCounter, 1, 7),
                         getNodePositionY(greenhouseCounter, 1, 7)
                 );
@@ -508,12 +485,13 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
                 nodes.add(temperatureInTelemetryNode);              // 13
                 nodes.add(humidityInTelemetryNode);                 // 14
                 nodes.add(mapToSectionsNode);                       // 15
-                nodes.add(mapToEnergyWaterMeterTelemetryNode);      // 16
-                nodes.add(toEnergyMeterOriginatorNode);             // 17
-                nodes.add(finishEnergyMeterTelemetryNode);          // 18
-                nodes.add(toWaterMeterOriginatorNode);              // 19
-                nodes.add(finishWaterMeterTelemetryNode);           // 20
-                nodes.add(metersSaveNode);                          // 21
+                nodes.add(toWaterMeterOriginatorNode);              // 16
+                nodes.add(waterMeterNode);                          // 17
+                nodes.add(mapToEnergyWaterMeterTelemetryNode);      // 18
+                nodes.add(finishWaterMeterTelemetryNode);           // 19
+                nodes.add(toEnergyMeterOriginatorNode);             // 20
+                nodes.add(finishEnergyMeterTelemetryNode);          // 21
+                nodes.add(metersSaveNode);                          // 22
 
                 connections.add(ruleChainBuildingService.createRuleConnection(index, index + 1));
                 connections.add(ruleChainBuildingService.createRuleConnection(index + 1, index + 2));
@@ -531,14 +509,15 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
                 connections.add(ruleChainBuildingService.createRuleConnection(index + 12, index + 13));
                 connections.add(ruleChainBuildingService.createRuleConnection(index + 13, index + 14));
                 connections.add(ruleChainBuildingService.createRuleConnection(index + 14, index + 15));
-
+                connections.add(ruleChainBuildingService.createRuleConnection(index + 15, index + 16));
                 connections.add(ruleChainBuildingService.createRuleConnection(index + 16, index + 17));
                 connections.add(ruleChainBuildingService.createRuleConnection(index + 17, index + 18));
-                connections.add(ruleChainBuildingService.createRuleConnection(index + 18, index + 21));
 
-                connections.add(ruleChainBuildingService.createRuleConnection(index + 16, index + 19));
-                connections.add(ruleChainBuildingService.createRuleConnection(index + 19, index + 20));
-                connections.add(ruleChainBuildingService.createRuleConnection(index + 20, index + 21));
+                connections.add(ruleChainBuildingService.createRuleConnection(index + 18, index + 19));
+                connections.add(ruleChainBuildingService.createRuleConnection(index + 19, index + 22));
+
+                connections.add(ruleChainBuildingService.createRuleConnection(index + 18, index + 21));
+                connections.add(ruleChainBuildingService.createRuleConnection(index + 21, index + 22));
 
                 int sectionCounter = 0;
                 for (Section section : greenhouse.getSections()) {
