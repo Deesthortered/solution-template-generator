@@ -82,7 +82,7 @@ var getIrrigations = function () {
         metadata.ss_temp_ts = ts;
     }
 
-    return 0;
+    return temp_irrigation_count;
 };
 
 var makeNecessaryData = function () {
