@@ -56,6 +56,8 @@ var makeHumidityInData = function () {
         dehumidificationMode = true;
     }
 
+    metadata.values_humidification = false;
+    metadata.values_dehumidification = false;
     if (humidificationMode) {
         metadata.values_humidification = true;
         currentLevel += Math.min(humidificationIncreaseValue, Math.abs(currentLevel - okLevel)) + getRandomInt(-1, 1);

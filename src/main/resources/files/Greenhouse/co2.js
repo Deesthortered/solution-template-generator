@@ -17,6 +17,8 @@ var makeCo2ConcentrationData = function () {
     var currentLevel = parseInt(metadata.concentration);
     var co2Consumption = makeCo2ConsumptionData();
     currentLevel += co2Consumption;
+
+    metadata.values_aeration = false;
     if (maxLevel <= currentLevel) {
         metadata.values_aeration = true;
         currentLevel -= decreaseLevel;

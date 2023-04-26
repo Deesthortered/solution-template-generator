@@ -66,12 +66,14 @@ var makeTemperatureInData = function () {
         heatingMode = true;
     }
 
+    metadata.values_heating = false;
+    metadata.values_cooling = false;
     if (heatingMode) {
-        metadata.heating = true;
+        metadata.values_heating = true;
         currentLevel += Math.min(heatingIncreaseValue, Math.abs(currentLevel - okLevel));
     }
     if (coolingMode) {
-        metadata.cooling = true;
+        metadata.values_cooling = true;
         currentLevel -= Math.min(coolingDecreaseValue, Math.abs(currentLevel - okLevel));
     }
 
