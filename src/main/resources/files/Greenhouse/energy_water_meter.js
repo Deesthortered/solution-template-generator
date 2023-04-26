@@ -69,10 +69,18 @@ var getIrrigations = function () {
     var irrigation = metadata.values_irrigation !== null ? parseInt(metadata.values_irrigation) : 0;
     var ts = parseInt(metadata.ts);
 
-    var temp_irrigation_count = metadata.values_irrigation !== null ? parseInt(metadata.values_irrigation) : 0;
-    var temp_ts = metadata.values_irrigation !== null ? parseInt(metadata.values_irrigation) : 0;
+    var temp_irrigation_count = metadata.ss_temp_irrigations !== null ? parseInt(metadata.ss_temp_irrigations) : 0;
+    var temp_ts = metadata.ss_temp_ts !== null ? parseInt(metadata.ss_temp_ts) : 0;
     
-
+    if (ts === temp_ts) {
+        temp_irrigation_count += (irrigation) ? 1 : 0;
+        metadata.ss_temp_irrigations = temp_irrigation_count;
+    } else {
+        temp_irrigation_count = 0;
+        temp_irrigation_count += (irrigation) ? 1 : 0;
+        metadata.ss_temp_irrigations = temp_irrigation_count;
+        metadata.ss_temp_ts = ts;
+    }
 
     return 0;
 };

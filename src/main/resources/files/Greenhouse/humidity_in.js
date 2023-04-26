@@ -14,6 +14,10 @@ var getRandomInt = function (min, max) {
     return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
+function sign(x) {
+    return typeof x === 'number' ? x ? x < 0 ? -1 : 1 : x === x ? 0 : NaN : NaN;
+}
+
 var makeHumidityInData = function () {
 
     var increaseLevel = 3;
@@ -39,7 +43,7 @@ var makeHumidityInData = function () {
     var diff = outsideHumidity - currentLevel;
 
     currentLevel += increaseLevel;
-    currentLevel += (aeration) ? Math.sign(diff) * Math.min(aerationDecreaseValue, Math.abs(diff)) : 0;
+    currentLevel += (aeration) ? sign(diff) * Math.min(aerationDecreaseValue, Math.abs(diff)) : 0;
     currentLevel += (heating) ? heatingIncreaseValue : 0;
     currentLevel -= (cooling) ? coolingDecreaseValue : 0;
 

@@ -532,7 +532,7 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
                     int sectionQuantity = greenhouse.getSections().size();
                     RuleNode sectionDelayNode = this.ruleChainBuildingService.createDelayNode(
                             String.format("%s: Finish - Delay Node", greenhouseName),
-                            (sectionCounter + 1) * (3600 - 20) / sectionQuantity,
+                            sectionCounter * (3600 - 20) / sectionQuantity,
                             getNodePositionX(greenhouseCounter, 2 + sectionCounter, 1),
                             getNodePositionY(greenhouseCounter, 2 + sectionCounter, 1)
                     );
