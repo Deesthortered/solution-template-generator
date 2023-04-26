@@ -8,14 +8,13 @@ var getRandomInt = function (min, max) {
 }
 
 
-var makeEnergyMeterData = function () {
+var makeEnergyMeterData = function (irrigationCount) {
     var light = parseInt(metadata.values_light_in);
     var aeration = metadata.values_aeration !== null ? metadata.values_aeration : false;
     var heating = metadata.values_heating !== null ? metadata.values_heating : false;
     var cooling = metadata.values_cooling !== null ? metadata.values_cooling : false;
     var humidification = metadata.values_humidification !== null ? metadata.values_humidification : false;
     var dehumidification = metadata.values_dehumidification !== null ? metadata.values_dehumidification : false;
-    var irrigationCount = metadata.values_irrigation_count !== null ? parseInt(metadata.values_irrigation_count) : 0;
 
     var valueLight = 0;
     valueLight += light * 0.05;
@@ -52,9 +51,8 @@ var makeEnergyMeterData = function () {
     metadata.values_energyConsumptionIrrigation = valueIrrigation;
 }
 
-var makeWaterMeterData = function () {
+var makeWaterMeterData = function (irrigationCount) {
     var humidification = metadata.values_humidification !== null ? metadata.values_humidification : false;
-    var irrigationCount = metadata.values_irrigation_count !== null ? parseInt(metadata.values_irrigation_count) : 0;
 
     var value = 0;
     value += (humidification) ? 0.5 : 0;
@@ -63,12 +61,26 @@ var makeWaterMeterData = function () {
     value += getRandomInt(-0.5, 0.5);
     value = Math.max(0, value);
 
-    return value;
+    metadata.values_consumptionWater =  value;
 }
 
+
+var getIrrigations = function () {
+    var irrigation = metadata.values_irrigation !== null ? parseInt(metadata.values_irrigation) : 0;
+    var ts = parseInt(metadata.ts);
+
+    var temp_irrigation_count = metadata.values_irrigation !== null ? parseInt(metadata.values_irrigation) : 0;
+    var temp_ts = metadata.values_irrigation !== null ? parseInt(metadata.values_irrigation) : 0;
+    
+
+
+    return 0;
+};
+
 var makeNecessaryData = function () {
-    makeEnergyMeterData();
-    metadata.values_consumptionWater = makeWaterMeterData();
+    var irrigations = getIrrigations();
+    makeEnergyMeterData(irrigations);
+    makeWaterMeterData(irrigations);
 };
 
 makeNecessaryData();

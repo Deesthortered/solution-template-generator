@@ -426,8 +426,8 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
                                 "temp_ts"
                         ),
                         false,
-                        getNodePositionX(greenhouseCounter, 0, 3),
-                        getNodePositionY(greenhouseCounter, 0, 3)
+                        getNodePositionX(greenhouseCounter, 1, 3),
+                        getNodePositionY(greenhouseCounter, 1, 3)
                 );
 
 
