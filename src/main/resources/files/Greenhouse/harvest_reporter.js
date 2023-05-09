@@ -12,10 +12,18 @@ function getDaysBetweenDates(date1, date2) {
     return diffInMs / (1000 * 60 * 60 * 24);
 }
 
+function truncateDateToDayOfYear() {
+    var date = new Date();
+    var isLeap = new Date(date.getFullYear(), 1, 29).getDate() === 29;
+    var dayOfYear = Math.floor((date - new Date(date.getFullYear(), 0, 0)) / 1000 / 60 / 60 / 24);
+    date.setHours(0, 0, 0, 0);
+    date.setDate(date.getDate() - dayOfYear + (isLeap ? 1 : 0));
+    return date;
+}
+
 
 var makeNecessaryData = function () {
-    var startDate = new Date();
-    startDate.setHours(0, 0, 0, 0);
+    var startDate = truncateDateToDayOfYear();
     var iteratedDate = new Date(parseInt(metadata.ts));
     if (iteratedDate.getHours() > 0) {
         return;

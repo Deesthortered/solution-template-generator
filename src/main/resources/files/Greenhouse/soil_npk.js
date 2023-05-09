@@ -12,10 +12,18 @@ function getDaysBetweenDates(date1, date2) {
     return diffInMs / (1000 * 60 * 60 * 24);
 }
 
+function truncateDateToDayOfYear() {
+    var date = new Date();
+    var isLeap = new Date(date.getFullYear(), 1, 29).getDate() === 29;
+    var dayOfYear = Math.floor((date - new Date(date.getFullYear(), 0, 0)) / 1000 / 60 / 60 / 24);
+    date.setHours(0, 0, 0, 0);
+    date.setDate(date.getDate() - dayOfYear + (isLeap ? 1 : 0));
+    return date;
+}
+
 
 var makeConsumptionData = function (prevValue, noiseAmplitude, noiseCoefficient, totalPeriodDays, periodDays, periodValues) {
-    var startDate = new Date();
-    startDate.setHours(0, 0, 0, 0);
+    var startDate = truncateDateToDayOfYear();
     var iteratedDate = new Date(parseInt(metadata.ts));
 
     var daysBetween = getDaysBetweenDates(startDate, iteratedDate);
@@ -49,8 +57,8 @@ var makeNitrogenConsumptionData = function () {
     var noiseAmplitude = 3;
     var noiseCoefficient = 1.0;
     var totalPeriodDays = (parseInt(metadata.ss_minRipeningPeriodDays) + parseInt(metadata.ss_maxRipeningPeriodDays)) / 2;
-    var periodDays = JSON.parse(metadata.ss_growthPeriodsDayList !== null ? metadata.ss_growthPeriodsDayList : '[]');
-    var periodValues = JSON.parse(metadata.ss_growthPeriodsNitrogenConsumption !== null ? metadata.ss_growthPeriodsNitrogenConsumption : '[]');
+    var periodDays = JSON.parse(metadata.ss_growthPeriodsDayList != null ? metadata.ss_growthPeriodsDayList : '[]');
+    var periodValues = JSON.parse(metadata.ss_growthPeriodsNitrogenConsumption != null ? metadata.ss_growthPeriodsNitrogenConsumption : '[]');
 
     var result = makeConsumptionData(prevValue, noiseAmplitude, noiseCoefficient, totalPeriodDays, periodDays, periodValues);
     metadata.values_nitrogen_consumption = result;
@@ -61,8 +69,8 @@ var makePhosphorusConsumptionData = function () {
     var noiseAmplitude = 1;
     var noiseCoefficient = 0.01;
     var totalPeriodDays = (parseInt(metadata.ss_minRipeningPeriodDays) + parseInt(metadata.ss_maxRipeningPeriodDays)) / 2;
-    var periodDays = JSON.parse(metadata.ss_growthPeriodsDayList !== null ? metadata.ss_growthPeriodsDayList : '[]');
-    var periodValues = JSON.parse(metadata.ss_growthPeriodsPhosphorusConsumption !== null ? metadata.ss_growthPeriodsPhosphorusConsumption : '[]');
+    var periodDays = JSON.parse(metadata.ss_growthPeriodsDayList != null ? metadata.ss_growthPeriodsDayList : '[]');
+    var periodValues = JSON.parse(metadata.ss_growthPeriodsPhosphorusConsumption != null ? metadata.ss_growthPeriodsPhosphorusConsumption : '[]');
 
     var result = makeConsumptionData(prevValue, noiseAmplitude, noiseCoefficient, totalPeriodDays, periodDays, periodValues);
     metadata.values_phosphorus_consumption = result;
@@ -73,8 +81,8 @@ var makePotassiumConsumptionData = function () {
     var noiseAmplitude = 3;
     var noiseCoefficient = 1.0;
     var totalPeriodDays = (parseInt(metadata.ss_minRipeningPeriodDays) + parseInt(metadata.ss_maxRipeningPeriodDays)) / 2;
-    var periodDays = JSON.parse(metadata.ss_growthPeriodsDayList !== null ? metadata.ss_growthPeriodsDayList : '[]');
-    var periodValues = JSON.parse(metadata.ss_growthPeriodsPotassiumConsumption !== null ? metadata.ss_growthPeriodsPotassiumConsumption : '[]');
+    var periodDays = JSON.parse(metadata.ss_growthPeriodsDayList != null ? metadata.ss_growthPeriodsDayList : '[]');
+    var periodValues = JSON.parse(metadata.ss_growthPeriodsPotassiumConsumption != null ? metadata.ss_growthPeriodsPotassiumConsumption : '[]');
 
     var result = makeConsumptionData(prevValue, noiseAmplitude, noiseCoefficient, totalPeriodDays, periodDays, periodValues);
     metadata.values_potassium_consumption = result;

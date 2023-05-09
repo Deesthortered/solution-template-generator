@@ -12,6 +12,15 @@ function getHoursBetweenDates(date1, date2) {
     return diffInMs / (1000 * 60 * 60);
 }
 
+function truncateDateToDayOfYear() {
+    var date = new Date();
+    var isLeap = new Date(date.getFullYear(), 1, 29).getDate() === 29;
+    var dayOfYear = Math.floor((date - new Date(date.getFullYear(), 0, 0)) / 1000 / 60 / 60 / 24);
+    date.setHours(0, 0, 0, 0);
+    date.setDate(date.getDate() - dayOfYear + (isLeap ? 1 : 0));
+    return date;
+}
+
 
 var makeMoistureConsumptionData = function () {
     var minLevel = parseInt(metadata.ss_minSoilMoisture);
@@ -20,8 +29,7 @@ var makeMoistureConsumptionData = function () {
     var maxRipeningPeriodDays = parseInt(metadata.ss_maxRipeningPeriodDays);
     var period = 24 * (minRipeningPeriodDays + maxRipeningPeriodDays) / 2;
 
-    var startDate = new Date();
-    startDate.setHours(0, 0, 0, 0);
+    var startDate = truncateDateToDayOfYear();
     var iteratedDate = new Date(parseInt(metadata.ts));
 
     var hoursBetween = getHoursBetweenDates(startDate, iteratedDate);

@@ -10,11 +10,11 @@ var getRandomInt = function (min, max) {
 
 var makeEnergyMeterData = function (irrigationCount) {
     var light = parseInt(metadata.values_light_in);
-    var aeration = metadata.values_aeration !== null ? metadata.values_aeration : false;
-    var heating = metadata.values_heating !== null ? metadata.values_heating : false;
-    var cooling = metadata.values_cooling !== null ? metadata.values_cooling : false;
-    var humidification = metadata.values_humidification !== null ? metadata.values_humidification : false;
-    var dehumidification = metadata.values_dehumidification !== null ? metadata.values_dehumidification : false;
+    var aeration = metadata.values_aeration != null ? metadata.values_aeration : false;
+    var heating = metadata.values_heating != null ? metadata.values_heating : false;
+    var cooling = metadata.values_cooling != null ? metadata.values_cooling : false;
+    var humidification = metadata.values_humidification != null ? metadata.values_humidification : false;
+    var dehumidification = metadata.values_dehumidification != null ? metadata.values_dehumidification : false;
 
     var valueLight = 0;
     valueLight += light * 0.05;
@@ -52,7 +52,7 @@ var makeEnergyMeterData = function (irrigationCount) {
 }
 
 var makeWaterMeterData = function (irrigationCount) {
-    var humidification = metadata.values_humidification !== null ? metadata.values_humidification : false;
+    var humidification = metadata.values_humidification != null ? metadata.values_humidification : false;
 
     var value = 0;
     value += (humidification) ? 0.5 : 0;
@@ -66,11 +66,11 @@ var makeWaterMeterData = function (irrigationCount) {
 
 
 var getIrrigations = function () {
-    var irrigation = metadata.values_irrigation !== null ? parseInt(metadata.values_irrigation) : 0;
+    var irrigation = metadata.values_irrigation != null ? parseInt(metadata.values_irrigation) : 0;
     var ts = parseInt(metadata.ts);
 
-    var temp_irrigation_count = metadata.ss_temp_irrigations !== null ? parseInt(metadata.ss_temp_irrigations) : 0;
-    var temp_ts = metadata.ss_temp_ts !== null ? parseInt(metadata.ss_temp_ts) : 0;
+    var temp_irrigation_count = metadata.ss_temp_irrigations != null ? parseInt(metadata.ss_temp_irrigations) : 0;
+    var temp_ts = metadata.ss_temp_ts != null ? parseInt(metadata.ss_temp_ts) : 0;
     
     if (ts === temp_ts) {
         temp_irrigation_count += (irrigation) ? 1 : 0;
