@@ -1,6 +1,6 @@
 function makeLightData(date, clouds) {
     var hour = date.getHours();
-    var day = getDayofYear(date);
+    var day = getDayOfYear(date);
 
     var hourLux = getHourLuxValues(hour);
     var yearLux = getYearLuxCycleValue(day);
@@ -12,7 +12,7 @@ function makeLightData(date, clouds) {
     return value;
 }
 
-function getDayofYear(date) {
+function getDayOfYear(date) {
     var start = new Date(date.getFullYear(), 0, 0);
     var diff = date - start;
     var oneDay = 1000 * 60 * 60 * 24;
