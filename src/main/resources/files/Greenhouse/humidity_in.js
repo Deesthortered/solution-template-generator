@@ -29,8 +29,8 @@ function makeHumidityInData() {
 
     var humidificationMode = false;
     var dehumidificationMode = false;
-    var lowLevel = parseInt(metadata.minAirHumidity);
-    var highLevel = parseInt(metadata.maxAirHumidity);
+    var lowLevel = parseInt(metadata.ss_minAirHumidity);
+    var highLevel = parseInt(metadata.ss_maxAirHumidity);
     var okLevel = (lowLevel + highLevel) / 2;
 
     var currentLevel = parseInt(metadata.values_humidity_out);
