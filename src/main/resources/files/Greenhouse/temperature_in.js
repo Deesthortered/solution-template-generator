@@ -5,7 +5,7 @@ function getBooleanByProbability(probability) {
     return Math.random() < probability;
 }
 
-var getRandomInt = function (min, max) {
+function getRandomInt(min, max) {
     if (min === max) {
         return min;
     }
@@ -14,7 +14,7 @@ var getRandomInt = function (min, max) {
     return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
-var makeTemperatureInData = function () {
+function makeTemperatureInData() {
     var DAY_START_HOUR = 8;
     var NIGHT_START_HOUR = 20;
 
@@ -82,7 +82,7 @@ var makeTemperatureInData = function () {
     }
 
     return currentLevel;
-};
+}
 
 metadata.values_temperature_in = makeTemperatureInData();
 

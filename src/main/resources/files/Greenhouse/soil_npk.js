@@ -1,4 +1,4 @@
-var getRandomInt = function (min, max) {
+function getRandomInt(min, max) {
     if (min === max) {
         return min;
     }
@@ -22,7 +22,7 @@ function truncateDateToDayOfYear() {
 }
 
 
-var makeConsumptionData = function (prevValue, noiseAmplitude, noiseCoefficient, totalPeriodDays, periodDays, periodValues) {
+function makeConsumptionData(prevValue, noiseAmplitude, noiseCoefficient, totalPeriodDays, periodDays, periodValues) {
     var startDate = truncateDateToDayOfYear();
     var iteratedDate = new Date(parseInt(metadata.ts));
 
@@ -52,7 +52,7 @@ var makeConsumptionData = function (prevValue, noiseAmplitude, noiseCoefficient,
 }
 
 
-var makeNitrogenConsumptionData = function () {
+function makeNitrogenConsumptionData() {
     var prevValue = metadata.values_nitrogen_consumption != null ? parseInt(metadata.values_nitrogen_consumption) : 0;
     var noiseAmplitude = 3;
     var noiseCoefficient = 1.0;
@@ -64,7 +64,7 @@ var makeNitrogenConsumptionData = function () {
     metadata.values_nitrogen_consumption = result;
     return result;
 }
-var makePhosphorusConsumptionData = function () {
+function makePhosphorusConsumptionData() {
     var prevValue = metadata.values_phosphorus_consumption != null ? parseInt(metadata.values_phosphorus_consumption) : 0;
     var noiseAmplitude = 1;
     var noiseCoefficient = 0.01;
@@ -76,7 +76,7 @@ var makePhosphorusConsumptionData = function () {
     metadata.values_phosphorus_consumption = result;
     return result;
 }
-var makePotassiumConsumptionData = function () {
+function makePotassiumConsumptionData() {
     var prevValue = metadata.values_potassium_consumption != null ? parseInt(metadata.values_potassium_consumption) : 0;
     var noiseAmplitude = 3;
     var noiseCoefficient = 1.0;
@@ -90,7 +90,7 @@ var makePotassiumConsumptionData = function () {
 }
 
 
-var makeData = function (prevValue, minLevel, raiseValue, consumption) {
+function makeData(prevValue, minLevel, raiseValue, consumption) {
     var value = consumption;
 
     var delta = value - prevValue;
@@ -107,7 +107,7 @@ var makeData = function (prevValue, minLevel, raiseValue, consumption) {
     return currentLevel;
 }
 
-var makeNitrogenData = function () {
+function makeNitrogenData() {
     var prevValue = parseInt(metadata.nitrogen);
     var minLevel = parseInt(metadata.ss_minNitrogenLevel);
     var raiseValue = parseInt(metadata.ss_maxNitrogenLevel) - parseInt(metadata.ss_minNitrogenLevel);
@@ -115,7 +115,7 @@ var makeNitrogenData = function () {
     
     return makeData(prevValue, minLevel, raiseValue, consumption);
 }
-var makePhosphorusData = function () {
+function makePhosphorusData() {
     var prevValue = parseInt(metadata.phosphorus);
     var minLevel = parseInt(metadata.ss_minPhosphorusLevel);
     var raiseValue = parseInt(metadata.ss_maxPhosphorusLevel) - parseInt(metadata.ss_minPhosphorusLevel);
@@ -123,7 +123,7 @@ var makePhosphorusData = function () {
 
     return makeData(prevValue, minLevel, raiseValue, consumption);
 }
-var makePotassiumData = function () {
+function makePotassiumData() {
     var prevValue = parseInt(metadata.potassium);
     var minLevel = parseInt(metadata.ss_minPotassiumLevel);
     var raiseValue = parseInt(metadata.ss_maxPotassiumLevel) - parseInt(metadata.ss_minPotassiumLevel);
@@ -133,7 +133,7 @@ var makePotassiumData = function () {
 }
 
 
-var makeNecessaryData = function () {
+function makeNecessaryData() {
     var iteratedDate = new Date(parseInt(metadata.ts));
     if (iteratedDate.getHours() > 0) {
         return;
@@ -142,7 +142,7 @@ var makeNecessaryData = function () {
     metadata.values_nitrogen = makeNitrogenData();
     metadata.values_phosphorus = makePhosphorusData();
     metadata.values_potassium = makePotassiumData();
-};
+}
 
 makeNecessaryData();
 return {msg: msg, metadata: metadata, msgType: msgType};

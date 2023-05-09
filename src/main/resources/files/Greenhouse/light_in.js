@@ -1,4 +1,4 @@
-var makeLightInData = function () {
+function makeLightInData() {
     var date = new Date(parseInt(metadata.ts));
     date.setMinutes(0, 0, 0);
     var ts = date.getTime();
@@ -21,7 +21,7 @@ var makeLightInData = function () {
         : nightLevel;
 
     return Math.max(0, currentNeededLevel - outsideValue);
-};
+}
 
 metadata.values_light_in = makeLightInData();
 

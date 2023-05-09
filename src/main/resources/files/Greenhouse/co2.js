@@ -1,4 +1,4 @@
-var makeCo2ConsumptionData = function () {
+function makeCo2ConsumptionData() {
     var nightConsumption = 50;
     var zeroConsumptionLightLevel = parseInt(metadata.ss_dayMinLight);
 
@@ -6,9 +6,9 @@ var makeCo2ConsumptionData = function () {
     var outsideLight = metadata.values_light_out;
     var light = outsideLight + insideLight;
     return Math.round((-1.0 * nightConsumption * light) / zeroConsumptionLightLevel) + nightConsumption;
-};
+}
 
-var makeCo2ConcentrationData = function () {
+function makeCo2ConcentrationData() {
     var MIN_WORD_CO2_CONCENTRATION = 400;
     var minLevel = metadata.ss_minCo2Concentration;
     var maxLevel = metadata.ss_maxCo2Concentration;
@@ -26,7 +26,7 @@ var makeCo2ConcentrationData = function () {
     currentLevel = Math.max(MIN_WORD_CO2_CONCENTRATION, currentLevel);
 
     return currentLevel;
-};
+}
 
 metadata.values_concentration = makeCo2ConcentrationData();
 

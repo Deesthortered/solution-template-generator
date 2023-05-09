@@ -1,4 +1,4 @@
-var getRandomInt = function (min, max) {
+function getRandomInt(min, max) {
     if (min === max) {
         return min;
     }
@@ -22,7 +22,7 @@ function truncateDateToDayOfYear() {
 }
 
 
-var makeMoistureConsumptionData = function () {
+function makeMoistureConsumptionData() {
     var minLevel = parseInt(metadata.ss_minSoilMoisture);
     var maxLevel = parseInt(metadata.ss_maxSoilMoisture);
     var minRipeningPeriodDays = parseInt(metadata.ss_minRipeningPeriodDays);
@@ -43,7 +43,7 @@ var makeMoistureConsumptionData = function () {
     return consumption;
 }
 
-var makeMoistureData = function () {
+function makeMoistureData() {
     var minLevel = parseInt(metadata.ss_minSoilMoisture);
     var maxLevel = parseInt(metadata.ss_maxSoilMoisture);
 
@@ -63,7 +63,7 @@ var makeMoistureData = function () {
 }
 
 
-var makeTemperatureData = function () {
+function makeTemperatureData() {
     var increaseLevel = 0.5;
     var decreaseIrrigationLevel = 5;
 
@@ -80,13 +80,13 @@ var makeTemperatureData = function () {
 }
 
 
-var makeNecessaryData = function () {
+function makeNecessaryData() {
     var moisture = makeMoistureData();
     var temperature = makeTemperatureData();
 
     metadata.values_moisture = moisture;
     metadata.values_temperature = temperature;
-};
+}
 
 makeNecessaryData();
 return {msg: msg, metadata: metadata, msgType: msgType};

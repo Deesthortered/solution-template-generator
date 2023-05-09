@@ -5,7 +5,7 @@ function getBooleanByProbability(probability) {
     return Math.random() < probability;
 }
 
-var getRandomInt = function (min, max) {
+function getRandomInt(min, max) {
     if (min === max) {
         return min;
     }
@@ -18,7 +18,7 @@ function sign(x) {
     return typeof x === 'number' ? x ? x < 0 ? -1 : 1 : x === x ? 0 : NaN : NaN;
 }
 
-var makeHumidityInData = function () {
+function makeHumidityInData() {
 
     var increaseLevel = 3;
     var aerationDecreaseValue = 30;
@@ -79,7 +79,7 @@ var makeHumidityInData = function () {
     currentLevel = Math.max(currentLevel, 0);
 
     return currentLevel;
-};
+}
 
 metadata.values_humidity_in = makeHumidityInData();
 

@@ -1,39 +1,39 @@
-var makeLightData = function (date, clouds) {
+function makeLightData(date, clouds) {
     var hour = date.getHours();
     var day = getDayofYear(date);
 
     var hourLux = getHourLuxValues(hour);
     var yearLux = getYearLuxCycleValue(day);
-    var percents = getPercaneByClouds(clouds);
+    var percents = getPercentByClouds(clouds);
     var noise = getRandomInt(-1000, 1000);
     var value = (hourLux + yearLux) * percents + noise;
     value = Math.max(0, value);
 
     return value;
-};
+}
 
-var getDayofYear = function (date) {
+function getDayofYear(date) {
     var start = new Date(date.getFullYear(), 0, 0);
     var diff = date - start;
     var oneDay = 1000 * 60 * 60 * 24;
     var day = Math.floor(diff / oneDay);
     return day;
-};
+}
 
-var getRandomInt = function (min, max) {
+function getRandomInt(min, max) {
     if (min === max) {
         return min;
     }
     min = Math.ceil(min);
     max = Math.floor(max);
     return Math.floor(Math.random() * (max - min + 1)) + min;
-};
+}
 
-var getPercaneByClouds = function(clouds) {
+function getPercentByClouds(clouds) {
     return (100 - clouds) * 0.6 + 40;
-};
+}
 
-var getYearLuxCycleValue = function(day) {
+function getYearLuxCycleValue(day) {
     var diff = 12000;
     if (172 <= day && day < 356) {
         return (-diff * (day - 172)) / (356 - 172);
@@ -42,9 +42,9 @@ var getYearLuxCycleValue = function(day) {
     } else  {
         return (diff * (day + (365 - 356))) / ((365 - 356) + 172) - diff;
     }
-};
+}
 
-var getHourLuxValues = function(hour) {
+function getHourLuxValues(hour) {
     /// As summer day [0 - 17_000]
     switch (hour) {
         case 0:
@@ -92,14 +92,14 @@ var getHourLuxValues = function(hour) {
             return 0;
         default: Number.NaN;
     }
-};
+}
 
 
-var makeNecessaryData = function () {
+function makeNecessaryData() {
     var date = new Date(parseInt(metadata.ts));
     date.setMinutes(0, 0, 0);
     return makeLightData(date, msg.clouds.all);
-};
+}
 
 metadata.values_light_out = makeNecessaryData();
 

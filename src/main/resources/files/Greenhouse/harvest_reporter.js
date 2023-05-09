@@ -1,4 +1,4 @@
-var getRandomInt = function (min, max) {
+function getRandomInt(min, max) {
     if (min === max) {
         return min;
     }
@@ -22,7 +22,7 @@ function truncateDateToDayOfYear() {
 }
 
 
-var makeNecessaryData = function () {
+function makeNecessaryData() {
     var startDate = truncateDateToDayOfYear();
     var iteratedDate = new Date(parseInt(metadata.ts));
     if (iteratedDate.getHours() > 0) {

@@ -1,4 +1,4 @@
-var getRandomInt = function (min, max) {
+function getRandomInt(min, max) {
     if (min === max) {
         return min;
     }
@@ -7,7 +7,7 @@ var getRandomInt = function (min, max) {
     return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
-var makeAcidityData = function () {
+function makeAcidityData() {
     var period = parseInt(metadata.ss_maxRipeningPeriodDays) * 24;
     var minLevel = parseInt(metadata.ss_minPh);
     var maxLevel = parseInt(metadata.ss_maxPh);

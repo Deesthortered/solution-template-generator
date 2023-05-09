@@ -1,4 +1,4 @@
-var getRandomInt = function (min, max) {
+function getRandomInt(min, max) {
     if (min === max) {
         return min;
     }
@@ -8,7 +8,7 @@ var getRandomInt = function (min, max) {
 }
 
 
-var makeEnergyMeterData = function (irrigationCount) {
+function makeEnergyMeterData(irrigationCount) {
     var light = parseInt(metadata.values_light_in);
     var aeration = metadata.values_aeration != null ? metadata.values_aeration : false;
     var heating = metadata.values_heating != null ? metadata.values_heating : false;
@@ -51,7 +51,7 @@ var makeEnergyMeterData = function (irrigationCount) {
     metadata.values_energyConsumptionIrrigation = valueIrrigation;
 }
 
-var makeWaterMeterData = function (irrigationCount) {
+function makeWaterMeterData(irrigationCount) {
     var humidification = metadata.values_humidification != null ? metadata.values_humidification : false;
 
     var value = 0;
@@ -65,7 +65,7 @@ var makeWaterMeterData = function (irrigationCount) {
 }
 
 
-var getIrrigations = function () {
+function getIrrigations() {
     var irrigation = metadata.values_irrigation != null ? parseInt(metadata.values_irrigation) : 0;
     var ts = parseInt(metadata.ts);
 
@@ -83,13 +83,13 @@ var getIrrigations = function () {
     }
 
     return temp_irrigation_count;
-};
+}
 
-var makeNecessaryData = function () {
+function makeNecessaryData() {
     var irrigations = getIrrigations();
     makeEnergyMeterData(irrigations);
     makeWaterMeterData(irrigations);
-};
+}
 
 makeNecessaryData();
 return {msg: msg, metadata: metadata, msgType: msgType};
