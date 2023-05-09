@@ -34,7 +34,7 @@ var makeTemperatureInData = function () {
     var nightHighLevel = parseInt(metadata.ss_nightMaxTemperature);
     var nightOkLevel = (nightLowLevel + nightHighLevel) / 2;
 
-    var hour = new Date(metadata.ts).getHours();
+    var hour = new Date(parseInt(metadata.ts)).getHours();
     var currentLevel = parseInt(metadata.temperature_in);
 
     var day = (DAY_START_HOUR <= hour && hour < NIGHT_START_HOUR);

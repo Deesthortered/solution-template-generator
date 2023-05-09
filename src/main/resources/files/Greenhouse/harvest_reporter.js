@@ -13,7 +13,7 @@ function getDaysBetweenDates(date1, date2) {
 }
 
 function truncateDateToDayOfYear() {
-    var date = new Date();
+    var date = new Date(parseInt(metadata.ts));
     var isLeap = new Date(date.getFullYear(), 1, 29).getDate() === 29;
     var dayOfYear = Math.floor((date - new Date(date.getFullYear(), 0, 0)) / 1000 / 60 / 60 / 24);
     date.setHours(0, 0, 0, 0);

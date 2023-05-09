@@ -96,7 +96,7 @@ var getHourLuxValues = function(hour) {
 
 
 var makeNecessaryData = function () {
-    var date = new Date();
+    var date = new Date(parseInt(metadata.ts));
     date.setMinutes(0, 0, 0);
     return makeLightData(date, msg.clouds.all);
 };

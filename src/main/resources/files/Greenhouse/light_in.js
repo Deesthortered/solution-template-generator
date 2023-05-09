@@ -1,5 +1,5 @@
 var makeLightInData = function () {
-    var date = new Date();
+    var date = new Date(parseInt(metadata.ts));
     date.setMinutes(0, 0, 0);
     var ts = date.getTime();
     var hour = date.getHours();
