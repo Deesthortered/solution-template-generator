@@ -67,7 +67,7 @@ function makeTemperatureData() {
     var increaseLevel = 0.5;
     var decreaseIrrigationLevel = 5;
 
-    var irrigation = metadata.values_irrigation != null ? metadata.values_irrigation : false;
+    var irrigation = metadata.values_irrigation != null ? Boolean(JSON.parse(metadata.values_irrigation)) : false;
     var insideTemperature = parseInt(metadata.values_temperature_in);
 
     var currentLevel = parseInt(metadata.temperature);

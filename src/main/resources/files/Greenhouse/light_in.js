@@ -14,7 +14,7 @@ function makeLightInData() {
     var dayLevel = (dayMinLevel + dayMaxLevel) / 2;
     var nightLevel = (nightMinLevel + nightMaxLevel) / 2;
 
-    var outsideValue = metadata.values_light_out;
+    var outsideValue = parseInt(metadata.values_light_out);
 
     var currentNeededLevel = (DAY_START_HOUR <= hour && hour < NIGHT_START_HOUR)
         ? dayLevel

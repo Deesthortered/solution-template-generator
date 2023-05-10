@@ -17,7 +17,7 @@ function makeAcidityData() {
     var acidificationDecreaseLevel = (maxLevel - minLevel);
     var currentLevel = parseInt(metadata.acidity);
 
-    var irrigation = metadata.values_irrigation != null ? metadata.values_irrigation : false;
+    var irrigation = metadata.values_irrigation != null ? Boolean(JSON.parse(metadata.values_irrigation)) : false;
 
     currentLevel -= increaseLevel;
     currentLevel -= (irrigation) ? irrigationIncreaseLevel : 0;

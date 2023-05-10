@@ -10,11 +10,11 @@ function getRandomInt(min, max) {
 
 function makeEnergyMeterData(irrigationCount) {
     var light = parseInt(metadata.values_light_in);
-    var aeration = metadata.values_aeration != null ? metadata.values_aeration : false;
-    var heating = metadata.values_heating != null ? metadata.values_heating : false;
-    var cooling = metadata.values_cooling != null ? metadata.values_cooling : false;
-    var humidification = metadata.values_humidification != null ? metadata.values_humidification : false;
-    var dehumidification = metadata.values_dehumidification != null ? metadata.values_dehumidification : false;
+    var aeration = metadata.values_aeration != null ? Boolean(JSON.parse(metadata.values_aeration)) : false;
+    var heating = metadata.values_heating != null ? Boolean(JSON.parse(metadata.values_heating)) : false;
+    var cooling = metadata.values_cooling != null ? Boolean(JSON.parse(metadata.values_cooling)) : false;
+    var humidification = metadata.values_humidification != null ? Boolean(JSON.parse(metadata.values_humidification)) : false;
+    var dehumidification = metadata.values_dehumidification != null ? Boolean(JSON.parse(metadata.values_dehumidification)) : false;
 
     var valueLight = 0;
     valueLight += light * 0.05;

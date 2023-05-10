@@ -33,11 +33,11 @@ function makeHumidityInData() {
     var highLevel = parseInt(metadata.ss_maxAirHumidity);
     var okLevel = (lowLevel + highLevel) / 2;
 
-    var currentLevel = parseInt(metadata.values_humidity_out);
+    var currentLevel = parseInt(metadata.humidity_in);
 
-    var aeration = metadata.values_aeration != null ? metadata.values_aeration : false;
-    var heating = metadata.values_heating != null ? metadata.values_heating : false;
-    var cooling = metadata.values_cooling != null ? metadata.values_cooling : false;
+    var aeration = metadata.values_aeration != null ? Boolean(JSON.parse(metadata.values_aeration)) : false;
+    var heating = metadata.values_heating != null ? Boolean(JSON.parse(metadata.values_heating)) : false;
+    var cooling = metadata.values_cooling != null ? Boolean(JSON.parse(metadata.values_cooling)) : false;
 
     var outsideHumidity = parseInt(metadata.values_humidity_out);
     var diff = outsideHumidity - currentLevel;

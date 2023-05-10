@@ -38,7 +38,7 @@ function makeTemperatureInData() {
     var currentLevel = parseInt(metadata.temperature_in);
 
     var day = (DAY_START_HOUR <= hour && hour < NIGHT_START_HOUR);
-    var aeration = metadata.values_aeration != null ? metadata.values_aeration : false;
+    var aeration = metadata.values_aeration != null ? Boolean(JSON.parse(metadata.values_aeration)) : false;
     var lowLevel = (day) ? dayLowLevel : nightLowLevel;
     var highLevel = (day) ? dayHighLevel : nightHighLevel;
     var okLevel = (day) ? dayOkLevel : nightOkLevel;
