@@ -52,7 +52,7 @@ function makeEnergyMeterData(irrigationCount) {
 }
 
 function makeWaterMeterData(irrigationCount) {
-    var humidification = metadata.values_humidification != null ? metadata.values_humidification : false;
+    var humidification = metadata.values_humidification != null ? Boolean(JSON.parse(metadata.values_humidification)) : false;
 
     var value = 0;
     value += (humidification) ? 0.5 : 0;
@@ -66,7 +66,7 @@ function makeWaterMeterData(irrigationCount) {
 
 
 function getIrrigations() {
-    var irrigation = metadata.values_irrigation != null ? parseInt(metadata.values_irrigation) : 0;
+    var irrigation = metadata.values_irrigation != null ? Boolean(JSON.parse(metadata.values_irrigation)) : false;
     var ts = parseInt(metadata.ts);
 
     var temp_irrigation_count = metadata.ss_temp_irrigations != null ? parseInt(metadata.ss_temp_irrigations) : 0;
