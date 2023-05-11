@@ -543,7 +543,12 @@ public class TbRestClient {
     }
 
     public RuleChainMetaData saveRuleChainMetadata(RuleChainMetaData metaData) {
-        return restTemplate.postForEntity(baseURL + "/api/ruleChain/metadata", metaData, RuleChainMetaData.class).getBody();
+        try {
+            return restTemplate.postForEntity(baseURL + "/api/ruleChain/metadata", metaData, RuleChainMetaData.class).getBody();
+        } catch (Exception e) {
+            String metadataJson = JsonUtils.makeNodeFromPojo(metaData).toPrettyString();
+            throw new IllegalStateException("Error during rule chain saving: " + e.getMessage() + "\n\n " + metadataJson, e);
+        }
     }
 
 

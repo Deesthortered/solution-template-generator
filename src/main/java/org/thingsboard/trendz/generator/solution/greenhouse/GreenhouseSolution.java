@@ -623,6 +623,7 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
                 connections.add(ruleChainBuildingService.createRuleConnection(index + 14, index + 18));
                 connections.add(ruleChainBuildingService.createRuleConnection(index + 14, index + 20));
                 connections.add(ruleChainBuildingService.createRuleConnection(index + 14, index + 22));
+                connections.add(ruleChainBuildingService.createRuleConnection(index + 14, index + 25));
 
                 connections.add(ruleChainBuildingService.createRuleConnection(index + 15, index + 24));
 
@@ -635,19 +636,19 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
                 connections.add(ruleChainBuildingService.createRuleConnection(index + 20, index + 21));
                 connections.add(ruleChainBuildingService.createRuleConnection(index + 21, index + 24));
 
-                connections.add(ruleChainBuildingService.createRuleConnection(index + 22, index + 22));
-                connections.add(ruleChainBuildingService.createRuleConnection(index + 23, index + 24));
-
-                ///
                 connections.add(ruleChainBuildingService.createRuleConnection(index + 22, index + 23));
                 connections.add(ruleChainBuildingService.createRuleConnection(index + 23, index + 24));
 
-                connections.add(ruleChainBuildingService.createRuleConnection(index + 24, index + 25));
-                connections.add(ruleChainBuildingService.createRuleConnection(index + 25, index + 28));
-
-                connections.add(ruleChainBuildingService.createRuleConnection(index + 24, index + 26));
+                ///
                 connections.add(ruleChainBuildingService.createRuleConnection(index + 26, index + 27));
                 connections.add(ruleChainBuildingService.createRuleConnection(index + 27, index + 28));
+
+                connections.add(ruleChainBuildingService.createRuleConnection(index + 28, index + 29));
+                connections.add(ruleChainBuildingService.createRuleConnection(index + 29, index + 32));
+
+                connections.add(ruleChainBuildingService.createRuleConnection(index + 28, index + 30));
+                connections.add(ruleChainBuildingService.createRuleConnection(index + 30, index + 31));
+                connections.add(ruleChainBuildingService.createRuleConnection(index + 31, index + 32));
 
                 int sectionCounter = 0;
                 for (Section section : greenhouse.getSections()) {
@@ -858,7 +859,7 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
                     connections.add(ruleChainBuildingService.createRuleConnection(sectionIndex + 9, sectionIndex + 10));
                     connections.add(ruleChainBuildingService.createRuleConnection(sectionIndex + 10, sectionIndex + 11));
 
-                    connections.add(ruleChainBuildingService.createRuleConnection(sectionIndex + 11, index + 22));
+                    connections.add(ruleChainBuildingService.createRuleConnection(sectionIndex + 11, index + 26));
 
                     connections.add(ruleChainBuildingService.createRuleConnection(sectionIndex + 11, sectionIndex + 12));
                     connections.add(ruleChainBuildingService.createRuleConnection(sectionIndex + 12, sectionIndex + 19));
@@ -3162,7 +3163,7 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
     }
 
     private double getNodePositionY(int greenhouseCounter, double x, double y) {
-        return 250 + greenhouseCounter * RuleNodeAdditionalInfo.CELL_SIZE * 80 + RuleNodeAdditionalInfo.CELL_SIZE * 3 * y;
+        return 250 + greenhouseCounter * RuleNodeAdditionalInfo.CELL_SIZE * 85 + RuleNodeAdditionalInfo.CELL_SIZE * 3 * y;
     }
 
     private String getGreenhouseGeneratorCode(double latitude, double longitude, String apiId) throws IOException {
