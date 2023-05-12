@@ -30,7 +30,7 @@ function getRandomInt(min, max) {
 }
 
 function getPercentByClouds(clouds) {
-    return (100 - clouds) * 0.6 + 40;
+    return ((100 - clouds) * 0.6 + 40) * 0.01;
 }
 
 function getYearLuxCycleValue(day) {
@@ -97,7 +97,6 @@ function getHourLuxValues(hour) {
 
 function makeNecessaryData() {
     var date = new Date(parseInt(metadata.ts));
-    date.setMinutes(0, 0, 0);
     return makeLightData(date, msg.clouds.all);
 }
 
