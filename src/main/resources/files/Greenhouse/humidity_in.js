@@ -27,8 +27,8 @@ function makeHumidityInData() {
     var humidificationIncreaseValue = 10;
     var dehumidificationDecreaseValue = 10;
 
-    var humidificationMode = false;
-    var dehumidificationMode = false;
+    var humidificationMode = metadata.ss_temp_humidificationMode != null ? Boolean(JSON.parse(metadata.ss_temp_humidificationMode)) : false;
+    var dehumidificationMode = metadata.ss_temp_dehumidificationMode != null ? Boolean(JSON.parse(metadata.ss_temp_dehumidificationMode)) : false;
     var lowLevel = parseInt(metadata.ss_minAirHumidity);
     var highLevel = parseInt(metadata.ss_maxAirHumidity);
     var okLevel = (lowLevel + highLevel) / 2;
@@ -78,6 +78,8 @@ function makeHumidityInData() {
     currentLevel = Math.min(currentLevel, 100);
     currentLevel = Math.max(currentLevel, 0);
 
+    metadata.temp_humidificationMode = metadata.values_humidification;
+    metadata.temp_dehumidificationMode = metadata.values_dehumidification;
     return currentLevel;
 }
 

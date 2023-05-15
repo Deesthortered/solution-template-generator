@@ -348,7 +348,7 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
                         Collections.emptyList(),
                         Collections.emptyList(),
                         Collections.emptyList(),
-                        List.of("temperature_in", "humidity_in"),
+                        List.of("temperature_in", "humidity_in", "temp_heatingMode", "temp_coolingMode", "temp_humidificationMode", "temp_dehumidificationMode"),
                         false,
                         getNodePositionX(greenhouseCounter, 0, 8),
                         getNodePositionY(greenhouseCounter, 0, 8)

@@ -70,7 +70,7 @@ function makeNecessaryData() {
         metadata.values_cropWeight = 0;
         metadata.values_workerInCharge = "None";
     }
-};
+}
 
 makeNecessaryData();
 return {msg: msg, metadata: metadata, msgType: msgType};
