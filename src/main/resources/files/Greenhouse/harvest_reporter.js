@@ -7,6 +7,14 @@ function getRandomInt(min, max) {
     return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
+function getRandomFloat(min, max) {
+    if (min === max) {
+        return min;
+    }
+    return Math.random() * (max - min) + min;
+}
+
+
 function getDaysBetweenDates(date1, date2) {
     var diffInMs = Math.abs(date2.getTime() - date1.getTime());
     return diffInMs / (1000 * 60 * 60 * 24);
@@ -45,12 +53,12 @@ function makeNecessaryData() {
     if (periodMin < daysPeriod) {
         if (periodMin === daysPeriod) {
             currentLevel = averageCropWeight;
-            currentLevel += getRandomInt(-cropWeightNoiseAmplitude, cropWeightNoiseAmplitude);
+            currentLevel += getRandomFloat(-cropWeightNoiseAmplitude, cropWeightNoiseAmplitude);
         }
         var workerIndex = getRandomInt(0, workersInCharge.length);
         var worker = workersInCharge[workerIndex];
 
-        var value = getRandomInt(0.5, 0.5 + currentLevel);
+        var value = getRandomFloat(0.5, 0.5 + currentLevel);
         value = Math.round(value * 100) / 100;
 
         if (currentLevel < value) {

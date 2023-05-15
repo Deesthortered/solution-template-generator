@@ -1,10 +1,8 @@
-function getRandomInt(min, max) {
+function getRandomFloat(min, max) {
     if (min === max) {
         return min;
     }
-    min = Math.ceil(min);
-    max = Math.floor(max);
-    return Math.floor(Math.random() * (max - min + 1)) + min;
+    return Math.random() * (max - min) + min;
 }
 
 function makeAcidityData() {
@@ -27,7 +25,7 @@ function makeAcidityData() {
         currentLevel += acidificationDecreaseLevel;
     }
 
-    currentLevel += getRandomInt(-0.03, 0.03);
+    currentLevel += getRandomFloat(-0.03, 0.03);
 
     return currentLevel;
 }

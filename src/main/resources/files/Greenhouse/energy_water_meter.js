@@ -7,6 +7,13 @@ function getRandomInt(min, max) {
     return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
+function getRandomFloat(min, max) {
+    if (min === max) {
+        return min;
+    }
+    return Math.random() * (max - min) + min;
+}
+
 
 function makeEnergyMeterData(irrigationCount) {
     var light = parseInt(metadata.values_light_in);
@@ -58,7 +65,7 @@ function makeWaterMeterData(irrigationCount) {
     value += (humidification) ? 0.5 : 0;
     value += irrigationCount * 2.5;
 
-    value += getRandomInt(-0.5, 0.5);
+    value += getRandomFloat(-0.5, 0.5);
     value = Math.max(0, value);
 
     metadata.values_consumptionWater =  value;
