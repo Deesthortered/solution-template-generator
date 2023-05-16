@@ -7,8 +7,8 @@ function getRandomFloat(min, max) {
 
 function makeAcidityData() {
     var period = parseInt(metadata.ss_maxRipeningPeriodDays) * 24;
-    var minLevel = parseInt(metadata.ss_minPh);
-    var maxLevel = parseInt(metadata.ss_maxPh);
+    var minLevel = parseFloat(metadata.ss_minPh);
+    var maxLevel = parseFloat(metadata.ss_maxPh);
 
     var increaseLevel = (maxLevel - minLevel) / period;
     var irrigationIncreaseLevel = (maxLevel - minLevel) / period * 24 * 5;

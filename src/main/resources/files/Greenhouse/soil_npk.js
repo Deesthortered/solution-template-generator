@@ -53,7 +53,7 @@ function makeConsumptionData(prevValue, noiseAmplitude, noiseCoefficient, totalP
 
 
 function makeNitrogenConsumptionData() {
-    var prevValue = metadata.values_nitrogen_consumption != null ? parseInt(metadata.values_nitrogen_consumption) : 0;
+    var prevValue = metadata.values_nitrogen_consumption != null ? parseFloat(metadata.values_nitrogen_consumption) : 0;
     var noiseAmplitude = 3;
     var noiseCoefficient = 1.0;
     var totalPeriodDays = (parseInt(metadata.ss_minRipeningPeriodDays) + parseInt(metadata.ss_maxRipeningPeriodDays)) / 2;
@@ -65,7 +65,7 @@ function makeNitrogenConsumptionData() {
     return result;
 }
 function makePhosphorusConsumptionData() {
-    var prevValue = metadata.values_phosphorus_consumption != null ? parseInt(metadata.values_phosphorus_consumption) : 0;
+    var prevValue = metadata.values_phosphorus_consumption != null ? parseFloat(metadata.values_phosphorus_consumption) : 0;
     var noiseAmplitude = 1;
     var noiseCoefficient = 0.01;
     var totalPeriodDays = (parseInt(metadata.ss_minRipeningPeriodDays) + parseInt(metadata.ss_maxRipeningPeriodDays)) / 2;
@@ -77,7 +77,7 @@ function makePhosphorusConsumptionData() {
     return result;
 }
 function makePotassiumConsumptionData() {
-    var prevValue = metadata.values_potassium_consumption != null ? parseInt(metadata.values_potassium_consumption) : 0;
+    var prevValue = metadata.values_potassium_consumption != null ? parseFloat(metadata.values_potassium_consumption) : 0;
     var noiseAmplitude = 3;
     var noiseCoefficient = 1.0;
     var totalPeriodDays = (parseInt(metadata.ss_minRipeningPeriodDays) + parseInt(metadata.ss_maxRipeningPeriodDays)) / 2;
@@ -108,25 +108,25 @@ function makeData(prevValue, minLevel, raiseValue, consumption) {
 }
 
 function makeNitrogenData() {
-    var prevValue = parseInt(metadata.nitrogen);
-    var minLevel = parseInt(metadata.ss_minNitrogenLevel);
-    var raiseValue = parseInt(metadata.ss_maxNitrogenLevel) - parseInt(metadata.ss_minNitrogenLevel);
+    var prevValue = parseFloat(metadata.nitrogen);
+    var minLevel = parseFloat(metadata.ss_minNitrogenLevel);
+    var raiseValue = parseFloat(metadata.ss_maxNitrogenLevel) - parseFloat(metadata.ss_minNitrogenLevel);
     var consumption = makeNitrogenConsumptionData();
     
     return makeData(prevValue, minLevel, raiseValue, consumption);
 }
 function makePhosphorusData() {
-    var prevValue = parseInt(metadata.phosphorus);
-    var minLevel = parseInt(metadata.ss_minPhosphorusLevel);
-    var raiseValue = parseInt(metadata.ss_maxPhosphorusLevel) - parseInt(metadata.ss_minPhosphorusLevel);
+    var prevValue = parseFloat(metadata.phosphorus);
+    var minLevel = parseFloat(metadata.ss_minPhosphorusLevel);
+    var raiseValue = parseFloat(metadata.ss_maxPhosphorusLevel) - parseFloat(metadata.ss_minPhosphorusLevel);
     var consumption = makePhosphorusConsumptionData();
 
     return makeData(prevValue, minLevel, raiseValue, consumption);
 }
 function makePotassiumData() {
-    var prevValue = parseInt(metadata.potassium);
-    var minLevel = parseInt(metadata.ss_minPotassiumLevel);
-    var raiseValue = parseInt(metadata.ss_maxPotassiumLevel) - parseInt(metadata.ss_minPotassiumLevel);
+    var prevValue = parseFloat(metadata.potassium);
+    var minLevel = parseFloat(metadata.ss_minPotassiumLevel);
+    var raiseValue = parseFloat(metadata.ss_maxPotassiumLevel) - parseFloat(metadata.ss_minPotassiumLevel);
     var consumption = makePotassiumConsumptionData();
 
     return makeData(prevValue, minLevel, raiseValue, consumption);

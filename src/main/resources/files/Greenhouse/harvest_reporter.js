@@ -39,12 +39,12 @@ function makeNecessaryData() {
 
     var periodMin = parseInt(metadata.ss_minRipeningPeriodDays);
     var periodMax = parseInt(metadata.ss_maxRipeningPeriodDays);
-    var averageCropWeight = parseInt(metadata.ss_averageCropWeight);
+    var averageCropWeight = parseFloat(metadata.ss_averageCropWeight);
     var cropWeightNoiseAmplitude = averageCropWeight / 5;
     var workersInCharge = "WORKER_IN_CHARGE_PLACEHOLDER";
 
     var currentLevel = metadata.values_harverstReporter_currentLevel !== null
-        ? parseInt(metadata.values_harverstReporter_currentLevel)
+        ? parseFloat(metadata.values_harverstReporter_currentLevel)
         : 0;
 
     var daysBetween = getDaysBetweenDates(startDate, iteratedDate);
