@@ -13,7 +13,7 @@ function makeAcidityData() {
     var increaseLevel = (maxLevel - minLevel) / period;
     var irrigationIncreaseLevel = (maxLevel - minLevel) / period * 24 * 5;
     var acidificationDecreaseLevel = (maxLevel - minLevel);
-    var currentLevel = parseInt(metadata.acidity);
+    var currentLevel = parseFloat(metadata.acidity);
 
     var irrigation = metadata.values_irrigation != null ? Boolean(JSON.parse(metadata.values_irrigation)) : false;
 
