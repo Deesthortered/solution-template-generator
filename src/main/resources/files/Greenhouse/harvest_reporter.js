@@ -43,8 +43,8 @@ function makeNecessaryData() {
     var cropWeightNoiseAmplitude = averageCropWeight / 5;
     var workersInCharge = "WORKER_IN_CHARGE_PLACEHOLDER";
 
-    var currentLevel = metadata.values_harverstReporter_currentLevel !== null
-        ? parseFloat(metadata.values_harverstReporter_currentLevel)
+    var currentLevel = metadata.temp_harvest_currentLevel != null
+        ? parseFloat(metadata.temp_harvest_currentLevel)
         : 0;
 
     var daysBetween = getDaysBetweenDates(startDate, iteratedDate);
@@ -65,7 +65,7 @@ function makeNecessaryData() {
             value = currentLevel;
         }
         currentLevel -= value;
-        metadata.values_harverstReporter_currentLevel = currentLevel;
+        metadata.temp_harvest_currentLevel = currentLevel;
 
         if (0 < value) {
             metadata.values_cropWeight = value;

@@ -5,6 +5,7 @@ if (iteratedDate.getHours() > 0) {
 var newMsg = {
     'ts' : parseInt(metadata.ts),
     'values' : {
+        'temp_harvest_currentLevel' : parseFloat(metadata.temp_harvest_currentLevel),
         'cropWeight' : parseFloat(metadata.values_cropWeight),
         'workerInCharge' : metadata.values_workerInCharge
     }
