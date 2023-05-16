@@ -21,8 +21,8 @@ function makeTemperatureInData() {
     var defaultCoefficient = 0.2;
     var aerationCoefficient = 0.4;
 
-    var heatingMode = metadata.ss_temp_heatingMode != null ? Boolean(JSON.parse(metadata.ss_temp_heatingMode)) : false;
-    var coolingMode = metadata.ss_temp_coolingMode != null ? Boolean(JSON.parse(metadata.ss_temp_coolingMode)) : false;
+    var heatingMode = metadata.temp_heatingMode != null ? Boolean(JSON.parse(metadata.temp_heatingMode)) : false;
+    var coolingMode = metadata.temp_coolingMode != null ? Boolean(JSON.parse(metadata.temp_coolingMode)) : false;
 
     var heatingIncreaseValue = 8;
     var coolingDecreaseValue = 8;
