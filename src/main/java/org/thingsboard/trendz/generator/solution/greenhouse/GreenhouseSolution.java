@@ -1544,7 +1544,7 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
                 Set<Long> sectionIrrigations = irrigations.computeIfAbsent(sectionName, key -> new HashSet<>());
 
                 Telemetry<Double> temporalTelemetrySoilWaterConsumption = createTemporalTelemetrySoilWaterConsumption(configuration, skipTelemetry);
-                Telemetry<Integer> soilMoisture = createTelemetrySoilMoisture(configuration, temporalTelemetrySoilWaterConsumption, sectionIrrigations, skipTelemetry);
+                Telemetry<Double> soilMoisture = createTelemetrySoilMoisture(configuration, temporalTelemetrySoilWaterConsumption, sectionIrrigations, skipTelemetry);
 
                 Telemetry<Integer> telemetrySoilTemperature = createTelemetrySoilTemperature(configuration, insideTemperatureTelemetry, sectionIrrigations, skipTelemetry);
 
@@ -2463,11 +2463,11 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
     }
 
 
-    private Telemetry<Integer> createTelemetrySoilMoisture(GreenhouseConfiguration configuration, Telemetry<Double> temporalTelemetrySoilWaterConsumption, Set<Long> sectionIrrigations, boolean skipTelemetry) {
+    private Telemetry<Double> createTelemetrySoilMoisture(GreenhouseConfiguration configuration, Telemetry<Double> temporalTelemetrySoilWaterConsumption, Set<Long> sectionIrrigations, boolean skipTelemetry) {
         if (skipTelemetry) {
             return new Telemetry<>("skip");
         }
-        Telemetry<Integer> result = new Telemetry<>("moisture");
+        Telemetry<Double> result = new Telemetry<>("moisture");
 
         PlantConfiguration plantConfiguration = configuration.getPlantConfiguration();
         double minLevel = plantConfiguration.getMinSoilMoisture();
@@ -2495,7 +2495,7 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
             currentLevel = Math.min(currentLevel, 100);
             currentLevel = Math.max(currentLevel, 0);
 
-            result.add(new Telemetry.Point<>(Timestamp.of(iteratedTs), (int) currentLevel));
+            result.add(new Telemetry.Point<>(Timestamp.of(iteratedTs), currentLevel));
             iteratedDate = iteratedDate.plus(1, ChronoUnit.HOURS);
         }
 

@@ -1,10 +1,8 @@
-function getRandomInt(min, max) {
+function getRandomFloat(min, max) {
     if (min === max) {
         return min;
     }
-    min = Math.ceil(min);
-    max = Math.floor(max);
-    return Math.floor(Math.random() * (max - min + 1)) + min;
+    return Math.random() * (max - min) + min;
 }
 
 function getHoursBetweenDates(date1, date2) {
@@ -38,7 +36,7 @@ function makeMoistureConsumptionData() {
     var step = hourCycle / (period / 3) + 1;
 
     var consumption = Math.pow(0.8, step) * (minLevel + maxLevel) / period;
-    consumption += getRandomInt(0, 1);
+    consumption += getRandomFloat(0, 1);
 
     return consumption;
 }
