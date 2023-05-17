@@ -5,18 +5,17 @@ function getBooleanByProbability(probability) {
     return Math.random() < probability;
 }
 
-function getRandomInt(min, max) {
+function getRandomFloat(min, max) {
     if (min === max) {
         return min;
     }
-    min = Math.ceil(min);
-    max = Math.floor(max);
-    return Math.floor(Math.random() * (max - min + 1)) + min;
+    return Math.random() * (max - min) + min;
 }
 
 function sign(x) {
     return typeof x === 'number' ? x ? x < 0 ? -1 : 1 : x === x ? 0 : NaN : NaN;
 }
+
 
 function makeHumidityInData() {
 
@@ -64,15 +63,15 @@ function makeHumidityInData() {
     metadata.values_dehumidification = false;
     if (humidificationMode) {
         metadata.values_humidification = true;
-        currentLevel += Math.min(humidificationIncreaseValue, Math.abs(currentLevel - okLevel)) + getRandomInt(-1, 1);
+        currentLevel += Math.min(humidificationIncreaseValue, Math.abs(currentLevel - okLevel)) + getRandomFloat(-1, 1);
     }
     if (dehumidificationMode) {
         metadata.values_dehumidification = true;
-        currentLevel -= Math.min(dehumidificationDecreaseValue, Math.abs(currentLevel - okLevel)) + getRandomInt(-1, 1);
+        currentLevel -= Math.min(dehumidificationDecreaseValue, Math.abs(currentLevel - okLevel)) + getRandomFloat(-1, 1);
     }
 
     if (getBooleanByProbability(0.3)) {
-        currentLevel += getRandomInt(0, 1);
+        currentLevel += getRandomFloat(0, 1);
     }
 
     currentLevel = Math.min(currentLevel, 100);

@@ -5,14 +5,13 @@ function getBooleanByProbability(probability) {
     return Math.random() < probability;
 }
 
-function getRandomInt(min, max) {
+function getRandomFloat(min, max) {
     if (min === max) {
         return min;
     }
-    min = Math.ceil(min);
-    max = Math.floor(max);
-    return Math.floor(Math.random() * (max - min + 1)) + min;
+    return Math.random() * (max - min) + min;
 }
+
 
 function makeTemperatureInData() {
     var DAY_START_HOUR = 8;
@@ -78,7 +77,7 @@ function makeTemperatureInData() {
     }
 
     if (getBooleanByProbability(0.2)) {
-        currentLevel += getRandomInt(-2, 2);
+        currentLevel += getRandomFloat(-2, 2);
     }
 
     metadata.temp_heatingMode = heatingMode;

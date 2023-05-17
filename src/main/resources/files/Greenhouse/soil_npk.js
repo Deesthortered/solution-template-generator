@@ -1,10 +1,8 @@
-function getRandomInt(min, max) {
+function getRandomFloat(min, max) {
     if (min === max) {
         return min;
     }
-    min = Math.ceil(min);
-    max = Math.floor(max);
-    return Math.floor(Math.random() * (max - min + 1)) + min;
+    return Math.random() * (max - min) + min;
 }
 
 function getDaysBetweenDates(date1, date2) {
@@ -40,7 +38,7 @@ function makeConsumptionData(prevValue, noiseAmplitude, noiseCoefficient, totalP
         var periodValue = periodValues[i];
         if (currentDayCycle < periodDay) {
             var value = periodValuePrev + ((currentDayCycle - periodDayPrev) * (periodValue - periodValuePrev)) / (periodDay - periodDayPrev);
-            value += getRandomInt(0, noiseAmplitude) * noiseCoefficient;
+            value += getRandomFloat(0, noiseAmplitude) * noiseCoefficient;
             value = Math.max(prevValue, value);
             return value;
         }

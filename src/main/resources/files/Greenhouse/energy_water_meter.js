@@ -1,12 +1,3 @@
-function getRandomInt(min, max) {
-    if (min === max) {
-        return min;
-    }
-    min = Math.ceil(min);
-    max = Math.floor(max);
-    return Math.floor(Math.random() * (max - min + 1)) + min;
-}
-
 function getRandomFloat(min, max) {
     if (min === max) {
         return min;
@@ -25,29 +16,29 @@ function makeEnergyMeterData(irrigationCount) {
 
     var valueLight = 0;
     valueLight += light * 0.05;
-    valueLight += getRandomInt(-2, 2);
+    valueLight += getRandomFloat(-2, 2);
     valueLight = Math.max(0, valueLight);
 
     var valueHeating = 0;
     valueHeating += (heating) ? 200 : 0;
-    valueHeating += getRandomInt(-2, 2);
+    valueHeating += getRandomFloat(-2, 2);
     valueHeating = Math.max(0, valueHeating);
 
     var valueCooling = 0;
     valueCooling += (cooling) ? 100 : 0;
-    valueCooling += getRandomInt(-2, 2);
+    valueCooling += getRandomFloat(-2, 2);
     valueCooling = Math.max(0, valueCooling);
 
     var valueAirControl = 0;
     valueAirControl += (aeration) ? 20 : 0;
     valueAirControl += (humidification) ? 20 : 0;
     valueAirControl += (dehumidification) ? 50 : 0;
-    valueAirControl += getRandomInt(-2, 2);
+    valueAirControl += getRandomFloat(-2, 2);
     valueAirControl = Math.max(0, valueAirControl);
 
     var valueIrrigation = 0;
     valueIrrigation += irrigationCount * 100;
-    valueIrrigation += getRandomInt(-2, 2);
+    valueIrrigation += getRandomFloat(-2, 2);
     valueIrrigation = Math.max(0, valueIrrigation);
 
 
