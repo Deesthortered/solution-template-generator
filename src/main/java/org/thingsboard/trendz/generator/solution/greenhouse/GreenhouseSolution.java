@@ -768,7 +768,7 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
 
 
                     RuleNode finishSoilWarmMoistureSensorOriginatorNode = this.ruleChainBuildingService.createChangeOriginatorNode(
-                            String.format("%s: Finish - To Soil Soil Warm-Moisture", greenhouseName),
+                            String.format("%s: Finish - To Soil Warm-Moisture", greenhouseName),
                             soilWarmMoistureSensor.getSystemName(),
                             EntityType.DEVICE,
                             getNodePositionX(greenhouseCounter, 2 + sectionCounter, 13),
