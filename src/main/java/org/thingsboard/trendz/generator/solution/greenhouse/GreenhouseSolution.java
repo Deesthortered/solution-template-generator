@@ -615,7 +615,6 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
                 connections.add(ruleChainBuildingService.createRuleConnection(index + 11, index + 12));
                 connections.add(ruleChainBuildingService.createRuleConnection(index + 12, index + 13));
                 connections.add(ruleChainBuildingService.createRuleConnection(index + 13, index + 14));
-                connections.add(ruleChainBuildingService.createRuleConnection(index + 14, index + 21));
 
                 ///
                 connections.add(ruleChainBuildingService.createRuleConnection(index + 14, index + 15));
