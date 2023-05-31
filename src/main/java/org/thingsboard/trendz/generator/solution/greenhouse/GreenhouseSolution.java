@@ -768,7 +768,7 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
 
 
                     RuleNode finishSoilWarmMoistureSensorOriginatorNode = this.ruleChainBuildingService.createChangeOriginatorNode(
-                            String.format("%s: Finish - To Soil NPK Sensor", greenhouseName),
+                            String.format("%s: Finish - To Soil Soil Warm-Moisture", greenhouseName),
                             soilWarmMoistureSensor.getSystemName(),
                             EntityType.DEVICE,
                             getNodePositionX(greenhouseCounter, 2 + sectionCounter, 13),
@@ -777,7 +777,7 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
 
                     String scriptFinishSoilWarmMoisture = this.fileService.getFileContent(getSolutionName(), "finish_soil_temperature_moisture.js");
                     RuleNode finishSoilWarmMoistureTelemetryNode = this.ruleChainBuildingService.createTransformationNode(
-                            String.format("%s: Finish - Map To Soil NPK", greenhouseName),
+                            String.format("%s: Finish - Map To Soil Warm-Moisture", greenhouseName),
                             scriptFinishSoilWarmMoisture,
                             getNodePositionX(greenhouseCounter, 2 + sectionCounter, 14),
                             getNodePositionY(greenhouseCounter, 2 + sectionCounter, 14)
@@ -835,13 +835,18 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
                     sectionNodes.add(soilAcidityTelemetryNode);                     // 9
                     sectionNodes.add(soilNpkTelemetryNode);                         // 10
                     sectionNodes.add(harvestReporterTelemetryNode);                 // 11
+
                     sectionNodes.add(finishSoilNpkTelemetryNode);                   // 12
+
                     sectionNodes.add(finishSoilWarmMoistureSensorOriginatorNode);   // 13
                     sectionNodes.add(finishSoilWarmMoistureTelemetryNode);          // 14
+
                     sectionNodes.add(finishSoilAciditySensorOriginatorNode);        // 15
                     sectionNodes.add(finishSoilAcidityTelemetryNode);               // 16
+
                     sectionNodes.add(finishHarvestReporterSensorOriginatorNode);    // 17
                     sectionNodes.add(finishHarvestReporterTelemetryNode);           // 18
+
                     sectionNodes.add(sectionSaveNode);                              // 19
                     nodes.addAll(sectionNodes);
 
