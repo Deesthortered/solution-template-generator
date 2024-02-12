@@ -101,19 +101,6 @@ public class TbRestClient {
         return authToken;
     }
 
-    public AuthToken refreshToken(String refreshToken) {
-        Map<String, String> request = new HashMap<>();
-        request.put("refreshToken", refreshToken);
-
-        ResponseEntity<AuthToken> response = restTemplate.postForEntity(LOGIN_PATH, request, AuthToken.class);
-        AuthToken authToken = response.getBody();
-        if (authToken == null) {
-            throw new IllegalStateException("Refresh token is failed!");
-        }
-        this.tenantId = tokenExtractor.getTenantId(authToken);
-        return authToken;
-    }
-
     public UUID getTenantId() {
         return this.tenantId;
     }

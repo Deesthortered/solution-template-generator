@@ -61,7 +61,7 @@ public class TbRestRequestInterceptor implements ClientHttpRequestInterceptor {
         if (this.authToken == null) {
             this.authToken = tbRestClient.login(new LoginRequest(this.tbApiUser, this.tbApiPass));
         } else if (isTokenExpired(this.authToken)) {
-            this.authToken = tbRestClient.refreshToken(this.authToken.getRefreshToken());
+            this.authToken = tbRestClient.login(new LoginRequest(this.tbApiUser, this.tbApiPass));
         }
         return this.authToken.getToken();
     }
