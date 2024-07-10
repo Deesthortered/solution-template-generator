@@ -775,7 +775,7 @@ public class WaterMeteringSolution implements SolutionTemplateGenerator {
         ZonedDateTime nowDate = DateTimeUtils.fromTs(now).truncatedTo(ChronoUnit.HOURS);
 
         Pair<Long, Long> intervalValues = getIntervalValuesRangeByConsumerType(consumerConfiguration.getType());
-        int fullInterval = 365;
+        int fullInterval = 366;
         long minValue = intervalValues.getLeft();
         long maxValue = intervalValues.getRight();
         List<Pair<Long, Long>> intervals = generateRandomRanges(fullInterval, fullInterval / 40, minValue, maxValue);

@@ -18,21 +18,21 @@
 	<properties>
 		<java.version>11</java.version>
 		<tb.version>3.4.4-SNAPSHOT</tb.version>
-		<spring.boot.version>3.0.1</spring.boot.version>
+		<spring.boot.version>3.3.1</spring.boot.version>
 		<jwt.version>4.2.1</jwt.version>
-		<guava.version>31.1-jre</guava.version>
+		<guava.version>33.2.1-jre</guava.version>
 	</properties>
 
 	<dependencies>
 		<dependency>
 			<groupId>org.thingsboard.common</groupId>
 			<artifactId>data</artifactId>
-			<version>3.4.2PE-SNAPSHOT</version>
+			<version>3.5.1PE</version>
 		</dependency>
 		<dependency>
 			<groupId>org.thingsboard.rule-engine</groupId>
 			<artifactId>rule-engine-components</artifactId>
-			<version>3.4.4-SNAPSHOT</version>
+			<version>3.7.1-SNAPSHOT</version>
 		</dependency>
 
 		<dependency>
@@ -64,12 +64,17 @@
 		<dependency>
 			<groupId>org.apache.commons</groupId>
 			<artifactId>commons-csv</artifactId>
-			<version>1.9.0</version>
+			<version>1.11.0</version>
 		</dependency>
 		<dependency>
 			<groupId>com.github.sh0nk</groupId>
 			<artifactId>matplotlib4j</artifactId>
 			<version>0.5.0</version>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.commons</groupId>
+			<artifactId>commons-lang3</artifactId>
+			<version>3.14.0</version>
 		</dependency>
 	</dependencies>
 
