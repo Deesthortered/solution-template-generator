@@ -1,6 +1,7 @@
 package org.thingsboard.trendz.generator.service.roolchain;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.thingsboard.rule.engine.api.NodeConfiguration;
 import org.thingsboard.rule.engine.debug.TbMsgGeneratorNode;
@@ -35,11 +36,14 @@ import java.util.UUID;
 public class RuleChainBuildingService {
 
     private final FileService fileService;
+    private final int telemetryTtl;
 
     public RuleChainBuildingService(
-            FileService fileService
+            FileService fileService,
+            @Value("${generator.telemetryTtl}") int telemetryTtl
     ) {
         this.fileService = fileService;
+        this.telemetryTtl = telemetryTtl;
     }
 
     public NodeConnectionInfo createRuleConnection(int from, int to) {
@@ -53,7 +57,7 @@ public class RuleChainBuildingService {
 
     public RuleNode createSaveNode(String name, double gridX, double gridY) {
         TbMsgTimeseriesNodeConfiguration saveConfiguration = new TbMsgTimeseriesNodeConfiguration();
-        saveConfiguration.setDefaultTTL(0);
+        saveConfiguration.setDefaultTTL(this.telemetryTtl);
         saveConfiguration.setUseServerTs(false);
         saveConfiguration.setSkipLatestPersistence(false);
 

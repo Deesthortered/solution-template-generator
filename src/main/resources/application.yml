@@ -14,3 +14,4 @@ generator:
   solutions: WaterMetering
   skipTelemetry: false
   startYear: 2023
+  telemetryTtl: 315360000 # 10 years in seconds

@@ -1946,9 +1946,11 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
             case "Heavy Snow / Windy":
             case "Heavy Snow Shower":
             case "Heavy Snow Shower / Windy":
+            case "Heavy Snow with Thunder":
             case "Heavy Rain":
             case "Heavy Rain / Windy":
             case "Heavy Rain Shower":
+            case "Heavy Rain Shower / Windy":
             case "Heavy T-Storm":
             case "Heavy T-Storm / Windy":
             case "Squalls":
@@ -1995,6 +1997,7 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
             case "Drifting Snow":
             case "Drifting Snow / Windy":
             case "Drizzle":
+            case "Drizzle and Fog":
             case "Freezing Rain":
             case "Freezing Rain / Windy":
             case "Snow Grains":
@@ -2002,6 +2005,7 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
             case "Thunder in the Vicinity":
             case "Showers in the Vicinity":
             case "Mist":
+            case "Mist / Windy":
                 return 0.70;
 
             case "Light Sleet":
