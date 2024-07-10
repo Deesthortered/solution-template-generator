@@ -12,6 +12,6 @@ GR
 "customerId":"a8e226a0-0860-11ee-af14-175a6432e834" - 4 - GR customer
 "customerId":"c32e1b60-a3aa-11ed-87ab-cfdf96a89571" - 7 - WM customer
 
-"tenantId":"d3b23930-a094-11ed-bf3d-5d40b1136f31"   - "tenantId":"3be16090-3e95-11ef-9e73-63e81e40cfd3"
+"tenantId":"d3b23930-a094-11ed-bf3d-5d40b1136f31"   - "tenantId":"a54c28c0-3d29-11ef-9e73-63e81e40cfd3"
 "customerId":"a8e226a0-0860-11ee-af14-175a6432e834" - "customerId":"3be16090-3e95-11ef-9e73-63e81e40cfd3"
 "customerId":"c32e1b60-a3aa-11ed-87ab-cfdf96a89571" - "customerId":"c536ce80-3e94-11ef-9e73-63e81e40cfd3"
