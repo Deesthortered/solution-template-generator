@@ -1,0 +1,2215 @@
+{
+  "title": "Water Metering Dashboard",
+  "image": null,
+  "mobileHide": false,
+  "mobileOrder": null,
+  "name": "Water Metering Dashboard",
+  "configuration": {
+    "description": "",
+    "widgets": {
+      "c61f6ad5-f739-c08d-ab1b-dd4dba3866d1": {
+        "type": "static",
+        "sizeX": 7.5,
+        "sizeY": 3,
+        "config": {
+          "datasources": [],
+          "timewindow": {
+            "realtime": {
+              "timewindowMs": 60000
+            }
+          },
+          "showTitle": false,
+          "backgroundColor": "rgb(255, 255, 255)",
+          "color": "rgba(0, 0, 0, 0.87)",
+          "padding": "0px",
+          "settings": {
+            "cardCss": ".card {\n   width: 100%;\n   height: 100%;\n   box-sizing: border-box;\n}\n\n.card .content {\n   padding: 5px;\n   display: flex;\n   flex-direction: column;\n   align-items: center;\n   justify-content: center;\n   height: 100%;\n   box-sizing: border-box;\n}\n\n.card .description {\n    font-size: 0.75em;\n    font-weight: normal;\n    line-height: 2;\n    color: #333333;\n    text-transform: uppercase;\n    opacity: 0.5;\n}\n",
+            "cardHtml": "<div class='card'>\n    <div class='content'>\n        <div class='description'>\n            Patterns\n        </div>\n    </div>\n</div>"
+          },
+          "title": "Navigation: Total",
+          "dropShadow": false,
+          "showTitleIcon": false,
+          "iconColor": "rgba(0, 0, 0, 0.87)",
+          "iconSize": "24px",
+          "titleTooltip": "",
+          "enableFullscreen": false,
+          "widgetStyle": {
+            "border": "1px solid #E0E0E0"
+          },
+          "titleStyle": {
+            "fontSize": "16px",
+            "fontWeight": 400
+          },
+          "showLegend": false
+        },
+        "row": 0,
+        "col": 0,
+        "id": "c61f6ad5-f739-c08d-ab1b-dd4dba3866d1",
+        "typeFullFqn": "system.cards.html_card"
+      },
+      "8b8a2b54-5b72-cab8-e481-995002cfdf41": {
+        "type": "static",
+        "sizeX": 7.5,
+        "sizeY": 3,
+        "config": {
+          "datasources": [],
+          "timewindow": {
+            "realtime": {
+              "timewindowMs": 60000
+            }
+          },
+          "showTitle": false,
+          "backgroundColor": "rgb(255, 255, 255)",
+          "color": "rgba(0, 0, 0, 0.87)",
+          "padding": "0px",
+          "settings": {
+            "cardCss": ".card {\n   width: 100%;\n   height: 100%;\n   box-sizing: border-box;\n}\n\n.card .content {\n   padding: 5px;\n   display: flex;\n   flex-direction: column;\n   align-items: center;\n   justify-content: center;\n   height: 100%;\n   box-sizing: border-box;\n   transition: background-color 0.5s;\n}\n\n.card .content:hover {\n    background-color: #ddd;\n}\n\n.card .description {\n    font-size: 0.75em;\n    font-weight: normal;\n    line-height: 2;\n    color: #333333;\n    text-transform: uppercase;\n}\n",
+            "cardHtml": "<div class='card'>\n    <div class='content' id=\"analytics\">\n        <div class='description' id=\"analytics\">\n            Home\n        </div>\n    </div>\n</div>"
+          },
+          "title": "Navigation: Total",
+          "dropShadow": false,
+          "showTitleIcon": false,
+          "iconColor": "rgba(0, 0, 0, 0.87)",
+          "iconSize": "24px",
+          "titleTooltip": "",
+          "enableFullscreen": false,
+          "widgetStyle": {
+            "border": "1px solid #E0E0E0"
+          },
+          "titleStyle": {
+            "fontSize": "16px",
+            "fontWeight": 400
+          },
+          "showLegend": false,
+          "actions": {
+            "elementClick": [
+              {
+                "name": "analytics",
+                "icon": "more_horiz",
+                "type": "custom",
+                "customFunction": "openDashboardState('home');\n\nfunction openDashboardState(statedId) {\n    var currentState = widgetContext.stateController\n        .getStateId();\n    if (currentState !== statedId) {\n        var params = {};\n        widgetContext.stateController.updateState(statedId,\n            params, false);\n    }\n}",
+                "id": "e748240e-cb44-0c9a-a199-0e4eacb3954c"
+              }
+            ]
+          }
+        },
+        "row": 0,
+        "col": 0,
+        "id": "8b8a2b54-5b72-cab8-e481-995002cfdf41",
+        "typeFullFqn": "system.cards.html_card"
+      },
+      "476a9025-69e9-8698-1f06-2581a2e08743": {
+        "type": "latest",
+        "sizeX": 7.5,
+        "sizeY": 3,
+        "config": {
+          "datasources": [
+            {
+              "type": "entity",
+              "name": null,
+              "entityAliasId": "73aa5a62-03f7-55be-758d-4bd0ac09801b",
+              "filterId": null,
+              "dataKeys": [
+                {
+                  "name": "name",
+                  "type": "entityField",
+                  "label": "Name",
+                  "color": "#2196f3",
+                  "settings": {},
+                  "_hash": 0.8959256155818616
+                }
+              ]
+            }
+          ],
+          "timewindow": {
+            "displayValue": "",
+            "selectedTab": 0,
+            "realtime": {
+              "realtimeType": 1,
+              "interval": 1000,
+              "timewindowMs": 60000,
+              "quickInterval": "CURRENT_DAY"
+            },
+            "history": {
+              "historyType": 0,
+              "interval": 1000,
+              "timewindowMs": 60000,
+              "fixedTimewindow": {
+                "startTimeMs": 1684245187498,
+                "endTimeMs": 1684331587498
+              },
+              "quickInterval": "CURRENT_DAY"
+            },
+            "aggregation": {
+              "type": "AVG",
+              "limit": 25000
+            }
+          },
+          "showTitle": false,
+          "backgroundColor": "#fff",
+          "color": "rgba(0, 0, 0, 0.87)",
+          "padding": "8px",
+          "settings": {
+            "viewUrl": "https://trendz.test.cloud.tb-trendz.com/trendz/viewMode/f4e3d3ec-88a4-4de0-a13b-901961f451a9",
+            "useDashboardTimeWindow": true
+          },
+          "title": "Weekly heatmap",
+          "showTitleIcon": false,
+          "iconColor": "rgba(0, 0, 0, 0.87)",
+          "iconSize": "24px",
+          "titleTooltip": "",
+          "dropShadow": false,
+          "enableFullscreen": true,
+          "widgetStyle": {},
+          "titleStyle": {
+            "fontSize": "16px",
+            "fontWeight": 400
+          },
+          "showLegend": false
+        },
+        "row": 0,
+        "col": 0,
+        "id": "476a9025-69e9-8698-1f06-2581a2e08743",
+        "typeFullFqn": "tenant.trendz_bundle.trendz_view_latest"
+      },
+      "9896a630-d22e-a599-e8b7-03f04a1b5fc3": {
+        "type": "latest",
+        "sizeX": 7.5,
+        "sizeY": 3,
+        "config": {
+          "datasources": [
+            {
+              "type": "entity",
+              "name": null,
+              "entityAliasId": "73aa5a62-03f7-55be-758d-4bd0ac09801b",
+              "filterId": null,
+              "dataKeys": [
+                {
+                  "name": "name",
+                  "type": "entityField",
+                  "label": "Name",
+                  "color": "#2196f3",
+                  "settings": {},
+                  "_hash": 0.11609836195674683
+                }
+              ]
+            }
+          ],
+          "timewindow": {
+            "displayValue": "",
+            "selectedTab": 0,
+            "realtime": {
+              "realtimeType": 1,
+              "interval": 1000,
+              "timewindowMs": 60000,
+              "quickInterval": "CURRENT_DAY"
+            },
+            "history": {
+              "historyType": 0,
+              "interval": 1000,
+              "timewindowMs": 60000,
+              "fixedTimewindow": {
+                "startTimeMs": 1684245187499,
+                "endTimeMs": 1684331587499
+              },
+              "quickInterval": "CURRENT_DAY"
+            },
+            "aggregation": {
+              "type": "AVG",
+              "limit": 25000
+            }
+          },
+          "showTitle": false,
+          "backgroundColor": "#fff",
+          "color": "rgba(0, 0, 0, 0.87)",
+          "padding": "8px",
+          "settings": {
+            "viewUrl": "https://trendz.test.cloud.tb-trendz.com/trendz/viewMode/7a50320e-1aed-11ec-a201-93618415f1fb",
+            "useDashboardTimeWindow": false,
+            "updateInRealTime": false,
+            "updateInRealTimeInterval": 1,
+            "canCancelViewLoading": false
+          },
+          "title": "New Trendz Native latest",
+          "showTitleIcon": false,
+          "iconColor": "rgba(0, 0, 0, 0.87)",
+          "iconSize": "24px",
+          "titleTooltip": "",
+          "dropShadow": false,
+          "enableFullscreen": true,
+          "widgetStyle": {},
+          "titleStyle": {
+            "fontSize": "16px",
+            "fontWeight": 400
+          },
+          "showLegend": false
+        },
+        "row": 0,
+        "col": 0,
+        "id": "9896a630-d22e-a599-e8b7-03f04a1b5fc3",
+        "typeFullFqn": "tenant.trendz_bundle.trendz_view_latest"
+      },
+      "e0bb0e57-6bef-fbc1-341a-2e8663217c3a": {
+        "type": "latest",
+        "sizeX": 7.5,
+        "sizeY": 3,
+        "config": {
+          "datasources": [
+            {
+              "type": "entity",
+              "name": null,
+              "entityAliasId": "73aa5a62-03f7-55be-758d-4bd0ac09801b",
+              "filterId": null,
+              "dataKeys": [
+                {
+                  "name": "name",
+                  "type": "entityField",
+                  "label": "Name",
+                  "color": "#2196f3",
+                  "settings": {},
+                  "_hash": 0.011159450512909563
+                }
+              ]
+            }
+          ],
+          "timewindow": {
+            "displayValue": "",
+            "selectedTab": 0,
+            "realtime": {
+              "realtimeType": 1,
+              "interval": 1000,
+              "timewindowMs": 60000,
+              "quickInterval": "CURRENT_DAY"
+            },
+            "history": {
+              "historyType": 0,
+              "interval": 1000,
+              "timewindowMs": 60000,
+              "fixedTimewindow": {
+                "startTimeMs": 1684245187499,
+                "endTimeMs": 1684331587499
+              },
+              "quickInterval": "CURRENT_DAY"
+            },
+            "aggregation": {
+              "type": "AVG",
+              "limit": 25000
+            }
+          },
+          "showTitle": false,
+          "backgroundColor": "#fff",
+          "color": "rgba(0, 0, 0, 0.87)",
+          "padding": "8px",
+          "settings": {
+            "viewUrl": "https://trendz.test.cloud.tb-trendz.com/trendz/viewMode/3599c48e-1c6f-11ec-b58a-b954da83317d",
+            "useDashboardTimeWindow": false,
+            "updateInRealTime": false,
+            "updateInRealTimeInterval": 1,
+            "canCancelViewLoading": false
+          },
+          "title": "New Trendz Native latest",
+          "showTitleIcon": false,
+          "iconColor": "rgba(0, 0, 0, 0.87)",
+          "iconSize": "24px",
+          "titleTooltip": "",
+          "dropShadow": false,
+          "enableFullscreen": true,
+          "widgetStyle": {},
+          "titleStyle": {
+            "fontSize": "16px",
+            "fontWeight": 400
+          },
+          "showLegend": false
+        },
+        "row": 0,
+        "col": 0,
+        "id": "e0bb0e57-6bef-fbc1-341a-2e8663217c3a",
+        "typeFullFqn": "tenant.trendz_bundle.trendz_view_latest"
+      },
+      "84a133bf-f38e-ab95-9873-7ff51d67ccb2": {
+        "type": "latest",
+        "sizeX": 7.5,
+        "sizeY": 3,
+        "config": {
+          "datasources": [
+            {
+              "type": "entity",
+              "name": null,
+              "entityAliasId": "73aa5a62-03f7-55be-758d-4bd0ac09801b",
+              "filterId": null,
+              "dataKeys": [
+                {
+                  "name": "name",
+                  "type": "entityField",
+                  "label": "Name",
+                  "color": "#2196f3",
+                  "settings": {},
+                  "_hash": 0.3603079529633493
+                }
+              ]
+            }
+          ],
+          "timewindow": {
+            "displayValue": "",
+            "selectedTab": 0,
+            "realtime": {
+              "realtimeType": 1,
+              "interval": 1000,
+              "timewindowMs": 60000,
+              "quickInterval": "CURRENT_DAY"
+            },
+            "history": {
+              "historyType": 0,
+              "interval": 1000,
+              "timewindowMs": 60000,
+              "fixedTimewindow": {
+                "startTimeMs": 1684245187499,
+                "endTimeMs": 1684331587499
+              },
+              "quickInterval": "CURRENT_DAY"
+            },
+            "aggregation": {
+              "type": "AVG",
+              "limit": 25000
+            }
+          },
+          "showTitle": false,
+          "backgroundColor": "#fff",
+          "color": "rgba(0, 0, 0, 0.87)",
+          "padding": "8px",
+          "settings": {
+            "viewUrl": "https://trendz.test.cloud.tb-trendz.com/trendz/viewMode/e93852d5-1c70-11ec-b58a-b954da83317d",
+            "useDashboardTimeWindow": false,
+            "updateInRealTime": false,
+            "updateInRealTimeInterval": 1,
+            "canCancelViewLoading": false
+          },
+          "title": "New Trendz Native latest",
+          "showTitleIcon": false,
+          "iconColor": "rgba(0, 0, 0, 0.87)",
+          "iconSize": "24px",
+          "titleTooltip": "",
+          "dropShadow": false,
+          "enableFullscreen": true,
+          "widgetStyle": {},
+          "titleStyle": {
+            "fontSize": "16px",
+            "fontWeight": 400
+          },
+          "showLegend": false
+        },
+        "row": 0,
+        "col": 0,
+        "id": "84a133bf-f38e-ab95-9873-7ff51d67ccb2",
+        "typeFullFqn": "tenant.trendz_bundle.trendz_view_latest"
+      },
+      "ba02653b-f627-be86-6f56-56a756d8660d": {
+        "type": "latest",
+        "sizeX": 7.5,
+        "sizeY": 3,
+        "config": {
+          "datasources": [
+            {
+              "type": "entity",
+              "name": null,
+              "entityAliasId": "73aa5a62-03f7-55be-758d-4bd0ac09801b",
+              "filterId": null,
+              "dataKeys": [
+                {
+                  "name": "name",
+                  "type": "entityField",
+                  "label": "Name",
+                  "color": "#2196f3",
+                  "settings": {},
+                  "_hash": 0.9144176162797941
+                }
+              ]
+            }
+          ],
+          "timewindow": {
+            "displayValue": "",
+            "selectedTab": 0,
+            "realtime": {
+              "realtimeType": 1,
+              "interval": 1000,
+              "timewindowMs": 60000,
+              "quickInterval": "CURRENT_DAY"
+            },
+            "history": {
+              "historyType": 0,
+              "interval": 1000,
+              "timewindowMs": 60000,
+              "fixedTimewindow": {
+                "startTimeMs": 1684245187499,
+                "endTimeMs": 1684331587499
+              },
+              "quickInterval": "CURRENT_DAY"
+            },
+            "aggregation": {
+              "type": "AVG",
+              "limit": 25000
+            }
+          },
+          "showTitle": false,
+          "backgroundColor": "#fff",
+          "color": "rgba(0, 0, 0, 0.87)",
+          "padding": "8px",
+          "settings": {
+            "viewUrl": "https://trendz.test.cloud.tb-trendz.com/trendz/viewMode/3280c78f-6a2e-4846-9ded-ae5c75f6e3d1",
+            "useDashboardTimeWindow": true
+          },
+          "title": "New Trendz Native latest",
+          "showTitleIcon": false,
+          "iconColor": "rgba(0, 0, 0, 0.87)",
+          "iconSize": "24px",
+          "titleTooltip": "",
+          "dropShadow": false,
+          "enableFullscreen": true,
+          "widgetStyle": {},
+          "titleStyle": {
+            "fontSize": "16px",
+            "fontWeight": 400
+          },
+          "showLegend": false
+        },
+        "row": 0,
+        "col": 0,
+        "id": "ba02653b-f627-be86-6f56-56a756d8660d",
+        "typeFullFqn": "tenant.trendz_bundle.trendz_view_latest"
+      },
+      "8d28d031-3378-d7ee-8c61-d9bec3c0dc1d": {
+        "type": "static",
+        "sizeX": 7.5,
+        "sizeY": 3,
+        "config": {
+          "datasources": [],
+          "timewindow": {
+            "realtime": {
+              "timewindowMs": 60000
+            }
+          },
+          "showTitle": false,
+          "backgroundColor": "rgb(255, 255, 255)",
+          "color": "rgba(0, 0, 0, 0.87)",
+          "padding": "0px",
+          "settings": {
+            "cardCss": ".card {\n   width: 100%;\n   height: 100%;\n   box-sizing: border-box;\n}\n\n.card .content {\n   padding: 5px;\n   display: flex;\n   flex-direction: column;\n   align-items: center;\n   justify-content: center;\n   height: 100%;\n   box-sizing: border-box;\n   transition: background-color 0.5s;\n}\n\n.card .content:hover {\n    background-color: #ddd;\n}\n\n.card .description {\n    font-size: 0.75em;\n    font-weight: normal;\n    line-height: 2;\n    color: #333333;\n    text-transform: uppercase;\n}\n",
+            "cardHtml": "<div class='card'>\n    <div class='content' id=\"analytics\">\n        <div class='description' id=\"analytics\">\n            Leakage\n        </div>\n    </div>\n</div>"
+          },
+          "title": "Navigation: Total",
+          "dropShadow": false,
+          "showTitleIcon": false,
+          "iconColor": "rgba(0, 0, 0, 0.87)",
+          "iconSize": "24px",
+          "titleTooltip": "",
+          "enableFullscreen": false,
+          "widgetStyle": {
+            "border": "1px solid #E0E0E0"
+          },
+          "titleStyle": {
+            "fontSize": "16px",
+            "fontWeight": 400
+          },
+          "showLegend": false,
+          "actions": {
+            "elementClick": [
+              {
+                "name": "analytics",
+                "icon": "more_horiz",
+                "type": "custom",
+                "customFunction": "openDashboardState('leakage');\n\nfunction openDashboardState(statedId) {\n    var currentState = widgetContext.stateController\n        .getStateId();\n    if (currentState !== statedId) {\n        var params = {};\n        widgetContext.stateController.updateState(statedId,\n            params, false);\n    }\n}",
+                "id": "e748240e-cb44-0c9a-a199-0e4eacb3954c"
+              }
+            ]
+          }
+        },
+        "row": 0,
+        "col": 0,
+        "id": "8d28d031-3378-d7ee-8c61-d9bec3c0dc1d",
+        "typeFullFqn": "system.cards.html_card"
+      },
+      "542a7923-f637-edf8-c0aa-51b4f78b14ab": {
+        "type": "static",
+        "sizeX": 7.5,
+        "sizeY": 3,
+        "config": {
+          "datasources": [],
+          "timewindow": {
+            "realtime": {
+              "timewindowMs": 60000
+            }
+          },
+          "showTitle": false,
+          "backgroundColor": "rgb(255, 255, 255)",
+          "color": "rgba(0, 0, 0, 0.87)",
+          "padding": "0px",
+          "settings": {
+            "cardCss": ".card {\n   width: 100%;\n   height: 100%;\n   box-sizing: border-box;\n}\n\n.card .content {\n   padding: 5px;\n   display: flex;\n   flex-direction: column;\n   align-items: center;\n   justify-content: center;\n   height: 100%;\n   box-sizing: border-box;\n   transition: background-color 0.5s;\n}\n\n.card .content:hover {\n    background-color: #ddd;\n}\n\n.card .description {\n    font-size: 0.75em;\n    font-weight: normal;\n    line-height: 2;\n    color: #333333;\n    text-transform: uppercase;\n}\n",
+            "cardHtml": "<div class='card'>\n    <div class='content' id=\"analytics\">\n        <div class='description' id=\"analytics\">\n            Home\n        </div>\n    </div>\n</div>"
+          },
+          "title": "Navigation: Total",
+          "dropShadow": false,
+          "showTitleIcon": false,
+          "iconColor": "rgba(0, 0, 0, 0.87)",
+          "iconSize": "24px",
+          "titleTooltip": "",
+          "enableFullscreen": false,
+          "widgetStyle": {
+            "border": "1px solid #E0E0E0"
+          },
+          "titleStyle": {
+            "fontSize": "16px",
+            "fontWeight": 400
+          },
+          "showLegend": false,
+          "actions": {
+            "elementClick": [
+              {
+                "name": "analytics",
+                "icon": "more_horiz",
+                "type": "custom",
+                "customFunction": "openDashboardState('home');\n\nfunction openDashboardState(statedId) {\n    var currentState = widgetContext.stateController\n        .getStateId();\n    if (currentState !== statedId) {\n        var params = {};\n        widgetContext.stateController.updateState(statedId,\n            params, false);\n    }\n}",
+                "id": "e748240e-cb44-0c9a-a199-0e4eacb3954c"
+              }
+            ]
+          }
+        },
+        "row": 0,
+        "col": 0,
+        "id": "542a7923-f637-edf8-c0aa-51b4f78b14ab",
+        "typeFullFqn": "system.cards.html_card"
+      },
+      "ee9d87a0-0861-2433-5267-f7594a5fc033": {
+        "type": "static",
+        "sizeX": 7.5,
+        "sizeY": 3,
+        "config": {
+          "datasources": [],
+          "timewindow": {
+            "realtime": {
+              "timewindowMs": 60000
+            }
+          },
+          "showTitle": false,
+          "backgroundColor": "rgb(255, 255, 255)",
+          "color": "rgba(0, 0, 0, 0.87)",
+          "padding": "0px",
+          "settings": {
+            "cardCss": ".card {\n   width: 100%;\n   height: 100%;\n   box-sizing: border-box;\n}\n\n.card .content {\n   padding: 5px;\n   display: flex;\n   flex-direction: column;\n   align-items: center;\n   justify-content: center;\n   height: 100%;\n   box-sizing: border-box;\n   transition: background-color 0.5s;\n}\n\n.card .content:hover {\n    background-color: #ddd;\n}\n\n.card .description {\n    font-size: 0.75em;\n    font-weight: normal;\n    line-height: 2;\n    color: #333333;\n    text-transform: uppercase;\n}\n",
+            "cardHtml": "<div class='card'>\n    <div class='content' id=\"analytics\">\n        <div class='description' id=\"analytics\">\n            Leakage\n        </div>\n    </div>\n</div>"
+          },
+          "title": "Navigation: Total",
+          "dropShadow": false,
+          "showTitleIcon": false,
+          "iconColor": "rgba(0, 0, 0, 0.87)",
+          "iconSize": "24px",
+          "titleTooltip": "",
+          "enableFullscreen": false,
+          "widgetStyle": {
+            "border": "1px solid #E0E0E0"
+          },
+          "titleStyle": {
+            "fontSize": "16px",
+            "fontWeight": 400
+          },
+          "showLegend": false,
+          "actions": {
+            "elementClick": [
+              {
+                "name": "analytics",
+                "icon": "more_horiz",
+                "type": "custom",
+                "customFunction": "openDashboardState('leakage');\n\nfunction openDashboardState(statedId) {\n    var currentState = widgetContext.stateController\n        .getStateId();\n    if (currentState !== statedId) {\n        var params = {};\n        widgetContext.stateController.updateState(statedId,\n            params, false);\n    }\n}",
+                "id": "e748240e-cb44-0c9a-a199-0e4eacb3954c"
+              }
+            ]
+          }
+        },
+        "row": 0,
+        "col": 0,
+        "id": "ee9d87a0-0861-2433-5267-f7594a5fc033",
+        "typeFullFqn": "system.cards.html_card"
+      },
+      "afba0099-fb77-e6ed-6d84-f6782d3cf5ea": {
+        "type": "static",
+        "sizeX": 7.5,
+        "sizeY": 3,
+        "config": {
+          "datasources": [],
+          "timewindow": {
+            "realtime": {
+              "timewindowMs": 60000
+            }
+          },
+          "showTitle": false,
+          "backgroundColor": "rgb(255, 255, 255)",
+          "color": "rgba(0, 0, 0, 0.87)",
+          "padding": "8px",
+          "settings": {
+            "viewUrl": "https://trendz.test.cloud.tb-trendz.com/trendz/editConfig/b5ba620d-1d17-4261-9846-1ccf81fc1c11",
+            "useDashboardTimeWindow": true,
+            "canCancelViewLoading": false,
+            "isFiltersBroadcasting": false,
+            "isFiltersListen": false,
+            "channelName": "trendz-filter"
+          },
+          "title": "New tmp-native-trndz",
+          "dropShadow": false,
+          "showTitleIcon": false,
+          "iconColor": "rgba(0, 0, 0, 0.87)",
+          "iconSize": "24px",
+          "titleTooltip": "",
+          "enableFullscreen": true,
+          "widgetStyle": {},
+          "titleStyle": {
+            "fontSize": "16px",
+            "fontWeight": 400
+          },
+          "showLegend": false
+        },
+        "row": 0,
+        "col": 0,
+        "id": "afba0099-fb77-e6ed-6d84-f6782d3cf5ea",
+        "typeFullFqn": "tenant.trendz_bundle.trendz_view_static"
+      },
+      "6db529ed-e550-bf53-006f-c7790619d244": {
+        "type": "static",
+        "sizeX": 7.5,
+        "sizeY": 3,
+        "config": {
+          "datasources": [],
+          "timewindow": {
+            "realtime": {
+              "timewindowMs": 60000
+            }
+          },
+          "showTitle": false,
+          "backgroundColor": "rgb(255, 255, 255)",
+          "color": "rgba(0, 0, 0, 0.87)",
+          "padding": "0px",
+          "settings": {
+            "cardCss": ".card {\n   width: 100%;\n   height: 100%;\n   box-sizing: border-box;\n}\n\n.card .content {\n   padding: 5px;\n   display: flex;\n   flex-direction: column;\n   align-items: center;\n   justify-content: center;\n   height: 100%;\n   box-sizing: border-box;\n   transition: background-color 0.5s;\n}\n\n.card .content:hover {\n    background-color: #ddd;\n}\n\n.card .description {\n    font-size: 0.75em;\n    font-weight: normal;\n    line-height: 2;\n    color: #333333;\n    text-transform: uppercase;\n}\n",
+            "cardHtml": "<div class='card'>\n    <div class='content' id=\"analytics\">\n        <div class='description' id=\"analytics\">\n            Patterns\n        </div>\n    </div>\n</div>"
+          },
+          "title": "Navigation: Total",
+          "dropShadow": false,
+          "showTitleIcon": false,
+          "iconColor": "rgba(0, 0, 0, 0.87)",
+          "iconSize": "24px",
+          "titleTooltip": "",
+          "enableFullscreen": false,
+          "widgetStyle": {
+            "border": "1px solid #E0E0E0"
+          },
+          "titleStyle": {
+            "fontSize": "16px",
+            "fontWeight": 400
+          },
+          "showLegend": false,
+          "actions": {
+            "elementClick": [
+              {
+                "name": "analytics",
+                "icon": "more_horiz",
+                "type": "custom",
+                "customFunction": "openDashboardState('patterns');\n\nfunction openDashboardState(statedId) {\n    var currentState = widgetContext.stateController\n        .getStateId();\n    if (currentState !== statedId) {\n        var params = {};\n        widgetContext.stateController.updateState(statedId,\n            params, false);\n    }\n}",
+                "id": "e748240e-cb44-0c9a-a199-0e4eacb3954c"
+              }
+            ]
+          }
+        },
+        "row": 0,
+        "col": 0,
+        "id": "6db529ed-e550-bf53-006f-c7790619d244",
+        "typeFullFqn": "system.cards.html_card"
+      },
+      "b0c38307-1320-f9d3-1110-6968095f3d67": {
+        "type": "static",
+        "sizeX": 7.5,
+        "sizeY": 3,
+        "config": {
+          "datasources": [],
+          "timewindow": {
+            "realtime": {
+              "timewindowMs": 60000
+            }
+          },
+          "showTitle": false,
+          "backgroundColor": "rgb(255, 255, 255)",
+          "color": "rgba(0, 0, 0, 0.87)",
+          "padding": "8px",
+          "settings": {
+            "viewUrl": "https://trendz.test.cloud.tb-trendz.com/trendz/viewMode/8f7f77fc-f819-452b-bc3f-edbcc8454086",
+            "useDashboardTimeWindow": false,
+            "canCancelViewLoading": false
+          },
+          "title": "New tmp-native-trndz",
+          "dropShadow": false,
+          "showTitleIcon": false,
+          "iconColor": "rgba(0, 0, 0, 0.87)",
+          "iconSize": "24px",
+          "titleTooltip": "",
+          "enableFullscreen": true,
+          "widgetStyle": {},
+          "titleStyle": {
+            "fontSize": "16px",
+            "fontWeight": 400
+          },
+          "showLegend": false
+        },
+        "row": 0,
+        "col": 0,
+        "id": "b0c38307-1320-f9d3-1110-6968095f3d67",
+        "typeFullFqn": "tenant.trendz_bundle.trendz_view_static"
+      },
+      "2e7eddd6-e4ff-52d8-b5d0-a989f77bcbb5": {
+        "type": "static",
+        "sizeX": 7.5,
+        "sizeY": 3,
+        "config": {
+          "datasources": [],
+          "timewindow": {
+            "realtime": {
+              "timewindowMs": 60000
+            }
+          },
+          "showTitle": false,
+          "backgroundColor": "rgb(255, 255, 255)",
+          "color": "rgba(0, 0, 0, 0.87)",
+          "padding": "0px",
+          "settings": {
+            "cardCss": ".card {\n   width: 100%;\n   height: 100%;\n   box-sizing: border-box;\n}\n\n.card .content {\n   padding: 5px;\n   display: flex;\n   flex-direction: column;\n   align-items: center;\n   justify-content: center;\n   height: 100%;\n   box-sizing: border-box;\n   transition: background-color 0.5s;\n}\n\n.card .content:hover {\n    background-color: #ddd;\n}\n\n.card .description {\n    font-size: 0.75em;\n    font-weight: normal;\n    line-height: 2;\n    color: #333333;\n    text-transform: uppercase;\n}\n",
+            "cardHtml": "<div class='card'>\n    <div class='content' id=\"analytics\">\n        <div class='description' id=\"analytics\">\n            Home\n        </div>\n    </div>\n</div>"
+          },
+          "title": "Navigation: Total",
+          "dropShadow": false,
+          "showTitleIcon": false,
+          "iconColor": "rgba(0, 0, 0, 0.87)",
+          "iconSize": "24px",
+          "titleTooltip": "",
+          "enableFullscreen": false,
+          "widgetStyle": {
+            "border": "1px solid #E0E0E0"
+          },
+          "titleStyle": {
+            "fontSize": "16px",
+            "fontWeight": 400
+          },
+          "showLegend": false,
+          "actions": {
+            "elementClick": [
+              {
+                "name": "analytics",
+                "icon": "more_horiz",
+                "type": "custom",
+                "customFunction": "openDashboardState('home');\n\nfunction openDashboardState(statedId) {\n    var currentState = widgetContext.stateController\n        .getStateId();\n    if (currentState !== statedId) {\n        var params = {};\n        widgetContext.stateController.updateState(statedId,\n            params, false);\n    }\n}",
+                "id": "e748240e-cb44-0c9a-a199-0e4eacb3954c"
+              }
+            ]
+          }
+        },
+        "row": 0,
+        "col": 0,
+        "id": "2e7eddd6-e4ff-52d8-b5d0-a989f77bcbb5",
+        "typeFullFqn": "system.cards.html_card"
+      },
+      "75eeb161-c3fc-a4e7-58d8-bbce9134d1b8": {
+        "type": "static",
+        "sizeX": 7.5,
+        "sizeY": 3,
+        "config": {
+          "datasources": [],
+          "timewindow": {
+            "realtime": {
+              "timewindowMs": 60000
+            }
+          },
+          "showTitle": false,
+          "backgroundColor": "rgb(255, 255, 255)",
+          "color": "rgba(0, 0, 0, 0.87)",
+          "padding": "0px",
+          "settings": {
+            "cardCss": ".card {\n   width: 100%;\n   height: 100%;\n   box-sizing: border-box;\n}\n\n.card .content {\n   padding: 5px;\n   display: flex;\n   flex-direction: column;\n   align-items: center;\n   justify-content: center;\n   height: 100%;\n   box-sizing: border-box;\n   transition: background-color 0.5s;\n}\n\n.card .content:hover {\n    background-color: #ddd;\n}\n\n.card .description {\n    font-size: 0.75em;\n    font-weight: normal;\n    line-height: 2;\n    color: #333333;\n    text-transform: uppercase;\n}\n",
+            "cardHtml": "<div class='card'>\n    <div class='content' id=\"analytics\">\n        <div class='description' id=\"analytics\">\n            Leakage\n        </div>\n    </div>\n</div>"
+          },
+          "title": "Navigation: Total",
+          "dropShadow": false,
+          "showTitleIcon": false,
+          "iconColor": "rgba(0, 0, 0, 0.87)",
+          "iconSize": "24px",
+          "titleTooltip": "",
+          "enableFullscreen": false,
+          "widgetStyle": {
+            "border": "1px solid #E0E0E0"
+          },
+          "titleStyle": {
+            "fontSize": "16px",
+            "fontWeight": 400
+          },
+          "showLegend": false,
+          "actions": {
+            "elementClick": [
+              {
+                "name": "analytics",
+                "icon": "more_horiz",
+                "type": "custom",
+                "customFunction": "openDashboardState('leakage');\n\nfunction openDashboardState(statedId) {\n    var currentState = widgetContext.stateController\n        .getStateId();\n    if (currentState !== statedId) {\n        var params = {};\n        widgetContext.stateController.updateState(statedId,\n            params, false);\n    }\n}",
+                "id": "e748240e-cb44-0c9a-a199-0e4eacb3954c"
+              }
+            ]
+          }
+        },
+        "row": 0,
+        "col": 0,
+        "id": "75eeb161-c3fc-a4e7-58d8-bbce9134d1b8",
+        "typeFullFqn": "system.cards.html_card"
+      },
+      "54c2b986-a19f-6486-6680-2231aa23c48f": {
+        "type": "static",
+        "sizeX": 7.5,
+        "sizeY": 3,
+        "config": {
+          "datasources": [],
+          "timewindow": {
+            "realtime": {
+              "timewindowMs": 60000
+            }
+          },
+          "showTitle": false,
+          "backgroundColor": "rgb(255, 255, 255)",
+          "color": "rgba(0, 0, 0, 0.87)",
+          "padding": "0px",
+          "settings": {
+            "cardCss": ".card {\n   width: 100%;\n   height: 100%;\n   box-sizing: border-box;\n}\n\n.card .content {\n   padding: 5px;\n   display: flex;\n   flex-direction: column;\n   align-items: center;\n   justify-content: center;\n   height: 100%;\n   box-sizing: border-box;\n   transition: background-color 0.5s;\n}\n\n.card .content:hover {\n    background-color: #ddd;\n}\n\n.card .description {\n    font-size: 0.75em;\n    font-weight: normal;\n    line-height: 2;\n    color: #333333;\n    text-transform: uppercase;\n}\n",
+            "cardHtml": "<div class='card'>\n    <div class='content' id=\"analytics\">\n        <div class='description' id=\"analytics\">\n            Patterns\n        </div>\n    </div>\n</div>"
+          },
+          "title": "Navigation: Total",
+          "dropShadow": false,
+          "showTitleIcon": false,
+          "iconColor": "rgba(0, 0, 0, 0.87)",
+          "iconSize": "24px",
+          "titleTooltip": "",
+          "enableFullscreen": false,
+          "widgetStyle": {
+            "border": "1px solid #E0E0E0"
+          },
+          "titleStyle": {
+            "fontSize": "16px",
+            "fontWeight": 400
+          },
+          "showLegend": false,
+          "actions": {
+            "elementClick": [
+              {
+                "name": "analytics",
+                "icon": "more_horiz",
+                "type": "custom",
+                "customFunction": "openDashboardState('patterns');\n\nfunction openDashboardState(statedId) {\n    var currentState = widgetContext.stateController\n        .getStateId();\n    if (currentState !== statedId) {\n        var params = {};\n        widgetContext.stateController.updateState(statedId,\n            params, false);\n    }\n}",
+                "id": "e748240e-cb44-0c9a-a199-0e4eacb3954c"
+              }
+            ]
+          }
+        },
+        "row": 0,
+        "col": 0,
+        "id": "54c2b986-a19f-6486-6680-2231aa23c48f",
+        "typeFullFqn": "system.cards.html_card"
+      },
+      "03c38df9-d5a2-302e-8d2c-c0f6f47428bf": {
+        "type": "latest",
+        "sizeX": 7.5,
+        "sizeY": 3,
+        "config": {
+          "datasources": [
+            {
+              "type": "entity",
+              "name": null,
+              "entityAliasId": "36bbdf43-cc7c-f349-842e-d1eb1e82617d",
+              "filterId": null,
+              "dataKeys": [
+                {
+                  "name": "name",
+                  "type": "entityField",
+                  "label": "Name",
+                  "color": "#2196f3",
+                  "settings": {},
+                  "_hash": 0.730009886025127
+                }
+              ]
+            }
+          ],
+          "timewindow": {
+            "displayValue": "",
+            "selectedTab": 0,
+            "realtime": {
+              "realtimeType": 1,
+              "interval": 1000,
+              "timewindowMs": 60000,
+              "quickInterval": "CURRENT_DAY"
+            },
+            "history": {
+              "historyType": 0,
+              "interval": 1000,
+              "timewindowMs": 60000,
+              "fixedTimewindow": {
+                "startTimeMs": 1684245187499,
+                "endTimeMs": 1684331587499
+              },
+              "quickInterval": "CURRENT_DAY"
+            },
+            "aggregation": {
+              "type": "AVG",
+              "limit": 25000
+            }
+          },
+          "showTitle": false,
+          "backgroundColor": "#fff",
+          "color": "rgba(0, 0, 0, 0.87)",
+          "padding": "8px",
+          "settings": {
+            "viewUrl": "https://trendz.test.cloud.tb-trendz.com/trendz/viewMode/9b236356-fcee-419e-b7c8-c6c15b8704c1",
+            "filterName": "WM Region",
+            "useDashboardTimeWindow": false,
+            "updateInRealTime": false,
+            "updateInRealTimeInterval": 1,
+            "canCancelViewLoading": false
+          },
+          "title": "New Trendz Native latest",
+          "showTitleIcon": false,
+          "iconColor": "rgba(0, 0, 0, 0.87)",
+          "iconSize": "24px",
+          "titleTooltip": "",
+          "dropShadow": false,
+          "enableFullscreen": true,
+          "widgetStyle": {},
+          "titleStyle": {
+            "fontSize": "16px",
+            "fontWeight": 400
+          },
+          "showLegend": false,
+          "actions": {
+            "dateSelected": [
+              {
+                "name": "select date",
+                "icon": "more_horiz",
+                "useShowWidgetActionFunction": null,
+                "showWidgetActionFunction": "return true;",
+                "type": "custom",
+                "customFunction": "var newTimeRange = {\n    aggregation: {\n        limit: 30000,\n        type: \"NONE\"\n    },\n    hideAggInterval: false,\n    hideAggregation: false,\n    hideInterval: false,\n    history: {\n        historyType: 1,\n        fixedTimewindow: {\n            startTimeMs: additionalParams.startTs,\n            endTimeMs: additionalParams.endTs\n        }\n    },\n    selectedTab: 1\n}\n    \n// apply new time range \nwidgetContext.dashboard.dashboardTimewindowChangedSubject.next(newTimeRange);\n\nvar params = {\n    entityId: entityId,\n    entityName: entityName,\n    entityLabel: entityLabel,\n}\n\n// open new dashboard state        \nwidgetContext.stateController.updateState('leakageDetails', additionalParams.params);",
+                "openInSeparateDialog": false,
+                "openInPopover": false,
+                "id": "99356949-4160-725b-660f-4df12466f69f"
+              }
+            ]
+          }
+        },
+        "row": 0,
+        "col": 0,
+        "id": "03c38df9-d5a2-302e-8d2c-c0f6f47428bf",
+        "typeFullFqn": "tenant.trendz_bundle.trendz_view_latest"
+      },
+      "f9ba5d04-1d5e-83c6-e2f3-9b634fd6ef69": {
+        "type": "latest",
+        "sizeX": 7.5,
+        "sizeY": 3,
+        "config": {
+          "datasources": [
+            {
+              "type": "entity",
+              "name": null,
+              "entityAliasId": "73aa5a62-03f7-55be-758d-4bd0ac09801b",
+              "filterId": null,
+              "dataKeys": [
+                {
+                  "name": "name",
+                  "type": "entityField",
+                  "label": "Name",
+                  "color": "#2196f3",
+                  "settings": {},
+                  "_hash": 0.9813850449761801
+                }
+              ]
+            }
+          ],
+          "timewindow": {
+            "displayValue": "",
+            "selectedTab": 0,
+            "realtime": {
+              "realtimeType": 1,
+              "interval": 1000,
+              "timewindowMs": 60000,
+              "quickInterval": "CURRENT_DAY"
+            },
+            "history": {
+              "historyType": 0,
+              "interval": 1000,
+              "timewindowMs": 60000,
+              "fixedTimewindow": {
+                "startTimeMs": 1684245187499,
+                "endTimeMs": 1684331587499
+              },
+              "quickInterval": "CURRENT_DAY"
+            },
+            "aggregation": {
+              "type": "AVG",
+              "limit": 25000
+            }
+          },
+          "showTitle": false,
+          "backgroundColor": "#fff",
+          "color": "rgba(0, 0, 0, 0.87)",
+          "padding": "8px",
+          "settings": {
+            "viewUrl": "https://trendz.test.cloud.tb-trendz.com/trendz/viewMode/b5ba620d-1d17-4261-9846-1ccf81fc1c11",
+            "useDashboardTimeWindow": true
+          },
+          "title": "New Trendz Native latest",
+          "showTitleIcon": false,
+          "iconColor": "rgba(0, 0, 0, 0.87)",
+          "iconSize": "24px",
+          "titleTooltip": "",
+          "dropShadow": false,
+          "enableFullscreen": true,
+          "widgetStyle": {},
+          "titleStyle": {
+            "fontSize": "16px",
+            "fontWeight": 400
+          },
+          "showLegend": false,
+          "actions": {
+            "rowClick": [
+              {
+                "name": "select region",
+                "icon": "more_horiz",
+                "type": "updateDashboardState",
+                "targetDashboardStateId": null,
+                "setEntityId": true,
+                "stateEntityParamName": "selectedRegion",
+                "openRightLayout": false,
+                "id": "4f80c92b-e7a4-4be7-65f8-5886b8443b37"
+              }
+            ]
+          }
+        },
+        "row": 0,
+        "col": 0,
+        "id": "f9ba5d04-1d5e-83c6-e2f3-9b634fd6ef69",
+        "typeFullFqn": "tenant.trendz_bundle.trendz_view_latest"
+      },
+      "31aef986-2248-4aa7-0675-04bfab1cdb57": {
+        "type": "static",
+        "sizeX": 7.5,
+        "sizeY": 3,
+        "config": {
+          "datasources": [],
+          "timewindow": {
+            "realtime": {
+              "timewindowMs": 60000
+            }
+          },
+          "showTitle": false,
+          "backgroundColor": "rgb(255, 255, 255)",
+          "color": "rgba(0, 0, 0, 0.87)",
+          "padding": "0px",
+          "settings": {
+            "cardCss": ".card {\n   width: 100%;\n   height: 100%;\n   box-sizing: border-box;\n}\n\n.card .content {\n   padding: 5px;\n   display: flex;\n   flex-direction: column;\n   align-items: center;\n   justify-content: center;\n   height: 100%;\n   box-sizing: border-box;\n   transition: background-color 0.5s;\n}\n\n.card .content:hover {\n    background-color: #ddd;\n}\n\n.card .description {\n    font-size: 0.75em;\n    font-weight: normal;\n    line-height: 2;\n    color: #333333;\n    text-transform: uppercase;\n}\n",
+            "cardHtml": "<div class='card'>\n    <div class='content' id=\"analytics\">\n        <div class='description' id=\"analytics\">\n            Back\n        </div>\n    </div>\n</div>"
+          },
+          "title": "Navigation: Total",
+          "dropShadow": false,
+          "showTitleIcon": false,
+          "iconColor": "rgba(0, 0, 0, 0.87)",
+          "iconSize": "24px",
+          "titleTooltip": "",
+          "enableFullscreen": false,
+          "widgetStyle": {
+            "border": "1px solid #E0E0E0"
+          },
+          "titleStyle": {
+            "fontSize": "16px",
+            "fontWeight": 400
+          },
+          "showLegend": false,
+          "actions": {
+            "elementClick": [
+              {
+                "name": "analytics",
+                "icon": "more_horiz",
+                "useShowWidgetActionFunction": null,
+                "showWidgetActionFunction": "return true;",
+                "type": "custom",
+                "customFunction": "var newTimeRange = {\n    aggregation: {\n        limit: 30000,\n        type: \"NONE\"\n    },\n    hideAggInterval: false,\n    hideAggregation: false,\n    hideInterval: false,\n    history: {\n        historyType: 1,\n        fixedTimewindow: {\n            startTimeMs: 1577829600000,\n            endTimeMs: new Date().getTime()\n        }\n    },\n    selectedTab: 1\n}\n    \n// apply new time range \nwidgetContext.dashboard.dashboardTimewindowChangedSubject.next(newTimeRange);\n\n\nopenDashboardState('leakage');\n\nfunction openDashboardState(statedId) {\n    var currentState = widgetContext.stateController\n        .getStateId();\n    if (currentState !== statedId) {\n        var params = {};\n        widgetContext.stateController.updateState(statedId,\n            params, false);\n    }\n}",
+                "openInSeparateDialog": false,
+                "openInPopover": false,
+                "id": "e748240e-cb44-0c9a-a199-0e4eacb3954c"
+              }
+            ]
+          }
+        },
+        "row": 0,
+        "col": 0,
+        "id": "31aef986-2248-4aa7-0675-04bfab1cdb57",
+        "typeFullFqn": "system.cards.html_card"
+      },
+      "29242b15-cee1-28e1-1bb0-4088cb59da06": {
+        "type": "latest",
+        "sizeX": 7.5,
+        "sizeY": 3,
+        "config": {
+          "datasources": [
+            {
+              "type": "entity",
+              "name": null,
+              "entityAliasId": "36bbdf43-cc7c-f349-842e-d1eb1e82617d",
+              "filterId": null,
+              "dataKeys": [
+                {
+                  "name": "name",
+                  "type": "entityField",
+                  "label": "Name",
+                  "color": "#2196f3",
+                  "settings": {},
+                  "_hash": 0.8726664549243581
+                }
+              ]
+            }
+          ],
+          "timewindow": {
+            "displayValue": "",
+            "selectedTab": 0,
+            "realtime": {
+              "realtimeType": 1,
+              "interval": 1000,
+              "timewindowMs": 60000,
+              "quickInterval": "CURRENT_DAY"
+            },
+            "history": {
+              "historyType": 0,
+              "interval": 1000,
+              "timewindowMs": 60000,
+              "fixedTimewindow": {
+                "startTimeMs": 1684245187499,
+                "endTimeMs": 1684331587499
+              },
+              "quickInterval": "CURRENT_DAY"
+            },
+            "aggregation": {
+              "type": "AVG",
+              "limit": 25000
+            }
+          },
+          "showTitle": false,
+          "backgroundColor": "#fff",
+          "color": "rgba(0, 0, 0, 0.87)",
+          "padding": "8px",
+          "settings": {
+            "viewUrl": "https://trendz.test.cloud.tb-trendz.com/trendz/viewMode/f4cbcbf4-876a-47e1-947e-d8b2bdd0f0e2",
+            "useDashboardTimeWindow": true,
+            "filterName": "WM Region",
+            "updateInRealTime": false,
+            "updateInRealTimeInterval": 1,
+            "canCancelViewLoading": false
+          },
+          "title": "New Trendz Native latest",
+          "showTitleIcon": false,
+          "iconColor": "rgba(0, 0, 0, 0.87)",
+          "iconSize": "24px",
+          "titleTooltip": "",
+          "dropShadow": false,
+          "enableFullscreen": true,
+          "widgetStyle": {},
+          "titleStyle": {
+            "fontSize": "16px",
+            "fontWeight": 400
+          },
+          "showLegend": false
+        },
+        "row": 0,
+        "col": 0,
+        "id": "29242b15-cee1-28e1-1bb0-4088cb59da06",
+        "typeFullFqn": "tenant.trendz_bundle.trendz_view_latest"
+      },
+      "dea63b7c-f7b8-54b3-4054-e59cf7ee0669": {
+        "type": "static",
+        "sizeX": 7.5,
+        "sizeY": 3,
+        "config": {
+          "datasources": [],
+          "timewindow": {
+            "realtime": {
+              "timewindowMs": 60000
+            }
+          },
+          "showTitle": false,
+          "backgroundColor": "rgb(255, 255, 255)",
+          "color": "rgba(0, 0, 0, 0.87)",
+          "padding": "8px",
+          "settings": {
+            "viewUrl": "https://trendz.test.cloud.tb-trendz.com/trendz/viewMode/007b822c-8de7-11ee-abb5-7d77e393fbb2",
+            "useDashboardTimeWindow": false,
+            "canCancelViewLoading": false
+          },
+          "title": "New tmp-native-trndz",
+          "dropShadow": false,
+          "showTitleIcon": false,
+          "iconColor": "rgba(0, 0, 0, 0.87)",
+          "iconSize": "24px",
+          "titleTooltip": "",
+          "enableFullscreen": true,
+          "widgetStyle": {},
+          "titleStyle": {
+            "fontSize": "16px",
+            "fontWeight": 400
+          },
+          "showLegend": false
+        },
+        "row": 0,
+        "col": 0,
+        "id": "dea63b7c-f7b8-54b3-4054-e59cf7ee0669",
+        "typeFullFqn": "tenant.trendz_bundle.trendz_view_static"
+      },
+      "987ad618-1430-851b-fe5b-6ab3716b4f84": {
+        "type": "static",
+        "sizeX": 7.5,
+        "sizeY": 3,
+        "config": {
+          "datasources": [],
+          "timewindow": {
+            "realtime": {
+              "timewindowMs": 60000
+            }
+          },
+          "showTitle": false,
+          "backgroundColor": "rgb(255, 255, 255)",
+          "color": "rgba(0, 0, 0, 0.87)",
+          "padding": "0px",
+          "settings": {
+            "cardCss": ".card {\n   width: 100%;\n   height: 100%;\n   box-sizing: border-box;\n}\n\n.card .content {\n   padding: 5px;\n   display: flex;\n   flex-direction: column;\n   align-items: center;\n   justify-content: center;\n   height: 100%;\n   box-sizing: border-box;\n   transition: background-color 0.5s;\n}\n\n.card .content:hover {\n    background-color: #ddd;\n}\n\n.card .description {\n    font-size: 0.75em;\n    font-weight: normal;\n    line-height: 2;\n    color: #333333;\n    text-transform: uppercase;\n}\n",
+            "cardHtml": "<div class='card'>\n    <div class='content' id=\"analytics\">\n        <div class='description' id=\"analytics\">\n            Insights\n        </div>\n    </div>\n</div>"
+          },
+          "title": "Navigation: Total",
+          "dropShadow": false,
+          "showTitleIcon": false,
+          "iconColor": "rgba(0, 0, 0, 0.87)",
+          "iconSize": "24px",
+          "titleTooltip": "",
+          "enableFullscreen": false,
+          "widgetStyle": {
+            "border": "1px solid #E0E0E0"
+          },
+          "titleStyle": {
+            "fontSize": "16px",
+            "fontWeight": 400
+          },
+          "showLegend": false,
+          "actions": {
+            "elementClick": [
+              {
+                "name": "analytics",
+                "icon": "more_horiz",
+                "type": "custom",
+                "customFunction": "openDashboardState('insights');\n\nfunction openDashboardState(statedId) {\n    var currentState = widgetContext.stateController\n        .getStateId();\n    if (currentState !== statedId) {\n        var params = {};\n        widgetContext.stateController.updateState(statedId,\n            params, false);\n    }\n}",
+                "id": "e748240e-cb44-0c9a-a199-0e4eacb3954c"
+              }
+            ]
+          }
+        },
+        "row": 0,
+        "col": 0,
+        "id": "987ad618-1430-851b-fe5b-6ab3716b4f84",
+        "typeFullFqn": "system.cards.html_card"
+      },
+      "6b6decb6-014f-a83a-f5b1-fe9cbedba283": {
+        "type": "static",
+        "sizeX": 7.5,
+        "sizeY": 3,
+        "config": {
+          "datasources": [],
+          "timewindow": {
+            "realtime": {
+              "timewindowMs": 60000
+            }
+          },
+          "showTitle": false,
+          "backgroundColor": "rgb(255, 255, 255)",
+          "color": "rgba(0, 0, 0, 0.87)",
+          "padding": "0px",
+          "settings": {
+            "cardCss": ".card {\n   width: 100%;\n   height: 100%;\n   box-sizing: border-box;\n}\n\n.card .content {\n   padding: 5px;\n   display: flex;\n   flex-direction: column;\n   align-items: center;\n   justify-content: center;\n   height: 100%;\n   box-sizing: border-box;\n   transition: background-color 0.5s;\n}\n\n.card .content:hover {\n    background-color: #ddd;\n}\n\n.card .description {\n    font-size: 0.75em;\n    font-weight: normal;\n    line-height: 2;\n    color: #333333;\n    text-transform: uppercase;\n}\n",
+            "cardHtml": "<div class='card'>\n    <div class='content' id=\"analytics\">\n        <div class='description' id=\"analytics\">\n            Home\n        </div>\n    </div>\n</div>"
+          },
+          "title": "Navigation: Total",
+          "dropShadow": false,
+          "showTitleIcon": false,
+          "iconColor": "rgba(0, 0, 0, 0.87)",
+          "iconSize": "24px",
+          "titleTooltip": "",
+          "enableFullscreen": false,
+          "widgetStyle": {
+            "border": "1px solid #E0E0E0"
+          },
+          "titleStyle": {
+            "fontSize": "16px",
+            "fontWeight": 400
+          },
+          "showLegend": false,
+          "actions": {
+            "elementClick": [
+              {
+                "name": "analytics",
+                "icon": "more_horiz",
+                "type": "custom",
+                "customFunction": "openDashboardState('home');\n\nfunction openDashboardState(statedId) {\n    var currentState = widgetContext.stateController\n        .getStateId();\n    if (currentState !== statedId) {\n        var params = {};\n        widgetContext.stateController.updateState(statedId,\n            params, false);\n    }\n}",
+                "id": "e748240e-cb44-0c9a-a199-0e4eacb3954c"
+              }
+            ]
+          }
+        },
+        "row": 0,
+        "col": 0,
+        "id": "6b6decb6-014f-a83a-f5b1-fe9cbedba283",
+        "typeFullFqn": "system.cards.html_card"
+      },
+      "39e3840a-7667-979c-ffcb-5b3bec84db45": {
+        "type": "static",
+        "sizeX": 7.5,
+        "sizeY": 3,
+        "config": {
+          "datasources": [],
+          "timewindow": {
+            "realtime": {
+              "timewindowMs": 60000
+            }
+          },
+          "showTitle": false,
+          "backgroundColor": "rgb(255, 255, 255)",
+          "color": "rgba(0, 0, 0, 0.87)",
+          "padding": "0px",
+          "settings": {
+            "cardCss": ".card {\n   width: 100%;\n   height: 100%;\n   box-sizing: border-box;\n}\n\n.card .content {\n   padding: 5px;\n   display: flex;\n   flex-direction: column;\n   align-items: center;\n   justify-content: center;\n   height: 100%;\n   box-sizing: border-box;\n   transition: background-color 0.5s;\n}\n\n.card .content:hover {\n    background-color: #ddd;\n}\n\n.card .description {\n    font-size: 0.75em;\n    font-weight: normal;\n    line-height: 2;\n    color: #333333;\n    text-transform: uppercase;\n}\n",
+            "cardHtml": "<div class='card'>\n    <div class='content' id=\"analytics\">\n        <div class='description' id=\"analytics\">\n            Leakage\n        </div>\n    </div>\n</div>"
+          },
+          "title": "Navigation: Total",
+          "dropShadow": false,
+          "showTitleIcon": false,
+          "iconColor": "rgba(0, 0, 0, 0.87)",
+          "iconSize": "24px",
+          "titleTooltip": "",
+          "enableFullscreen": false,
+          "widgetStyle": {
+            "border": "1px solid #E0E0E0"
+          },
+          "titleStyle": {
+            "fontSize": "16px",
+            "fontWeight": 400
+          },
+          "showLegend": false,
+          "actions": {
+            "elementClick": [
+              {
+                "name": "analytics",
+                "icon": "more_horiz",
+                "type": "custom",
+                "customFunction": "openDashboardState('leakage');\n\nfunction openDashboardState(statedId) {\n    var currentState = widgetContext.stateController\n        .getStateId();\n    if (currentState !== statedId) {\n        var params = {};\n        widgetContext.stateController.updateState(statedId,\n            params, false);\n    }\n}",
+                "id": "e748240e-cb44-0c9a-a199-0e4eacb3954c"
+              }
+            ]
+          }
+        },
+        "row": 0,
+        "col": 0,
+        "id": "39e3840a-7667-979c-ffcb-5b3bec84db45",
+        "typeFullFqn": "system.cards.html_card"
+      },
+      "600dc8d7-1fc7-31a0-1842-f6c4b88d00fb": {
+        "type": "static",
+        "sizeX": 7.5,
+        "sizeY": 3,
+        "config": {
+          "datasources": [],
+          "timewindow": {
+            "realtime": {
+              "timewindowMs": 60000
+            }
+          },
+          "showTitle": false,
+          "backgroundColor": "rgb(255, 255, 255)",
+          "color": "rgba(0, 0, 0, 0.87)",
+          "padding": "0px",
+          "settings": {
+            "cardCss": ".card {\n   width: 100%;\n   height: 100%;\n   box-sizing: border-box;\n}\n\n.card .content {\n   padding: 5px;\n   display: flex;\n   flex-direction: column;\n   align-items: center;\n   justify-content: center;\n   height: 100%;\n   box-sizing: border-box;\n   transition: background-color 0.5s;\n}\n\n.card .content:hover {\n    background-color: #ddd;\n}\n\n.card .description {\n    font-size: 0.75em;\n    font-weight: normal;\n    line-height: 2;\n    color: #333333;\n    text-transform: uppercase;\n}\n",
+            "cardHtml": "<div class='card'>\n    <div class='content' id=\"analytics\">\n        <div class='description' id=\"analytics\">\n            Patterns\n        </div>\n    </div>\n</div>"
+          },
+          "title": "Navigation: Total",
+          "dropShadow": false,
+          "showTitleIcon": false,
+          "iconColor": "rgba(0, 0, 0, 0.87)",
+          "iconSize": "24px",
+          "titleTooltip": "",
+          "enableFullscreen": false,
+          "widgetStyle": {
+            "border": "1px solid #E0E0E0"
+          },
+          "titleStyle": {
+            "fontSize": "16px",
+            "fontWeight": 400
+          },
+          "showLegend": false,
+          "actions": {
+            "elementClick": [
+              {
+                "name": "analytics",
+                "icon": "more_horiz",
+                "type": "custom",
+                "customFunction": "openDashboardState('patterns');\n\nfunction openDashboardState(statedId) {\n    var currentState = widgetContext.stateController\n        .getStateId();\n    if (currentState !== statedId) {\n        var params = {};\n        widgetContext.stateController.updateState(statedId,\n            params, false);\n    }\n}",
+                "id": "e748240e-cb44-0c9a-a199-0e4eacb3954c"
+              }
+            ]
+          }
+        },
+        "row": 0,
+        "col": 0,
+        "id": "600dc8d7-1fc7-31a0-1842-f6c4b88d00fb",
+        "typeFullFqn": "system.cards.html_card"
+      },
+      "f2cc1232-7f2f-8b6b-160b-511d1ab554ed": {
+        "type": "static",
+        "sizeX": 7.5,
+        "sizeY": 3,
+        "config": {
+          "datasources": [],
+          "timewindow": {
+            "realtime": {
+              "timewindowMs": 60000
+            }
+          },
+          "showTitle": false,
+          "backgroundColor": "rgb(255, 255, 255)",
+          "color": "rgba(0, 0, 0, 0.87)",
+          "padding": "0px",
+          "settings": {
+            "cardCss": ".card {\n   width: 100%;\n   height: 100%;\n   box-sizing: border-box;\n}\n\n.card .content {\n   padding: 5px;\n   display: flex;\n   flex-direction: column;\n   align-items: center;\n   justify-content: center;\n   height: 100%;\n   box-sizing: border-box;\n   transition: background-color 0.5s;\n}\n\n.card .content:hover {\n    background-color: #ddd;\n}\n\n.card .description {\n    font-size: 0.75em;\n    font-weight: normal;\n    line-height: 2;\n    color: #333333;\n    text-transform: uppercase;\n}\n",
+            "cardHtml": "<div class='card'>\n    <div class='content' id=\"analytics\">\n        <div class='description' id=\"analytics\">\n            Insights\n        </div>\n    </div>\n</div>"
+          },
+          "title": "Navigation: Total",
+          "dropShadow": false,
+          "showTitleIcon": false,
+          "iconColor": "rgba(0, 0, 0, 0.87)",
+          "iconSize": "24px",
+          "titleTooltip": "",
+          "enableFullscreen": false,
+          "widgetStyle": {
+            "border": "1px solid #E0E0E0"
+          },
+          "titleStyle": {
+            "fontSize": "16px",
+            "fontWeight": 400
+          },
+          "showLegend": false,
+          "actions": {
+            "elementClick": [
+              {
+                "name": "analytics",
+                "icon": "more_horiz",
+                "type": "custom",
+                "customFunction": "openDashboardState('insights');\n\nfunction openDashboardState(statedId) {\n    var currentState = widgetContext.stateController\n        .getStateId();\n    if (currentState !== statedId) {\n        var params = {};\n        widgetContext.stateController.updateState(statedId,\n            params, false);\n    }\n}",
+                "id": "e748240e-cb44-0c9a-a199-0e4eacb3954c"
+              }
+            ]
+          }
+        },
+        "row": 0,
+        "col": 0,
+        "id": "f2cc1232-7f2f-8b6b-160b-511d1ab554ed",
+        "typeFullFqn": "system.cards.html_card"
+      },
+      "aa5c94cf-1ad1-a13d-a066-5d3ce94aa2fc": {
+        "type": "static",
+        "sizeX": 7.5,
+        "sizeY": 3,
+        "config": {
+          "datasources": [],
+          "timewindow": {
+            "realtime": {
+              "timewindowMs": 60000
+            }
+          },
+          "showTitle": false,
+          "backgroundColor": "rgb(255, 255, 255)",
+          "color": "rgba(0, 0, 0, 0.87)",
+          "padding": "0px",
+          "settings": {
+            "cardCss": ".card {\n   width: 100%;\n   height: 100%;\n   box-sizing: border-box;\n}\n\n.card .content {\n   padding: 5px;\n   display: flex;\n   flex-direction: column;\n   align-items: center;\n   justify-content: center;\n   height: 100%;\n   box-sizing: border-box;\n   transition: background-color 0.5s;\n}\n\n.card .content:hover {\n    background-color: #ddd;\n}\n\n.card .description {\n    font-size: 0.75em;\n    font-weight: normal;\n    line-height: 2;\n    color: #333333;\n    text-transform: uppercase;\n}\n",
+            "cardHtml": "<div class='card'>\n    <div class='content' id=\"analytics\">\n        <div class='description' id=\"analytics\">\n            Insights\n        </div>\n    </div>\n</div>"
+          },
+          "title": "Navigation: Total",
+          "dropShadow": false,
+          "showTitleIcon": false,
+          "iconColor": "rgba(0, 0, 0, 0.87)",
+          "iconSize": "24px",
+          "titleTooltip": "",
+          "enableFullscreen": false,
+          "widgetStyle": {
+            "border": "1px solid #E0E0E0"
+          },
+          "titleStyle": {
+            "fontSize": "16px",
+            "fontWeight": 400
+          },
+          "showLegend": false,
+          "actions": {
+            "elementClick": [
+              {
+                "name": "analytics",
+                "icon": "more_horiz",
+                "type": "custom",
+                "customFunction": "openDashboardState('insights');\n\nfunction openDashboardState(statedId) {\n    var currentState = widgetContext.stateController\n        .getStateId();\n    if (currentState !== statedId) {\n        var params = {};\n        widgetContext.stateController.updateState(statedId,\n            params, false);\n    }\n}",
+                "id": "e748240e-cb44-0c9a-a199-0e4eacb3954c"
+              }
+            ]
+          }
+        },
+        "row": 0,
+        "col": 0,
+        "id": "aa5c94cf-1ad1-a13d-a066-5d3ce94aa2fc",
+        "typeFullFqn": "system.cards.html_card"
+      },
+      "c43b1043-ad21-d17c-f876-b1a7e0d98587": {
+        "type": "static",
+        "sizeX": 7.5,
+        "sizeY": 3,
+        "config": {
+          "datasources": [],
+          "timewindow": {
+            "realtime": {
+              "timewindowMs": 60000
+            }
+          },
+          "showTitle": false,
+          "backgroundColor": "rgb(255, 255, 255)",
+          "color": "rgba(0, 0, 0, 0.87)",
+          "padding": "8px",
+          "settings": {
+            "viewUrl": "https://trendz.test.cloud.tb-trendz.com/trendz/viewMode/caa0f58b-c51a-4834-8a12-b29a744d5084",
+            "useDashboardTimeWindow": false
+          },
+          "title": "New tmp-native-trndz",
+          "dropShadow": false,
+          "showTitleIcon": false,
+          "iconColor": "rgba(0, 0, 0, 0.87)",
+          "iconSize": "24px",
+          "titleTooltip": "",
+          "enableFullscreen": true,
+          "widgetStyle": {},
+          "titleStyle": {
+            "fontSize": "16px",
+            "fontWeight": 400
+          },
+          "showLegend": false
+        },
+        "row": 0,
+        "col": 0,
+        "id": "c43b1043-ad21-d17c-f876-b1a7e0d98587",
+        "typeFullFqn": "tenant.trendz_bundle.trendz_view_static"
+      },
+      "a647f628-6258-55dd-74c3-7f3be44d9d6d": {
+        "type": "static",
+        "sizeX": 7.5,
+        "sizeY": 3,
+        "config": {
+          "datasources": [],
+          "timewindow": {
+            "realtime": {
+              "timewindowMs": 60000
+            }
+          },
+          "showTitle": false,
+          "backgroundColor": "rgb(255, 255, 255)",
+          "color": "rgba(0, 0, 0, 0.87)",
+          "padding": "8px",
+          "settings": {
+            "viewUrl": "https://trendz.test.cloud.tb-trendz.com/trendz/viewMode/9c733de3-1d2b-11ec-a018-d99acc16be03",
+            "useDashboardTimeWindow": false
+          },
+          "title": "New tmp-native-trndz",
+          "dropShadow": false,
+          "showTitleIcon": false,
+          "iconColor": "rgba(0, 0, 0, 0.87)",
+          "iconSize": "24px",
+          "titleTooltip": "",
+          "enableFullscreen": true,
+          "widgetStyle": {},
+          "titleStyle": {
+            "fontSize": "16px",
+            "fontWeight": 400
+          },
+          "showLegend": false
+        },
+        "row": 0,
+        "col": 0,
+        "id": "a647f628-6258-55dd-74c3-7f3be44d9d6d",
+        "typeFullFqn": "tenant.trendz_bundle.trendz_view_static"
+      },
+      "186c578c-c86c-1a82-a97a-74cc688b0943": {
+        "type": "static",
+        "sizeX": 7.5,
+        "sizeY": 3,
+        "config": {
+          "datasources": [],
+          "timewindow": {
+            "realtime": {
+              "timewindowMs": 60000
+            }
+          },
+          "showTitle": false,
+          "backgroundColor": "rgb(255, 255, 255)",
+          "color": "rgba(0, 0, 0, 0.87)",
+          "padding": "8px",
+          "settings": {
+            "viewUrl": "https://trendz.test.cloud.tb-trendz.com/trendz/viewMode/bea59c8b-a068-4aa8-9ba9-a909bb4d2e36",
+            "useDashboardTimeWindow": false
+          },
+          "title": "New tmp-native-trndz",
+          "dropShadow": false,
+          "showTitleIcon": false,
+          "iconColor": "rgba(0, 0, 0, 0.87)",
+          "iconSize": "24px",
+          "titleTooltip": "",
+          "enableFullscreen": true,
+          "widgetStyle": {},
+          "titleStyle": {
+            "fontSize": "16px",
+            "fontWeight": 400
+          },
+          "showLegend": false
+        },
+        "row": 0,
+        "col": 0,
+        "id": "186c578c-c86c-1a82-a97a-74cc688b0943",
+        "typeFullFqn": "tenant.trendz_bundle.trendz_view_static"
+      },
+      "666bde8d-e9de-7dc8-8c65-29cd2428e43c": {
+        "type": "static",
+        "sizeX": 7.5,
+        "sizeY": 3,
+        "config": {
+          "datasources": [],
+          "timewindow": {
+            "realtime": {
+              "timewindowMs": 60000
+            }
+          },
+          "showTitle": false,
+          "backgroundColor": "rgb(255, 255, 255)",
+          "color": "rgba(0, 0, 0, 0.87)",
+          "padding": "8px",
+          "settings": {
+            "viewUrl": "https://trendz.test.cloud.tb-trendz.com/trendz/viewMode/bbb12026-3ce9-4df6-a004-77d1d215d7b0",
+            "useDashboardTimeWindow": false
+          },
+          "title": "New tmp-native-trndz",
+          "dropShadow": false,
+          "showTitleIcon": false,
+          "iconColor": "rgba(0, 0, 0, 0.87)",
+          "iconSize": "24px",
+          "titleTooltip": "",
+          "enableFullscreen": true,
+          "widgetStyle": {},
+          "titleStyle": {
+            "fontSize": "16px",
+            "fontWeight": 400
+          },
+          "showLegend": false
+        },
+        "row": 0,
+        "col": 0,
+        "id": "666bde8d-e9de-7dc8-8c65-29cd2428e43c",
+        "typeFullFqn": "tenant.trendz_bundle.trendz_view_static"
+      },
+      "1436325b-7f9d-8866-3d8c-853c80f8bedb": {
+        "type": "static",
+        "sizeX": 7.5,
+        "sizeY": 3,
+        "config": {
+          "datasources": [],
+          "timewindow": {
+            "realtime": {
+              "timewindowMs": 60000
+            }
+          },
+          "showTitle": false,
+          "backgroundColor": "rgb(255, 255, 255)",
+          "color": "rgba(0, 0, 0, 0.87)",
+          "padding": "8px",
+          "settings": {
+            "viewUrl": "https://trendz.test.cloud.tb-trendz.com/trendz/viewMode/35dfd714-5532-4800-a345-523ec7b4b199",
+            "useDashboardTimeWindow": false
+          },
+          "title": "New tmp-native-trndz",
+          "dropShadow": false,
+          "showTitleIcon": false,
+          "iconColor": "rgba(0, 0, 0, 0.87)",
+          "iconSize": "24px",
+          "titleTooltip": "",
+          "enableFullscreen": true,
+          "widgetStyle": {},
+          "titleStyle": {
+            "fontSize": "16px",
+            "fontWeight": 400
+          },
+          "showLegend": false
+        },
+        "row": 0,
+        "col": 0,
+        "id": "1436325b-7f9d-8866-3d8c-853c80f8bedb",
+        "typeFullFqn": "tenant.trendz_bundle.trendz_view_static"
+      },
+      "b530e199-8a5f-3c65-832c-984fe3268b73": {
+        "type": "static",
+        "sizeX": 7.5,
+        "sizeY": 3,
+        "config": {
+          "datasources": [],
+          "timewindow": {
+            "realtime": {
+              "timewindowMs": 60000
+            }
+          },
+          "showTitle": false,
+          "backgroundColor": "rgb(255, 255, 255)",
+          "color": "rgba(0, 0, 0, 0.87)",
+          "padding": "0px",
+          "settings": {
+            "cardCss": ".card {\n   width: 100%;\n   height: 100%;\n   box-sizing: border-box;\n}\n\n.card .content {\n   padding: 5px;\n   display: flex;\n   flex-direction: column;\n   align-items: center;\n   justify-content: center;\n   height: 100%;\n   box-sizing: border-box;\n   transition: background-color 0.5s;\n}\n\n.card .content:hover {\n    background-color: #ddd;\n}\n\n.card .description {\n    font-size: 0.75em;\n    font-weight: normal;\n    line-height: 2;\n    color: #333333;\n    text-transform: uppercase;\n}\n",
+            "cardHtml": "<div class='card'>\n    <div class='content' id=\"analytics\">\n        <div class='description' id=\"analytics\">\n            Patterns\n        </div>\n    </div>\n</div>"
+          },
+          "title": "Navigation: Total",
+          "dropShadow": false,
+          "showTitleIcon": false,
+          "iconColor": "rgba(0, 0, 0, 0.87)",
+          "iconSize": "24px",
+          "titleTooltip": "",
+          "enableFullscreen": false,
+          "widgetStyle": {
+            "border": "1px solid #E0E0E0"
+          },
+          "titleStyle": {
+            "fontSize": "16px",
+            "fontWeight": 400
+          },
+          "showLegend": false,
+          "actions": {
+            "elementClick": [
+              {
+                "name": "analytics",
+                "icon": "more_horiz",
+                "type": "custom",
+                "customFunction": "openDashboardState('patterns');\n\nfunction openDashboardState(statedId) {\n    var currentState = widgetContext.stateController\n        .getStateId();\n    if (currentState !== statedId) {\n        var params = {};\n        widgetContext.stateController.updateState(statedId,\n            params, false);\n    }\n}",
+                "id": "e748240e-cb44-0c9a-a199-0e4eacb3954c"
+              }
+            ]
+          }
+        },
+        "row": 0,
+        "col": 0,
+        "id": "b530e199-8a5f-3c65-832c-984fe3268b73",
+        "typeFullFqn": "system.cards.html_card"
+      }
+    },
+    "states": {
+      "patterns": {
+        "name": "Water metering",
+        "root": true,
+        "layouts": {
+          "main": {
+            "widgets": {
+              "c61f6ad5-f739-c08d-ab1b-dd4dba3866d1": {
+                "sizeX": 9,
+                "sizeY": 1,
+                "row": 0,
+                "col": 14
+              },
+              "8b8a2b54-5b72-cab8-e481-995002cfdf41": {
+                "sizeX": 7,
+                "sizeY": 1,
+                "row": 0,
+                "col": 0
+              },
+              "476a9025-69e9-8698-1f06-2581a2e08743": {
+                "sizeX": 18,
+                "sizeY": 7,
+                "row": 1,
+                "col": 0
+              },
+              "9896a630-d22e-a599-e8b7-03f04a1b5fc3": {
+                "sizeX": 14,
+                "sizeY": 5,
+                "row": 1,
+                "col": 18
+              },
+              "e0bb0e57-6bef-fbc1-341a-2e8663217c3a": {
+                "sizeX": 14,
+                "sizeY": 5,
+                "row": 6,
+                "col": 18
+              },
+              "84a133bf-f38e-ab95-9873-7ff51d67ccb2": {
+                "sizeX": 14,
+                "sizeY": 5,
+                "row": 11,
+                "col": 18
+              },
+              "ba02653b-f627-be86-6f56-56a756d8660d": {
+                "sizeX": 18,
+                "sizeY": 8,
+                "row": 8,
+                "col": 0
+              },
+              "8d28d031-3378-d7ee-8c61-d9bec3c0dc1d": {
+                "sizeX": 7,
+                "sizeY": 1,
+                "row": 0,
+                "col": 7
+              },
+              "987ad618-1430-851b-fe5b-6ab3716b4f84": {
+                "sizeX": 9,
+                "sizeY": 1,
+                "row": 0,
+                "col": 23
+              }
+            },
+            "gridSettings": {
+              "backgroundColor": "#f2f2f2",
+              "color": "rgba(0,0,0,0.870588)",
+              "columns": 32,
+              "margin": 8,
+              "backgroundSizeMode": "100%",
+              "autoFillHeight": true,
+              "backgroundImageUrl": null,
+              "mobileAutoFillHeight": false,
+              "mobileRowHeight": 70,
+              "outerMargin": true
+            }
+          }
+        }
+      },
+      "leakage": {
+        "name": "leakage",
+        "root": false,
+        "layouts": {
+          "main": {
+            "widgets": {
+              "2e7eddd6-e4ff-52d8-b5d0-a989f77bcbb5": {
+                "sizeX": 6,
+                "sizeY": 1,
+                "row": 0,
+                "col": 0
+              },
+              "75eeb161-c3fc-a4e7-58d8-bbce9134d1b8": {
+                "sizeX": 6,
+                "sizeY": 1,
+                "row": 0,
+                "col": 6
+              },
+              "54c2b986-a19f-6486-6680-2231aa23c48f": {
+                "sizeX": 5,
+                "sizeY": 1,
+                "row": 0,
+                "col": 12
+              },
+              "03c38df9-d5a2-302e-8d2c-c0f6f47428bf": {
+                "sizeX": 24,
+                "sizeY": 10,
+                "row": 8,
+                "col": 0
+              },
+              "f9ba5d04-1d5e-83c6-e2f3-9b634fd6ef69": {
+                "sizeX": 24,
+                "sizeY": 7,
+                "row": 1,
+                "col": 0
+              },
+              "b530e199-8a5f-3c65-832c-984fe3268b73": {
+                "sizeX": 7,
+                "sizeY": 1,
+                "row": 0,
+                "col": 17
+              }
+            },
+            "gridSettings": {
+              "backgroundColor": "#eeeeee",
+              "color": "rgba(0,0,0,0.870588)",
+              "columns": 24,
+              "margin": 10,
+              "backgroundSizeMode": "100%",
+              "autoFillHeight": false,
+              "backgroundImageUrl": null,
+              "mobileAutoFillHeight": false,
+              "mobileRowHeight": 70,
+              "outerMargin": true
+            }
+          }
+        }
+      },
+      "home": {
+        "name": "home",
+        "root": false,
+        "layouts": {
+          "main": {
+            "widgets": {
+              "542a7923-f637-edf8-c0aa-51b4f78b14ab": {
+                "sizeX": 8,
+                "sizeY": 1,
+                "row": 0,
+                "col": 0
+              },
+              "ee9d87a0-0861-2433-5267-f7594a5fc033": {
+                "sizeX": 8,
+                "sizeY": 1,
+                "row": 0,
+                "col": 8
+              },
+              "afba0099-fb77-e6ed-6d84-f6782d3cf5ea": {
+                "sizeX": 17,
+                "sizeY": 7,
+                "row": 1,
+                "col": 0
+              },
+              "6db529ed-e550-bf53-006f-c7790619d244": {
+                "sizeX": 9,
+                "sizeY": 1,
+                "row": 0,
+                "col": 16
+              },
+              "b0c38307-1320-f9d3-1110-6968095f3d67": {
+                "sizeX": 15,
+                "sizeY": 14,
+                "row": 1,
+                "col": 17
+              },
+              "dea63b7c-f7b8-54b3-4054-e59cf7ee0669": {
+                "sizeX": 17,
+                "sizeY": 7,
+                "row": 8,
+                "col": 0
+              },
+              "aa5c94cf-1ad1-a13d-a066-5d3ce94aa2fc": {
+                "sizeX": 7,
+                "sizeY": 1,
+                "row": 0,
+                "col": 25
+              }
+            },
+            "gridSettings": {
+              "backgroundColor": "#eeeeee",
+              "color": "rgba(0,0,0,0.870588)",
+              "columns": 32,
+              "margin": 8,
+              "backgroundSizeMode": "100%",
+              "autoFillHeight": true,
+              "backgroundImageUrl": null,
+              "mobileAutoFillHeight": false,
+              "mobileRowHeight": 70,
+              "outerMargin": true
+            }
+          }
+        }
+      },
+      "current_state": {
+        "name": "current state",
+        "root": false,
+        "layouts": {
+          "main": {
+            "widgets": {
+              "186c578c-c86c-1a82-a97a-74cc688b0943": {
+                "sizeX": 21,
+                "sizeY": 9,
+                "row": 0,
+                "col": 1
+              }
+            },
+            "gridSettings": {
+              "backgroundColor": "#eeeeee",
+              "color": "rgba(0,0,0,0.870588)",
+              "columns": 24,
+              "margin": 10,
+              "backgroundSizeMode": "100%",
+              "outerMargin": true
+            }
+          }
+        }
+      },
+      "leakageDetails": {
+        "name": "leakageDetails",
+        "root": false,
+        "layouts": {
+          "main": {
+            "widgets": {
+              "31aef986-2248-4aa7-0675-04bfab1cdb57": {
+                "sizeX": 4,
+                "sizeY": 1,
+                "row": 0,
+                "col": 0
+              },
+              "03c38df9-d5a2-302e-8d2c-c0f6f47428bf": {
+                "sizeX": 32,
+                "sizeY": 13,
+                "row": 1,
+                "col": 0
+              },
+              "29242b15-cee1-28e1-1bb0-4088cb59da06": {
+                "sizeX": 32,
+                "sizeY": 10,
+                "row": 14,
+                "col": 0
+              }
+            },
+            "gridSettings": {
+              "backgroundColor": "#eeeeee",
+              "color": "rgba(0,0,0,0.870588)",
+              "columns": 32,
+              "margin": 8,
+              "backgroundSizeMode": "100%",
+              "autoFillHeight": false,
+              "backgroundImageUrl": null,
+              "mobileAutoFillHeight": false,
+              "mobileRowHeight": 70,
+              "outerMargin": true
+            }
+          }
+        }
+      },
+      "insights": {
+        "name": "Insights",
+        "root": false,
+        "layouts": {
+          "main": {
+            "widgets": {
+              "6b6decb6-014f-a83a-f5b1-fe9cbedba283": {
+                "sizeX": 8,
+                "sizeY": 1,
+                "row": 0,
+                "col": 0
+              },
+              "39e3840a-7667-979c-ffcb-5b3bec84db45": {
+                "sizeX": 8,
+                "sizeY": 1,
+                "row": 0,
+                "col": 8
+              },
+              "600dc8d7-1fc7-31a0-1842-f6c4b88d00fb": {
+                "sizeX": 9,
+                "sizeY": 1,
+                "row": 0,
+                "col": 16
+              },
+              "f2cc1232-7f2f-8b6b-160b-511d1ab554ed": {
+                "sizeX": 7,
+                "sizeY": 1,
+                "row": 0,
+                "col": 25
+              },
+              "c43b1043-ad21-d17c-f876-b1a7e0d98587": {
+                "sizeX": 16,
+                "sizeY": 8,
+                "row": 1,
+                "col": 0
+              },
+              "a647f628-6258-55dd-74c3-7f3be44d9d6d": {
+                "sizeX": 16,
+                "sizeY": 8,
+                "row": 1,
+                "col": 16
+              },
+              "666bde8d-e9de-7dc8-8c65-29cd2428e43c": {
+                "sizeX": 16,
+                "sizeY": 8,
+                "row": 9,
+                "col": 0
+              },
+              "1436325b-7f9d-8866-3d8c-853c80f8bedb": {
+                "sizeX": 16,
+                "sizeY": 8,
+                "row": 9,
+                "col": 16
+              }
+            },
+            "gridSettings": {
+              "backgroundColor": "#eeeeee",
+              "color": "rgba(0,0,0,0.870588)",
+              "columns": 32,
+              "margin": 8,
+              "backgroundSizeMode": "100%",
+              "autoFillHeight": true,
+              "backgroundImageUrl": null,
+              "mobileAutoFillHeight": false,
+              "mobileRowHeight": 70,
+              "outerMargin": true
+            }
+          }
+        }
+      }
+    },
+    "entityAliases": {
+      "73aa5a62-03f7-55be-758d-4bd0ac09801b": {
+        "id": "73aa5a62-03f7-55be-758d-4bd0ac09801b",
+        "alias": "all cities",
+        "filter": {
+          "type": "assetType",
+          "resolveMultiple": true,
+          "assetNameFilter": "",
+          "assetTypes": [
+            "WM City"
+          ]
+        }
+      },
+      "36bbdf43-cc7c-f349-842e-d1eb1e82617d": {
+        "id": "36bbdf43-cc7c-f349-842e-d1eb1e82617d",
+        "alias": "selectedRegion",
+        "filter": {
+          "type": "stateEntity",
+          "resolveMultiple": false,
+          "stateEntityParamName": "selectedRegion",
+          "defaultStateEntity": {
+            "entityType": "DEVICE",
+            "id": "cd9af3a0-a3ac-11ed-9c79-91622243936c"
+          }
+        }
+      }
+    },
+    "filters": {},
+    "timewindow": {
+      "hideInterval": false,
+      "hideLastInterval": false,
+      "hideQuickInterval": false,
+      "hideAggregation": false,
+      "hideAggInterval": false,
+      "hideTimezone": false,
+      "selectedTab": 1,
+      "history": {
+        "historyType": 1,
+        "timewindowMs": 60000,
+        "interval": 1000,
+        "fixedTimewindow": {
+          "startTimeMs": 1688245080000,
+          "endTimeMs": 1688849940000
+        },
+        "quickInterval": "CURRENT_DAY"
+      },
+      "aggregation": {
+        "type": "NONE",
+        "limit": 30000
+      },
+      "timezone": null
+    },
+    "settings": {
+      "stateControllerId": "entity",
+      "showTitle": false,
+      "showDashboardsSelect": true,
+      "showEntitiesSelect": true,
+      "showDashboardTimewindow": true,
+      "showDashboardExport": true,
+      "toolbarAlwaysOpen": true
+    }
+  }
+}
