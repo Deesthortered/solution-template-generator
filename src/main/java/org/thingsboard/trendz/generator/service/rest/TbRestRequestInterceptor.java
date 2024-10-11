@@ -11,11 +11,13 @@ import org.springframework.http.client.ClientHttpRequestInterceptor;
 import org.springframework.http.client.ClientHttpResponse;
 import org.springframework.http.client.support.HttpRequestWrapper;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StreamUtils;
 import org.springframework.web.client.RestTemplate;
 import org.thingsboard.trendz.generator.model.rest.AuthToken;
 import org.thingsboard.trendz.generator.model.rest.LoginRequest;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.Date;
 
@@ -45,15 +47,19 @@ public class TbRestRequestInterceptor implements ClientHttpRequestInterceptor {
     }
 
     @Override
-    public ClientHttpResponse intercept(HttpRequest request, byte[] bytes, ClientHttpRequestExecution execution) throws IOException {
+    public ClientHttpResponse intercept(HttpRequest request, byte[] body, ClientHttpRequestExecution execution) throws IOException {
         if (TbRestClient.LOGIN_PATH.equals(request.getURI().getPath())) {
-            return execution.execute(request, bytes);
+            return execution.execute(request, body);
         }
-        String token = "Bearer " + gainToken();
+        var token = "Bearer " + gainToken();
 
         HttpRequest wrapper = new HttpRequestWrapper(request);
         wrapper.getHeaders().set(JWT_TOKEN_HEADER_PARAM, token);
-        return execution.execute(wrapper, bytes);
+
+        logRequestDetails(request, body);
+        var response = execution.execute(wrapper, body);
+        logResponseDetails(response);
+        return response;
     }
 
 
@@ -69,5 +75,18 @@ public class TbRestRequestInterceptor implements ClientHttpRequestInterceptor {
     private boolean isTokenExpired(AuthToken authToken) {
         DecodedJWT jwt = JWT.decode(authToken.getToken());
         return jwt.getExpiresAt().before(new Date());
+    }
+
+    private void logRequestDetails(HttpRequest request, byte[] body) {
+        log.debug("Request URI     : {}", request.getURI());
+        log.debug("Request Method  : {}", request.getMethod());
+        log.debug("Request Headers : {}", request.getHeaders());
+        log.debug("Request body    : {}", new String(body, StandardCharsets.UTF_8));
+    }
+
+    private void logResponseDetails(ClientHttpResponse response) throws IOException {
+        log.debug("Response Status Code  : {}", response.getStatusCode());
+        log.debug("Response Headers      : {}", response.getHeaders());
+        log.debug("Response Body         : {}", StreamUtils.copyToString(response.getBody(), StandardCharsets.UTF_8));
     }
 }

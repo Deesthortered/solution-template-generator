@@ -7,7 +7,6 @@ import org.thingsboard.rule.engine.debug.TbMsgGeneratorNode;
 import org.thingsboard.rule.engine.debug.TbMsgGeneratorNodeConfiguration;
 import org.thingsboard.rule.engine.telemetry.TbMsgTimeseriesNode;
 import org.thingsboard.rule.engine.telemetry.TbMsgTimeseriesNodeConfiguration;
-import org.thingsboard.server.common.data.Customer;
 import org.thingsboard.server.common.data.Device;
 import org.thingsboard.server.common.data.EntityType;
 import org.thingsboard.server.common.data.asset.Asset;
@@ -24,7 +23,6 @@ import org.thingsboard.trendz.generator.exception.DeviceAlreadyExistException;
 import org.thingsboard.trendz.generator.exception.RuleChainAlreadyExistException;
 import org.thingsboard.trendz.generator.exception.SolutionValidationException;
 import org.thingsboard.trendz.generator.model.tb.Attribute;
-import org.thingsboard.trendz.generator.model.tb.CustomerUser;
 import org.thingsboard.trendz.generator.model.tb.NodeConnectionType;
 import org.thingsboard.trendz.generator.model.tb.RelationType;
 import org.thingsboard.trendz.generator.model.tb.RuleNodeAdditionalInfo;
@@ -120,34 +118,58 @@ public class BasicSolution implements SolutionTemplateGenerator {
     }
 
     @Override
-    public void generate(boolean skipTelemetry, ZonedDateTime startYear) {
+    public void generate(boolean skipTelemetry, ZonedDateTime startYear, boolean strictGeneration) {
         log.info("Basic Solution - start generation");
         try {
 
-            Customer customer = tbRestClient.createCustomer(CUSTOMER_TITLE);
-            CustomerUser customerUser = tbRestClient.createCustomerUser(
+            final var customer = strictGeneration
+                    ? tbRestClient.createCustomer(CUSTOMER_TITLE)
+                    : tbRestClient.createCustomerIfNotExists(CUSTOMER_TITLE);
+            final var customerUser = tbRestClient.createCustomerUser(
                     customer, CUSTOMER_USER_EMAIL, CUSTOMER_USER_PASSWORD,
                     CUSTOMER_USER_FIRST_NAME, CUSTOMER_USER_LAST_NAME
             );
+
             if (tbRestClient.isPe()) {
                 tbRestClient.setCustomerUserToCustomerAdministratorsGroup(customer, customerUser);
             }
 
-            dashboardService.createDashboardItems(getSolutionName(), customer.getId());
+            dashboardService.createDashboardItems(getSolutionName(), customer.getId(), strictGeneration);
 
             Asset asset;
             Device device;
             if (tbRestClient.isPe()) {
-                asset = tbRestClient.createAsset(ASSET_NAME, ASSET_TYPE, customer.getId());
-                device = tbRestClient.createDevice(DEVICE_NAME, DEVICE_TYPE, customer.getId());
-                EntityGroup assetGroup = tbRestClient.createEntityGroup(ASSET_GROUP_NAME, EntityType.ASSET, customer.getUuidId(), true);
-                EntityGroup deviceGroup = tbRestClient.createEntityGroup(DEVICE_GROUP_NAME, EntityType.DEVICE, customer.getUuidId(), true);
+                var customerId = customer.getId();
+
+                asset = strictGeneration
+                        ? tbRestClient.createAsset(ASSET_NAME, ASSET_TYPE, customerId)
+                        : tbRestClient.createAssetIfNotExists(ASSET_NAME, ASSET_TYPE, customerId)
+                ;
+
+                device = strictGeneration
+                        ? tbRestClient.createDevice(DEVICE_NAME, DEVICE_TYPE, customerId)
+                        : tbRestClient.createDeviceIfNotExists(DEVICE_NAME, DEVICE_TYPE, customerId);
+
+                EntityGroup assetGroup = strictGeneration
+                        ? tbRestClient.createEntityGroup(ASSET_GROUP_NAME, EntityType.ASSET, customer.getUuidId(), true)
+                        : tbRestClient.createEntityGroupIfNotExists(ASSET_GROUP_NAME, EntityType.ASSET, customer.getUuidId(), true);
+
+                EntityGroup deviceGroup = strictGeneration
+                        ? tbRestClient.createEntityGroup(DEVICE_GROUP_NAME, EntityType.DEVICE, customer.getUuidId(), true)
+                        : tbRestClient.createEntityGroupIfNotExists(DEVICE_GROUP_NAME, EntityType.DEVICE, customer.getUuidId(), true);
+
                 tbRestClient.addEntitiesToTheGroup(assetGroup.getUuidId(), Set.of(asset.getUuidId()));
                 tbRestClient.addEntitiesToTheGroup(deviceGroup.getUuidId(), Set.of(device.getUuidId()));
                 log.info("");
             } else {
-                asset = tbRestClient.createAsset(ASSET_NAME, ASSET_TYPE);
-                device = tbRestClient.createDevice(DEVICE_NAME, DEVICE_TYPE);
+                asset = strictGeneration
+                        ? tbRestClient.createAsset(ASSET_NAME, ASSET_TYPE)
+                        : tbRestClient.createAssetIfNotExists(ASSET_NAME, ASSET_TYPE)
+                ;
+                device = strictGeneration
+                        ? tbRestClient.createDevice(DEVICE_NAME, DEVICE_TYPE)
+                        : tbRestClient.createDeviceIfNotExists(DEVICE_NAME, DEVICE_TYPE)
+                ;
                 tbRestClient.assignAssetToCustomer(customer.getUuidId(), asset.getUuidId());
                 tbRestClient.assignDeviceToCustomer(customer.getUuidId(), device.getUuidId());
             }

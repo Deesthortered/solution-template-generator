@@ -39,6 +39,8 @@ import org.thingsboard.trendz.generator.model.tb.Telemetry;
 import org.thingsboard.trendz.generator.service.jwt.TokenExtractor;
 import org.thingsboard.trendz.generator.utils.JsonUtils;
 
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -46,8 +48,11 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.StringJoiner;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
+
+import static java.util.Objects.isNull;
 
 @Slf4j
 @Service
@@ -117,17 +122,23 @@ public class TbRestClient {
                 .lastName(lastName)
                 .build();
 
-        CustomerUser savedUser = restTemplate.postForEntity(baseURL + "/api/user?sendActivationMail=false", user, CustomerUser.class).getBody();
-        Objects.requireNonNull(savedUser);
+        try {
 
-        String activationLink = restTemplate.getForEntity(baseURL + "/api/user/" + savedUser.getId().getId() + "/activationLink", String.class).getBody();
-        Objects.requireNonNull(activationLink);
+            CustomerUser savedUser = restTemplate.postForEntity(baseURL + "/api/user?sendActivationMail=false", user, CustomerUser.class).getBody();
+            Objects.requireNonNull(savedUser);
 
-        String token = activationLink.substring(activationLink.lastIndexOf('=') + 1);
-        ActivationRequest activationRequest = new ActivationRequest(token, password);
-        ActivationAuthToken activationAuthToken = restTemplate.postForEntity(baseURL + "/api/noauth/activate?sendActivationMail=true", activationRequest, ActivationAuthToken.class).getBody();
+            String activationLink = restTemplate.getForEntity(baseURL + "/api/user/" + savedUser.getId().getId() + "/activationLink", String.class).getBody();
+            Objects.requireNonNull(activationLink);
 
-        return savedUser;
+            String token = activationLink.substring(activationLink.lastIndexOf('=') + 1);
+            ActivationRequest activationRequest = new ActivationRequest(token, password);
+            ActivationAuthToken activationAuthToken = restTemplate.postForEntity(baseURL + "/api/noauth/activate?sendActivationMail=true", activationRequest, ActivationAuthToken.class).getBody();
+            return savedUser;
+        } catch (HttpClientErrorException.BadRequest ex) {
+            log.trace("Customer was already activated");
+            var customerUsers = getCustomerUsers(customer.getId().getId().toString());
+            return customerUsers.stream().findAny().get();
+        }
     }
 
     public Dashboard assignDashboardToSpecifiedCustomer(UUID dashboardId, UUID customerId) {
@@ -205,77 +216,65 @@ public class TbRestClient {
 
 
     public Set<Customer> getAllCustomers() {
-        ParameterizedTypeReference<PageData<Customer>> reference = new ParameterizedTypeReference<>() {
+        final var reference = new ParameterizedTypeReference<PageData<Customer>>() {
         };
 
-        return getAllEntities("/api/customers", reference);
+        return getAllEntities("/api/customers", reference, new HashMap<>());
     }
 
     public Set<Asset> getAllAssets() {
-        ParameterizedTypeReference<PageData<Asset>> reference = new ParameterizedTypeReference<>() {
+        final var reference = new ParameterizedTypeReference<PageData<Asset>>() {
         };
 
-        return getAllEntities("/api/tenant/assets", reference);
+        return getAllEntities("/api/tenant/assets", reference, new HashMap<>());
     }
 
     public Set<Device> getAllDevices() {
-        ParameterizedTypeReference<PageData<Device>> reference = new ParameterizedTypeReference<>() {
+        final var reference = new ParameterizedTypeReference<PageData<Device>>() {
         };
 
-        return getAllEntities("/api/tenant/devices", reference);
+        return getAllEntities("/api/tenant/devices", reference, new HashMap<>());
     }
 
     public Set<Dashboard> getAllTenantDashboards() {
-        ParameterizedTypeReference<PageData<Dashboard>> reference = new ParameterizedTypeReference<>() {
+        final var reference = new ParameterizedTypeReference<PageData<Dashboard>>() {
         };
 
-        return getAllEntities("/api/tenant/dashboards", reference);
+        return getAllEntities("/api/tenant/dashboards", reference, new HashMap<>());
     }
 
     public Set<Dashboard> getAllCustomerDashboards(UUID customerId) {
-        ParameterizedTypeReference<PageData<Dashboard>> reference = new ParameterizedTypeReference<>() {
+        final var reference = new ParameterizedTypeReference<PageData<Dashboard>>() {
         };
 
-        return getAllEntities("/api/customer/" + customerId.toString() + "/dashboards", reference);
+        return getAllEntities("/api/customer/" + customerId.toString() + "/dashboards", reference, new HashMap<>());
     }
-
-    private <T> Set<T> getAllEntities(String request, ParameterizedTypeReference<PageData<T>> type) {
-        Set<T> result = new HashSet<>();
-        boolean hasNextPage = true;
-        PageData<T> page;
-        int pageIndex = 0;
-        int pageSize = 100;
-        while (hasNextPage) {
-            page = restTemplate.exchange(
-                    baseURL + request + "?page={page}&pageSize={pageSize}",
-                    HttpMethod.GET,
-                    null,
-                    type,
-                    pageIndex, pageSize
-            ).getBody();
-            hasNextPage = page.hasNext();
-            pageIndex++;
-            result.addAll(page.getData());
-        }
-        return result;
-    }
-
 
     public Customer createCustomer(String name) {
-        Customer customer = new Customer();
+        final var customer = new Customer();
         customer.setTitle(name);
         return restTemplate.postForEntity(baseURL + "/api/customer", customer, Customer.class).getBody();
     }
 
+    public Customer createCustomerIfNotExists(String name) {
+        final var customerOpt = getCustomerByTitle(name);
+        return customerOpt.orElseGet(() -> createCustomer(name));
+    }
+
     public Asset createAsset(String name, String type) {
         try {
-            Asset asset = new Asset();
+            var asset = new Asset();
             asset.setName(name);
             asset.setType(type);
             return restTemplate.postForEntity(baseURL + "/api/asset", asset, Asset.class).getBody();
         } catch (Exception e) {
             throw new RuntimeException("", e);
         }
+    }
+
+    public Asset createAssetIfNotExists(String name, String type) {
+        final var assetOpt = getAssetByName(name);
+        return assetOpt.orElseGet(() -> createAsset(name, type));
     }
 
     public Device createDevice(String name, String type) {
@@ -289,6 +288,11 @@ public class TbRestClient {
         }
     }
 
+    public Device createDeviceIfNotExists(String name, String type) {
+        final var deviceOpt = getDeviceByName(name);
+        return deviceOpt.orElseGet(() -> createDevice(name, type));
+    }
+
     public Dashboard createDashboard(String title) {
         try {
             Dashboard dashboard = new Dashboard();
@@ -297,6 +301,11 @@ public class TbRestClient {
         } catch (Exception e) {
             throw new RuntimeException("", e);
         }
+    }
+
+    public Dashboard createDashboardIfNotExists(String title) {
+        final var dashboardOpt = getDashboardsByTitle(title).stream().findAny();
+        return dashboardOpt.orElseGet(() -> createDashboard(title));
     }
 
 
@@ -319,6 +328,11 @@ public class TbRestClient {
         }
     }
 
+    public Asset createAssetIfNotExists(String name, String type, EntityId ownerId) {
+        final var assetOpt = getAssetByName(name);
+        return assetOpt.orElseGet(() -> createAsset(name, type, ownerId));
+    }
+
     public Device createDevice(String name, String type, EntityId ownerId) {
         try {
             Device device = new Device();
@@ -331,6 +345,11 @@ public class TbRestClient {
         }
     }
 
+    public Device createDeviceIfNotExists(String name, String type, EntityId ownerId) {
+        final var deviceOpt = getDeviceByName(name);
+        return deviceOpt.orElseGet(() -> createDevice(name, type, ownerId));
+    }
+
     public Dashboard createDashboard(String title, EntityId ownerId) {
         try {
             Dashboard dashboard = new Dashboard();
@@ -340,6 +359,11 @@ public class TbRestClient {
         } catch (Exception e) {
             throw new RuntimeException("", e);
         }
+    }
+
+    public Dashboard createDashboardIfNotExists(String title, EntityId ownerId) {
+        final var dashBoardOpt = getDashboardsByTitle(title).stream().findAny();
+        return dashBoardOpt.orElseGet(() -> createDashboard(title, ownerId));
     }
 
 
@@ -441,7 +465,7 @@ public class TbRestClient {
                     pushTelemetry0(accessToken, partitions.get(i));
 
                     errorCount = 0;
-                    log.info("Batch is sent ({}/{})", i+1, partitions.size());
+                    log.info("Batch is sent ({}/{})", i + 1, partitions.size());
                 } catch (Exception e) {
                     log.error("Error during pushing telemetry to the cloud, error count = " + errorCount + ", retry...", e);
                     errorCount++;
@@ -456,12 +480,6 @@ public class TbRestClient {
             pushTelemetry0(accessToken, telemetry);
         }
     }
-
-    private void pushTelemetry0(String accessToken, Telemetry<?> telemetry) {
-        String json = telemetry.toJson();
-        restTemplate.postForEntity(baseURL + "/api/v1/" + accessToken + "/telemetry", json, String.class).getBody();
-    }
-
 
     public void setEntityAttributes(UUID entityId, EntityType entityType, Attribute.Scope scope, Set<Attribute<?>> attributes) {
         Map<String, Object> params = new HashMap<>();
@@ -497,7 +515,7 @@ public class TbRestClient {
         ParameterizedTypeReference<PageData<RuleChain>> reference = new ParameterizedTypeReference<>() {
         };
 
-        return getAllEntities("/api/ruleChains", reference);
+        return getAllEntities("/api/ruleChains", reference, new HashMap<>());
     }
 
     public Optional<RuleChain> getRuleChainById(UUID ruleChainId) {
@@ -518,7 +536,6 @@ public class TbRestClient {
     public void deleteRuleChain(UUID ruleChainId) {
         restTemplate.delete(baseURL + "/api/ruleChain/" + ruleChainId);
     }
-
 
     public Optional<RuleChainMetaData> getRuleChainMetadataByRuleChainId(UUID ruleChainId) {
         try {
@@ -555,11 +572,14 @@ public class TbRestClient {
         EntityGroup entityGroup = new EntityGroup();
         entityGroup.setName(name);
         entityGroup.setType(entityType);
-        entityGroup.setOwnerId(
-                isCustomerOwner ? new CustomerId(ownerId) : new TenantId(ownerId)
-        );
+        entityGroup.setOwnerId(isCustomerOwner ? new CustomerId(ownerId) : new TenantId(ownerId));
 
         return restTemplate.postForEntity(baseURL + "/api/entityGroup", entityGroup, EntityGroup.class).getBody();
+    }
+
+    public EntityGroup createEntityGroupIfNotExists(String name, EntityType entityType, UUID ownerId, boolean isCustomerOwner) {
+        final var entityGroupOpt = getEntityGroup(name, entityType, ownerId, isCustomerOwner);
+        return entityGroupOpt.orElseGet(() -> createEntityGroup(name, entityType, ownerId, isCustomerOwner));
     }
 
     public void deleteEntityGroup(UUID entityGroupId) {
@@ -622,4 +642,81 @@ public class TbRestClient {
             throw new RuntimeException("Can not assign customer user to the Customer Group", e);
         }
     }
+
+    public Set<CustomerUser> getCustomerUsers(String customerId) {
+        final var reference = new ParameterizedTypeReference<PageData<CustomerUser>>() {
+        };
+
+        return getAllEntities("/api/customer/" + customerId + "/users", reference, new HashMap<>());
+    }
+
+    public Set<Dashboard> getDashboardsByTitle(String title) {
+        final var customParams = new HashMap<String, Object>() {{
+            put("includeCustomers", true);
+            put("textSearch", title);
+            put("sortProperty", "name");
+            put("sortOrder", "ASC");
+        }};
+        final var reference = new ParameterizedTypeReference<PageData<Dashboard>>() {
+        };
+
+        return getAllEntities("/api/dashboards/all", reference, customParams);
+    }
+
+    private <T> Set<T> getAllEntities(String request,
+                                      ParameterizedTypeReference<PageData<T>> type,
+                                      Map<String, Object> customParams) {
+        final Set<T> result = new HashSet<>();
+        final var pageSize = 100;
+        var pageIndex = 0;
+        var hasNextPage = true;
+        PageData<T> page;
+
+        customParams.put("page", pageIndex);
+        customParams.put("pageSize", pageSize);
+
+        try {
+            while (hasNextPage) {
+                final var urlParams = generateUrlParams(customParams);
+                page = restTemplate.exchange(
+                        baseURL + request + urlParams,
+                        HttpMethod.GET,
+                        null,
+                        type
+                ).getBody();
+
+                if (isNull(page)) break;
+
+                hasNextPage = page.hasNext();
+                customParams.put("page", pageIndex++);
+                result.addAll(page.getData());
+            }
+            return result;
+        } catch (UnsupportedEncodingException e) {
+            throw new RuntimeException("Can not generate url params", e);
+        }
+    }
+
+    private String generateUrlParams(Map<String, Object> params) throws UnsupportedEncodingException {
+        if (isNull(params) || params.isEmpty()) {
+            return "";
+        }
+
+        final var charset = "UTF-8";
+        final var queryString = new StringJoiner("&", "?", "");
+
+        for (Map.Entry<String, Object> entry : params.entrySet()) {
+            final var encodedKey = URLEncoder.encode(entry.getKey(), charset);
+            final var encodedValue = URLEncoder.encode(entry.getValue().toString(), charset);
+            queryString.add(encodedKey + "=" + encodedValue);
+        }
+
+        return queryString.toString();
+    }
+
+    private void pushTelemetry0(String accessToken, Telemetry<?> telemetry) {
+        final String json = telemetry.toJson();
+        restTemplate.postForEntity(baseURL + "/api/v1/" + accessToken + "/telemetry", json, String.class).getBody();
+    }
+
 }

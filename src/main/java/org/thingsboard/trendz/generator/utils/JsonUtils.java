@@ -1,15 +1,19 @@
 package org.thingsboard.trendz.generator.utils;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.json.JsonMapper;
 
 public class JsonUtils {
 
     private static final ObjectMapper objectMapper;
 
     static {
-        objectMapper = new ObjectMapper();
+        objectMapper = JsonMapper.builder()
+                .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+                .build();
     }
 
 

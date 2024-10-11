@@ -7,7 +7,6 @@ import org.apache.commons.csv.CSVParser;
 import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.thingsboard.server.common.data.Customer;
 import org.thingsboard.server.common.data.Device;
 import org.thingsboard.server.common.data.EntityType;
 import org.thingsboard.server.common.data.asset.Asset;
@@ -19,18 +18,46 @@ import org.thingsboard.server.common.data.rule.RuleChain;
 import org.thingsboard.server.common.data.rule.RuleChainMetaData;
 import org.thingsboard.server.common.data.rule.RuleNode;
 import org.thingsboard.server.common.data.security.DeviceCredentials;
-import org.thingsboard.trendz.generator.exception.*;
+import org.thingsboard.trendz.generator.exception.AssetAlreadyExistException;
+import org.thingsboard.trendz.generator.exception.CustomerAlreadyExistException;
+import org.thingsboard.trendz.generator.exception.DeviceAlreadyExistException;
+import org.thingsboard.trendz.generator.exception.RuleChainAlreadyExistException;
+import org.thingsboard.trendz.generator.exception.SolutionValidationException;
 import org.thingsboard.trendz.generator.model.ModelData;
 import org.thingsboard.trendz.generator.model.ModelEntity;
-import org.thingsboard.trendz.generator.model.tb.*;
+import org.thingsboard.trendz.generator.model.tb.Attribute;
+import org.thingsboard.trendz.generator.model.tb.CustomerData;
+import org.thingsboard.trendz.generator.model.tb.CustomerUser;
+import org.thingsboard.trendz.generator.model.tb.RelationType;
+import org.thingsboard.trendz.generator.model.tb.RuleNodeAdditionalInfo;
+import org.thingsboard.trendz.generator.model.tb.Telemetry;
+import org.thingsboard.trendz.generator.model.tb.Timestamp;
 import org.thingsboard.trendz.generator.service.FileService;
 import org.thingsboard.trendz.generator.service.anomaly.AnomalyService;
 import org.thingsboard.trendz.generator.service.dashboard.DashboardService;
 import org.thingsboard.trendz.generator.service.rest.TbRestClient;
 import org.thingsboard.trendz.generator.service.roolchain.RuleChainBuildingService;
 import org.thingsboard.trendz.generator.solution.SolutionTemplateGenerator;
-import org.thingsboard.trendz.generator.solution.greenhouse.configuration.*;
-import org.thingsboard.trendz.generator.solution.greenhouse.model.*;
+import org.thingsboard.trendz.generator.solution.greenhouse.configuration.GreenhouseConfiguration;
+import org.thingsboard.trendz.generator.solution.greenhouse.configuration.PlantConfiguration;
+import org.thingsboard.trendz.generator.solution.greenhouse.configuration.StationCity;
+import org.thingsboard.trendz.generator.solution.greenhouse.configuration.WeatherData;
+import org.thingsboard.trendz.generator.solution.greenhouse.configuration.WorkerInChargeName;
+import org.thingsboard.trendz.generator.solution.greenhouse.model.EnergyMeter;
+import org.thingsboard.trendz.generator.solution.greenhouse.model.Greenhouse;
+import org.thingsboard.trendz.generator.solution.greenhouse.model.HarvestReporter;
+import org.thingsboard.trendz.generator.solution.greenhouse.model.InsideAirWarmHumiditySensor;
+import org.thingsboard.trendz.generator.solution.greenhouse.model.InsideCO2Sensor;
+import org.thingsboard.trendz.generator.solution.greenhouse.model.InsideLightSensor;
+import org.thingsboard.trendz.generator.solution.greenhouse.model.OutsideAirWarmHumiditySensor;
+import org.thingsboard.trendz.generator.solution.greenhouse.model.OutsideLightSensor;
+import org.thingsboard.trendz.generator.solution.greenhouse.model.Plant;
+import org.thingsboard.trendz.generator.solution.greenhouse.model.PlantName;
+import org.thingsboard.trendz.generator.solution.greenhouse.model.Section;
+import org.thingsboard.trendz.generator.solution.greenhouse.model.SoilAciditySensor;
+import org.thingsboard.trendz.generator.solution.greenhouse.model.SoilNpkSensor;
+import org.thingsboard.trendz.generator.solution.greenhouse.model.SoilWarmMoistureSensor;
+import org.thingsboard.trendz.generator.solution.greenhouse.model.WaterMeter;
 import org.thingsboard.trendz.generator.utils.DateTimeUtils;
 import org.thingsboard.trendz.generator.utils.JsonUtils;
 import org.thingsboard.trendz.generator.utils.MySortedSet;
@@ -42,7 +69,17 @@ import java.io.Reader;
 import java.nio.file.Path;
 import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.TreeSet;
+import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -132,14 +169,14 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
     }
 
     @Override
-    public void generate(boolean skipTelemetry, ZonedDateTime startYear) {
+    public void generate(boolean skipTelemetry, ZonedDateTime startYear, boolean strictGeneration) {
         log.info("Greenhouse Solution - start generation");
         try {
-            CustomerData customerData = createCustomerData();
+            CustomerData customerData = createCustomerData(strictGeneration);
             ModelData data = makeData(skipTelemetry, startYear);
-            applyData(data, customerData);
-            createRuleChain(data);
-            dashboardService.createDashboardItems(getSolutionName(), customerData.getCustomer().getId());
+            applyData(data, customerData, strictGeneration);
+            createRuleChain(data, strictGeneration);
+            dashboardService.createDashboardItems(getSolutionName(), customerData.getCustomer().getId(), strictGeneration);
 
             log.info("Greenhouse Solution - generation is completed!");
         } catch (Exception e) {
@@ -182,9 +219,11 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
     }
 
 
-    private CustomerData createCustomerData() {
-        Customer customer = this.tbRestClient.createCustomer(CUSTOMER_TITLE);
-        CustomerUser customerUser = this.tbRestClient.createCustomerUser(
+    private CustomerData createCustomerData(boolean strictGeneration) {
+        var customer = strictGeneration
+                ? tbRestClient.createCustomer(CUSTOMER_TITLE)
+                : tbRestClient.createCustomerIfNotExists(CUSTOMER_TITLE);
+        var customerUser = this.tbRestClient.createCustomerUser(
                 customer, CUSTOMER_USER_EMAIL, CUSTOMER_USER_PASSWORD,
                 CUSTOMER_USER_FIRST_NAME, CUSTOMER_USER_LAST_NAME
         );
@@ -208,7 +247,10 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
     }
 
 
-    private void createRuleChain(ModelData data) {
+    private void createRuleChain(ModelData data, boolean strictGeneration) {
+        if (!strictGeneration) {
+            deleteRuleChain();
+        }
         Set<Greenhouse> greenhouses = mapToGreenhouses(data);
 
         try {
@@ -970,36 +1012,40 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
                 .build();
     }
 
-    private void applyData(ModelData data, CustomerData customerData) {
+    private void applyData(ModelData data, CustomerData customerData, boolean strictGeneration) {
         CustomerUser customerUser = customerData.getUser();
         UUID ownerId = customerUser.getCustomerId().getId();
 
         UUID assetGroupId = null;
         UUID deviceGroupId = null;
         if (tbRestClient.isPe()) {
-            EntityGroup assetGroup = tbRestClient.createEntityGroup(ASSET_GROUP_NAME, EntityType.ASSET, ownerId, true);
-            EntityGroup deviceGroup = tbRestClient.createEntityGroup(DEVICE_GROUP_NAME, EntityType.DEVICE, ownerId, true);
+            EntityGroup assetGroup = strictGeneration
+                    ? tbRestClient.createEntityGroup(ASSET_GROUP_NAME, EntityType.ASSET, ownerId, true)
+                    : tbRestClient.createEntityGroupIfNotExists(ASSET_GROUP_NAME, EntityType.ASSET, ownerId, true);
+            EntityGroup deviceGroup = strictGeneration
+                    ? tbRestClient.createEntityGroup(DEVICE_GROUP_NAME, EntityType.DEVICE, ownerId, true)
+                    : tbRestClient.createEntityGroupIfNotExists(DEVICE_GROUP_NAME, EntityType.DEVICE, ownerId, true);
             assetGroupId = assetGroup.getUuidId();
             deviceGroupId = deviceGroup.getUuidId();
         }
 
         Set<Plant> plants = mapToPlants(data);
         for (Plant plant : plants) {
-            Asset plantAsset = createPlant(plant, ownerId, assetGroupId);
+            Asset plantAsset = createPlant(plant, ownerId, assetGroupId, strictGeneration);
         }
 
         Set<Greenhouse> greenhouses = mapToGreenhouses(data);
         for (Greenhouse greenhouse : greenhouses) {
-            Asset greenhouseAsset = createGreenhouse(greenhouse, ownerId, assetGroupId);
+            Asset greenhouseAsset = createGreenhouse(greenhouse, ownerId, assetGroupId, strictGeneration);
 
             for (Section section : greenhouse.getSections()) {
-                Asset sectionAsset = createSection(section, ownerId, assetGroupId);
+                Asset sectionAsset = createSection(section, ownerId, assetGroupId, strictGeneration);
                 this.tbRestClient.createRelation(RelationType.CONTAINS.getType(), greenhouseAsset.getId(), sectionAsset.getId());
 
-                Device soilWarmMoistureSensorDevice = createSoilWarmMoistureSensor(section.getSoilWarmMoistureSensor(), ownerId, deviceGroupId);
-                Device soilAciditySensorDevice = createSoilAciditySensor(section.getSoilAciditySensor(), ownerId, deviceGroupId);
-                Device soilNpkSensorDevice = createSoilNpkSensor(section.getSoilNpkSensor(), ownerId, deviceGroupId);
-                Device harvestReporterDevice = createHarvestReporter(section.getHarvestReporter(), ownerId, deviceGroupId);
+                Device soilWarmMoistureSensorDevice = createSoilWarmMoistureSensor(section.getSoilWarmMoistureSensor(), ownerId, deviceGroupId, strictGeneration);
+                Device soilAciditySensorDevice = createSoilAciditySensor(section.getSoilAciditySensor(), ownerId, deviceGroupId, strictGeneration);
+                Device soilNpkSensorDevice = createSoilNpkSensor(section.getSoilNpkSensor(), ownerId, deviceGroupId, strictGeneration);
+                Device harvestReporterDevice = createHarvestReporter(section.getHarvestReporter(), ownerId, deviceGroupId, strictGeneration);
 
                 this.tbRestClient.createRelation(RelationType.CONTAINS.getType(), sectionAsset.getId(), soilWarmMoistureSensorDevice.getId());
                 this.tbRestClient.createRelation(RelationType.CONTAINS.getType(), sectionAsset.getId(), soilAciditySensorDevice.getId());
@@ -1007,13 +1053,13 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
                 this.tbRestClient.createRelation(RelationType.CONTAINS.getType(), sectionAsset.getId(), harvestReporterDevice.getId());
             }
 
-            Device insideAirWarmHumiditySensorDevice = createInsideAirWarmHumiditySensor(greenhouse.getInsideAirWarmHumiditySensor(), ownerId, deviceGroupId);
-            Device insideLightSensorDevice = createInsideLightSensor(greenhouse.getInsideLightSensor(), ownerId, deviceGroupId);
-            Device insideCO2SensorDevice = createInsideCO2Sensor(greenhouse.getInsideCO2Sensor(), ownerId, deviceGroupId);
-            Device outsideAirWarmHumiditySensorDevice = createOutsideAirWarmHumiditySensor(greenhouse.getOutsideAirWarmHumiditySensor(), ownerId, deviceGroupId);
-            Device outsideLightSensorDevice = createOutsideLightSensor(greenhouse.getOutsideLightSensor(), ownerId, deviceGroupId);
-            Device energyMeter = createEnergyMeter(greenhouse.getEnergyMeter(), ownerId, deviceGroupId);
-            Device waterMeter = createWaterMeter(greenhouse.getWaterMeter(), ownerId, deviceGroupId);
+            Device insideAirWarmHumiditySensorDevice = createInsideAirWarmHumiditySensor(greenhouse.getInsideAirWarmHumiditySensor(), ownerId, deviceGroupId, strictGeneration);
+            Device insideLightSensorDevice = createInsideLightSensor(greenhouse.getInsideLightSensor(), ownerId, deviceGroupId, strictGeneration);
+            Device insideCO2SensorDevice = createInsideCO2Sensor(greenhouse.getInsideCO2Sensor(), ownerId, deviceGroupId, strictGeneration);
+            Device outsideAirWarmHumiditySensorDevice = createOutsideAirWarmHumiditySensor(greenhouse.getOutsideAirWarmHumiditySensor(), ownerId, deviceGroupId, strictGeneration);
+            Device outsideLightSensorDevice = createOutsideLightSensor(greenhouse.getOutsideLightSensor(), ownerId, deviceGroupId, strictGeneration);
+            Device energyMeter = createEnergyMeter(greenhouse.getEnergyMeter(), ownerId, deviceGroupId, strictGeneration);
+            Device waterMeter = createWaterMeter(greenhouse.getWaterMeter(), ownerId, deviceGroupId, strictGeneration);
 
             this.tbRestClient.createRelation(RelationType.CONTAINS.getType(), greenhouseAsset.getId(), insideAirWarmHumiditySensorDevice.getId());
             this.tbRestClient.createRelation(RelationType.CONTAINS.getType(), greenhouseAsset.getId(), insideLightSensorDevice.getId());
@@ -1875,7 +1921,7 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
     }
 
     private int getHourLuxValues(int hour) {
-        /// As summer day [0 - 17_000]
+        /// As summer day [0-17_000]
         switch (hour) {
             case 0:
             case 1:
@@ -2777,16 +2823,23 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
     }
 
 
-    private Asset createPlant(Plant plant, UUID ownerId, UUID assetGroupId) {
+    private Asset createPlant(Plant plant, UUID ownerId, UUID assetGroupId, boolean strictGeneration) {
         String name = plant.getSystemName();
         String entityType = plant.entityType();
 
         Asset asset;
         if (tbRestClient.isPe()) {
-            asset = tbRestClient.createAsset(name, entityType, new CustomerId(ownerId));
+            var newCustomerId = new CustomerId(ownerId);
+            asset = strictGeneration
+                    ? tbRestClient.createAsset(name, entityType, newCustomerId)
+                    : tbRestClient.createAssetIfNotExists(name, entityType, newCustomerId)
+            ;
             tbRestClient.addEntitiesToTheGroup(assetGroupId, Set.of(asset.getUuidId()));
         } else {
-            asset = tbRestClient.createAsset(name, entityType);
+            asset = strictGeneration
+                    ? tbRestClient.createAsset(name, entityType)
+                    : tbRestClient.createAssetIfNotExists(name, entityType)
+            ;
             tbRestClient.assignAssetToCustomer(ownerId, asset.getUuidId());
         }
 
@@ -2831,16 +2884,23 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
         return asset;
     }
 
-    private Asset createGreenhouse(Greenhouse greenhouse, UUID ownerId, UUID assetGroupId) {
+    private Asset createGreenhouse(Greenhouse greenhouse, UUID ownerId, UUID assetGroupId, boolean strictGeneration) {
         String name = greenhouse.getSystemName();
         String entityType = greenhouse.entityType();
 
         Asset asset;
         if (tbRestClient.isPe()) {
-            asset = tbRestClient.createAsset(name, entityType, new CustomerId(ownerId));
+            var customerId = new CustomerId(ownerId);
+            asset = strictGeneration
+                    ? tbRestClient.createAsset(name, entityType, customerId)
+                    : tbRestClient.createAssetIfNotExists(name, entityType, customerId)
+            ;
             tbRestClient.addEntitiesToTheGroup(assetGroupId, Set.of(asset.getUuidId()));
         } else {
-            asset = tbRestClient.createAsset(name, entityType);
+            asset = strictGeneration
+                    ? tbRestClient.createAsset(name, entityType)
+                    : tbRestClient.createAssetIfNotExists(name, entityType)
+            ;
             tbRestClient.assignAssetToCustomer(ownerId, asset.getUuidId());
         }
 
@@ -2856,16 +2916,23 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
         return asset;
     }
 
-    private Asset createSection(Section section, UUID ownerId, UUID assetGroupId) {
+    private Asset createSection(Section section, UUID ownerId, UUID assetGroupId, boolean strictGeneration) {
         String name = section.getSystemName();
         String entityType = section.entityType();
 
         Asset asset;
         if (tbRestClient.isPe()) {
-            asset = tbRestClient.createAsset(name, entityType, new CustomerId(ownerId));
+            var customerId = new CustomerId(ownerId);
+            asset = strictGeneration
+                    ? tbRestClient.createAsset(name, entityType, customerId)
+                    : tbRestClient.createAssetIfNotExists(name, entityType, customerId)
+            ;
             tbRestClient.addEntitiesToTheGroup(assetGroupId, Set.of(asset.getUuidId()));
         } else {
-            asset = tbRestClient.createAsset(name, entityType);
+            asset = strictGeneration
+                    ? tbRestClient.createAsset(name, entityType)
+                    : tbRestClient.createAssetIfNotExists(name, entityType)
+            ;
             tbRestClient.assignAssetToCustomer(ownerId, asset.getUuidId());
         }
 
@@ -2880,16 +2947,21 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
         return asset;
     }
 
-    private Device createSoilNpkSensor(SoilNpkSensor soilNpkSensor, UUID ownerId, UUID deviceGroupId) {
+    private Device createSoilNpkSensor(SoilNpkSensor soilNpkSensor, UUID ownerId, UUID deviceGroupId, boolean strictGeneration) {
         String name = soilNpkSensor.getSystemName();
         String entityType = soilNpkSensor.entityType();
 
         Device device;
         if (tbRestClient.isPe()) {
-            device = tbRestClient.createDevice(name, entityType, new CustomerId(ownerId));
+            device = strictGeneration
+                    ? tbRestClient.createDevice(name, entityType, new CustomerId(ownerId))
+                    : tbRestClient.createDeviceIfNotExists(name, entityType, new CustomerId(ownerId));
             tbRestClient.addEntitiesToTheGroup(deviceGroupId, Set.of(device.getUuidId()));
         } else {
-            device = tbRestClient.createDevice(name, entityType);
+            device = strictGeneration
+                    ? tbRestClient.createDevice(name, entityType)
+                    : tbRestClient.createDeviceIfNotExists(name, entityType)
+            ;
             tbRestClient.assignDeviceToCustomer(ownerId, device.getUuidId());
         }
         DeviceCredentials deviceCredentials = tbRestClient.getDeviceCredentials(device.getUuidId());
@@ -2907,16 +2979,24 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
         return device;
     }
 
-    private Device createSoilWarmMoistureSensor(SoilWarmMoistureSensor soilWarmMoistureSensor, UUID ownerId, UUID deviceGroupId) {
+    private Device createSoilWarmMoistureSensor(SoilWarmMoistureSensor soilWarmMoistureSensor,
+                                                UUID ownerId,
+                                                UUID deviceGroupId,
+                                                boolean strictGeneration) {
         String name = soilWarmMoistureSensor.getSystemName();
         String entityType = soilWarmMoistureSensor.entityType();
 
         Device device;
         if (tbRestClient.isPe()) {
-            device = tbRestClient.createDevice(name, entityType, new CustomerId(ownerId));
+            device = strictGeneration
+                    ? tbRestClient.createDevice(name, entityType, new CustomerId(ownerId))
+                    : tbRestClient.createDeviceIfNotExists(name, entityType, new CustomerId(ownerId));
             tbRestClient.addEntitiesToTheGroup(deviceGroupId, Set.of(device.getUuidId()));
         } else {
-            device = tbRestClient.createDevice(name, entityType);
+            device = strictGeneration
+                    ? tbRestClient.createDevice(name, entityType)
+                    : tbRestClient.createDeviceIfNotExists(name, entityType)
+            ;
             tbRestClient.assignDeviceToCustomer(ownerId, device.getUuidId());
         }
         DeviceCredentials deviceCredentials = tbRestClient.getDeviceCredentials(device.getUuidId());
@@ -2933,16 +3013,24 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
         return device;
     }
 
-    private Device createSoilAciditySensor(SoilAciditySensor soilAciditySensor, UUID ownerId, UUID deviceGroupId) {
+    private Device createSoilAciditySensor(SoilAciditySensor soilAciditySensor,
+                                           UUID ownerId,
+                                           UUID deviceGroupId,
+                                           boolean strictGeneration) {
         String name = soilAciditySensor.getSystemName();
         String entityType = soilAciditySensor.entityType();
 
         Device device;
         if (tbRestClient.isPe()) {
-            device = tbRestClient.createDevice(name, entityType, new CustomerId(ownerId));
+            device = strictGeneration
+                    ? tbRestClient.createDevice(name, entityType, new CustomerId(ownerId))
+                    : tbRestClient.createDeviceIfNotExists(name, entityType, new CustomerId(ownerId));
             tbRestClient.addEntitiesToTheGroup(deviceGroupId, Set.of(device.getUuidId()));
         } else {
-            device = tbRestClient.createDevice(name, entityType);
+            device = strictGeneration
+                    ? tbRestClient.createDevice(name, entityType)
+                    : tbRestClient.createDeviceIfNotExists(name, entityType)
+            ;
             tbRestClient.assignDeviceToCustomer(ownerId, device.getUuidId());
         }
         DeviceCredentials deviceCredentials = tbRestClient.getDeviceCredentials(device.getUuidId());
@@ -2958,16 +3046,24 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
         return device;
     }
 
-    private Device createInsideAirWarmHumiditySensor(InsideAirWarmHumiditySensor insideAirWarmHumiditySensor, UUID ownerId, UUID deviceGroupId) {
+    private Device createInsideAirWarmHumiditySensor(InsideAirWarmHumiditySensor insideAirWarmHumiditySensor,
+                                                     UUID ownerId,
+                                                     UUID deviceGroupId,
+                                                     boolean strictGeneration) {
         String name = insideAirWarmHumiditySensor.getSystemName();
         String entityType = insideAirWarmHumiditySensor.entityType();
 
         Device device;
         if (tbRestClient.isPe()) {
-            device = tbRestClient.createDevice(name, entityType, new CustomerId(ownerId));
+            device = strictGeneration
+                    ? tbRestClient.createDevice(name, entityType, new CustomerId(ownerId))
+                    : tbRestClient.createDeviceIfNotExists(name, entityType, new CustomerId(ownerId));
             tbRestClient.addEntitiesToTheGroup(deviceGroupId, Set.of(device.getUuidId()));
         } else {
-            device = tbRestClient.createDevice(name, entityType);
+            device = strictGeneration
+                    ? tbRestClient.createDevice(name, entityType)
+                    : tbRestClient.createDeviceIfNotExists(name, entityType)
+            ;
             tbRestClient.assignDeviceToCustomer(ownerId, device.getUuidId());
         }
         DeviceCredentials deviceCredentials = tbRestClient.getDeviceCredentials(device.getUuidId());
@@ -2984,16 +3080,20 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
         return device;
     }
 
-    private Device createInsideCO2Sensor(InsideCO2Sensor insideCO2Sensor, UUID ownerId, UUID deviceGroupId) {
+    private Device createInsideCO2Sensor(InsideCO2Sensor insideCO2Sensor, UUID ownerId, UUID deviceGroupId, boolean strictGeneration) {
         String name = insideCO2Sensor.getSystemName();
         String entityType = insideCO2Sensor.entityType();
 
         Device device;
         if (tbRestClient.isPe()) {
-            device = tbRestClient.createDevice(name, entityType, new CustomerId(ownerId));
+            device = strictGeneration
+                    ? tbRestClient.createDevice(name, entityType, new CustomerId(ownerId))
+                    : tbRestClient.createDeviceIfNotExists(name, entityType, new CustomerId(ownerId));
             tbRestClient.addEntitiesToTheGroup(deviceGroupId, Set.of(device.getUuidId()));
         } else {
-            device = tbRestClient.createDevice(name, entityType);
+            device = strictGeneration
+                    ? tbRestClient.createDevice(name, entityType)
+                    : tbRestClient.createDeviceIfNotExists(name, entityType);
             tbRestClient.assignDeviceToCustomer(ownerId, device.getUuidId());
         }
         DeviceCredentials deviceCredentials = tbRestClient.getDeviceCredentials(device.getUuidId());
@@ -3009,16 +3109,20 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
         return device;
     }
 
-    private Device createInsideLightSensor(InsideLightSensor insideLightSensor, UUID ownerId, UUID deviceGroupId) {
+    private Device createInsideLightSensor(InsideLightSensor insideLightSensor, UUID ownerId, UUID deviceGroupId, boolean strictGeneration) {
         String name = insideLightSensor.getSystemName();
         String entityType = insideLightSensor.entityType();
 
         Device device;
         if (tbRestClient.isPe()) {
-            device = tbRestClient.createDevice(name, entityType, new CustomerId(ownerId));
+            device = strictGeneration
+                    ? tbRestClient.createDevice(name, entityType, new CustomerId(ownerId))
+                    : tbRestClient.createDeviceIfNotExists(name, entityType, new CustomerId(ownerId));
             tbRestClient.addEntitiesToTheGroup(deviceGroupId, Set.of(device.getUuidId()));
         } else {
-            device = tbRestClient.createDevice(name, entityType);
+            device = strictGeneration
+                    ? tbRestClient.createDevice(name, entityType)
+                    : tbRestClient.createDeviceIfNotExists(name, entityType);
             tbRestClient.assignDeviceToCustomer(ownerId, device.getUuidId());
         }
         DeviceCredentials deviceCredentials = tbRestClient.getDeviceCredentials(device.getUuidId());
@@ -3034,16 +3138,20 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
         return device;
     }
 
-    private Device createHarvestReporter(HarvestReporter harvestReporter, UUID ownerId, UUID deviceGroupId) {
+    private Device createHarvestReporter(HarvestReporter harvestReporter, UUID ownerId, UUID deviceGroupId, boolean strictGeneration) {
         String name = harvestReporter.getSystemName();
         String entityType = harvestReporter.entityType();
 
         Device device;
         if (tbRestClient.isPe()) {
-            device = tbRestClient.createDevice(name, entityType, new CustomerId(ownerId));
+            device = strictGeneration
+                    ? tbRestClient.createDevice(name, entityType, new CustomerId(ownerId))
+                    : tbRestClient.createDeviceIfNotExists(name, entityType, new CustomerId(ownerId));
             tbRestClient.addEntitiesToTheGroup(deviceGroupId, Set.of(device.getUuidId()));
         } else {
-            device = tbRestClient.createDevice(name, entityType);
+            device = strictGeneration
+                    ? tbRestClient.createDevice(name, entityType)
+                    : tbRestClient.createDeviceIfNotExists(name, entityType);
             tbRestClient.assignDeviceToCustomer(ownerId, device.getUuidId());
         }
         DeviceCredentials deviceCredentials = tbRestClient.getDeviceCredentials(device.getUuidId());
@@ -3060,16 +3168,20 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
         return device;
     }
 
-    private Device createEnergyMeter(EnergyMeter energyMeter, UUID ownerId, UUID deviceGroupId) {
+    private Device createEnergyMeter(EnergyMeter energyMeter, UUID ownerId, UUID deviceGroupId, boolean strictGeneration) {
         String name = energyMeter.getSystemName();
         String entityType = energyMeter.entityType();
 
         Device device;
         if (tbRestClient.isPe()) {
-            device = tbRestClient.createDevice(name, entityType, new CustomerId(ownerId));
+            device = strictGeneration
+                    ? tbRestClient.createDevice(name, entityType, new CustomerId(ownerId))
+                    : tbRestClient.createDeviceIfNotExists(name, entityType, new CustomerId(ownerId));
             tbRestClient.addEntitiesToTheGroup(deviceGroupId, Set.of(device.getUuidId()));
         } else {
-            device = tbRestClient.createDevice(name, entityType);
+            device = strictGeneration
+                    ? tbRestClient.createDevice(name, entityType)
+                    : tbRestClient.createDeviceIfNotExists(name, entityType);
             tbRestClient.assignDeviceToCustomer(ownerId, device.getUuidId());
         }
         DeviceCredentials deviceCredentials = tbRestClient.getDeviceCredentials(device.getUuidId());
@@ -3089,16 +3201,20 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
         return device;
     }
 
-    private Device createWaterMeter(WaterMeter waterMeter, UUID ownerId, UUID deviceGroupId) {
+    private Device createWaterMeter(WaterMeter waterMeter, UUID ownerId, UUID deviceGroupId, boolean strictGeneration) {
         String name = waterMeter.getSystemName();
         String entityType = waterMeter.entityType();
 
         Device device;
         if (tbRestClient.isPe()) {
-            device = tbRestClient.createDevice(name, entityType, new CustomerId(ownerId));
+            device = strictGeneration
+                    ? tbRestClient.createDevice(name, entityType, new CustomerId(ownerId))
+                    : tbRestClient.createDeviceIfNotExists(name, entityType, new CustomerId(ownerId));
             tbRestClient.addEntitiesToTheGroup(deviceGroupId, Set.of(device.getUuidId()));
         } else {
-            device = tbRestClient.createDevice(name, entityType);
+            device = strictGeneration
+                    ? tbRestClient.createDevice(name, entityType)
+                    : tbRestClient.createDeviceIfNotExists(name, entityType);
             tbRestClient.assignDeviceToCustomer(ownerId, device.getUuidId());
         }
         DeviceCredentials deviceCredentials = tbRestClient.getDeviceCredentials(device.getUuidId());
@@ -3114,16 +3230,20 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
         return device;
     }
 
-    private Device createOutsideAirWarmHumiditySensor(OutsideAirWarmHumiditySensor outsideAirWarmHumiditySensor, UUID ownerId, UUID deviceGroupId) {
+    private Device createOutsideAirWarmHumiditySensor(OutsideAirWarmHumiditySensor outsideAirWarmHumiditySensor, UUID ownerId, UUID deviceGroupId, boolean strictGeneration) {
         String name = outsideAirWarmHumiditySensor.getSystemName();
         String entityType = outsideAirWarmHumiditySensor.entityType();
 
         Device device;
         if (tbRestClient.isPe()) {
-            device = tbRestClient.createDevice(name, entityType, new CustomerId(ownerId));
+            device = strictGeneration
+                    ? tbRestClient.createDevice(name, entityType, new CustomerId(ownerId))
+                    : tbRestClient.createDeviceIfNotExists(name, entityType, new CustomerId(ownerId));
             tbRestClient.addEntitiesToTheGroup(deviceGroupId, Set.of(device.getUuidId()));
         } else {
-            device = tbRestClient.createDevice(name, entityType);
+            device = strictGeneration
+                    ? tbRestClient.createDevice(name, entityType)
+                    : tbRestClient.createDeviceIfNotExists(name, entityType);
             tbRestClient.assignDeviceToCustomer(ownerId, device.getUuidId());
         }
         DeviceCredentials deviceCredentials = tbRestClient.getDeviceCredentials(device.getUuidId());
@@ -3140,16 +3260,20 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
         return device;
     }
 
-    private Device createOutsideLightSensor(OutsideLightSensor outsideLightSensor, UUID ownerId, UUID deviceGroupId) {
+    private Device createOutsideLightSensor(OutsideLightSensor outsideLightSensor, UUID ownerId, UUID deviceGroupId, boolean strictGeneration) {
         String name = outsideLightSensor.getSystemName();
         String entityType = outsideLightSensor.entityType();
 
         Device device;
         if (tbRestClient.isPe()) {
-            device = tbRestClient.createDevice(name, entityType, new CustomerId(ownerId));
+            device = strictGeneration
+                    ? tbRestClient.createDevice(name, entityType, new CustomerId(ownerId))
+                    : tbRestClient.createDeviceIfNotExists(name, entityType, new CustomerId(ownerId));
             tbRestClient.addEntitiesToTheGroup(deviceGroupId, Set.of(device.getUuidId()));
         } else {
-            device = tbRestClient.createDevice(name, entityType);
+            device = strictGeneration
+                    ? tbRestClient.createDevice(name, entityType)
+                    : tbRestClient.createDeviceIfNotExists(name, entityType);
             tbRestClient.assignDeviceToCustomer(ownerId, device.getUuidId());
         }
         DeviceCredentials deviceCredentials = tbRestClient.getDeviceCredentials(device.getUuidId());

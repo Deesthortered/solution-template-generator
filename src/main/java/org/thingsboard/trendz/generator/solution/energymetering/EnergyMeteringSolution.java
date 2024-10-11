@@ -4,7 +4,6 @@ import com.google.common.collect.Sets;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.thingsboard.server.common.data.Customer;
 import org.thingsboard.server.common.data.Device;
 import org.thingsboard.server.common.data.EntityType;
 import org.thingsboard.server.common.data.asset.Asset;
@@ -15,12 +14,21 @@ import org.thingsboard.server.common.data.rule.RuleChain;
 import org.thingsboard.server.common.data.rule.RuleChainMetaData;
 import org.thingsboard.server.common.data.rule.RuleNode;
 import org.thingsboard.server.common.data.security.DeviceCredentials;
-import org.thingsboard.trendz.generator.exception.*;
+import org.thingsboard.trendz.generator.exception.AssetAlreadyExistException;
+import org.thingsboard.trendz.generator.exception.CustomerAlreadyExistException;
+import org.thingsboard.trendz.generator.exception.DeviceAlreadyExistException;
+import org.thingsboard.trendz.generator.exception.RuleChainAlreadyExistException;
+import org.thingsboard.trendz.generator.exception.SolutionValidationException;
 import org.thingsboard.trendz.generator.model.ModelData;
 import org.thingsboard.trendz.generator.model.ModelEntity;
 import org.thingsboard.trendz.generator.model.anomaly.AnomalyInfo;
 import org.thingsboard.trendz.generator.model.anomaly.AnomalyType;
-import org.thingsboard.trendz.generator.model.tb.*;
+import org.thingsboard.trendz.generator.model.tb.Attribute;
+import org.thingsboard.trendz.generator.model.tb.CustomerData;
+import org.thingsboard.trendz.generator.model.tb.CustomerUser;
+import org.thingsboard.trendz.generator.model.tb.RelationType;
+import org.thingsboard.trendz.generator.model.tb.RuleNodeAdditionalInfo;
+import org.thingsboard.trendz.generator.model.tb.Telemetry;
 import org.thingsboard.trendz.generator.service.FileService;
 import org.thingsboard.trendz.generator.service.anomaly.AnomalyService;
 import org.thingsboard.trendz.generator.service.dashboard.DashboardService;
@@ -39,7 +47,15 @@ import org.thingsboard.trendz.generator.utils.RandomUtils;
 
 import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.TreeSet;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -112,14 +128,14 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
     }
 
     @Override
-    public void generate(boolean skipTelemetry, ZonedDateTime startYear) {
+    public void generate(boolean skipTelemetry, ZonedDateTime startYear, boolean strictGeneration) {
         log.info("Energy Metering Solution - start generation");
         try {
-            CustomerData customerData = createCustomerData();
+            CustomerData customerData = createCustomerData(strictGeneration);
             ModelData data = makeData(skipTelemetry, startYear);
-            applyData(data, customerData);
-            createRuleChain(data);
-            dashboardService.createDashboardItems(getSolutionName(), customerData.getCustomer().getId());
+            applyData(data, customerData, strictGeneration);
+            createRuleChain(data, strictGeneration);
+            dashboardService.createDashboardItems(getSolutionName(), customerData.getCustomer().getId(), strictGeneration);
 
             checkRandomStability();
             log.info("Energy Metering Solution - generation is completed!");
@@ -172,9 +188,11 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
     }
 
 
-    private CustomerData createCustomerData() {
-        Customer customer = this.tbRestClient.createCustomer(CUSTOMER_TITLE);
-        CustomerUser customerUser = this.tbRestClient.createCustomerUser(
+    private CustomerData createCustomerData(boolean strictGeneration) {
+        var customer = strictGeneration
+                ? tbRestClient.createCustomer(CUSTOMER_TITLE)
+                : tbRestClient.createCustomerIfNotExists(CUSTOMER_TITLE);
+        var customerUser = this.tbRestClient.createCustomerUser(
                 customer, CUSTOMER_USER_EMAIL, CUSTOMER_USER_PASSWORD,
                 CUSTOMER_USER_FIRST_NAME, CUSTOMER_USER_LAST_NAME
         );
@@ -198,7 +216,11 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
     }
 
 
-    private void createRuleChain(ModelData data) {
+    private void createRuleChain(ModelData data, boolean strictGeneration) {
+        if (!strictGeneration) {
+            deleteRuleChain();
+        }
+
         Set<Building> buildings = mapToBuildings(data);
 
         try {
@@ -636,32 +658,36 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
         return new ModelData(buildings);
     }
 
-    private void applyData(ModelData data, CustomerData customerData) {
+    private void applyData(ModelData data, CustomerData customerData, boolean strictGeneration) {
         CustomerUser customerUser = customerData.getUser();
         UUID ownerId = customerUser.getCustomerId().getId();
 
         UUID assetGroupId = null;
         UUID deviceGroupId = null;
         if (tbRestClient.isPe()) {
-            EntityGroup assetGroup = tbRestClient.createEntityGroup(ASSET_GROUP_NAME, EntityType.ASSET, ownerId, true);
-            EntityGroup deviceGroup = tbRestClient.createEntityGroup(DEVICE_GROUP_NAME, EntityType.DEVICE, ownerId, true);
+            EntityGroup assetGroup = strictGeneration
+                    ? tbRestClient.createEntityGroup(ASSET_GROUP_NAME, EntityType.ASSET, ownerId, true)
+                    : tbRestClient.createEntityGroupIfNotExists(ASSET_GROUP_NAME, EntityType.ASSET, ownerId, true);
+            EntityGroup deviceGroup = strictGeneration
+                    ? tbRestClient.createEntityGroup(DEVICE_GROUP_NAME, EntityType.DEVICE, ownerId, true)
+                    : tbRestClient.createEntityGroupIfNotExists(DEVICE_GROUP_NAME, EntityType.DEVICE, ownerId, true);
             assetGroupId = assetGroup.getUuidId();
             deviceGroupId = deviceGroup.getUuidId();
         }
 
         Set<Building> buildings = mapToBuildings(data);
         for (Building building : buildings) {
-            Asset buildingAsset = createBuilding(building, ownerId, assetGroupId);
+            Asset buildingAsset = createBuilding(building, ownerId, assetGroupId, strictGeneration);
 
             Set<Apartment> apartments = building.getApartments();
             for (Apartment apartment : apartments) {
-                Asset apartmentAsset = createApartment(apartment, ownerId, assetGroupId);
+                Asset apartmentAsset = createApartment(apartment, ownerId, assetGroupId, strictGeneration);
                 this.tbRestClient.createRelation(RelationType.CONTAINS.getType(), buildingAsset.getId(), apartmentAsset.getId());
 
                 EnergyMeter energyMeter = apartment.getEnergyMeter();
                 HeatMeter heatMeter = apartment.getHeatMeter();
-                Device energyMeterDevice = createEnergyMeter(energyMeter, ownerId, deviceGroupId);
-                Device heatMeterDevice = createHeatMeter(heatMeter, ownerId, deviceGroupId);
+                Device energyMeterDevice = createEnergyMeter(energyMeter, ownerId, deviceGroupId, strictGeneration);
+                Device heatMeterDevice = createHeatMeter(heatMeter, ownerId, deviceGroupId, strictGeneration);
                 this.tbRestClient.createRelation(RelationType.CONTAINS.getType(), apartmentAsset.getId(), energyMeterDevice.getId());
                 this.tbRestClient.createRelation(RelationType.CONTAINS.getType(), apartmentAsset.getId(), heatMeterDevice.getId());
             }
@@ -1123,13 +1149,20 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
     }
 
 
-    private Asset createBuilding(Building building, UUID ownerId, UUID assetGroupId) {
+    private Asset createBuilding(Building building, UUID ownerId, UUID assetGroupId, boolean strictGeneration) {
         Asset asset;
         if (tbRestClient.isPe()) {
-            asset = tbRestClient.createAsset(building.getSystemName(), building.entityType(), new CustomerId(ownerId));
+            var customerId = new CustomerId(ownerId);
+            asset = strictGeneration
+                    ? tbRestClient.createAsset(building.getSystemName(), building.entityType(), customerId)
+                    : tbRestClient.createAssetIfNotExists(building.getSystemName(), building.entityType(), customerId)
+            ;
             tbRestClient.addEntitiesToTheGroup(assetGroupId, Set.of(asset.getUuidId()));
         } else {
-            asset = tbRestClient.createAsset(building.getSystemName(), building.entityType());
+            asset = strictGeneration
+                    ? tbRestClient.createAsset(building.getSystemName(), building.entityType())
+                    : tbRestClient.createAssetIfNotExists(building.getSystemName(), building.entityType())
+            ;
             tbRestClient.assignAssetToCustomer(ownerId, asset.getUuidId());
         }
 
@@ -1140,13 +1173,19 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
         return asset;
     }
 
-    private Asset createApartment(Apartment apartment, UUID ownerId, UUID assetGroupId) {
+    private Asset createApartment(Apartment apartment, UUID ownerId, UUID assetGroupId, boolean strictGeneration) {
         Asset asset;
         if (tbRestClient.isPe()) {
-            asset = tbRestClient.createAsset(apartment.getSystemName(), apartment.entityType(), new CustomerId(ownerId));
+            var customerId = new CustomerId(ownerId);
+            asset = strictGeneration
+                    ? tbRestClient.createAsset(apartment.getSystemName(), apartment.entityType(), customerId)
+                    : tbRestClient.createAssetIfNotExists(apartment.getSystemName(), apartment.entityType(), customerId)
+            ;
             tbRestClient.addEntitiesToTheGroup(assetGroupId, Set.of(asset.getUuidId()));
         } else {
-            asset = tbRestClient.createAsset(apartment.getSystemName(), apartment.entityType());
+            asset = strictGeneration
+                    ? tbRestClient.createAsset(apartment.getSystemName(), apartment.entityType())
+                    : tbRestClient.createAssetIfNotExists(apartment.getSystemName(), apartment.entityType());
             tbRestClient.assignAssetToCustomer(ownerId, asset.getUuidId());
         }
 
@@ -1160,13 +1199,18 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
         return asset;
     }
 
-    private Device createEnergyMeter(EnergyMeter energyMeter, UUID ownerId, UUID deviceGroupId) {
+    private Device createEnergyMeter(EnergyMeter energyMeter, UUID ownerId, UUID deviceGroupId, boolean strictGeneration) {
         Device device;
         if (tbRestClient.isPe()) {
-            device = tbRestClient.createDevice(energyMeter.getSystemName(), energyMeter.entityType(), new CustomerId(ownerId));
+            device = strictGeneration
+                    ? tbRestClient.createDevice(energyMeter.getSystemName(), energyMeter.entityType(), new CustomerId(ownerId))
+                    : tbRestClient.createDeviceIfNotExists(energyMeter.getSystemName(), energyMeter.entityType(), new CustomerId(ownerId)) ;
             tbRestClient.addEntitiesToTheGroup(deviceGroupId, Set.of(device.getUuidId()));
         } else {
-            device = tbRestClient.createDevice(energyMeter.getSystemName(), energyMeter.entityType());
+            device = strictGeneration
+                    ? tbRestClient.createDevice(energyMeter.getSystemName(), energyMeter.entityType())
+                    : tbRestClient.createDeviceIfNotExists(energyMeter.getSystemName(), energyMeter.entityType())
+            ;
             tbRestClient.assignDeviceToCustomer(ownerId, device.getUuidId());
         }
         DeviceCredentials deviceCredentials = tbRestClient.getDeviceCredentials(device.getUuidId());
@@ -1184,13 +1228,18 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
         return device;
     }
 
-    private Device createHeatMeter(HeatMeter heatMeter, UUID ownerId, UUID deviceGroupId) {
+    private Device createHeatMeter(HeatMeter heatMeter, UUID ownerId, UUID deviceGroupId, boolean strictGeneration) {
         Device device;
         if (tbRestClient.isPe()) {
-            device = tbRestClient.createDevice(heatMeter.getSystemName(), heatMeter.entityType(), new CustomerId(ownerId));
+            device = strictGeneration
+                    ? tbRestClient.createDevice(heatMeter.getSystemName(), heatMeter.entityType(), new CustomerId(ownerId))
+                    : tbRestClient.createDeviceIfNotExists(heatMeter.getSystemName(), heatMeter.entityType(), new CustomerId(ownerId));
             tbRestClient.addEntitiesToTheGroup(deviceGroupId, Set.of(device.getUuidId()));
         } else {
-            device = tbRestClient.createDevice(heatMeter.getSystemName(), heatMeter.entityType());
+            device = strictGeneration
+                    ? tbRestClient.createDevice(heatMeter.getSystemName(), heatMeter.entityType())
+                    : tbRestClient.createDeviceIfNotExists(heatMeter.getSystemName(), heatMeter.entityType())
+            ;
             tbRestClient.assignDeviceToCustomer(ownerId, device.getUuidId());
         }
         DeviceCredentials deviceCredentials = tbRestClient.getDeviceCredentials(device.getUuidId());
