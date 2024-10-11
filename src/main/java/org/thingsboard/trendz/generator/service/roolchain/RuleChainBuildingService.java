@@ -14,10 +14,7 @@ import org.thingsboard.rule.engine.rest.TbRestApiCallNode;
 import org.thingsboard.rule.engine.rest.TbRestApiCallNodeConfiguration;
 import org.thingsboard.rule.engine.telemetry.TbMsgTimeseriesNode;
 import org.thingsboard.rule.engine.telemetry.TbMsgTimeseriesNodeConfiguration;
-import org.thingsboard.rule.engine.transform.TbChangeOriginatorNode;
-import org.thingsboard.rule.engine.transform.TbChangeOriginatorNodeConfiguration;
-import org.thingsboard.rule.engine.transform.TbTransformMsgNode;
-import org.thingsboard.rule.engine.transform.TbTransformMsgNodeConfiguration;
+import org.thingsboard.rule.engine.transform.*;
 import org.thingsboard.server.common.data.EntityType;
 import org.thingsboard.server.common.data.rule.NodeConnectionInfo;
 import org.thingsboard.server.common.data.rule.RuleNode;
@@ -96,7 +93,7 @@ public class RuleChainBuildingService {
 
     public RuleNode createChangeOriginatorNode(String name, String entityNamePattern, EntityType entityType, double gridX, double gridY) {
         TbChangeOriginatorNodeConfiguration configuration = new TbChangeOriginatorNodeConfiguration();
-        configuration.setOriginatorSource("ENTITY");
+        configuration.setOriginatorSource(OriginatorSource.ENTITY);
         configuration.setEntityType(entityType.name());
         configuration.setEntityNamePattern(entityNamePattern);
 
