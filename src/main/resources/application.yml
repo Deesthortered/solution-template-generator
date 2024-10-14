@@ -24,7 +24,6 @@ generator:
   # true - generate telemetry from 'startGenerationTime' to 'endGenerationTime' and without generating anomalies
   # false - generate telemetry from static range in the code and with generating anomalies
   fullTelemetryGeneration: true
-  startYear: 2023
-  startGenerationTime: 1727740800000
-  endGenerationTime: 1728345600000
+  startGenerationTime: 1672531200000
+  endGenerationTime: 1728864000000
   telemetryTtl: 315360000 # 10 years in seconds

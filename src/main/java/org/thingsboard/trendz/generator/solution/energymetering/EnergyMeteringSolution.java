@@ -45,6 +45,7 @@ import org.thingsboard.trendz.generator.utils.DateTimeUtils;
 import org.thingsboard.trendz.generator.utils.MySortedSet;
 import org.thingsboard.trendz.generator.utils.RandomUtils;
 
+import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
@@ -117,7 +118,7 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
 
             if (!tbRestClient.isPe()) {
                 dashboardService.validateDashboardItems(getSolutionName(), null);
-                ModelData data = makeData(true, ZonedDateTime.now());
+                ModelData data = makeData(true, ZonedDateTime.now(), true, 0L, 0L);
                 validateData(data);
             }
 
@@ -128,11 +129,16 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
     }
 
     @Override
-    public void generate(boolean skipTelemetry, ZonedDateTime startYear, boolean strictGeneration) {
+    public void generate(boolean skipTelemetry,
+                         ZonedDateTime startYear,
+                         boolean strictGeneration,
+                         boolean fullTelemetryGeneration,
+                         long startGenerationTime,
+                         long endGenerationTime) {
         log.info("Energy Metering Solution - start generation");
         try {
             CustomerData customerData = createCustomerData(strictGeneration);
-            ModelData data = makeData(skipTelemetry, startYear);
+            ModelData data = makeData(skipTelemetry, startYear, fullTelemetryGeneration, startGenerationTime, endGenerationTime);
             applyData(data, customerData, strictGeneration);
             createRuleChain(data, strictGeneration);
             dashboardService.createDashboardItems(getSolutionName(), customerData.getCustomer().getId(), strictGeneration);
@@ -153,7 +159,7 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
 
             if (!tbRestClient.isPe()) {
                 dashboardService.deleteDashboardItems(getSolutionName(), null);
-                ModelData data = makeData(true, ZonedDateTime.now());
+                ModelData data = makeData(true, ZonedDateTime.now(), true, 0L, 0L);
                 deleteData(data);
             }
 
@@ -363,7 +369,11 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
     }
 
 
-    private ModelData makeData(boolean skipTelemetry, ZonedDateTime startYear) {
+    private ModelData makeData(boolean skipTelemetry,
+                               ZonedDateTime startYear,
+                               boolean fullTelemetryGeneration,
+                               long startGenerationTime,
+                               long endGenerationTime) {
         long TS_JANUARY = DateTimeUtils.toTs(startYear);
         long TS_FEBRUARY = DateTimeUtils.toTs(startYear.plusMonths(1));
         long TS_MARCH = DateTimeUtils.toTs(startYear.plusMonths(2));
@@ -652,7 +662,8 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
         );
 
         Set<ModelEntity> buildings = buildingConfigurations.stream()
-                .map(configuration -> makeBuildingByConfiguration(configuration, skipTelemetry))
+                .map(configuration -> makeBuildingByConfiguration(
+                        configuration, skipTelemetry, fullTelemetryGeneration, startGenerationTime, endGenerationTime))
                 .collect(Collectors.toCollection(TreeSet::new));
 
         return new ModelData(buildings);
@@ -779,7 +790,11 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
     }
 
 
-    private Building makeBuildingByConfiguration(BuildingConfiguration configuration, boolean skipTelemetry) {
+    private Building makeBuildingByConfiguration(BuildingConfiguration configuration,
+                                                 boolean skipTelemetry,
+                                                 boolean fullTelemetryGeneration,
+                                                 long startGenerationTime,
+                                                 long endGenerationTime) {
         Set<Apartment> apartments = MySortedSet.of();
         for (int floor = 1; floor <= configuration.getFloorCount(); floor++) {
             for (int number = 1; number <= configuration.getApartmentsByFloorCount(); number++) {
@@ -796,7 +811,9 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
                         .computeIfAbsent(floor, key -> new HashMap<>())
                         .computeIfAbsent(number, key -> configuration.getDefaultApartmentConfiguration());
 
-                Apartment apartment = createApartmentByConfiguration(apartmentConfiguration, configuration.getName(), floor, number, configuration.getApartmentsByFloorCount(), skipTelemetry);
+                Apartment apartment = createApartmentByConfiguration(
+                        apartmentConfiguration, configuration.getName(), floor, number, configuration.getApartmentsByFloorCount(), skipTelemetry,
+                        fullTelemetryGeneration, startGenerationTime, endGenerationTime);
                 apartments.add(apartment);
             }
         }
@@ -809,19 +826,34 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
                 .build();
     }
 
-    private Apartment createApartmentByConfiguration(ApartmentConfiguration configuration, String buildingName, int floor, int number, int apartmentByFloorCount, boolean skipTelemetry) {
+    private Apartment createApartmentByConfiguration(ApartmentConfiguration configuration,
+                                                     String buildingName,
+                                                     int floor,
+                                                     int number,
+                                                     int apartmentByFloorCount,
+                                                     boolean skipTelemetry,
+                                                     boolean fullTelemetryGeneration,
+                                                     long startGenerationTime,
+                                                     long endGenerationTime) {
         String titleNumber = floor + "0" + number;
         String letterAndNumber = buildingName.charAt(0) + titleNumber;
         long startDate = configuration.getStartDate() + createRandomDateBias();
 
-        Telemetry<Long> energyMeterConsumption = createTelemetryEnergyMeterConsumption(configuration, skipTelemetry);
-        this.anomalyService.applyAnomaly(energyMeterConsumption, configuration.getAnomalies());
+        Telemetry<Long> energyMeterConsumption = createTelemetryEnergyMeterConsumption(
+                configuration, skipTelemetry, fullTelemetryGeneration, startGenerationTime, endGenerationTime);
+        if (fullTelemetryGeneration) {
+            this.anomalyService.applyAnomaly(energyMeterConsumption, configuration.getAnomalies());
+        }
         Telemetry<Long> energyMeterConsAbsolute = createTelemetryEnergyMeterConsAbsolute(energyMeterConsumption, skipTelemetry);
 
-        Telemetry<Long> heatMeterTemperature = createTelemetryHeatMeterTemperature(configuration, skipTelemetry);
-        Telemetry<Long> heatMeterConsumption = createTelemetryHeatMeterConsumption(configuration, skipTelemetry);
-        this.anomalyService.applyAnomaly(heatMeterTemperature, configuration.getAnomalies());
-        this.anomalyService.applyAnomaly(heatMeterConsumption, configuration.getAnomalies());
+        Telemetry<Long> heatMeterTemperature = createTelemetryHeatMeterTemperature(
+                configuration, skipTelemetry, fullTelemetryGeneration, startGenerationTime, endGenerationTime);
+        Telemetry<Long> heatMeterConsumption = createTelemetryHeatMeterConsumption(
+                configuration, skipTelemetry, fullTelemetryGeneration, startGenerationTime, endGenerationTime);
+        if (fullTelemetryGeneration) {
+            this.anomalyService.applyAnomaly(heatMeterTemperature, configuration.getAnomalies());
+            this.anomalyService.applyAnomaly(heatMeterConsumption, configuration.getAnomalies());
+        }
         Telemetry<Long> heatMeterConsAbsolute = createTelemetryHeatMeterConsAbsolute(heatMeterConsumption, skipTelemetry);
 
         EnergyMeter energyMeter = EnergyMeter.builder()
@@ -883,13 +915,17 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
     }
 
 
-    private Telemetry<Long> createTelemetryEnergyMeterConsumption(ApartmentConfiguration configuration, boolean skipTelemetry) {
+    private Telemetry<Long> createTelemetryEnergyMeterConsumption(ApartmentConfiguration configuration,
+                                                                  boolean skipTelemetry,
+                                                                  boolean fullTelemetryGeneration,
+                                                                  long startGenerationTime,
+                                                                  long endGenerationTime) {
         if (skipTelemetry) {
             return new Telemetry<>("skip");
         }
 
         Telemetry<Long> result = new Telemetry<>("energyConsumption");
-        long now = System.currentTimeMillis();
+        long now = ZonedDateTime.now(ZoneId.of("UTC")).toInstant().toEpochMilli();
 
         long startTs = configuration.getStartDate();
         boolean occupied = configuration.isOccupied();
@@ -905,8 +941,21 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
                     double phase = (3.14 * 1) / 12;
                     double koeff = 3.14 / 24;
 
-                    ZonedDateTime startDate = DateTimeUtils.fromTs(startTs).truncatedTo(ChronoUnit.HOURS);
-                    ZonedDateTime nowDate = DateTimeUtils.fromTs(now).truncatedTo(ChronoUnit.HOURS);
+                    long fromMs = startTs;
+                    long toMs = now;
+
+                    if (!fullTelemetryGeneration) {
+                        try {
+                            var fromEndPair = DateTimeUtils.getDatesIntersection(fromMs, toMs, startGenerationTime, endGenerationTime);
+                            fromMs = fromEndPair.getA();
+                            toMs = fromEndPair.getB();
+                        } catch (IllegalStateException e) {
+                            return new Telemetry<>("skip");
+                        }
+                    }
+
+                    ZonedDateTime startDate = DateTimeUtils.fromTs(fromMs).truncatedTo(ChronoUnit.HOURS);
+                    ZonedDateTime nowDate = DateTimeUtils.fromTs(toMs).truncatedTo(ChronoUnit.HOURS);
                     ZonedDateTime iteratedDate = startDate;
                     while (iteratedDate.isBefore(nowDate)) {
                         long iteratedTs = DateTimeUtils.toTs(iteratedDate);
@@ -927,8 +976,21 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
                     double phase = (3.14 * 3) / 12;
                     double koeff = 3.14 / 12;
 
-                    ZonedDateTime startDate = DateTimeUtils.fromTs(startTs).truncatedTo(ChronoUnit.HOURS);
-                    ZonedDateTime nowDate = DateTimeUtils.fromTs(now).truncatedTo(ChronoUnit.HOURS);
+                    long fromMs = startTs;
+                    long toMs = now;
+
+                    if (!fullTelemetryGeneration) {
+                        try {
+                            var fromEndPair = DateTimeUtils.getDatesIntersection(fromMs, toMs, startGenerationTime, endGenerationTime);
+                            fromMs = fromEndPair.getA();
+                            toMs = fromEndPair.getB();
+                        } catch (IllegalStateException e) {
+                            return new Telemetry<>("skip");
+                        }
+                    }
+
+                    ZonedDateTime startDate = DateTimeUtils.fromTs(fromMs).truncatedTo(ChronoUnit.HOURS);
+                    ZonedDateTime nowDate = DateTimeUtils.fromTs(toMs).truncatedTo(ChronoUnit.HOURS);
                     ZonedDateTime iteratedDate = startDate;
                     while (iteratedDate.isBefore(nowDate)) {
                         long iteratedTs = DateTimeUtils.toTs(iteratedDate);
@@ -950,8 +1012,21 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
                     double koeffDay = 3.14 / 14;
                     double koeffHour = 3.14 / 6;
 
-                    ZonedDateTime startDate = DateTimeUtils.fromTs(startTs).truncatedTo(ChronoUnit.HOURS);
-                    ZonedDateTime nowDate = DateTimeUtils.fromTs(now).truncatedTo(ChronoUnit.HOURS);
+                    long fromMs = startTs;
+                    long toMs = now;
+
+                    if (!fullTelemetryGeneration) {
+                        try {
+                            var fromEndPair = DateTimeUtils.getDatesIntersection(fromMs, toMs, startGenerationTime, endGenerationTime);
+                            fromMs = fromEndPair.getA();
+                            toMs = fromEndPair.getB();
+                        } catch (IllegalStateException e) {
+                            return new Telemetry<>("skip");
+                        }
+                    }
+
+                    ZonedDateTime startDate = DateTimeUtils.fromTs(fromMs).truncatedTo(ChronoUnit.HOURS);
+                    ZonedDateTime nowDate = DateTimeUtils.fromTs(toMs).truncatedTo(ChronoUnit.HOURS);
                     ZonedDateTime iteratedDate = startDate;
                     while (iteratedDate.isBefore(nowDate)) {
                         long iteratedTs = DateTimeUtils.toTs(iteratedDate);
@@ -976,8 +1051,21 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
             double phase = (3.14 * 3) / 128;
             double koeff = 3.14 / 128;
 
-            ZonedDateTime startDate = DateTimeUtils.fromTs(startTs).truncatedTo(ChronoUnit.HOURS);
-            ZonedDateTime nowDate = DateTimeUtils.fromTs(now).truncatedTo(ChronoUnit.HOURS);
+            long fromMs = startTs;
+            long toMs = now;
+
+            if (!fullTelemetryGeneration) {
+                try {
+                    var fromEndPair = DateTimeUtils.getDatesIntersection(fromMs, toMs, startGenerationTime, endGenerationTime);
+                    fromMs = fromEndPair.getA();
+                    toMs = fromEndPair.getB();
+                } catch (IllegalStateException e) {
+                    return new Telemetry<>("skip");
+                }
+            }
+
+            ZonedDateTime startDate = DateTimeUtils.fromTs(fromMs).truncatedTo(ChronoUnit.HOURS);
+            ZonedDateTime nowDate = DateTimeUtils.fromTs(toMs).truncatedTo(ChronoUnit.HOURS);
             ZonedDateTime iteratedDate = startDate;
             while (iteratedDate.isBefore(nowDate)) {
                 long iteratedTs = DateTimeUtils.toTs(iteratedDate);
@@ -1006,21 +1094,38 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
         return result;
     }
 
-    private Telemetry<Long> createTelemetryHeatMeterTemperature(ApartmentConfiguration configuration, boolean skipTelemetry) {
+    private Telemetry<Long> createTelemetryHeatMeterTemperature(ApartmentConfiguration configuration,
+                                                                boolean skipTelemetry,
+                                                                boolean fullTelemetryGeneration,
+                                                                long startGenerationTime,
+                                                                long endGenerationTime) {
         if (skipTelemetry) {
             return new Telemetry<>("skip");
         }
 
         Telemetry<Long> result = new Telemetry<>("temperature");
-        long now = System.currentTimeMillis();
+        long now = ZonedDateTime.now(ZoneId.of("UTC")).toInstant().toEpochMilli();
 
         long startTs = configuration.getStartDate();
         boolean occupied = configuration.isOccupied();
 
         long noiseAmplitude = 3;
 
-        ZonedDateTime startDate = DateTimeUtils.fromTs(startTs).truncatedTo(ChronoUnit.HOURS);
-        ZonedDateTime nowDate = DateTimeUtils.fromTs(now).truncatedTo(ChronoUnit.HOURS);
+        long fromMs = startTs;
+        long toMs = now;
+
+        if (!fullTelemetryGeneration) {
+            try {
+                var fromEndPair = DateTimeUtils.getDatesIntersection(fromMs, toMs, startGenerationTime, endGenerationTime);
+                fromMs = fromEndPair.getA();
+                toMs = fromEndPair.getB();
+            } catch (IllegalStateException e) {
+                return new Telemetry<>("skip");
+            }
+        }
+
+        ZonedDateTime startDate = DateTimeUtils.fromTs(fromMs).truncatedTo(ChronoUnit.HOURS);
+        ZonedDateTime nowDate = DateTimeUtils.fromTs(toMs).truncatedTo(ChronoUnit.HOURS);
         ZonedDateTime iteratedDate = startDate;
         while (iteratedDate.isBefore(nowDate)) {
             long iteratedTs = DateTimeUtils.toTs(iteratedDate);
@@ -1039,14 +1144,28 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
         return result;
     }
 
-    private Telemetry<Long> createTelemetryHeatMeterConsumption(ApartmentConfiguration configuration, boolean skipTelemetry) {
+    private Telemetry<Long> createTelemetryHeatMeterConsumption(ApartmentConfiguration configuration,
+                                                                boolean skipTelemetry,
+                                                                boolean fullTelemetryGeneration,
+                                                                long startGenerationTime,
+                                                                long endGenerationTime) {
         if (skipTelemetry) {
             return new Telemetry<>("skip");
         }
 
-        long now = System.currentTimeMillis();
+        long fromMs = configuration.getStartDate();
+        long toMs = ZonedDateTime.now(ZoneId.of("UTC")).toInstant().toEpochMilli();
 
-        long startTs = configuration.getStartDate();
+        if (!fullTelemetryGeneration) {
+            try {
+                var fromEndPair = DateTimeUtils.getDatesIntersection(fromMs, toMs, startGenerationTime, endGenerationTime);
+                fromMs = fromEndPair.getA();
+                toMs = fromEndPair.getB();
+            } catch (IllegalStateException e) {
+                return new Telemetry<>("skip");
+            }
+        }
+
         boolean occupied = configuration.isOccupied();
         int level = configuration.getLevel();
 
@@ -1058,7 +1177,7 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
                     long noiseAmplitude = 300;
                     long noiseWidth = 100;
 
-                    return makeHeatConsumption(now, startTs, valueWarmTime, valueColdTime, noiseAmplitude, noiseWidth);
+                    return makeHeatConsumption(toMs, fromMs, valueWarmTime, valueColdTime, noiseAmplitude, noiseWidth);
                 }
                 case 2: {
                     long valueWarmTime = 0;
@@ -1066,7 +1185,7 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
                     long noiseAmplitude = 800;
                     long noiseWidth = 400;
 
-                    return makeHeatConsumption(now, startTs, valueWarmTime, valueColdTime, noiseAmplitude, noiseWidth);
+                    return makeHeatConsumption(toMs, fromMs, valueWarmTime, valueColdTime, noiseAmplitude, noiseWidth);
                 }
                 case 3: {
                     long valueWarmTime = 0;
@@ -1074,7 +1193,7 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
                     long noiseAmplitude = 2_000;
                     long noiseWidth = 800;
 
-                    return makeHeatConsumption(now, startTs, valueWarmTime, valueColdTime, noiseAmplitude, noiseWidth);
+                    return makeHeatConsumption(toMs, fromMs, valueWarmTime, valueColdTime, noiseAmplitude, noiseWidth);
                 }
                 default:
                     throw new IllegalStateException("Unsupported level: " + level);
@@ -1085,7 +1204,7 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
             long noiseAmplitude = 0;
             long noiseWidth = 1;
 
-            return makeHeatConsumption(now, startTs, valueWarmTime, valueColdTime, noiseAmplitude, noiseWidth);
+            return makeHeatConsumption(toMs, fromMs, valueWarmTime, valueColdTime, noiseAmplitude, noiseWidth);
         }
     }
 

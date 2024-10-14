@@ -10,7 +10,12 @@ public interface SolutionTemplateGenerator {
 
     void validate() throws SolutionValidationException;
 
-    void generate(boolean skipTelemetry, ZonedDateTime startYear, boolean strictGeneration);
+    void generate(boolean skipTelemetry,
+                  ZonedDateTime startYear,
+                  boolean strictGeneration,
+                  boolean fullTelemetryGeneration,
+                  long startGenerationTime,
+                  long endGenerationTime);
 
     void remove();
 }

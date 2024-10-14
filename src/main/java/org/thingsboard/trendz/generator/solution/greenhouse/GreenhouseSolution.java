@@ -67,6 +67,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.Reader;
 import java.nio.file.Path;
+import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
@@ -158,7 +159,7 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
 
             if (!tbRestClient.isPe()) {
                 dashboardService.validateDashboardItems(getSolutionName(), null);
-                ModelData data = makeData(true, ZonedDateTime.now());
+                ModelData data = makeData(true, ZonedDateTime.now(), true, 0L, 0L);
                 validateData(data);
             }
 
@@ -169,11 +170,16 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
     }
 
     @Override
-    public void generate(boolean skipTelemetry, ZonedDateTime startYear, boolean strictGeneration) {
+    public void generate(boolean skipTelemetry,
+                         ZonedDateTime startYear,
+                         boolean strictGeneration,
+                         boolean fullTelemetryGeneration,
+                         long startGenerationTime,
+                         long endGenerationTime) {
         log.info("Greenhouse Solution - start generation");
         try {
             CustomerData customerData = createCustomerData(strictGeneration);
-            ModelData data = makeData(skipTelemetry, startYear);
+            ModelData data = makeData(skipTelemetry, startYear, fullTelemetryGeneration, startGenerationTime, endGenerationTime);
             applyData(data, customerData, strictGeneration);
             createRuleChain(data, strictGeneration);
             dashboardService.createDashboardItems(getSolutionName(), customerData.getCustomer().getId(), strictGeneration);
@@ -193,7 +199,7 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
 
             if (!tbRestClient.isPe()) {
                 dashboardService.deleteDashboardItems(getSolutionName(), null);
-                ModelData data = makeData(true, ZonedDateTime.now());
+                ModelData data = makeData(true, ZonedDateTime.now(), true, 0L, 0L);
                 deleteData(data);
             }
 
@@ -951,12 +957,16 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
     }
 
 
-    private ModelData makeData(boolean skipTelemetry, ZonedDateTime startYear) {
+    private ModelData makeData(boolean skipTelemetry,
+                               ZonedDateTime startYear,
+                               boolean fullTelemetryGeneration,
+                               long startGenerationTime,
+                               long endGenerationTime) {
         long startTs = DateTimeUtils.toTs(startYear);
-        long now = System.currentTimeMillis();
+        long now = ZonedDateTime.now(ZoneId.of("UTC")).toInstant().toEpochMilli();
 
         Map<StationCity, Map<Long, WeatherData>> weatherMap = Arrays.stream(StationCity.values())
-                .map(city -> Pair.of(city, loadWeatherData(city, startYear, skipTelemetry)))
+                .map(city -> Pair.of(city, loadWeatherData(city, startYear, skipTelemetry, fullTelemetryGeneration, startGenerationTime, endGenerationTime)))
                 .collect(Collectors.toMap(Pair::getKey, Pair::getValue));
 
         int order = 0;
@@ -1002,7 +1012,8 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
                 greenhouseConfigurations
                         .stream()
                         .map(configuration -> makeGreenhouseByConfiguration(
-                                configuration, weatherMap.get(configuration.getStationCity()), skipTelemetry
+                                configuration, weatherMap.get(configuration.getStationCity()), skipTelemetry,
+                                fullTelemetryGeneration, startGenerationTime, endGenerationTime
                         ))
                         .collect(Collectors.toList())
         );
@@ -1565,24 +1576,33 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
                 .build();
     }
 
-    private Greenhouse makeGreenhouseByConfiguration(GreenhouseConfiguration configuration, Map<Long, WeatherData> weatherDataMap, boolean skipTelemetry) {
+    private Greenhouse makeGreenhouseByConfiguration(GreenhouseConfiguration configuration,
+                                                     Map<Long, WeatherData> weatherDataMap,
+                                                     boolean skipTelemetry,
+                                                     boolean fullTelemetryGeneration,
+                                                     long startGenerationTime,
+                                                     long endGenerationTime) {
 
-        Telemetry<Integer> outsideLightTelemetry = createOutsideLightTelemetry(weatherDataMap, configuration, skipTelemetry);
-        Telemetry<Integer> outsideTemperatureTelemetry = createOutsideTemperatureTelemetry(weatherDataMap, configuration, skipTelemetry);
-        Telemetry<Integer> outsideHumidityTelemetry = createOutsideHumidityTelemetry(weatherDataMap, configuration, skipTelemetry);
+        Telemetry<Integer> outsideLightTelemetry = createOutsideLightTelemetry(weatherDataMap, configuration, skipTelemetry, fullTelemetryGeneration, startGenerationTime, endGenerationTime);
+        Telemetry<Integer> outsideTemperatureTelemetry = createOutsideTemperatureTelemetry(weatherDataMap, configuration, skipTelemetry, fullTelemetryGeneration, startGenerationTime, endGenerationTime);
+        Telemetry<Integer> outsideHumidityTelemetry = createOutsideHumidityTelemetry(weatherDataMap, configuration, skipTelemetry, fullTelemetryGeneration, startGenerationTime, endGenerationTime);
 
-        Telemetry<Integer> insideLightTelemetry = createInsideLightTelemetry(outsideLightTelemetry, configuration, skipTelemetry);
+        Telemetry<Integer> insideLightTelemetry = createInsideLightTelemetry(outsideLightTelemetry, configuration, skipTelemetry, fullTelemetryGeneration, startGenerationTime, endGenerationTime);
 
         Set<Long> aerations = new HashSet<>();
-        Telemetry<Integer> temporalTelemetryCo2Generation = createTemporalTelemetryCo2Generation(outsideLightTelemetry, insideLightTelemetry, configuration, skipTelemetry);
-        Telemetry<Integer> co2ConcetracionTelemetry = createCo2ConcentrationTelemetryAndInterruption(aerations, temporalTelemetryCo2Generation, configuration, skipTelemetry);
+        Telemetry<Integer> temporalTelemetryCo2Generation = createTemporalTelemetryCo2Generation(
+                outsideLightTelemetry, insideLightTelemetry, configuration, skipTelemetry, fullTelemetryGeneration, startGenerationTime, endGenerationTime);
+        Telemetry<Integer> co2ConcetracionTelemetry = createCo2ConcentrationTelemetryAndInterruption(
+                aerations, temporalTelemetryCo2Generation, configuration, skipTelemetry, fullTelemetryGeneration, startGenerationTime, endGenerationTime);
 
         Set<Long> heatings = new HashSet<>();
         Set<Long> coolings = new HashSet<>();
         Set<Long> humidifications = new HashSet<>();
         Set<Long> dehumidifications = new HashSet<>();
-        Telemetry<Integer> insideTemperatureTelemetry = createInsideTemperatureTelemetry(aerations, heatings, coolings, outsideTemperatureTelemetry, configuration, skipTelemetry);
-        Telemetry<Integer> insideHumidityTelemetry = createInsideHumidityTelemetry(aerations, heatings, coolings, humidifications, dehumidifications, outsideHumidityTelemetry, configuration, skipTelemetry);
+        Telemetry<Integer> insideTemperatureTelemetry = createInsideTemperatureTelemetry(
+                aerations, heatings, coolings, outsideTemperatureTelemetry, configuration, skipTelemetry, fullTelemetryGeneration, startGenerationTime, endGenerationTime);
+        Telemetry<Integer> insideHumidityTelemetry = createInsideHumidityTelemetry(
+                aerations, heatings, coolings, humidifications, dehumidifications, outsideHumidityTelemetry, configuration, skipTelemetry, fullTelemetryGeneration, startGenerationTime, endGenerationTime);
 
         Map<String, Set<Long>> irrigations = new HashMap<>();
 
@@ -1593,21 +1613,29 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
                 String sectionName = String.format(configuration.getName() + ", section %s-%s", height, width);
                 Set<Long> sectionIrrigations = irrigations.computeIfAbsent(sectionName, key -> new HashSet<>());
 
-                Telemetry<Double> temporalTelemetrySoilWaterConsumption = createTemporalTelemetrySoilWaterConsumption(configuration, skipTelemetry);
-                Telemetry<Double> soilMoisture = createTelemetrySoilMoisture(configuration, temporalTelemetrySoilWaterConsumption, sectionIrrigations, skipTelemetry);
+                Telemetry<Double> temporalTelemetrySoilWaterConsumption = createTemporalTelemetrySoilWaterConsumption(
+                        configuration, skipTelemetry, fullTelemetryGeneration, startGenerationTime, endGenerationTime);
+                Telemetry<Double> soilMoisture = createTelemetrySoilMoisture(
+                        configuration, temporalTelemetrySoilWaterConsumption, sectionIrrigations, skipTelemetry, fullTelemetryGeneration, startGenerationTime, endGenerationTime);
 
-                Telemetry<Integer> telemetrySoilTemperature = createTelemetrySoilTemperature(configuration, insideTemperatureTelemetry, sectionIrrigations, skipTelemetry);
+                Telemetry<Integer> telemetrySoilTemperature = createTelemetrySoilTemperature(
+                        configuration, insideTemperatureTelemetry, sectionIrrigations, skipTelemetry, fullTelemetryGeneration, startGenerationTime, endGenerationTime);
 
                 Set<Long> acidification = new HashSet<>();
-                Telemetry<Double> telemetrySoilAcidity = createTelemetrySoilAcidity(configuration, sectionIrrigations, acidification, skipTelemetry);
+                Telemetry<Double> telemetrySoilAcidity = createTelemetrySoilAcidity(
+                        configuration, sectionIrrigations, acidification, skipTelemetry, fullTelemetryGeneration, startGenerationTime, endGenerationTime);
 
-                Telemetry<Double> nitrogenLevelTelemetry = createTelemetrySoilNitrogenLevel(configuration, skipTelemetry);
-                Telemetry<Double> phosphorusLevelTelemetry = createTelemetrySoilPhosphorusLevel(configuration, skipTelemetry);
-                Telemetry<Double> potassiumLevelTelemetry = createTelemetrySoilPotassiumLevel(configuration, skipTelemetry);
+                Telemetry<Double> nitrogenLevelTelemetry = createTelemetrySoilNitrogenLevel(
+                        configuration, skipTelemetry, fullTelemetryGeneration, startGenerationTime, endGenerationTime);
+                Telemetry<Double> phosphorusLevelTelemetry = createTelemetrySoilPhosphorusLevel(
+                        configuration, skipTelemetry, fullTelemetryGeneration, startGenerationTime, endGenerationTime);
+                Telemetry<Double> potassiumLevelTelemetry = createTelemetrySoilPotassiumLevel(
+                        configuration, skipTelemetry, fullTelemetryGeneration, startGenerationTime, endGenerationTime);
 
                 Telemetry<Double> telemetryCropWeight = new Telemetry<>("cropWeight");
                 Telemetry<String> telemetryWorkerInCharge = new Telemetry<>("workerInCharge");
-                createTelemetryHarvestReporter(telemetryCropWeight, telemetryWorkerInCharge, configuration, skipTelemetry);
+                createTelemetryHarvestReporter(
+                        telemetryCropWeight, telemetryWorkerInCharge, configuration, skipTelemetry, fullTelemetryGeneration, startGenerationTime, endGenerationTime);
 
 
                 SoilNpkSensor soilNpkSensor = SoilNpkSensor.builder()
@@ -1665,11 +1693,12 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
         Telemetry<Double> energyConsumptionAirControl = new Telemetry<>("energyConsumptionAirControl");
         Telemetry<Double> energyConsumptionIrrigation = new Telemetry<>("energyConsumptionIrrigation");
         createTelemetryConsumptionEnergy(
-                insideLightTelemetry, aerations, heatings, coolings, humidifications, dehumidifications, irrigations, configuration, skipTelemetry,
-                energyConsumptionLight, energyConsumptionHeating, energyConsumptionCooling, energyConsumptionAirControl, energyConsumptionIrrigation
+                insideLightTelemetry, aerations, heatings, coolings, humidifications, dehumidifications, irrigations, configuration, skipTelemetry, fullTelemetryGeneration,
+                startGenerationTime, endGenerationTime, energyConsumptionLight, energyConsumptionHeating, energyConsumptionCooling, energyConsumptionAirControl,
+                energyConsumptionIrrigation
         );
         Telemetry<Double> telemetryConsumptionWater = createTelemetryConsumptionWater(
-                humidifications, irrigations, configuration, skipTelemetry
+                humidifications, irrigations, configuration, skipTelemetry, fullTelemetryGeneration, startGenerationTime, endGenerationTime
         );
 
         OutsideAirWarmHumiditySensor outsideAirWarmHumiditySensor = OutsideAirWarmHumiditySensor.builder()
@@ -1749,9 +1778,16 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
     }
 
 
-    private Map<Long, WeatherData> loadWeatherData(StationCity city, ZonedDateTime startYear, boolean skipTelemetry) {
+    private Map<Long, WeatherData> loadWeatherData(StationCity city,
+                                                   ZonedDateTime startYear,
+                                                   boolean skipTelemetry,
+                                                   boolean fullTelemetryGeneration,
+                                                   long startGenerationTime,
+                                                   long endGenerationTime) {
+        final Map<Long, WeatherData> noWeatherData = new HashMap<>();
+
         if (skipTelemetry) {
-            return new HashMap<>();
+            return noWeatherData;
         }
 
         try {
@@ -1792,11 +1828,24 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
                             (w1, w2) -> w1
                     ));
 
-            long now = System.currentTimeMillis();
-            ZonedDateTime startDate = startYear.truncatedTo(ChronoUnit.HOURS);
-            ZonedDateTime nowDate = DateTimeUtils.fromTs(now).truncatedTo(ChronoUnit.HOURS);
+            long fromMs = startYear.toInstant().toEpochMilli();
+            long toMs = ZonedDateTime.now(ZoneId.of("UTC")).toInstant().toEpochMilli();
+
+            if (!fullTelemetryGeneration) {
+                try {
+                    var fromEndPair = DateTimeUtils.getDatesIntersection(fromMs, toMs, startGenerationTime, endGenerationTime);
+                    fromMs = fromEndPair.getA();
+                    toMs = fromEndPair.getB();
+                } catch (IllegalStateException e) {
+                    return noWeatherData;
+                }
+            }
+
+            ZonedDateTime startDate = DateTimeUtils.fromTs(fromMs, ZoneId.of("UTC")).truncatedTo(ChronoUnit.HOURS);
+            ZonedDateTime nowDate = DateTimeUtils.fromTs(toMs, ZoneId.of("UTC")).truncatedTo(ChronoUnit.HOURS);
             ZonedDateTime iteratedDate = startDate;
             WeatherData last = weatherDataList.get(0);
+
             while (iteratedDate.isBefore(nowDate)) {
                 long iteratedTs = DateTimeUtils.toTs(iteratedDate);
                 WeatherData weatherData = tsToWeatherMap.get(iteratedTs);
@@ -1836,17 +1885,33 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
     }
 
 
-    private Telemetry<Integer> createOutsideLightTelemetry(Map<Long, WeatherData> tsToWeatherMap, GreenhouseConfiguration configuration, boolean skipTelemetry) {
+    private Telemetry<Integer> createOutsideLightTelemetry(Map<Long, WeatherData> tsToWeatherMap,
+                                                           GreenhouseConfiguration configuration,
+                                                           boolean skipTelemetry,
+                                                           boolean fullTelemetryGeneration,
+                                                           long startGenerationTime,
+                                                           long endGenerationTime) {
         if (skipTelemetry) {
             return new Telemetry<>("skip");
         }
 
         Telemetry<Integer> result = new Telemetry<>("light_out");
-        long startTs = configuration.getStartTs();
-        long endTs = configuration.getEndTs();
 
-        ZonedDateTime startDate = DateTimeUtils.fromTs(startTs).truncatedTo(ChronoUnit.HOURS);
-        ZonedDateTime endDate = DateTimeUtils.fromTs(endTs).truncatedTo(ChronoUnit.HOURS);
+        long fromMs = configuration.getStartTs();
+        long toMs = configuration.getEndTs();
+
+        if (!fullTelemetryGeneration) {
+            try {
+                var fromEndPair = DateTimeUtils.getDatesIntersection(fromMs, toMs, startGenerationTime, endGenerationTime);
+                fromMs = fromEndPair.getA();
+                toMs = fromEndPair.getB();
+            } catch (IllegalStateException e) {
+                return new Telemetry<>("skip");
+            }
+        }
+
+        ZonedDateTime startDate = DateTimeUtils.fromTs(fromMs).truncatedTo(ChronoUnit.HOURS);
+        ZonedDateTime endDate = DateTimeUtils.fromTs(toMs).truncatedTo(ChronoUnit.HOURS);
         ZonedDateTime iteratedDate = startDate;
         while (iteratedDate.isBefore(endDate)) {
             long iteratedTs = DateTimeUtils.toTs(iteratedDate);
@@ -1870,17 +1935,33 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
         return result;
     }
 
-    private Telemetry<Integer> createOutsideTemperatureTelemetry(Map<Long, WeatherData> tsToWeatherMap, GreenhouseConfiguration configuration, boolean skipTelemetry) {
+    private Telemetry<Integer> createOutsideTemperatureTelemetry(Map<Long, WeatherData> tsToWeatherMap,
+                                                                 GreenhouseConfiguration configuration,
+                                                                 boolean skipTelemetry,
+                                                                 boolean fullTelemetryGeneration,
+                                                                 long startGenerationTime,
+                                                                 long endGenerationTime) {
         if (skipTelemetry) {
             return new Telemetry<>("skip");
         }
 
         Telemetry<Integer> result = new Telemetry<>("temperature_out");
-        long startTs = configuration.getStartTs();
-        long endTs = configuration.getEndTs();
 
-        ZonedDateTime startDate = DateTimeUtils.fromTs(startTs).truncatedTo(ChronoUnit.HOURS);
-        ZonedDateTime endDate = DateTimeUtils.fromTs(endTs).truncatedTo(ChronoUnit.HOURS);
+        long fromMs = configuration.getStartTs();
+        long toMs = configuration.getEndTs();
+
+        if (!fullTelemetryGeneration) {
+            try {
+                var fromEndPair = DateTimeUtils.getDatesIntersection(fromMs, toMs, startGenerationTime, endGenerationTime);
+                fromMs = fromEndPair.getA();
+                toMs = fromEndPair.getB();
+            } catch (IllegalStateException e) {
+                return new Telemetry<>("skip");
+            }
+        }
+
+        ZonedDateTime startDate = DateTimeUtils.fromTs(fromMs, ZoneId.of("UTC")).truncatedTo(ChronoUnit.HOURS);
+        ZonedDateTime endDate = DateTimeUtils.fromTs(toMs, ZoneId.of("UTC")).truncatedTo(ChronoUnit.HOURS);
         ZonedDateTime iteratedDate = startDate;
         while (iteratedDate.isBefore(endDate)) {
             long iteratedTs = DateTimeUtils.toTs(iteratedDate);
@@ -1897,17 +1978,33 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
         return result;
     }
 
-    private Telemetry<Integer> createOutsideHumidityTelemetry(Map<Long, WeatherData> tsToWeatherMap, GreenhouseConfiguration configuration, boolean skipTelemetry) {
+    private Telemetry<Integer> createOutsideHumidityTelemetry(Map<Long, WeatherData> tsToWeatherMap,
+                                                              GreenhouseConfiguration configuration,
+                                                              boolean skipTelemetry,
+                                                              boolean fullTelemetryGeneration,
+                                                              long startGenerationTime,
+                                                              long endGenerationTime) {
         if (skipTelemetry) {
             return new Telemetry<>("skip");
         }
 
         Telemetry<Integer> result = new Telemetry<>("humidity_out");
-        long startTs = configuration.getStartTs();
-        long endTs = configuration.getEndTs();
 
-        ZonedDateTime startDate = DateTimeUtils.fromTs(startTs).truncatedTo(ChronoUnit.HOURS);
-        ZonedDateTime endDate = DateTimeUtils.fromTs(endTs).truncatedTo(ChronoUnit.HOURS);
+        long fromMs = configuration.getStartTs();
+        long toMs = configuration.getEndTs();
+
+        if (!fullTelemetryGeneration) {
+            try {
+                var fromEndPair = DateTimeUtils.getDatesIntersection(fromMs, toMs, startGenerationTime, endGenerationTime);
+                fromMs = fromEndPair.getA();
+                toMs = fromEndPair.getB();
+            } catch (IllegalStateException e) {
+                return new Telemetry<>("skip");
+            }
+        }
+
+        ZonedDateTime startDate = DateTimeUtils.fromTs(fromMs, ZoneId.of("UTC")).truncatedTo(ChronoUnit.HOURS);
+        ZonedDateTime endDate = DateTimeUtils.fromTs(toMs, ZoneId.of("UTC")).truncatedTo(ChronoUnit.HOURS);
         ZonedDateTime iteratedDate = startDate;
         while (iteratedDate.isBefore(endDate)) {
             long iteratedTs = DateTimeUtils.toTs(iteratedDate);
@@ -2082,7 +2179,12 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
     }
 
 
-    private Telemetry<Integer> createInsideLightTelemetry(Telemetry<Integer> outsideLightTelemetry, GreenhouseConfiguration configuration, boolean skipTelemetry) {
+    private Telemetry<Integer> createInsideLightTelemetry(Telemetry<Integer> outsideLightTelemetry,
+                                                          GreenhouseConfiguration configuration,
+                                                          boolean skipTelemetry,
+                                                          boolean fullTelemetryGeneration,
+                                                          long startGenerationTime,
+                                                          long endGenerationTime) {
         if (skipTelemetry) {
             return new Telemetry<>("skip");
         }
@@ -2099,8 +2201,21 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
         double dayLevel = (dayMinLevel + dayMaxLevel) / 2;
         double nightLevel = (nightMinLevel + nightMaxLevel) / 2;
 
-        ZonedDateTime startDate = DateTimeUtils.fromTs(configuration.getStartTs()).truncatedTo(ChronoUnit.HOURS);
-        ZonedDateTime endDate = DateTimeUtils.fromTs(configuration.getEndTs()).truncatedTo(ChronoUnit.HOURS);
+        long fromMs = configuration.getStartTs();
+        long toMs = configuration.getEndTs();
+
+        if (!fullTelemetryGeneration) {
+            try {
+                var fromEndPair = DateTimeUtils.getDatesIntersection(fromMs, toMs, startGenerationTime, endGenerationTime);
+                fromMs = fromEndPair.getA();
+                toMs = fromEndPair.getB();
+            } catch (IllegalStateException e) {
+                return new Telemetry<>("skip");
+            }
+        }
+
+        ZonedDateTime startDate = DateTimeUtils.fromTs(fromMs, ZoneId.of("UTC")).truncatedTo(ChronoUnit.HOURS);
+        ZonedDateTime endDate = DateTimeUtils.fromTs(toMs, ZoneId.of("UTC")).truncatedTo(ChronoUnit.HOURS);
         ZonedDateTime iteratedDate = startDate;
         while (iteratedDate.isBefore(endDate)) {
             long iteratedTs = DateTimeUtils.toTs(iteratedDate);
@@ -2123,7 +2238,13 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
     }
 
 
-    private Telemetry<Integer> createCo2ConcentrationTelemetryAndInterruption(Set<Long> aerations, Telemetry<Integer> temporalTelemetryCo2Generation, GreenhouseConfiguration configuration, boolean skipTelemetry) {
+    private Telemetry<Integer> createCo2ConcentrationTelemetryAndInterruption(Set<Long> aerations,
+                                                                              Telemetry<Integer> temporalTelemetryCo2Generation,
+                                                                              GreenhouseConfiguration configuration,
+                                                                              boolean skipTelemetry,
+                                                                              boolean fullTelemetryGeneration,
+                                                                              long startGenerationTime,
+                                                                              long endGenerationTime) {
         if (skipTelemetry) {
             return new Telemetry<>("skip");
         }
@@ -2138,8 +2259,21 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
                 .stream()
                 .collect(Collectors.toMap(Telemetry.Point::getTs, Functions.identity()));
 
-        ZonedDateTime startDate = DateTimeUtils.fromTs(configuration.getStartTs()).truncatedTo(ChronoUnit.HOURS);
-        ZonedDateTime endDate = DateTimeUtils.fromTs(configuration.getEndTs()).truncatedTo(ChronoUnit.HOURS);
+        long fromMs = configuration.getStartTs();
+        long toMs = configuration.getEndTs();
+
+        if (!fullTelemetryGeneration) {
+            try {
+                var fromEndPair = DateTimeUtils.getDatesIntersection(fromMs, toMs, startGenerationTime, endGenerationTime);
+                fromMs = fromEndPair.getA();
+                toMs = fromEndPair.getB();
+            } catch (IllegalStateException e) {
+                return new Telemetry<>("skip");
+            }
+        }
+
+        ZonedDateTime startDate = DateTimeUtils.fromTs(fromMs, ZoneId.of("UTC")).truncatedTo(ChronoUnit.HOURS);
+        ZonedDateTime endDate = DateTimeUtils.fromTs(toMs, ZoneId.of("UTC")).truncatedTo(ChronoUnit.HOURS);
         ZonedDateTime iteratedDate = startDate;
         double currentLevel = startLevel;
         while (iteratedDate.isBefore(endDate)) {
@@ -2161,7 +2295,13 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
         return result;
     }
 
-    private Telemetry<Integer> createTemporalTelemetryCo2Generation(Telemetry<Integer> outsideLightTelemetry, Telemetry<Integer> insideLightTelemetry, GreenhouseConfiguration configuration, boolean skipTelemetry) {
+    private Telemetry<Integer> createTemporalTelemetryCo2Generation(Telemetry<Integer> outsideLightTelemetry,
+                                                                    Telemetry<Integer> insideLightTelemetry,
+                                                                    GreenhouseConfiguration configuration,
+                                                                    boolean skipTelemetry,
+                                                                    boolean fullTelemetryGeneration,
+                                                                    long startGenerationTime,
+                                                                    long endGenerationTime) {
         if (skipTelemetry) {
             return new Telemetry<>("skip");
         }
@@ -2178,8 +2318,21 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
                 .stream()
                 .collect(Collectors.toMap(Telemetry.Point::getTs, Functions.identity()));
 
-        ZonedDateTime startDate = DateTimeUtils.fromTs(configuration.getStartTs()).truncatedTo(ChronoUnit.HOURS);
-        ZonedDateTime endDate = DateTimeUtils.fromTs(configuration.getEndTs()).truncatedTo(ChronoUnit.HOURS);
+        long fromMs = configuration.getStartTs();
+        long toMs = configuration.getEndTs();
+
+        if (!fullTelemetryGeneration) {
+            try {
+                var fromEndPair = DateTimeUtils.getDatesIntersection(fromMs, toMs, startGenerationTime, endGenerationTime);
+                fromMs = fromEndPair.getA();
+                toMs = fromEndPair.getB();
+            } catch (IllegalStateException e) {
+                return new Telemetry<>("skip");
+            }
+        }
+
+        ZonedDateTime startDate = DateTimeUtils.fromTs(fromMs, ZoneId.of("UTC")).truncatedTo(ChronoUnit.HOURS);
+        ZonedDateTime endDate = DateTimeUtils.fromTs(toMs, ZoneId.of("UTC")).truncatedTo(ChronoUnit.HOURS);
         ZonedDateTime iteratedDate = startDate;
         while (iteratedDate.isBefore(endDate)) {
             long iteratedTs = DateTimeUtils.toTs(iteratedDate);
@@ -2198,7 +2351,15 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
     }
 
 
-    private Telemetry<Integer> createInsideTemperatureTelemetry(Set<Long> aerations, Set<Long> heatings, Set<Long> coolings, Telemetry<Integer> outsideTemperatureTelemetry, GreenhouseConfiguration configuration, boolean skipTelemetry) {
+    private Telemetry<Integer> createInsideTemperatureTelemetry(Set<Long> aerations,
+                                                                Set<Long> heatings,
+                                                                Set<Long> coolings,
+                                                                Telemetry<Integer> outsideTemperatureTelemetry,
+                                                                GreenhouseConfiguration configuration,
+                                                                boolean skipTelemetry,
+                                                                boolean fullTelemetryGeneration,
+                                                                long startGenerationTime,
+                                                                long endGenerationTime) {
         if (skipTelemetry) {
             return new Telemetry<>("skip");
         }
@@ -2226,8 +2387,21 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
                 .stream()
                 .collect(Collectors.toMap(Telemetry.Point::getTs, Functions.identity()));
 
-        ZonedDateTime startDate = DateTimeUtils.fromTs(configuration.getStartTs()).truncatedTo(ChronoUnit.HOURS);
-        ZonedDateTime endDate = DateTimeUtils.fromTs(configuration.getEndTs()).truncatedTo(ChronoUnit.HOURS);
+        long fromMs = configuration.getStartTs();
+        long toMs = configuration.getEndTs();
+
+        if (!fullTelemetryGeneration) {
+            try {
+                var fromEndPair = DateTimeUtils.getDatesIntersection(fromMs, toMs, startGenerationTime, endGenerationTime);
+                fromMs = fromEndPair.getA();
+                toMs = fromEndPair.getB();
+            } catch (IllegalStateException e) {
+                return new Telemetry<>("skip");
+            }
+        }
+
+        ZonedDateTime startDate = DateTimeUtils.fromTs(fromMs, ZoneId.of("UTC")).truncatedTo(ChronoUnit.HOURS);
+        ZonedDateTime endDate = DateTimeUtils.fromTs(toMs, ZoneId.of("UTC")).truncatedTo(ChronoUnit.HOURS);
         ZonedDateTime iteratedDate = startDate;
         double currentLevel = startLevel;
         while (iteratedDate.isBefore(endDate)) {
@@ -2283,7 +2457,17 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
         return result;
     }
 
-    private Telemetry<Integer> createInsideHumidityTelemetry(Set<Long> aerations, Set<Long> heatings, Set<Long> coolings, Set<Long> humidifications, Set<Long> dehumidifications, Telemetry<Integer> outsideHumidityTelemetry, GreenhouseConfiguration configuration, boolean skipTelemetry) {
+    private Telemetry<Integer> createInsideHumidityTelemetry(Set<Long> aerations,
+                                                             Set<Long> heatings,
+                                                             Set<Long> coolings,
+                                                             Set<Long> humidifications,
+                                                             Set<Long> dehumidifications,
+                                                             Telemetry<Integer> outsideHumidityTelemetry,
+                                                             GreenhouseConfiguration configuration,
+                                                             boolean skipTelemetry,
+                                                             boolean fullTelemetryGeneration,
+                                                             long startGenerationTime,
+                                                             long endGenerationTime) {
         if (skipTelemetry) {
             return new Telemetry<>("skip");
         }
@@ -2307,8 +2491,21 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
                 .stream()
                 .collect(Collectors.toMap(Telemetry.Point::getTs, Functions.identity()));
 
-        ZonedDateTime startDate = DateTimeUtils.fromTs(configuration.getStartTs()).truncatedTo(ChronoUnit.HOURS);
-        ZonedDateTime endDate = DateTimeUtils.fromTs(configuration.getEndTs()).truncatedTo(ChronoUnit.HOURS);
+        long fromMs = configuration.getStartTs();
+        long toMs = configuration.getEndTs();
+
+        if (!fullTelemetryGeneration) {
+            try {
+                var fromEndPair = DateTimeUtils.getDatesIntersection(fromMs, toMs, startGenerationTime, endGenerationTime);
+                fromMs = fromEndPair.getA();
+                toMs = fromEndPair.getB();
+            } catch (IllegalStateException e) {
+                return new Telemetry<>("skip");
+            }
+        }
+
+        ZonedDateTime startDate = DateTimeUtils.fromTs(fromMs, ZoneId.of("UTC")).truncatedTo(ChronoUnit.HOURS);
+        ZonedDateTime endDate = DateTimeUtils.fromTs(toMs, ZoneId.of("UTC")).truncatedTo(ChronoUnit.HOURS);
         ZonedDateTime iteratedDate = startDate;
         double currentLevel = startLevel;
         while (iteratedDate.isBefore(endDate)) {
@@ -2363,14 +2560,32 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
     }
 
 
-    private Telemetry<Double> createTelemetrySoilNitrogenLevel(GreenhouseConfiguration configuration, boolean skipTelemetry) {
+    private Telemetry<Double> createTelemetrySoilNitrogenLevel(GreenhouseConfiguration configuration,
+                                                               boolean skipTelemetry,
+                                                               boolean fullTelemetryGeneration,
+                                                               long startGenerationTime,
+                                                               long endGenerationTime) {
         if (skipTelemetry) {
             return new Telemetry<>("skip");
         }
 
         PlantConfiguration plantConfiguration = configuration.getPlantConfiguration();
-        ZonedDateTime startDate = DateTimeUtils.fromTs(configuration.getStartTs());
-        ZonedDateTime endDate = DateTimeUtils.fromTs(configuration.getEndTs());
+
+        long fromMs = configuration.getStartTs();
+        long toMs = configuration.getEndTs();
+
+        if (!fullTelemetryGeneration) {
+            try {
+                var fromEndPair = DateTimeUtils.getDatesIntersection(fromMs, toMs, startGenerationTime, endGenerationTime);
+                fromMs = fromEndPair.getA();
+                toMs = fromEndPair.getB();
+            } catch (IllegalStateException e) {
+                return new Telemetry<>("skip");
+            }
+        }
+
+        ZonedDateTime startDate = DateTimeUtils.fromTs(fromMs, ZoneId.of("UTC")).truncatedTo(ChronoUnit.HOURS);
+        ZonedDateTime endDate = DateTimeUtils.fromTs(toMs, ZoneId.of("UTC")).truncatedTo(ChronoUnit.HOURS);
         Telemetry<Double> consumption = createTemporalTelemetryPlantNitrogenConsumption(plantConfiguration, startDate, endDate);
 
         String name = "nitrogen";
@@ -2381,14 +2596,32 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
         return createSoilLevel(name, startLevel, minLevel, raiseValue, consumption);
     }
 
-    private Telemetry<Double> createTelemetrySoilPhosphorusLevel(GreenhouseConfiguration configuration, boolean skipTelemetry) {
+    private Telemetry<Double> createTelemetrySoilPhosphorusLevel(GreenhouseConfiguration configuration,
+                                                                 boolean skipTelemetry,
+                                                                 boolean fullTelemetryGeneration,
+                                                                 long startGenerationTime,
+                                                                 long endGenerationTime) {
         if (skipTelemetry) {
             return new Telemetry<>("skip");
         }
 
         PlantConfiguration plantConfiguration = configuration.getPlantConfiguration();
-        ZonedDateTime startDate = DateTimeUtils.fromTs(configuration.getStartTs());
-        ZonedDateTime endDate = DateTimeUtils.fromTs(configuration.getEndTs());
+
+        long fromMs = configuration.getStartTs();
+        long toMs = configuration.getEndTs();
+
+        if (!fullTelemetryGeneration) {
+            try {
+                var fromEndPair = DateTimeUtils.getDatesIntersection(fromMs, toMs, startGenerationTime, endGenerationTime);
+                fromMs = fromEndPair.getA();
+                toMs = fromEndPair.getB();
+            } catch (IllegalStateException e) {
+                return new Telemetry<>("skip");
+            }
+        }
+
+        ZonedDateTime startDate = DateTimeUtils.fromTs(fromMs, ZoneId.of("UTC")).truncatedTo(ChronoUnit.HOURS);
+        ZonedDateTime endDate = DateTimeUtils.fromTs(toMs, ZoneId.of("UTC")).truncatedTo(ChronoUnit.HOURS);
         Telemetry<Double> consumption = createTemporalTelemetryPlantPhosphorusConsumption(plantConfiguration, startDate, endDate);
 
         String name = "phosphorus";
@@ -2399,14 +2632,31 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
         return createSoilLevel(name, startLevel, minLevel, raiseValue, consumption);
     }
 
-    private Telemetry<Double> createTelemetrySoilPotassiumLevel(GreenhouseConfiguration configuration, boolean skipTelemetry) {
+    private Telemetry<Double> createTelemetrySoilPotassiumLevel(GreenhouseConfiguration configuration,
+                                                                boolean skipTelemetry,
+                                                                boolean fullTelemetryGeneration,
+                                                                long startGenerationTime,
+                                                                long endGenerationTime) {
         if (skipTelemetry) {
             return new Telemetry<>("skip");
         }
 
         PlantConfiguration plantConfiguration = configuration.getPlantConfiguration();
-        ZonedDateTime startDate = DateTimeUtils.fromTs(configuration.getStartTs());
-        ZonedDateTime endDate = DateTimeUtils.fromTs(configuration.getEndTs());
+        long fromMs = configuration.getStartTs();
+        long toMs = configuration.getEndTs();
+
+        if (!fullTelemetryGeneration) {
+            try {
+                var fromEndPair = DateTimeUtils.getDatesIntersection(fromMs, toMs, startGenerationTime, endGenerationTime);
+                fromMs = fromEndPair.getA();
+                toMs = fromEndPair.getB();
+            } catch (IllegalStateException e) {
+                return new Telemetry<>("skip");
+            }
+        }
+
+        ZonedDateTime startDate = DateTimeUtils.fromTs(fromMs, ZoneId.of("UTC")).truncatedTo(ChronoUnit.HOURS);
+        ZonedDateTime endDate = DateTimeUtils.fromTs(toMs, ZoneId.of("UTC")).truncatedTo(ChronoUnit.HOURS);
         Telemetry<Double> consumption = createTemporalTelemetryPlantPotassiumConsumption(plantConfiguration, startDate, endDate);
 
         String name = "potassium";
@@ -2517,7 +2767,13 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
     }
 
 
-    private Telemetry<Double> createTelemetrySoilMoisture(GreenhouseConfiguration configuration, Telemetry<Double> temporalTelemetrySoilWaterConsumption, Set<Long> sectionIrrigations, boolean skipTelemetry) {
+    private Telemetry<Double> createTelemetrySoilMoisture(GreenhouseConfiguration configuration,
+                                                          Telemetry<Double> temporalTelemetrySoilWaterConsumption,
+                                                          Set<Long> sectionIrrigations,
+                                                          boolean skipTelemetry,
+                                                          boolean fullTelemetryGeneration,
+                                                          long startGenerationTime,
+                                                          long endGenerationTime) {
         if (skipTelemetry) {
             return new Telemetry<>("skip");
         }
@@ -2532,8 +2788,21 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
                 .stream()
                 .collect(Collectors.toMap(Telemetry.Point::getTs, Functions.identity()));
 
-        ZonedDateTime startDate = DateTimeUtils.fromTs(configuration.getStartTs()).truncatedTo(ChronoUnit.HOURS);
-        ZonedDateTime endDate = DateTimeUtils.fromTs(configuration.getEndTs()).truncatedTo(ChronoUnit.HOURS);
+        long fromMs = configuration.getStartTs();
+        long toMs = configuration.getEndTs();
+
+        if (!fullTelemetryGeneration) {
+            try {
+                var fromEndPair = DateTimeUtils.getDatesIntersection(fromMs, toMs, startGenerationTime, endGenerationTime);
+                fromMs = fromEndPair.getA();
+                toMs = fromEndPair.getB();
+            } catch (IllegalStateException e) {
+                return new Telemetry<>("skip");
+            }
+        }
+
+        ZonedDateTime startDate = DateTimeUtils.fromTs(fromMs, ZoneId.of("UTC")).truncatedTo(ChronoUnit.HOURS);
+        ZonedDateTime endDate = DateTimeUtils.fromTs(toMs, ZoneId.of("UTC")).truncatedTo(ChronoUnit.HOURS);
         ZonedDateTime iteratedDate = startDate;
         double currentLevel = startLevel;
         while (iteratedDate.isBefore(endDate)) {
@@ -2556,7 +2825,11 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
         return result;
     }
 
-    private Telemetry<Double> createTemporalTelemetrySoilWaterConsumption(GreenhouseConfiguration configuration, boolean skipTelemetry) {
+    private Telemetry<Double> createTemporalTelemetrySoilWaterConsumption(GreenhouseConfiguration configuration,
+                                                                          boolean skipTelemetry,
+                                                                          boolean fullTelemetryGeneration,
+                                                                          long startGenerationTime,
+                                                                          long endGenerationTime) {
         if (skipTelemetry) {
             return new Telemetry<>("skip");
         }
@@ -2567,8 +2840,21 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
         double maxLevel = plantConfiguration.getMaxSoilMoisture();
         long period = 24L * (plantConfiguration.getMinRipeningPeriodDays() + plantConfiguration.getMaxRipeningPeriodDays()) / 2;
 
-        ZonedDateTime startDate = DateTimeUtils.fromTs(configuration.getStartTs()).truncatedTo(ChronoUnit.HOURS);
-        ZonedDateTime endDate = DateTimeUtils.fromTs(configuration.getEndTs()).truncatedTo(ChronoUnit.HOURS);
+        long fromMs = configuration.getStartTs();
+        long toMs = configuration.getEndTs();
+
+        if (!fullTelemetryGeneration) {
+            try {
+                var fromEndPair = DateTimeUtils.getDatesIntersection(fromMs, toMs, startGenerationTime, endGenerationTime);
+                fromMs = fromEndPair.getA();
+                toMs = fromEndPair.getB();
+            } catch (IllegalStateException e) {
+                return new Telemetry<>("skip");
+            }
+        }
+
+        ZonedDateTime startDate = DateTimeUtils.fromTs(fromMs, ZoneId.of("UTC")).truncatedTo(ChronoUnit.HOURS);
+        ZonedDateTime endDate = DateTimeUtils.fromTs(toMs, ZoneId.of("UTC")).truncatedTo(ChronoUnit.HOURS);
         ZonedDateTime iteratedDate = startDate;
         while (iteratedDate.isBefore(endDate)) {
             long iteratedTs = DateTimeUtils.toTs(iteratedDate);
@@ -2588,7 +2874,13 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
     }
 
 
-    private Telemetry<Integer> createTelemetrySoilTemperature(GreenhouseConfiguration configuration, Telemetry<Integer> insideTemperatureTelemetry, Set<Long> sectionIrrigations, boolean skipTelemetry) {
+    private Telemetry<Integer> createTelemetrySoilTemperature(GreenhouseConfiguration configuration,
+                                                              Telemetry<Integer> insideTemperatureTelemetry,
+                                                              Set<Long> sectionIrrigations,
+                                                              boolean skipTelemetry,
+                                                              boolean fullTelemetryGeneration,
+                                                              long startGenerationTime,
+                                                              long endGenerationTime) {
         if (skipTelemetry) {
             return new Telemetry<>("skip");
         }
@@ -2605,8 +2897,21 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
                 .stream()
                 .collect(Collectors.toMap(Telemetry.Point::getTs, Functions.identity()));
 
-        ZonedDateTime startDate = DateTimeUtils.fromTs(configuration.getStartTs()).truncatedTo(ChronoUnit.HOURS);
-        ZonedDateTime endDate = DateTimeUtils.fromTs(configuration.getEndTs()).truncatedTo(ChronoUnit.HOURS);
+        long fromMs = configuration.getStartTs();
+        long toMs = configuration.getEndTs();
+
+        if (!fullTelemetryGeneration) {
+            try {
+                var fromEndPair = DateTimeUtils.getDatesIntersection(fromMs, toMs, startGenerationTime, endGenerationTime);
+                fromMs = fromEndPair.getA();
+                toMs = fromEndPair.getB();
+            } catch (IllegalStateException e) {
+                return new Telemetry<>("skip");
+            }
+        }
+
+        ZonedDateTime startDate = DateTimeUtils.fromTs(fromMs, ZoneId.of("UTC")).truncatedTo(ChronoUnit.HOURS);
+        ZonedDateTime endDate = DateTimeUtils.fromTs(toMs, ZoneId.of("UTC")).truncatedTo(ChronoUnit.HOURS);
         ZonedDateTime iteratedDate = startDate;
         double currentLevel = startLevel;
         while (iteratedDate.isBefore(endDate)) {
@@ -2627,7 +2932,13 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
     }
 
 
-    private Telemetry<Double> createTelemetrySoilAcidity(GreenhouseConfiguration configuration, Set<Long> sectionIrrigations, Set<Long> acidification, boolean skipTelemetry) {
+    private Telemetry<Double> createTelemetrySoilAcidity(GreenhouseConfiguration configuration,
+                                                         Set<Long> sectionIrrigations,
+                                                         Set<Long> acidification,
+                                                         boolean skipTelemetry,
+                                                         boolean fullTelemetryGeneration,
+                                                         long startGenerationTime,
+                                                         long endGenerationTime) {
         if (skipTelemetry) {
             return new Telemetry<>("skip");
         }
@@ -2643,8 +2954,21 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
         double irrigationIncreaseLevel = (maxLevel - minLevel) / period * 24 * 5;
         double acidificationDecreaseLevel = (maxLevel - minLevel);
 
-        ZonedDateTime startDate = DateTimeUtils.fromTs(configuration.getStartTs()).truncatedTo(ChronoUnit.HOURS);
-        ZonedDateTime endDate = DateTimeUtils.fromTs(configuration.getEndTs()).truncatedTo(ChronoUnit.HOURS);
+        long fromMs = configuration.getStartTs();
+        long toMs = configuration.getEndTs();
+
+        if (!fullTelemetryGeneration) {
+            try {
+                var fromEndPair = DateTimeUtils.getDatesIntersection(fromMs, toMs, startGenerationTime, endGenerationTime);
+                fromMs = fromEndPair.getA();
+                toMs = fromEndPair.getB();
+            } catch (IllegalStateException e) {
+                return new Telemetry<>("skip");
+            }
+        }
+
+        ZonedDateTime startDate = DateTimeUtils.fromTs(fromMs, ZoneId.of("UTC")).truncatedTo(ChronoUnit.HOURS);
+        ZonedDateTime endDate = DateTimeUtils.fromTs(toMs, ZoneId.of("UTC")).truncatedTo(ChronoUnit.HOURS);
         ZonedDateTime iteratedDate = startDate;
         double currentLevel = startLevel;
         while (iteratedDate.isBefore(endDate)) {
@@ -2669,7 +2993,13 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
     }
 
 
-    private void createTelemetryHarvestReporter(Telemetry<Double> telemetryCropWeight, Telemetry<String> telemetryWorkerInCharge, GreenhouseConfiguration configuration, boolean skipTelemetry) {
+    private void createTelemetryHarvestReporter(Telemetry<Double> telemetryCropWeight,
+                                                Telemetry<String> telemetryWorkerInCharge,
+                                                GreenhouseConfiguration configuration,
+                                                boolean skipTelemetry,
+                                                boolean fullTelemetryGeneration,
+                                                long startGenerationTime,
+                                                long endGenerationTime) {
         if (skipTelemetry) {
             return;
         }
@@ -2684,8 +3014,21 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
         double currentLevel = 0;
         boolean skip = true;
 
-        ZonedDateTime startDate = DateTimeUtils.fromTs(configuration.getStartTs()).truncatedTo(ChronoUnit.DAYS);
-        ZonedDateTime endDate = DateTimeUtils.fromTs(configuration.getEndTs()).truncatedTo(ChronoUnit.DAYS);
+        long fromMs = configuration.getStartTs();
+        long toMs = configuration.getEndTs();
+
+        if (!fullTelemetryGeneration) {
+            try {
+                var fromEndPair = DateTimeUtils.getDatesIntersection(fromMs, toMs, startGenerationTime, endGenerationTime);
+                fromMs = fromEndPair.getA();
+                toMs = fromEndPair.getB();
+            } catch (IllegalStateException e) {
+                return;
+            }
+        }
+
+        ZonedDateTime startDate = DateTimeUtils.fromTs(fromMs).truncatedTo(ChronoUnit.DAYS);
+        ZonedDateTime endDate = DateTimeUtils.fromTs(toMs).truncatedTo(ChronoUnit.DAYS);
         ZonedDateTime iteratedDate = startDate;
         while (iteratedDate.isBefore(endDate)) {
             long iteratedTs = DateTimeUtils.toTs(iteratedDate);
@@ -2721,7 +3064,23 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
     }
 
 
-    private void createTelemetryConsumptionEnergy(Telemetry<Integer> insideLightTelemetry, Set<Long> aerations, Set<Long> heatings, Set<Long> coolings, Set<Long> humidifications, Set<Long> dehumidifications, Map<String, Set<Long>> irrigations, GreenhouseConfiguration configuration, boolean skipTelemetry, Telemetry<Double> energyConsumptionLight, Telemetry<Double> energyConsumptionHeating, Telemetry<Double> energyConsumptionCooling, Telemetry<Double> energyConsumptionAirControl, Telemetry<Double> energyConsumptionIrrigation) {
+    private void createTelemetryConsumptionEnergy(Telemetry<Integer> insideLightTelemetry,
+                                                  Set<Long> aerations,
+                                                  Set<Long> heatings,
+                                                  Set<Long> coolings,
+                                                  Set<Long> humidifications,
+                                                  Set<Long> dehumidifications,
+                                                  Map<String, Set<Long>> irrigations,
+                                                  GreenhouseConfiguration configuration,
+                                                  boolean skipTelemetry,
+                                                  boolean fullTelemetryGeneration,
+                                                  long startGenerationTime,
+                                                  long endGenerationTime,
+                                                  Telemetry<Double> energyConsumptionLight,
+                                                  Telemetry<Double> energyConsumptionHeating,
+                                                  Telemetry<Double> energyConsumptionCooling,
+                                                  Telemetry<Double> energyConsumptionAirControl,
+                                                  Telemetry<Double> energyConsumptionIrrigation) {
         if (skipTelemetry) {
             return;
         }
@@ -2735,8 +3094,21 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
                 .flatMap(Collection::stream)
                 .collect(Collectors.groupingBy(Function.identity(), Collectors.counting()));
 
-        ZonedDateTime startDate = DateTimeUtils.fromTs(configuration.getStartTs()).truncatedTo(ChronoUnit.HOURS);
-        ZonedDateTime endDate = DateTimeUtils.fromTs(configuration.getEndTs()).truncatedTo(ChronoUnit.HOURS);
+        long fromMs = configuration.getStartTs();
+        long toMs = configuration.getEndTs();
+
+        if (!fullTelemetryGeneration) {
+            try {
+                var fromEndPair = DateTimeUtils.getDatesIntersection(fromMs, toMs, startGenerationTime, endGenerationTime);
+                fromMs = fromEndPair.getA();
+                toMs = fromEndPair.getB();
+            } catch (IllegalStateException e) {
+                return;
+            }
+        }
+
+        ZonedDateTime startDate = DateTimeUtils.fromTs(fromMs).truncatedTo(ChronoUnit.DAYS);
+        ZonedDateTime endDate = DateTimeUtils.fromTs(toMs).truncatedTo(ChronoUnit.DAYS);
         ZonedDateTime iteratedDate = startDate;
 
         while (iteratedDate.isBefore(endDate)) {
@@ -2788,7 +3160,13 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
         }
     }
 
-    private Telemetry<Double> createTelemetryConsumptionWater(Set<Long> humidifications, Map<String, Set<Long>> irrigations, GreenhouseConfiguration configuration, boolean skipTelemetry) {
+    private Telemetry<Double> createTelemetryConsumptionWater(Set<Long> humidifications,
+                                                              Map<String, Set<Long>> irrigations,
+                                                              GreenhouseConfiguration configuration,
+                                                              boolean skipTelemetry,
+                                                              boolean fullTelemetryGeneration,
+                                                              long startGenerationTime,
+                                                              long endGenerationTime) {
         if (skipTelemetry) {
             return new Telemetry<>("skip");
         }
@@ -2799,8 +3177,21 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
                 .flatMap(Collection::stream)
                 .collect(Collectors.groupingBy(Function.identity(), Collectors.counting()));
 
-        ZonedDateTime startDate = DateTimeUtils.fromTs(configuration.getStartTs()).truncatedTo(ChronoUnit.HOURS);
-        ZonedDateTime endDate = DateTimeUtils.fromTs(configuration.getEndTs()).truncatedTo(ChronoUnit.HOURS);
+        long fromMs = configuration.getStartTs();
+        long toMs = configuration.getEndTs();
+
+        if (!fullTelemetryGeneration) {
+            try {
+                var fromEndPair = DateTimeUtils.getDatesIntersection(fromMs, toMs, startGenerationTime, endGenerationTime);
+                fromMs = fromEndPair.getA();
+                toMs = fromEndPair.getB();
+            } catch (IllegalStateException e) {
+                return new Telemetry<>("skip");
+            }
+        }
+
+        ZonedDateTime startDate = DateTimeUtils.fromTs(fromMs).truncatedTo(ChronoUnit.DAYS);
+        ZonedDateTime endDate = DateTimeUtils.fromTs(toMs).truncatedTo(ChronoUnit.DAYS);
         ZonedDateTime iteratedDate = startDate;
         while (iteratedDate.isBefore(endDate)) {
             long iteratedTs = DateTimeUtils.toTs(iteratedDate);

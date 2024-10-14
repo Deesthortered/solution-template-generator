@@ -51,6 +51,7 @@ import org.thingsboard.trendz.generator.utils.MySortedSet;
 import org.thingsboard.trendz.generator.utils.RandomUtils;
 
 import java.time.DayOfWeek;
+import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
@@ -117,7 +118,7 @@ public class WaterMeteringSolution implements SolutionTemplateGenerator {
 
             if (!tbRestClient.isPe()) {
                 dashboardService.validateDashboardItems(getSolutionName(), null);
-                ModelData data = makeData(true, ZonedDateTime.now());
+                ModelData data = makeData(true, ZonedDateTime.now(), true, 0L, 0L);
                 validateData(data);
             }
 
@@ -128,11 +129,16 @@ public class WaterMeteringSolution implements SolutionTemplateGenerator {
     }
 
     @Override
-    public void generate(boolean skipTelemetry, ZonedDateTime startYear, boolean strictGeneration) {
+    public void generate(boolean skipTelemetry,
+                         ZonedDateTime startYear,
+                         boolean strictGeneration,
+                         boolean fullTelemetryGeneration,
+                         long startGenerationTime,
+                         long endGenerationTime) {
         log.info("Water Metering Solution - start generation");
         try {
             CustomerData customerData = createCustomerData(strictGeneration);
-            ModelData data = makeData(skipTelemetry, startYear);
+            ModelData data = makeData(skipTelemetry, startYear, fullTelemetryGeneration, startGenerationTime, endGenerationTime);
             applyData(data, customerData, strictGeneration);
             createRuleChain(data, strictGeneration);
             dashboardService.createDashboardItems(getSolutionName(), customerData.getCustomer().getId(), strictGeneration);
@@ -153,7 +159,7 @@ public class WaterMeteringSolution implements SolutionTemplateGenerator {
 
             if (!tbRestClient.isPe()) {
                 dashboardService.deleteDashboardItems(getSolutionName(), null);
-                ModelData data = makeData(true, ZonedDateTime.now());
+                ModelData data = makeData(true, ZonedDateTime.now(), true, 0L, 0L);
                 deleteData(data);
             }
 
@@ -346,7 +352,11 @@ public class WaterMeteringSolution implements SolutionTemplateGenerator {
     }
 
 
-    private ModelData makeData(boolean skipTelemetry, ZonedDateTime startYear) {
+    private ModelData makeData(boolean skipTelemetry,
+                               ZonedDateTime startYear,
+                               boolean fullTelemetryGeneration,
+                               long startGenerationTime,
+                               long endGenerationTime) {
         int order = 0;
         Set<CityConfiguration> cityConfigurations = MySortedSet.of(
                 CityConfiguration.builder()
@@ -515,7 +525,7 @@ public class WaterMeteringSolution implements SolutionTemplateGenerator {
         );
 
         Set<ModelEntity> cities = cityConfigurations.stream()
-                .map(configuration -> makeCityByConfiguration(configuration, skipTelemetry))
+                .map(configuration -> makeCityByConfiguration(configuration, skipTelemetry, fullTelemetryGeneration, startGenerationTime, endGenerationTime))
                 .collect(Collectors.toCollection(TreeSet::new));
 
         return new ModelData(cities);
@@ -737,15 +747,20 @@ public class WaterMeteringSolution implements SolutionTemplateGenerator {
     }
 
 
-    private City makeCityByConfiguration(CityConfiguration cityConfiguration, boolean skipTelemetry) {
+    private City makeCityByConfiguration(CityConfiguration cityConfiguration,
+                                         boolean skipTelemetry,
+                                         boolean fullTelemetryGeneration,
+                                         long startGenerationTime,
+                                         long endGenerationTime) {
         Set<Region> regions = MySortedSet.of();
         Set<PumpStation> pumpStations = MySortedSet.of();
         for (RegionConfiguration regionConfiguration : cityConfiguration.getRegionConfigurations()) {
-            Region region = makeRegionByConfiguration(regionConfiguration, skipTelemetry);
+            Region region = makeRegionByConfiguration(
+                    regionConfiguration, skipTelemetry, fullTelemetryGeneration, startGenerationTime, endGenerationTime);
             regions.add(region);
 
             PumpStationConfiguration pumpStationConfiguration = regionConfiguration.getPumpStationConfiguration();
-            PumpStation pumpStation = makePumpStationByRegion(pumpStationConfiguration, region);
+            PumpStation pumpStation = makePumpStationByRegion(pumpStationConfiguration, region, fullTelemetryGeneration);
             pumpStations.add(pumpStation);
         }
 
@@ -758,10 +773,15 @@ public class WaterMeteringSolution implements SolutionTemplateGenerator {
                 .build();
     }
 
-    private Region makeRegionByConfiguration(RegionConfiguration regionConfiguration, boolean skipTelemetry) {
+    private Region makeRegionByConfiguration(RegionConfiguration regionConfiguration,
+                                             boolean skipTelemetry,
+                                             boolean fullTelemetryGeneration,
+                                             long startGenerationTime,
+                                             long endGenerationTime) {
         Set<Consumer> consumers = MySortedSet.of();
         for (ConsumerConfiguration consumerConfiguration : regionConfiguration.getConsumerConfigurations()) {
-            Consumer consumer = makeConsumerByConfiguration(regionConfiguration, consumerConfiguration, skipTelemetry);
+            Consumer consumer = makeConsumerByConfiguration(
+                    regionConfiguration, consumerConfiguration, skipTelemetry, fullTelemetryGeneration, startGenerationTime, endGenerationTime);
             consumers.add(consumer);
         }
 
@@ -770,7 +790,10 @@ public class WaterMeteringSolution implements SolutionTemplateGenerator {
                 .collect(Collectors.toSet());
 
         Telemetry<Long> fullConsumption = createTelemetryRegionFullConsumption(consumptionSet, skipTelemetry);
-        this.anomalyService.applyAnomaly(fullConsumption, regionConfiguration.getAnomalies());
+
+        if (fullTelemetryGeneration) {
+            this.anomalyService.applyAnomaly(fullConsumption, regionConfiguration.getAnomalies());
+        }
 
         return Region.builder()
                 .systemName(regionConfiguration.getName())
@@ -780,15 +803,24 @@ public class WaterMeteringSolution implements SolutionTemplateGenerator {
                 .build();
     }
 
-    private Consumer makeConsumerByConfiguration(RegionConfiguration regionConfiguration, ConsumerConfiguration consumerConfiguration, boolean skipTelemetry) {
+    private Consumer makeConsumerByConfiguration(RegionConfiguration regionConfiguration,
+                                                 ConsumerConfiguration consumerConfiguration,
+                                                 boolean skipTelemetry,
+                                                 boolean fullTelemetryGeneration,
+                                                 long startGenerationTime,
+                                                 long endGenerationTime) {
         ZonedDateTime startYear = regionConfiguration.getStartYear();
         String regionName = regionConfiguration.getName();
         String index = consumerConfiguration.getIndex();
         ConsumerType type = consumerConfiguration.getType();
 
         String consumerName = regionName + " " + type.name() + "_" + index;
-        Telemetry<Long> consumption = createTelemetryConsumerConsumption(consumerConfiguration, startYear, skipTelemetry);
-        this.anomalyService.applyAnomaly(consumption, consumerConfiguration.getAnomalies());
+        Telemetry<Long> consumption = createTelemetryConsumerConsumption(
+                consumerConfiguration, startYear, skipTelemetry, fullTelemetryGeneration, startGenerationTime, endGenerationTime);
+
+        if (fullTelemetryGeneration) {
+            this.anomalyService.applyAnomaly(consumption, consumerConfiguration.getAnomalies());
+        }
 
         return Consumer.builder()
                 .systemName(consumerName)
@@ -798,10 +830,13 @@ public class WaterMeteringSolution implements SolutionTemplateGenerator {
                 .build();
     }
 
-    private PumpStation makePumpStationByRegion(PumpStationConfiguration pumpStationConfiguration, Region region) {
+    private PumpStation makePumpStationByRegion(PumpStationConfiguration pumpStationConfiguration, Region region, boolean fullTelemetryGeneration) {
         String name = region.getSystemName() + " Pump Station";
         Telemetry<Long> provided = new Telemetry<>("provided", region.getFullConsumption().getPoints());
-        this.anomalyService.applyAnomaly(provided, pumpStationConfiguration.getAnomalies());
+
+        if (fullTelemetryGeneration) {
+            this.anomalyService.applyAnomaly(provided, pumpStationConfiguration.getAnomalies());
+        }
 
         return PumpStation.builder()
                 .systemName(name)
@@ -811,7 +846,12 @@ public class WaterMeteringSolution implements SolutionTemplateGenerator {
     }
 
 
-    private Telemetry<Long> createTelemetryConsumerConsumption(ConsumerConfiguration consumerConfiguration, ZonedDateTime startYear, boolean skipTelemetry) {
+    private Telemetry<Long> createTelemetryConsumerConsumption(ConsumerConfiguration consumerConfiguration,
+                                                               ZonedDateTime startYear,
+                                                               boolean skipTelemetry,
+                                                               boolean fullTelemetryGeneration,
+                                                               long startGenerationTime,
+                                                               long endGenerationTime) {
         if (skipTelemetry) {
             return new Telemetry<>("skip");
         }
@@ -819,9 +859,21 @@ public class WaterMeteringSolution implements SolutionTemplateGenerator {
         Telemetry<Long> result = new Telemetry<>("consumption");
         ConsumerType type = consumerConfiguration.getType();
 
-        long now = System.currentTimeMillis();
-        ZonedDateTime startDate = startYear.truncatedTo(ChronoUnit.HOURS);
-        ZonedDateTime nowDate = DateTimeUtils.fromTs(now).truncatedTo(ChronoUnit.HOURS);
+        long fromMs = startYear.toInstant().toEpochMilli();
+        long toMs = ZonedDateTime.now(ZoneId.of("UTC")).toInstant().toEpochMilli();
+
+        if (!fullTelemetryGeneration) {
+            try {
+                var fromEndPair = DateTimeUtils.getDatesIntersection(fromMs, toMs, startGenerationTime, endGenerationTime);
+                fromMs = fromEndPair.getA();
+                toMs = fromEndPair.getB();
+            } catch (IllegalStateException e) {
+                return new Telemetry<>("skip");
+            }
+        }
+
+        ZonedDateTime startDate = DateTimeUtils.fromTs(fromMs, ZoneId.of("UTC")).truncatedTo(ChronoUnit.HOURS);
+        ZonedDateTime nowDate = DateTimeUtils.fromTs(toMs, ZoneId.of("UTC")).truncatedTo(ChronoUnit.HOURS);
 
         Pair<Long, Long> intervalValues = getIntervalValuesRangeByConsumerType(consumerConfiguration.getType());
         int fullInterval = 366;

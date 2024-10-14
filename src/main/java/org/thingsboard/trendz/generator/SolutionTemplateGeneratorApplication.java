@@ -12,6 +12,7 @@ import org.thingsboard.trendz.generator.solution.SolutionTemplateGenerator;
 import org.thingsboard.trendz.generator.utils.DateTimeUtils;
 import org.thingsboard.trendz.generator.utils.RandomUtils;
 
+import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
@@ -26,7 +27,6 @@ public class SolutionTemplateGeneratorApplication implements CommandLineRunner {
 
     private final static String MODE_GENERATE = "generate";
     private final static String MODE_REMOVE = "remove";
-    private final static DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss z");
 
     private final String mode;
     private final List<String> currentSolutions;
@@ -52,7 +52,7 @@ public class SolutionTemplateGeneratorApplication implements CommandLineRunner {
         this.mode = mode;
         this.currentSolutions = currentSolutions;
         this.skipTelemetry = skipTelemetry;
-        this.startYear = ZonedDateTime.parse(DateTimeUtils.fromTs(startGenerationTime) + "-01-01 00:00:00 UTC", formatter);
+        this.startYear = DateTimeUtils.fromTs(startGenerationTime, ZoneId.of("UTC"));
         this.startGenerationTimeMs = startGenerationTime;
         this.endGenerationTimeMs = endGenerationTime;
         this.strictGeneration = strictGeneration;
@@ -78,7 +78,7 @@ public class SolutionTemplateGeneratorApplication implements CommandLineRunner {
                         if (this.strictGeneration) {
                             solutionGenerator.validate();
                         }
-                        solutionGenerator.generate(this.skipTelemetry, this.startYear, this.strictGeneration);
+                        solutionGenerator.generate(this.skipTelemetry, this.startYear, this.strictGeneration, fullTelemetryGeneration, startGenerationTimeMs, endGenerationTimeMs);
                         log.info("Current generator is finished: {}", solutionName);
                     } catch (SolutionValidationException e) {
                         log.error("Validation solution error: " + solutionGenerator.getSolutionName(), e.getCause());
