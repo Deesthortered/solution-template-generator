@@ -952,6 +952,9 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
                         } catch (IllegalStateException e) {
                             return new Telemetry<>("skip");
                         }
+                    } else {
+                        fromMs = startGenerationTime;
+                        toMs = endGenerationTime;
                     }
 
                     ZonedDateTime startDate = DateTimeUtils.fromTs(fromMs).truncatedTo(ChronoUnit.HOURS);
@@ -987,6 +990,9 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
                         } catch (IllegalStateException e) {
                             return new Telemetry<>("skip");
                         }
+                    } else {
+                        fromMs = startGenerationTime;
+                        toMs = endGenerationTime;
                     }
 
                     ZonedDateTime startDate = DateTimeUtils.fromTs(fromMs).truncatedTo(ChronoUnit.HOURS);
@@ -1023,6 +1029,9 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
                         } catch (IllegalStateException e) {
                             return new Telemetry<>("skip");
                         }
+                    } else {
+                        fromMs = startGenerationTime;
+                        toMs = endGenerationTime;
                     }
 
                     ZonedDateTime startDate = DateTimeUtils.fromTs(fromMs).truncatedTo(ChronoUnit.HOURS);
@@ -1062,6 +1071,9 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
                 } catch (IllegalStateException e) {
                     return new Telemetry<>("skip");
                 }
+            } else {
+                fromMs = startGenerationTime;
+                toMs = endGenerationTime;
             }
 
             ZonedDateTime startDate = DateTimeUtils.fromTs(fromMs).truncatedTo(ChronoUnit.HOURS);
@@ -1122,6 +1134,9 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
             } catch (IllegalStateException e) {
                 return new Telemetry<>("skip");
             }
+        } else {
+            fromMs = startGenerationTime;
+            toMs = endGenerationTime;
         }
 
         ZonedDateTime startDate = DateTimeUtils.fromTs(fromMs).truncatedTo(ChronoUnit.HOURS);
@@ -1164,6 +1179,9 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
             } catch (IllegalStateException e) {
                 return new Telemetry<>("skip");
             }
+        } else {
+            fromMs = startGenerationTime;
+            toMs = endGenerationTime;
         }
 
         boolean occupied = configuration.isOccupied();

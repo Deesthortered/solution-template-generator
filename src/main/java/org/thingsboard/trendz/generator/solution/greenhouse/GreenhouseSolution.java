@@ -1839,6 +1839,9 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
                 } catch (IllegalStateException e) {
                     return noWeatherData;
                 }
+            } else {
+                fromMs = startGenerationTime;
+                toMs = endGenerationTime;
             }
 
             ZonedDateTime startDate = DateTimeUtils.fromTs(fromMs, ZoneId.of("UTC")).truncatedTo(ChronoUnit.HOURS);
@@ -1908,6 +1911,9 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
             } catch (IllegalStateException e) {
                 return new Telemetry<>("skip");
             }
+        } else {
+            fromMs = startGenerationTime;
+            toMs = endGenerationTime;
         }
 
         ZonedDateTime startDate = DateTimeUtils.fromTs(fromMs).truncatedTo(ChronoUnit.HOURS);
@@ -1958,6 +1964,9 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
             } catch (IllegalStateException e) {
                 return new Telemetry<>("skip");
             }
+        } else {
+            fromMs = startGenerationTime;
+            toMs = endGenerationTime;
         }
 
         ZonedDateTime startDate = DateTimeUtils.fromTs(fromMs, ZoneId.of("UTC")).truncatedTo(ChronoUnit.HOURS);
@@ -2001,6 +2010,9 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
             } catch (IllegalStateException e) {
                 return new Telemetry<>("skip");
             }
+        } else {
+            fromMs = startGenerationTime;
+            toMs = endGenerationTime;
         }
 
         ZonedDateTime startDate = DateTimeUtils.fromTs(fromMs, ZoneId.of("UTC")).truncatedTo(ChronoUnit.HOURS);
@@ -2212,6 +2224,9 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
             } catch (IllegalStateException e) {
                 return new Telemetry<>("skip");
             }
+        } else {
+            fromMs = startGenerationTime;
+            toMs = endGenerationTime;
         }
 
         ZonedDateTime startDate = DateTimeUtils.fromTs(fromMs, ZoneId.of("UTC")).truncatedTo(ChronoUnit.HOURS);
@@ -2270,6 +2285,9 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
             } catch (IllegalStateException e) {
                 return new Telemetry<>("skip");
             }
+        } else {
+            fromMs = startGenerationTime;
+            toMs = endGenerationTime;
         }
 
         ZonedDateTime startDate = DateTimeUtils.fromTs(fromMs, ZoneId.of("UTC")).truncatedTo(ChronoUnit.HOURS);
@@ -2329,6 +2347,9 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
             } catch (IllegalStateException e) {
                 return new Telemetry<>("skip");
             }
+        } else {
+            fromMs = startGenerationTime;
+            toMs = endGenerationTime;
         }
 
         ZonedDateTime startDate = DateTimeUtils.fromTs(fromMs, ZoneId.of("UTC")).truncatedTo(ChronoUnit.HOURS);
@@ -2398,6 +2419,9 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
             } catch (IllegalStateException e) {
                 return new Telemetry<>("skip");
             }
+        } else {
+            fromMs = startGenerationTime;
+            toMs = endGenerationTime;
         }
 
         ZonedDateTime startDate = DateTimeUtils.fromTs(fromMs, ZoneId.of("UTC")).truncatedTo(ChronoUnit.HOURS);
@@ -2502,6 +2526,9 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
             } catch (IllegalStateException e) {
                 return new Telemetry<>("skip");
             }
+        } else {
+            fromMs = startGenerationTime;
+            toMs = endGenerationTime;
         }
 
         ZonedDateTime startDate = DateTimeUtils.fromTs(fromMs, ZoneId.of("UTC")).truncatedTo(ChronoUnit.HOURS);
@@ -2582,6 +2609,9 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
             } catch (IllegalStateException e) {
                 return new Telemetry<>("skip");
             }
+        } else {
+            fromMs = startGenerationTime;
+            toMs = endGenerationTime;
         }
 
         ZonedDateTime startDate = DateTimeUtils.fromTs(fromMs, ZoneId.of("UTC")).truncatedTo(ChronoUnit.HOURS);
@@ -2618,6 +2648,9 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
             } catch (IllegalStateException e) {
                 return new Telemetry<>("skip");
             }
+        } else {
+            fromMs = startGenerationTime;
+            toMs = endGenerationTime;
         }
 
         ZonedDateTime startDate = DateTimeUtils.fromTs(fromMs, ZoneId.of("UTC")).truncatedTo(ChronoUnit.HOURS);
@@ -2653,6 +2686,9 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
             } catch (IllegalStateException e) {
                 return new Telemetry<>("skip");
             }
+        } else {
+            fromMs = startGenerationTime;
+            toMs = endGenerationTime;
         }
 
         ZonedDateTime startDate = DateTimeUtils.fromTs(fromMs, ZoneId.of("UTC")).truncatedTo(ChronoUnit.HOURS);
@@ -2799,6 +2835,9 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
             } catch (IllegalStateException e) {
                 return new Telemetry<>("skip");
             }
+        } else {
+            fromMs = startGenerationTime;
+            toMs = endGenerationTime;
         }
 
         ZonedDateTime startDate = DateTimeUtils.fromTs(fromMs, ZoneId.of("UTC")).truncatedTo(ChronoUnit.HOURS);
@@ -2851,6 +2890,9 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
             } catch (IllegalStateException e) {
                 return new Telemetry<>("skip");
             }
+        } else {
+            fromMs = startGenerationTime;
+            toMs = endGenerationTime;
         }
 
         ZonedDateTime startDate = DateTimeUtils.fromTs(fromMs, ZoneId.of("UTC")).truncatedTo(ChronoUnit.HOURS);
@@ -2908,6 +2950,9 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
             } catch (IllegalStateException e) {
                 return new Telemetry<>("skip");
             }
+        } else {
+            fromMs = startGenerationTime;
+            toMs = endGenerationTime;
         }
 
         ZonedDateTime startDate = DateTimeUtils.fromTs(fromMs, ZoneId.of("UTC")).truncatedTo(ChronoUnit.HOURS);
@@ -2965,6 +3010,9 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
             } catch (IllegalStateException e) {
                 return new Telemetry<>("skip");
             }
+        } else {
+            fromMs = startGenerationTime;
+            toMs = endGenerationTime;
         }
 
         ZonedDateTime startDate = DateTimeUtils.fromTs(fromMs, ZoneId.of("UTC")).truncatedTo(ChronoUnit.HOURS);
@@ -3025,6 +3073,9 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
             } catch (IllegalStateException e) {
                 return;
             }
+        } else {
+            fromMs = startGenerationTime;
+            toMs = endGenerationTime;
         }
 
         ZonedDateTime startDate = DateTimeUtils.fromTs(fromMs).truncatedTo(ChronoUnit.DAYS);
@@ -3105,6 +3156,9 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
             } catch (IllegalStateException e) {
                 return;
             }
+        } else {
+            fromMs = startGenerationTime;
+            toMs = endGenerationTime;
         }
 
         ZonedDateTime startDate = DateTimeUtils.fromTs(fromMs).truncatedTo(ChronoUnit.DAYS);
@@ -3188,6 +3242,9 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
             } catch (IllegalStateException e) {
                 return new Telemetry<>("skip");
             }
+        } else {
+            fromMs = startGenerationTime;
+            toMs = endGenerationTime;
         }
 
         ZonedDateTime startDate = DateTimeUtils.fromTs(fromMs).truncatedTo(ChronoUnit.DAYS);

@@ -870,6 +870,9 @@ public class WaterMeteringSolution implements SolutionTemplateGenerator {
             } catch (IllegalStateException e) {
                 return new Telemetry<>("skip");
             }
+        } else {
+            fromMs = startGenerationTime;
+            toMs = endGenerationTime;
         }
 
         ZonedDateTime startDate = DateTimeUtils.fromTs(fromMs, ZoneId.of("UTC")).truncatedTo(ChronoUnit.HOURS);
