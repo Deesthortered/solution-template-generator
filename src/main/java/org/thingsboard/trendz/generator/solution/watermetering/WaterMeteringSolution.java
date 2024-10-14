@@ -649,38 +649,37 @@ public class WaterMeteringSolution implements SolutionTemplateGenerator {
 
     private Asset createCity(City city, UUID ownerId, UUID assetGroupId, boolean strictGeneration) {
         Asset asset;
+        final Set<Attribute<?>> attributes = Set.of(
+                new Attribute<>("population", city.getPopulation())
+        );
+
         if (tbRestClient.isPe()) {
             final var customerId = new CustomerId(ownerId);
             asset = strictGeneration
-                    ? tbRestClient.createAsset(city.getSystemName(), city.entityType(), customerId)
-                    : tbRestClient.createAssetIfNotExists(city.getSystemName(), city.entityType(), customerId)
+                    ? tbRestClient.createAsset(city.getSystemName(), city.entityType(), customerId, attributes)
+                    : tbRestClient.createAssetIfNotExists(city.getSystemName(), city.entityType(), customerId, attributes)
             ;
             tbRestClient.addEntitiesToTheGroup(assetGroupId, Set.of(asset.getUuidId()));
         } else {
-            asset = tbRestClient.createAsset(city.getSystemName(), city.entityType());
+            asset = tbRestClient.createAsset(city.getSystemName(), city.entityType(), attributes);
             tbRestClient.assignAssetToCustomer(ownerId, asset.getUuidId());
         }
 
-        if (strictGeneration) {
-            final Set<Attribute<?>> attributes = Set.of(
-                    new Attribute<>("population", city.getPopulation())
-            );
-            tbRestClient.setEntityAttributes(asset.getUuidId(), EntityType.ASSET, Attribute.Scope.SERVER_SCOPE, attributes);
-        }
         return asset;
     }
 
     private Device createRegion(Region region, UUID ownerId, UUID deviceGroupId, boolean strictGeneration) {
+        final Set<Attribute<?>> noAttributes = Collections.emptySet();
         Device device;
         if (tbRestClient.isPe()) {
             device = strictGeneration
-                    ? tbRestClient.createDevice(region.getSystemName(), region.entityType(), new CustomerId(ownerId))
-                    : tbRestClient.createDeviceIfNotExists(region.getSystemName(), region.entityType(), new CustomerId(ownerId));
+                    ? tbRestClient.createDevice(region.getSystemName(), region.entityType(), new CustomerId(ownerId), noAttributes)
+                    : tbRestClient.createDeviceIfNotExists(region.getSystemName(), region.entityType(), new CustomerId(ownerId), noAttributes);
             tbRestClient.addEntitiesToTheGroup(deviceGroupId, Set.of(device.getUuidId()));
         } else {
             device = strictGeneration
-                    ? tbRestClient.createDevice(region.getSystemName(), region.entityType())
-                    : tbRestClient.createDeviceIfNotExists(region.getSystemName(), region.entityType());
+                    ? tbRestClient.createDevice(region.getSystemName(), region.entityType(), noAttributes)
+                    : tbRestClient.createDeviceIfNotExists(region.getSystemName(), region.entityType(), noAttributes);
             tbRestClient.assignDeviceToCustomer(ownerId, device.getUuidId());
         }
         DeviceCredentials deviceCredentials = tbRestClient.getDeviceCredentials(device.getUuidId());
@@ -692,25 +691,23 @@ public class WaterMeteringSolution implements SolutionTemplateGenerator {
 
     private Device createConsumer(Consumer consumer, UUID ownerId, UUID deviceGroupId, boolean strictGeneration) {
         Device device;
+        final Set<Attribute<?>> attributes = Set.of(
+                new Attribute<>("type", consumer.getType())
+        );
+
         if (tbRestClient.isPe()) {
             device = strictGeneration
-                    ? tbRestClient.createDevice(consumer.getSystemName(), consumer.entityType(), new CustomerId(ownerId))
-                    : tbRestClient.createDeviceIfNotExists(consumer.getSystemName(), consumer.entityType(), new CustomerId(ownerId));
+                    ? tbRestClient.createDevice(consumer.getSystemName(), consumer.entityType(), new CustomerId(ownerId), attributes)
+                    : tbRestClient.createDeviceIfNotExists(consumer.getSystemName(), consumer.entityType(), new CustomerId(ownerId), attributes);
             tbRestClient.addEntitiesToTheGroup(deviceGroupId, Set.of(device.getUuidId()));
         } else {
             device = strictGeneration
-                    ? tbRestClient.createDevice(consumer.getSystemName(), consumer.entityType())
-                    : tbRestClient.createDeviceIfNotExists(consumer.getSystemName(), consumer.entityType());
+                    ? tbRestClient.createDevice(consumer.getSystemName(), consumer.entityType(), attributes)
+                    : tbRestClient.createDeviceIfNotExists(consumer.getSystemName(), consumer.entityType(), attributes);
             tbRestClient.assignDeviceToCustomer(ownerId, device.getUuidId());
         }
-        DeviceCredentials deviceCredentials = tbRestClient.getDeviceCredentials(device.getUuidId());
 
-        if (strictGeneration) {
-            final Set<Attribute<?>> attributes = Set.of(
-                    new Attribute<>("type", consumer.getType())
-            );
-            tbRestClient.setEntityAttributes(device.getUuidId(), EntityType.DEVICE, Attribute.Scope.SERVER_SCOPE, attributes);
-        }
+        final var deviceCredentials = tbRestClient.getDeviceCredentials(device.getUuidId());
 
         tbRestClient.pushTelemetry(deviceCredentials.getCredentialsId(), consumer.getConsumption());
 
@@ -719,16 +716,17 @@ public class WaterMeteringSolution implements SolutionTemplateGenerator {
     }
 
     private Device createPumpStation(PumpStation pumpStation, UUID ownerId, UUID deviceGroupId, boolean strictGeneration) {
+        final Set<Attribute<?>> noAttributes = Collections.emptySet();
         Device device;
         if (tbRestClient.isPe()) {
             device = strictGeneration
-                    ? tbRestClient.createDevice(pumpStation.getSystemName(), pumpStation.entityType(), new CustomerId(ownerId))
-                    : tbRestClient.createDeviceIfNotExists(pumpStation.getSystemName(), pumpStation.entityType(), new CustomerId(ownerId));
+                    ? tbRestClient.createDevice(pumpStation.getSystemName(), pumpStation.entityType(), new CustomerId(ownerId), noAttributes)
+                    : tbRestClient.createDeviceIfNotExists(pumpStation.getSystemName(), pumpStation.entityType(), new CustomerId(ownerId), noAttributes);
             tbRestClient.addEntitiesToTheGroup(deviceGroupId, Set.of(device.getUuidId()));
         } else {
             device = strictGeneration
-                    ? tbRestClient.createDevice(pumpStation.getSystemName(), pumpStation.entityType())
-                    : tbRestClient.createDeviceIfNotExists(pumpStation.getSystemName(), pumpStation.entityType());
+                    ? tbRestClient.createDevice(pumpStation.getSystemName(), pumpStation.entityType(), noAttributes)
+                    : tbRestClient.createDeviceIfNotExists(pumpStation.getSystemName(), pumpStation.entityType(), noAttributes);
             tbRestClient.assignDeviceToCustomer(ownerId, device.getUuidId());
         }
         DeviceCredentials deviceCredentials = tbRestClient.getDeviceCredentials(device.getUuidId());

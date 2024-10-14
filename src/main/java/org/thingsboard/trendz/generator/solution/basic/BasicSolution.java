@@ -138,17 +138,27 @@ public class BasicSolution implements SolutionTemplateGenerator {
 
             Asset asset;
             Device device;
+            final long now = System.currentTimeMillis();
+            final Set<Attribute<?>> attributes = Set.of(
+                    new Attribute<>("Generator Start Time", now),
+                    new Attribute<>("doubleKey", 1.0),
+                    new Attribute<>("longKey", 1L),
+                    new Attribute<>("intKey", 1),
+                    new Attribute<>("booleanKey", true),
+                    new Attribute<>("StringKey", "qwerty")
+            );
+
             if (tbRestClient.isPe()) {
                 var customerId = customer.getId();
 
                 asset = strictGeneration
-                        ? tbRestClient.createAsset(ASSET_NAME, ASSET_TYPE, customerId)
-                        : tbRestClient.createAssetIfNotExists(ASSET_NAME, ASSET_TYPE, customerId)
+                        ? tbRestClient.createAsset(ASSET_NAME, ASSET_TYPE, customerId, attributes)
+                        : tbRestClient.createAssetIfNotExists(ASSET_NAME, ASSET_TYPE, customerId, attributes)
                 ;
 
                 device = strictGeneration
-                        ? tbRestClient.createDevice(DEVICE_NAME, DEVICE_TYPE, customerId)
-                        : tbRestClient.createDeviceIfNotExists(DEVICE_NAME, DEVICE_TYPE, customerId);
+                        ? tbRestClient.createDevice(DEVICE_NAME, DEVICE_TYPE, customerId, attributes)
+                        : tbRestClient.createDeviceIfNotExists(DEVICE_NAME, DEVICE_TYPE, customerId, attributes);
 
                 EntityGroup assetGroup = strictGeneration
                         ? tbRestClient.createEntityGroup(ASSET_GROUP_NAME, EntityType.ASSET, customer.getUuidId(), true)
@@ -163,12 +173,12 @@ public class BasicSolution implements SolutionTemplateGenerator {
                 log.info("");
             } else {
                 asset = strictGeneration
-                        ? tbRestClient.createAsset(ASSET_NAME, ASSET_TYPE)
-                        : tbRestClient.createAssetIfNotExists(ASSET_NAME, ASSET_TYPE)
+                        ? tbRestClient.createAsset(ASSET_NAME, ASSET_TYPE, attributes)
+                        : tbRestClient.createAssetIfNotExists(ASSET_NAME, ASSET_TYPE, attributes)
                 ;
                 device = strictGeneration
-                        ? tbRestClient.createDevice(DEVICE_NAME, DEVICE_TYPE)
-                        : tbRestClient.createDeviceIfNotExists(DEVICE_NAME, DEVICE_TYPE)
+                        ? tbRestClient.createDevice(DEVICE_NAME, DEVICE_TYPE, attributes)
+                        : tbRestClient.createDeviceIfNotExists(DEVICE_NAME, DEVICE_TYPE, attributes)
                 ;
                 tbRestClient.assignAssetToCustomer(customer.getUuidId(), asset.getUuidId());
                 tbRestClient.assignDeviceToCustomer(customer.getUuidId(), device.getUuidId());
@@ -176,7 +186,6 @@ public class BasicSolution implements SolutionTemplateGenerator {
             EntityRelation relation = tbRestClient.createRelation(RelationType.CONTAINS.getType(), asset.getId(), device.getId());
 
             Telemetry<Integer> deviceTelemetry = new Telemetry<>("pushed_telemetry");
-            long now = System.currentTimeMillis();
             ZonedDateTime startTime = ZonedDateTime.of(2023, 1, 1, 0, 0, 0, 0, ZoneId.of("UTC"));
             ZonedDateTime today = DateTimeUtils.fromTs(now).truncatedTo(ChronoUnit.DAYS);
             int valueCounter = 0;
@@ -188,23 +197,6 @@ public class BasicSolution implements SolutionTemplateGenerator {
 
             DeviceCredentials credentials = tbRestClient.getDeviceCredentials(device.getUuidId());
             tbRestClient.pushTelemetry(credentials.getCredentialsId(), deviceTelemetry);
-
-            if (strictGeneration) {
-                final Set<Attribute<?>> attributes = Set.of(
-                        new Attribute<>("Generator Start Time", now),
-                        new Attribute<>("doubleKey", 1.0),
-                        new Attribute<>("longKey", 1L),
-                        new Attribute<>("intKey", 1),
-                        new Attribute<>("booleanKey", true),
-                        new Attribute<>("StringKey", "qwerty")
-                );
-                tbRestClient.setEntityAttributes(
-                        device.getUuidId(), EntityType.DEVICE, Attribute.Scope.SERVER_SCOPE, attributes
-                );
-                tbRestClient.setEntityAttributes(
-                        asset.getUuidId(), EntityType.ASSET, Attribute.Scope.SERVER_SCOPE, attributes
-                );
-            }
 
             TbMsgGeneratorNodeConfiguration generatorConfiguration = new TbMsgGeneratorNodeConfiguration();
             generatorConfiguration.setOriginatorType(EntityType.DEVICE);

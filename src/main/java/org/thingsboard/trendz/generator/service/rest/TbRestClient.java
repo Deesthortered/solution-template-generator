@@ -53,6 +53,7 @@ import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 import static java.util.Objects.isNull;
+import static java.util.Objects.nonNull;
 
 @Slf4j
 @Service
@@ -261,36 +262,47 @@ public class TbRestClient {
         return customerOpt.orElseGet(() -> createCustomer(name));
     }
 
-    public Asset createAsset(String name, String type) {
+    public Asset createAsset(String name, String type, Set<Attribute<?>> attributes) {
         try {
-            var asset = new Asset();
+            final var asset = new Asset();
             asset.setName(name);
             asset.setType(type);
-            return restTemplate.postForEntity(baseURL + "/api/asset", asset, Asset.class).getBody();
+            final var assetAdded = restTemplate.postForEntity(baseURL + "/api/asset", asset, Asset.class).getBody();
+
+            if (nonNull(attributes) && !attributes.isEmpty()) {
+                setEntityAttributes(assetAdded.getUuidId(), EntityType.ASSET, Attribute.Scope.SERVER_SCOPE, attributes);
+            }
+
+            return assetAdded;
         } catch (Exception e) {
             throw new RuntimeException("", e);
         }
     }
 
-    public Asset createAssetIfNotExists(String name, String type) {
+    public Asset createAssetIfNotExists(String name, String type, Set<Attribute<?>> attributes) {
         final var assetOpt = getAssetByName(name);
-        return assetOpt.orElseGet(() -> createAsset(name, type));
+        return assetOpt.orElseGet(() -> createAsset(name, type, attributes));
     }
 
-    public Device createDevice(String name, String type) {
+    public Device createDevice(String name, String type, Set<Attribute<?>> attributes) {
         try {
-            Device device = new Device();
+            final var device = new Device();
             device.setName(name);
             device.setType(type);
-            return restTemplate.postForEntity(baseURL + "/api/device", device, Device.class).getBody();
+            final var deviceAdded = restTemplate.postForEntity(baseURL + "/api/device", device, Device.class).getBody();
+
+            if (nonNull(attributes) && !attributes.isEmpty()) {
+                setEntityAttributes(deviceAdded.getUuidId(), EntityType.DEVICE, Attribute.Scope.SERVER_SCOPE, attributes);
+            }
+            return deviceAdded;
         } catch (Exception e) {
             throw new RuntimeException("", e);
         }
     }
 
-    public Device createDeviceIfNotExists(String name, String type) {
+    public Device createDeviceIfNotExists(String name, String type, Set<Attribute<?>> attributes) {
         final var deviceOpt = getDeviceByName(name);
-        return deviceOpt.orElseGet(() -> createDevice(name, type));
+        return deviceOpt.orElseGet(() -> createDevice(name, type, attributes));
     }
 
     public Dashboard createDashboard(String title) {
@@ -316,38 +328,49 @@ public class TbRestClient {
         return restTemplate.postForEntity(baseURL + "/api/customer", customer, Customer.class).getBody();
     }
 
-    public Asset createAsset(String name, String type, EntityId ownerId) {
+    public Asset createAsset(String name, String type, EntityId ownerId, Set<Attribute<?>> attributes) {
         try {
-            Asset asset = new Asset();
+            final var asset = new Asset();
             asset.setName(name);
             asset.setType(type);
             asset.setOwnerId(ownerId);
-            return restTemplate.postForEntity(baseURL + "/api/asset", asset, Asset.class).getBody();
+            var assetAdded = restTemplate.postForEntity(baseURL + "/api/asset", asset, Asset.class).getBody();
+
+            if (nonNull(attributes) && !attributes.isEmpty()) {
+                setEntityAttributes(assetAdded.getUuidId(), EntityType.ASSET, Attribute.Scope.SERVER_SCOPE, attributes);
+            }
+
+            return assetAdded;
         } catch (Exception e) {
             throw new RuntimeException("", e);
         }
     }
 
-    public Asset createAssetIfNotExists(String name, String type, EntityId ownerId) {
+    public Asset createAssetIfNotExists(String name, String type, EntityId ownerId, Set<Attribute<?>> attributes) {
         final var assetOpt = getAssetByName(name);
-        return assetOpt.orElseGet(() -> createAsset(name, type, ownerId));
+        return assetOpt.orElseGet(() -> createAsset(name, type, ownerId, attributes));
     }
 
-    public Device createDevice(String name, String type, EntityId ownerId) {
+    public Device createDevice(String name, String type, EntityId ownerId, Set<Attribute<?>> attributes) {
         try {
-            Device device = new Device();
+            var device = new Device();
             device.setName(name);
             device.setType(type);
             device.setOwnerId(ownerId);
-            return restTemplate.postForEntity(baseURL + "/api/device", device, Device.class).getBody();
+            var deviceAdded = restTemplate.postForEntity(baseURL + "/api/device", device, Device.class).getBody();
+
+            if (nonNull(attributes) && !attributes.isEmpty()) {
+                setEntityAttributes(deviceAdded.getUuidId(), EntityType.DEVICE, Attribute.Scope.SERVER_SCOPE, attributes);
+            }
+            return deviceAdded;
         } catch (Exception e) {
             throw new RuntimeException("", e);
         }
     }
 
-    public Device createDeviceIfNotExists(String name, String type, EntityId ownerId) {
+    public Device createDeviceIfNotExists(String name, String type, EntityId ownerId, Set<Attribute<?>> attributes) {
         final var deviceOpt = getDeviceByName(name);
-        return deviceOpt.orElseGet(() -> createDevice(name, type, ownerId));
+        return deviceOpt.orElseGet(() -> createDevice(name, type, ownerId, attributes));
     }
 
     public Dashboard createDashboard(String title, EntityId ownerId) {
