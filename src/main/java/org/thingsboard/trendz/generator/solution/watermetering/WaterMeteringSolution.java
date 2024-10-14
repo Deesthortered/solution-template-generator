@@ -661,10 +661,12 @@ public class WaterMeteringSolution implements SolutionTemplateGenerator {
             tbRestClient.assignAssetToCustomer(ownerId, asset.getUuidId());
         }
 
-        Set<Attribute<?>> attributes = Set.of(
-                new Attribute<>("population", city.getPopulation())
-        );
-        tbRestClient.setEntityAttributes(asset.getUuidId(), EntityType.ASSET, Attribute.Scope.SERVER_SCOPE, attributes);
+        if (strictGeneration) {
+            final Set<Attribute<?>> attributes = Set.of(
+                    new Attribute<>("population", city.getPopulation())
+            );
+            tbRestClient.setEntityAttributes(asset.getUuidId(), EntityType.ASSET, Attribute.Scope.SERVER_SCOPE, attributes);
+        }
         return asset;
     }
 
@@ -703,10 +705,12 @@ public class WaterMeteringSolution implements SolutionTemplateGenerator {
         }
         DeviceCredentials deviceCredentials = tbRestClient.getDeviceCredentials(device.getUuidId());
 
-        Set<Attribute<?>> attributes = Set.of(
-                new Attribute<>("type", consumer.getType())
-        );
-        tbRestClient.setEntityAttributes(device.getUuidId(), EntityType.DEVICE, Attribute.Scope.SERVER_SCOPE, attributes);
+        if (strictGeneration) {
+            final Set<Attribute<?>> attributes = Set.of(
+                    new Attribute<>("type", consumer.getType())
+            );
+            tbRestClient.setEntityAttributes(device.getUuidId(), EntityType.DEVICE, Attribute.Scope.SERVER_SCOPE, attributes);
+        }
 
         tbRestClient.pushTelemetry(deviceCredentials.getCredentialsId(), consumer.getConsumption());
 

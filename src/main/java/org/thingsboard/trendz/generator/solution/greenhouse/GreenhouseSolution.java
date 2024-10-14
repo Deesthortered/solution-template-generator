@@ -2843,42 +2843,44 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
             tbRestClient.assignAssetToCustomer(ownerId, asset.getUuidId());
         }
 
-        Set<Attribute<?>> attributes = Set.of(
-                new Attribute<>("name", plant.getName()),
-                new Attribute<>("variety", plant.getVariety()),
-                new Attribute<>("dayMinTemperature", plant.getDayMinTemperature()),
-                new Attribute<>("dayMaxTemperature", plant.getDayMaxTemperature()),
-                new Attribute<>("nightMinTemperature", plant.getNightMinTemperature()),
-                new Attribute<>("nightMaxTemperature", plant.getNightMaxTemperature()),
-                new Attribute<>("dayMinLight", plant.getDayMinLight()),
-                new Attribute<>("dayMaxLight", plant.getDayMaxLight()),
-                new Attribute<>("nightMinLight", plant.getNightMinLight()),
-                new Attribute<>("nightMaxLight", plant.getNightMaxLight()),
-                new Attribute<>("minAirHumidity", plant.getMinAirHumidity()),
-                new Attribute<>("maxAirHumidity", plant.getMaxAirHumidity()),
-                new Attribute<>("minSoilMoisture", plant.getMinSoilMoisture()),
-                new Attribute<>("maxSoilMoisture", plant.getMaxSoilMoisture()),
-                new Attribute<>("minSoilTemperature", plant.getMinSoilTemperature()),
-                new Attribute<>("maxSoilTemperature", plant.getMaxSoilTemperature()),
-                new Attribute<>("minCo2Concentration", plant.getMinCo2Concentration()),
-                new Attribute<>("maxCo2Concentration", plant.getMaxCo2Concentration()),
-                new Attribute<>("minPh", plant.getMinPh()),
-                new Attribute<>("maxPh", plant.getMaxPh()),
-                new Attribute<>("minRipeningPeriodDays", plant.getMinRipeningPeriodDays()),
-                new Attribute<>("maxRipeningPeriodDays", plant.getMaxRipeningPeriodDays()),
-                new Attribute<>("minNitrogenLevel", plant.getMinNitrogenLevel()),
-                new Attribute<>("maxNitrogenLevel", plant.getMaxNitrogenLevel()),
-                new Attribute<>("minPhosphorusLevel", plant.getMinPhosphorusLevel()),
-                new Attribute<>("maxPhosphorusLevel", plant.getMaxPhosphorusLevel()),
-                new Attribute<>("minPotassiumLevel", plant.getMinPotassiumLevel()),
-                new Attribute<>("maxPotassiumLevel", plant.getMaxPotassiumLevel()),
-                new Attribute<>("averageCropWeight", plant.getAverageCropWeight()),
-                new Attribute<>("growthPeriodsDayList", plant.getGrowthPeriodsDayList()),
-                new Attribute<>("growthPeriodsNitrogenConsumption", plant.getGrowthPeriodsNitrogenConsumption()),
-                new Attribute<>("growthPeriodsPhosphorusConsumption", plant.getGrowthPeriodsPhosphorusConsumption()),
-                new Attribute<>("growthPeriodsPotassiumConsumption", plant.getGrowthPeriodsPotassiumConsumption())
-        );
-        tbRestClient.setEntityAttributes(asset.getUuidId(), EntityType.ASSET, Attribute.Scope.SERVER_SCOPE, attributes);
+        if (strictGeneration) {
+            final Set<Attribute<?>> attributes = Set.of(
+                    new Attribute<>("name", plant.getName()),
+                    new Attribute<>("variety", plant.getVariety()),
+                    new Attribute<>("dayMinTemperature", plant.getDayMinTemperature()),
+                    new Attribute<>("dayMaxTemperature", plant.getDayMaxTemperature()),
+                    new Attribute<>("nightMinTemperature", plant.getNightMinTemperature()),
+                    new Attribute<>("nightMaxTemperature", plant.getNightMaxTemperature()),
+                    new Attribute<>("dayMinLight", plant.getDayMinLight()),
+                    new Attribute<>("dayMaxLight", plant.getDayMaxLight()),
+                    new Attribute<>("nightMinLight", plant.getNightMinLight()),
+                    new Attribute<>("nightMaxLight", plant.getNightMaxLight()),
+                    new Attribute<>("minAirHumidity", plant.getMinAirHumidity()),
+                    new Attribute<>("maxAirHumidity", plant.getMaxAirHumidity()),
+                    new Attribute<>("minSoilMoisture", plant.getMinSoilMoisture()),
+                    new Attribute<>("maxSoilMoisture", plant.getMaxSoilMoisture()),
+                    new Attribute<>("minSoilTemperature", plant.getMinSoilTemperature()),
+                    new Attribute<>("maxSoilTemperature", plant.getMaxSoilTemperature()),
+                    new Attribute<>("minCo2Concentration", plant.getMinCo2Concentration()),
+                    new Attribute<>("maxCo2Concentration", plant.getMaxCo2Concentration()),
+                    new Attribute<>("minPh", plant.getMinPh()),
+                    new Attribute<>("maxPh", plant.getMaxPh()),
+                    new Attribute<>("minRipeningPeriodDays", plant.getMinRipeningPeriodDays()),
+                    new Attribute<>("maxRipeningPeriodDays", plant.getMaxRipeningPeriodDays()),
+                    new Attribute<>("minNitrogenLevel", plant.getMinNitrogenLevel()),
+                    new Attribute<>("maxNitrogenLevel", plant.getMaxNitrogenLevel()),
+                    new Attribute<>("minPhosphorusLevel", plant.getMinPhosphorusLevel()),
+                    new Attribute<>("maxPhosphorusLevel", plant.getMaxPhosphorusLevel()),
+                    new Attribute<>("minPotassiumLevel", plant.getMinPotassiumLevel()),
+                    new Attribute<>("maxPotassiumLevel", plant.getMaxPotassiumLevel()),
+                    new Attribute<>("averageCropWeight", plant.getAverageCropWeight()),
+                    new Attribute<>("growthPeriodsDayList", plant.getGrowthPeriodsDayList()),
+                    new Attribute<>("growthPeriodsNitrogenConsumption", plant.getGrowthPeriodsNitrogenConsumption()),
+                    new Attribute<>("growthPeriodsPhosphorusConsumption", plant.getGrowthPeriodsPhosphorusConsumption()),
+                    new Attribute<>("growthPeriodsPotassiumConsumption", plant.getGrowthPeriodsPotassiumConsumption())
+            );
+            tbRestClient.setEntityAttributes(asset.getUuidId(), EntityType.ASSET, Attribute.Scope.SERVER_SCOPE, attributes);
+        }
 
         this.plantToIdMap.put(plant, asset.getUuidId());
         return asset;
@@ -2904,13 +2906,15 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
             tbRestClient.assignAssetToCustomer(ownerId, asset.getUuidId());
         }
 
-        Set<Attribute<?>> attributes = Set.of(
-                new Attribute<>("address", greenhouse.getAddress()),
-                new Attribute<>("latitude", greenhouse.getLatitude()),
-                new Attribute<>("longitude", greenhouse.getLongitude()),
-                new Attribute<>("workersInCharge", greenhouse.getWorkersInCharge())
-        );
-        tbRestClient.setEntityAttributes(asset.getUuidId(), EntityType.ASSET, Attribute.Scope.SERVER_SCOPE, attributes);
+        if (strictGeneration) {
+            Set<Attribute<?>> attributes = Set.of(
+                    new Attribute<>("address", greenhouse.getAddress()),
+                    new Attribute<>("latitude", greenhouse.getLatitude()),
+                    new Attribute<>("longitude", greenhouse.getLongitude()),
+                    new Attribute<>("workersInCharge", greenhouse.getWorkersInCharge())
+            );
+            tbRestClient.setEntityAttributes(asset.getUuidId(), EntityType.ASSET, Attribute.Scope.SERVER_SCOPE, attributes);
+        }
 
         this.greenhouseToIdMap.put(greenhouse, asset.getUuidId());
         return asset;
@@ -2936,13 +2940,15 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
             tbRestClient.assignAssetToCustomer(ownerId, asset.getUuidId());
         }
 
-        Set<Attribute<?>> attributes = Set.of(
-                new Attribute<>("position_height", section.getPositionHeight()),
-                new Attribute<>("position_width", section.getPositionWidth()),
-                new Attribute<>("area", section.getArea()),
-                new Attribute<>("from_greenhouse", section.getFromGreenhouse())
-        );
-        tbRestClient.setEntityAttributes(asset.getUuidId(), EntityType.ASSET, Attribute.Scope.SERVER_SCOPE, attributes);
+        if (strictGeneration) {
+            final Set<Attribute<?>> attributes = Set.of(
+                    new Attribute<>("position_height", section.getPositionHeight()),
+                    new Attribute<>("position_width", section.getPositionWidth()),
+                    new Attribute<>("area", section.getArea()),
+                    new Attribute<>("from_greenhouse", section.getFromGreenhouse())
+            );
+            tbRestClient.setEntityAttributes(asset.getUuidId(), EntityType.ASSET, Attribute.Scope.SERVER_SCOPE, attributes);
+        }
 
         return asset;
     }
@@ -2966,11 +2972,13 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
         }
         DeviceCredentials deviceCredentials = tbRestClient.getDeviceCredentials(device.getUuidId());
 
-        Set<Attribute<?>> attributes = Set.of(
-                new Attribute<>("from_greenhouse", soilNpkSensor.getFromGreenhouse())
-        );
+        if (strictGeneration) {
+            final Set<Attribute<?>> attributes = Set.of(
+                    new Attribute<>("from_greenhouse", soilNpkSensor.getFromGreenhouse())
+            );
+            tbRestClient.setEntityAttributes(device.getUuidId(), EntityType.DEVICE, Attribute.Scope.SERVER_SCOPE, attributes);
+        }
 
-        tbRestClient.setEntityAttributes(device.getUuidId(), EntityType.DEVICE, Attribute.Scope.SERVER_SCOPE, attributes);
         tbRestClient.pushTelemetry(deviceCredentials.getCredentialsId(), soilNpkSensor.getNitrogen());
         tbRestClient.pushTelemetry(deviceCredentials.getCredentialsId(), soilNpkSensor.getPotassium());
         tbRestClient.pushTelemetry(deviceCredentials.getCredentialsId(), soilNpkSensor.getPhosphorus());
@@ -3001,11 +3009,13 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
         }
         DeviceCredentials deviceCredentials = tbRestClient.getDeviceCredentials(device.getUuidId());
 
-        Set<Attribute<?>> attributes = Set.of(
-                new Attribute<>("from_greenhouse", soilWarmMoistureSensor.getFromGreenhouse())
-        );
+        if (strictGeneration) {
+            final Set<Attribute<?>> attributes = Set.of(
+                    new Attribute<>("from_greenhouse", soilWarmMoistureSensor.getFromGreenhouse())
+            );
+            tbRestClient.setEntityAttributes(device.getUuidId(), EntityType.DEVICE, Attribute.Scope.SERVER_SCOPE, attributes);
+        }
 
-        tbRestClient.setEntityAttributes(device.getUuidId(), EntityType.DEVICE, Attribute.Scope.SERVER_SCOPE, attributes);
         tbRestClient.pushTelemetry(deviceCredentials.getCredentialsId(), soilWarmMoistureSensor.getTemperature());
         tbRestClient.pushTelemetry(deviceCredentials.getCredentialsId(), soilWarmMoistureSensor.getMoisture());
 
@@ -3035,11 +3045,13 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
         }
         DeviceCredentials deviceCredentials = tbRestClient.getDeviceCredentials(device.getUuidId());
 
-        Set<Attribute<?>> attributes = Set.of(
-                new Attribute<>("from_greenhouse", soilAciditySensor.getFromGreenhouse())
-        );
+        if (strictGeneration) {
+            Set<Attribute<?>> attributes = Set.of(
+                    new Attribute<>("from_greenhouse", soilAciditySensor.getFromGreenhouse())
+            );
+            tbRestClient.setEntityAttributes(device.getUuidId(), EntityType.DEVICE, Attribute.Scope.SERVER_SCOPE, attributes);
+        }
 
-        tbRestClient.setEntityAttributes(device.getUuidId(), EntityType.DEVICE, Attribute.Scope.SERVER_SCOPE, attributes);
         tbRestClient.pushTelemetry(deviceCredentials.getCredentialsId(), soilAciditySensor.getAcidity());
 
         this.soilAciditySensorToIdMap.put(soilAciditySensor, device.getUuidId());
@@ -3068,11 +3080,13 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
         }
         DeviceCredentials deviceCredentials = tbRestClient.getDeviceCredentials(device.getUuidId());
 
-        Set<Attribute<?>> attributes = Set.of(
-                new Attribute<>("from_greenhouse", insideAirWarmHumiditySensor.getFromGreenhouse())
-        );
+        if (strictGeneration) {
+            final Set<Attribute<?>> attributes = Set.of(
+                    new Attribute<>("from_greenhouse", insideAirWarmHumiditySensor.getFromGreenhouse())
+            );
+            tbRestClient.setEntityAttributes(device.getUuidId(), EntityType.DEVICE, Attribute.Scope.SERVER_SCOPE, attributes);
+        }
 
-        tbRestClient.setEntityAttributes(device.getUuidId(), EntityType.DEVICE, Attribute.Scope.SERVER_SCOPE, attributes);
         tbRestClient.pushTelemetry(deviceCredentials.getCredentialsId(), insideAirWarmHumiditySensor.getTemperatureIn());
         tbRestClient.pushTelemetry(deviceCredentials.getCredentialsId(), insideAirWarmHumiditySensor.getHumidityIn());
 
@@ -3098,11 +3112,13 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
         }
         DeviceCredentials deviceCredentials = tbRestClient.getDeviceCredentials(device.getUuidId());
 
-        Set<Attribute<?>> attributes = Set.of(
-                new Attribute<>("from_greenhouse", insideCO2Sensor.getFromGreenhouse())
-        );
+        if (strictGeneration) {
+            final Set<Attribute<?>> attributes = Set.of(
+                    new Attribute<>("from_greenhouse", insideCO2Sensor.getFromGreenhouse())
+            );
+            tbRestClient.setEntityAttributes(device.getUuidId(), EntityType.DEVICE, Attribute.Scope.SERVER_SCOPE, attributes);
+        }
 
-        tbRestClient.setEntityAttributes(device.getUuidId(), EntityType.DEVICE, Attribute.Scope.SERVER_SCOPE, attributes);
         tbRestClient.pushTelemetry(deviceCredentials.getCredentialsId(), insideCO2Sensor.getConcentration());
 
         this.insideCO2SensorToIdMap.put(insideCO2Sensor, device.getUuidId());
@@ -3127,11 +3143,13 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
         }
         DeviceCredentials deviceCredentials = tbRestClient.getDeviceCredentials(device.getUuidId());
 
-        Set<Attribute<?>> attributes = Set.of(
-                new Attribute<>("from_greenhouse", insideLightSensor.getFromGreenhouse())
-        );
+        if (strictGeneration) {
+            final Set<Attribute<?>> attributes = Set.of(
+                    new Attribute<>("from_greenhouse", insideLightSensor.getFromGreenhouse())
+            );
+            tbRestClient.setEntityAttributes(device.getUuidId(), EntityType.DEVICE, Attribute.Scope.SERVER_SCOPE, attributes);
+        }
 
-        tbRestClient.setEntityAttributes(device.getUuidId(), EntityType.DEVICE, Attribute.Scope.SERVER_SCOPE, attributes);
         tbRestClient.pushTelemetry(deviceCredentials.getCredentialsId(), insideLightSensor.getLightIn());
 
         this.insideLightSensorToIdMap.put(insideLightSensor, device.getUuidId());
@@ -3156,11 +3174,13 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
         }
         DeviceCredentials deviceCredentials = tbRestClient.getDeviceCredentials(device.getUuidId());
 
-        Set<Attribute<?>> attributes = Set.of(
-                new Attribute<>("from_greenhouse", harvestReporter.getFromGreenhouse())
-        );
+        if (strictGeneration) {
+            final Set<Attribute<?>> attributes = Set.of(
+                    new Attribute<>("from_greenhouse", harvestReporter.getFromGreenhouse())
+            );
+            tbRestClient.setEntityAttributes(device.getUuidId(), EntityType.DEVICE, Attribute.Scope.SERVER_SCOPE, attributes);
+        }
 
-        tbRestClient.setEntityAttributes(device.getUuidId(), EntityType.DEVICE, Attribute.Scope.SERVER_SCOPE, attributes);
         tbRestClient.pushTelemetry(deviceCredentials.getCredentialsId(), harvestReporter.getCropWeight());
         tbRestClient.pushTelemetry(deviceCredentials.getCredentialsId(), harvestReporter.getWorkerInCharge());
 
@@ -3186,11 +3206,13 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
         }
         DeviceCredentials deviceCredentials = tbRestClient.getDeviceCredentials(device.getUuidId());
 
-        Set<Attribute<?>> attributes = Set.of(
-                new Attribute<>("from_greenhouse", energyMeter.getFromGreenhouse())
-        );
+        if (strictGeneration) {
+            final Set<Attribute<?>> attributes = Set.of(
+                    new Attribute<>("from_greenhouse", energyMeter.getFromGreenhouse())
+            );
+            tbRestClient.setEntityAttributes(device.getUuidId(), EntityType.DEVICE, Attribute.Scope.SERVER_SCOPE, attributes);
+        }
 
-        tbRestClient.setEntityAttributes(device.getUuidId(), EntityType.DEVICE, Attribute.Scope.SERVER_SCOPE, attributes);
         tbRestClient.pushTelemetry(deviceCredentials.getCredentialsId(), energyMeter.getEnergyConsumptionLight());
         tbRestClient.pushTelemetry(deviceCredentials.getCredentialsId(), energyMeter.getEnergyConsumptionHeating());
         tbRestClient.pushTelemetry(deviceCredentials.getCredentialsId(), energyMeter.getEnergyConsumptionCooling());
@@ -3219,11 +3241,13 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
         }
         DeviceCredentials deviceCredentials = tbRestClient.getDeviceCredentials(device.getUuidId());
 
-        Set<Attribute<?>> attributes = Set.of(
-                new Attribute<>("from_greenhouse", waterMeter.getFromGreenhouse())
-        );
+        if (strictGeneration) {
+            final Set<Attribute<?>> attributes = Set.of(
+                    new Attribute<>("from_greenhouse", waterMeter.getFromGreenhouse())
+            );
+            tbRestClient.setEntityAttributes(device.getUuidId(), EntityType.DEVICE, Attribute.Scope.SERVER_SCOPE, attributes);
+        }
 
-        tbRestClient.setEntityAttributes(device.getUuidId(), EntityType.DEVICE, Attribute.Scope.SERVER_SCOPE, attributes);
         tbRestClient.pushTelemetry(deviceCredentials.getCredentialsId(), waterMeter.getConsumptionWater());
 
         this.waterMeterToIdMap.put(waterMeter, device.getUuidId());
@@ -3248,11 +3272,13 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
         }
         DeviceCredentials deviceCredentials = tbRestClient.getDeviceCredentials(device.getUuidId());
 
-        Set<Attribute<?>> attributes = Set.of(
-                new Attribute<>("from_greenhouse", outsideAirWarmHumiditySensor.getFromGreenhouse())
-        );
+        if (strictGeneration) {
+            final Set<Attribute<?>> attributes = Set.of(
+                    new Attribute<>("from_greenhouse", outsideAirWarmHumiditySensor.getFromGreenhouse())
+            );
+            tbRestClient.setEntityAttributes(device.getUuidId(), EntityType.DEVICE, Attribute.Scope.SERVER_SCOPE, attributes);
+        }
 
-        tbRestClient.setEntityAttributes(device.getUuidId(), EntityType.DEVICE, Attribute.Scope.SERVER_SCOPE, attributes);
         tbRestClient.pushTelemetry(deviceCredentials.getCredentialsId(), outsideAirWarmHumiditySensor.getTemperatureOut());
         tbRestClient.pushTelemetry(deviceCredentials.getCredentialsId(), outsideAirWarmHumiditySensor.getHumidityOut());
 
@@ -3278,11 +3304,13 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
         }
         DeviceCredentials deviceCredentials = tbRestClient.getDeviceCredentials(device.getUuidId());
 
-        Set<Attribute<?>> attributes = Set.of(
-                new Attribute<>("from_greenhouse", outsideLightSensor.getFromGreenhouse())
-        );
+        if (strictGeneration) {
+            final Set<Attribute<?>> attributes = Set.of(
+                    new Attribute<>("from_greenhouse", outsideLightSensor.getFromGreenhouse())
+            );
+            tbRestClient.setEntityAttributes(device.getUuidId(), EntityType.DEVICE, Attribute.Scope.SERVER_SCOPE, attributes);
+        }
 
-        tbRestClient.setEntityAttributes(device.getUuidId(), EntityType.DEVICE, Attribute.Scope.SERVER_SCOPE, attributes);
         tbRestClient.pushTelemetry(deviceCredentials.getCredentialsId(), outsideLightSensor.getLightOut());
 
         this.outsideLightSensorToIdMap.put(outsideLightSensor, device.getUuidId());

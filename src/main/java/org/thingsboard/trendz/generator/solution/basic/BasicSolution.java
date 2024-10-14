@@ -189,20 +189,22 @@ public class BasicSolution implements SolutionTemplateGenerator {
             DeviceCredentials credentials = tbRestClient.getDeviceCredentials(device.getUuidId());
             tbRestClient.pushTelemetry(credentials.getCredentialsId(), deviceTelemetry);
 
-            Set<Attribute<?>> attributes = Set.of(
-                    new Attribute<>("Generator Start Time", now),
-                    new Attribute<>("doubleKey", 1.0),
-                    new Attribute<>("longKey", 1L),
-                    new Attribute<>("intKey", 1),
-                    new Attribute<>("booleanKey", true),
-                    new Attribute<>("StringKey", "qwerty")
-            );
-            tbRestClient.setEntityAttributes(
-                    device.getUuidId(), EntityType.DEVICE, Attribute.Scope.SERVER_SCOPE, attributes
-            );
-            tbRestClient.setEntityAttributes(
-                    asset.getUuidId(), EntityType.ASSET, Attribute.Scope.SERVER_SCOPE, attributes
-            );
+            if (strictGeneration) {
+                final Set<Attribute<?>> attributes = Set.of(
+                        new Attribute<>("Generator Start Time", now),
+                        new Attribute<>("doubleKey", 1.0),
+                        new Attribute<>("longKey", 1L),
+                        new Attribute<>("intKey", 1),
+                        new Attribute<>("booleanKey", true),
+                        new Attribute<>("StringKey", "qwerty")
+                );
+                tbRestClient.setEntityAttributes(
+                        device.getUuidId(), EntityType.DEVICE, Attribute.Scope.SERVER_SCOPE, attributes
+                );
+                tbRestClient.setEntityAttributes(
+                        asset.getUuidId(), EntityType.ASSET, Attribute.Scope.SERVER_SCOPE, attributes
+                );
+            }
 
             TbMsgGeneratorNodeConfiguration generatorConfiguration = new TbMsgGeneratorNodeConfiguration();
             generatorConfiguration.setOriginatorType(EntityType.DEVICE);

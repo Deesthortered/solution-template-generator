@@ -9,6 +9,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.ApplicationContext;
 import org.thingsboard.trendz.generator.exception.SolutionValidationException;
 import org.thingsboard.trendz.generator.solution.SolutionTemplateGenerator;
+import org.thingsboard.trendz.generator.utils.DateTimeUtils;
 import org.thingsboard.trendz.generator.utils.RandomUtils;
 
 import java.time.ZonedDateTime;
@@ -34,6 +35,7 @@ public class SolutionTemplateGeneratorApplication implements CommandLineRunner {
     private final Long startGenerationTimeMs;
     private final Long endGenerationTimeMs;
     private final boolean strictGeneration;
+    private final boolean fullTelemetryGeneration;
     private final SolutionTemplateDispatcher solutionTemplateDispatcher;
 
     public SolutionTemplateGeneratorApplication(
@@ -41,19 +43,20 @@ public class SolutionTemplateGeneratorApplication implements CommandLineRunner {
             @Value("${generator.mode}") String mode,
             @Value("${generator.solutions}") List<String> currentSolutions,
             @Value("${generator.skipTelemetry}") boolean skipTelemetry,
-            @Value("${generator.startYear}") String startYear,
             @Value("${generator.startGenerationTime}") Long startGenerationTime,
             @Value("${generator.endGenerationTime}") Long endGenerationTime,
-            @Value("${generator.strictGeneration}") boolean strictGeneration
+            @Value("${generator.strictGeneration}") boolean strictGeneration,
+            @Value("${generator.strictGeneration}") boolean fullTelemetryGeneration
     ) {
         this.solutionTemplateDispatcher = solutionTemplateDispatcher;
         this.mode = mode;
         this.currentSolutions = currentSolutions;
         this.skipTelemetry = skipTelemetry;
-        this.startYear = ZonedDateTime.parse(startYear + "-01-01 00:00:00 UTC", formatter);
+        this.startYear = ZonedDateTime.parse(DateTimeUtils.fromTs(startGenerationTime) + "-01-01 00:00:00 UTC", formatter);
         this.startGenerationTimeMs = startGenerationTime;
         this.endGenerationTimeMs = endGenerationTime;
         this.strictGeneration = strictGeneration;
+        this.fullTelemetryGeneration = fullTelemetryGeneration;
     }
 
     @Override

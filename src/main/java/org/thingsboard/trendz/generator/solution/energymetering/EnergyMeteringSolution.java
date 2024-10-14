@@ -1166,10 +1166,12 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
             tbRestClient.assignAssetToCustomer(ownerId, asset.getUuidId());
         }
 
-        Set<Attribute<?>> attributes = Set.of(
-                new Attribute<>("address", building.getAddress())
-        );
-        tbRestClient.setEntityAttributes(asset.getUuidId(), EntityType.ASSET, Attribute.Scope.SERVER_SCOPE, attributes);
+        if (strictGeneration) {
+            final Set<Attribute<?>> attributes = Set.of(
+                    new Attribute<>("address", building.getAddress())
+            );
+            tbRestClient.setEntityAttributes(asset.getUuidId(), EntityType.ASSET, Attribute.Scope.SERVER_SCOPE, attributes);
+        }
         return asset;
     }
 
@@ -1189,13 +1191,15 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
             tbRestClient.assignAssetToCustomer(ownerId, asset.getUuidId());
         }
 
-        Set<Attribute<?>> attributes = Set.of(
-                new Attribute<>("floor", apartment.getFloor()),
-                new Attribute<>("area", apartment.getArea()),
-                new Attribute<>("roomNumber", apartment.getRoomNumber()),
-                new Attribute<>("state", apartment.getState())
-        );
-        tbRestClient.setEntityAttributes(asset.getUuidId(), EntityType.ASSET, Attribute.Scope.SERVER_SCOPE, attributes);
+        if (strictGeneration) {
+            final Set<Attribute<?>> attributes = Set.of(
+                    new Attribute<>("floor", apartment.getFloor()),
+                    new Attribute<>("area", apartment.getArea()),
+                    new Attribute<>("roomNumber", apartment.getRoomNumber()),
+                    new Attribute<>("state", apartment.getState())
+            );
+            tbRestClient.setEntityAttributes(asset.getUuidId(), EntityType.ASSET, Attribute.Scope.SERVER_SCOPE, attributes);
+        }
         return asset;
     }
 
@@ -1204,7 +1208,7 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
         if (tbRestClient.isPe()) {
             device = strictGeneration
                     ? tbRestClient.createDevice(energyMeter.getSystemName(), energyMeter.entityType(), new CustomerId(ownerId))
-                    : tbRestClient.createDeviceIfNotExists(energyMeter.getSystemName(), energyMeter.entityType(), new CustomerId(ownerId)) ;
+                    : tbRestClient.createDeviceIfNotExists(energyMeter.getSystemName(), energyMeter.entityType(), new CustomerId(ownerId));
             tbRestClient.addEntitiesToTheGroup(deviceGroupId, Set.of(device.getUuidId()));
         } else {
             device = strictGeneration
@@ -1215,11 +1219,13 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
         }
         DeviceCredentials deviceCredentials = tbRestClient.getDeviceCredentials(device.getUuidId());
 
-        Set<Attribute<?>> attributes = Set.of(
-                new Attribute<>("installDate", energyMeter.getInstallDate()),
-                new Attribute<>("serialNumber", energyMeter.getSerialNumber())
-        );
-        tbRestClient.setEntityAttributes(device.getUuidId(), EntityType.DEVICE, Attribute.Scope.SERVER_SCOPE, attributes);
+        if (strictGeneration) {
+            final Set<Attribute<?>> attributes = Set.of(
+                    new Attribute<>("installDate", energyMeter.getInstallDate()),
+                    new Attribute<>("serialNumber", energyMeter.getSerialNumber())
+            );
+            tbRestClient.setEntityAttributes(device.getUuidId(), EntityType.DEVICE, Attribute.Scope.SERVER_SCOPE, attributes);
+        }
 
         tbRestClient.pushTelemetry(deviceCredentials.getCredentialsId(), energyMeter.getEnergyConsumption());
         tbRestClient.pushTelemetry(deviceCredentials.getCredentialsId(), energyMeter.getEnergyConsAbsolute());
@@ -1244,11 +1250,13 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
         }
         DeviceCredentials deviceCredentials = tbRestClient.getDeviceCredentials(device.getUuidId());
 
-        Set<Attribute<?>> attributes = Set.of(
-                new Attribute<>("installDate", heatMeter.getInstallDate()),
-                new Attribute<>("serialNumber", heatMeter.getSerialNumber())
-        );
-        tbRestClient.setEntityAttributes(device.getUuidId(), EntityType.DEVICE, Attribute.Scope.SERVER_SCOPE, attributes);
+        if (strictGeneration) {
+            final Set<Attribute<?>> attributes = Set.of(
+                    new Attribute<>("installDate", heatMeter.getInstallDate()),
+                    new Attribute<>("serialNumber", heatMeter.getSerialNumber())
+            );
+            tbRestClient.setEntityAttributes(device.getUuidId(), EntityType.DEVICE, Attribute.Scope.SERVER_SCOPE, attributes);
+        }
 
         tbRestClient.pushTelemetry(deviceCredentials.getCredentialsId(), heatMeter.getTemperature());
         tbRestClient.pushTelemetry(deviceCredentials.getCredentialsId(), heatMeter.getHeatConsumption());
