@@ -87,8 +87,6 @@ public class SolutionTemplateGeneratorApplication implements CommandLineRunner {
                 }
             }
         }
-
-        System.exit(0);
     }
 
 

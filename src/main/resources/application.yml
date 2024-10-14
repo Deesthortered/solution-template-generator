@@ -1,5 +1,10 @@
-server:
-  port: 8887
+spring:
+  main:
+    web-application-type: NONE
+
+logging:
+  level:
+    org.thingsboard.trendz.generator.service.rest.TbRestRequestInterceptor: INFO
 
 tb:
   api:
@@ -20,7 +25,3 @@ generator:
   startGenerationTime: 1727740800000
   endGenerationTime: 1728345600000
   telemetryTtl: 315360000 # 10 years in seconds
-
-logging:
-  level:
-    org.thingsboard.trendz.generator.service.rest.TbRestRequestInterceptor: INFO
