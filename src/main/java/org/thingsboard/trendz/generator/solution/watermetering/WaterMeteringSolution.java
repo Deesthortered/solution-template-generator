@@ -791,7 +791,7 @@ public class WaterMeteringSolution implements SolutionTemplateGenerator {
 
         Telemetry<Long> fullConsumption = createTelemetryRegionFullConsumption(consumptionSet, skipTelemetry);
 
-        if (fullTelemetryGeneration) {
+        if (!fullTelemetryGeneration) {
             this.anomalyService.applyAnomaly(fullConsumption, regionConfiguration.getAnomalies());
         }
 
@@ -818,7 +818,7 @@ public class WaterMeteringSolution implements SolutionTemplateGenerator {
         Telemetry<Long> consumption = createTelemetryConsumerConsumption(
                 consumerConfiguration, startYear, skipTelemetry, fullTelemetryGeneration, startGenerationTime, endGenerationTime);
 
-        if (fullTelemetryGeneration) {
+        if (!fullTelemetryGeneration) {
             this.anomalyService.applyAnomaly(consumption, consumerConfiguration.getAnomalies());
         }
 
@@ -834,7 +834,7 @@ public class WaterMeteringSolution implements SolutionTemplateGenerator {
         String name = region.getSystemName() + " Pump Station";
         Telemetry<Long> provided = new Telemetry<>("provided", region.getFullConsumption().getPoints());
 
-        if (fullTelemetryGeneration) {
+        if (!fullTelemetryGeneration) {
             this.anomalyService.applyAnomaly(provided, pumpStationConfiguration.getAnomalies());
         }
 

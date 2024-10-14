@@ -841,7 +841,7 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
 
         Telemetry<Long> energyMeterConsumption = createTelemetryEnergyMeterConsumption(
                 configuration, skipTelemetry, fullTelemetryGeneration, startGenerationTime, endGenerationTime);
-        if (fullTelemetryGeneration) {
+        if (!fullTelemetryGeneration) {
             this.anomalyService.applyAnomaly(energyMeterConsumption, configuration.getAnomalies());
         }
         Telemetry<Long> energyMeterConsAbsolute = createTelemetryEnergyMeterConsAbsolute(energyMeterConsumption, skipTelemetry);
@@ -850,7 +850,7 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
                 configuration, skipTelemetry, fullTelemetryGeneration, startGenerationTime, endGenerationTime);
         Telemetry<Long> heatMeterConsumption = createTelemetryHeatMeterConsumption(
                 configuration, skipTelemetry, fullTelemetryGeneration, startGenerationTime, endGenerationTime);
-        if (fullTelemetryGeneration) {
+        if (!fullTelemetryGeneration) {
             this.anomalyService.applyAnomaly(heatMeterTemperature, configuration.getAnomalies());
             this.anomalyService.applyAnomaly(heatMeterConsumption, configuration.getAnomalies());
         }
