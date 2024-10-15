@@ -2,6 +2,7 @@ package org.thingsboard.trendz.generator.solution.energymetering;
 
 import com.google.common.collect.Sets;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.thingsboard.server.common.data.Device;
@@ -925,7 +926,7 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
         }
 
         Telemetry<Long> result = new Telemetry<>("energyConsumption");
-        long now = ZonedDateTime.now(ZoneId.of("UTC")).toInstant().toEpochMilli();
+        long now = System.currentTimeMillis();
 
         long startTs = configuration.getStartDate();
         boolean occupied = configuration.isOccupied();
@@ -941,24 +942,15 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
                     double phase = (3.14 * 1) / 12;
                     double koeff = 3.14 / 24;
 
-                    long fromMs = startTs;
-                    long toMs = now;
-
-                    if (!fullTelemetryGeneration) {
-                        try {
-                            var fromEndPair = DateTimeUtils.getDatesIntersection(fromMs, toMs, startGenerationTime, endGenerationTime);
-                            fromMs = fromEndPair.getA();
-                            toMs = fromEndPair.getB();
-                        } catch (IllegalStateException e) {
-                            return new Telemetry<>("skip");
-                        }
-                    } else {
-                        fromMs = startGenerationTime;
-                        toMs = endGenerationTime;
+                    Pair<Long, Long> fromToPair;
+                    try {
+                        fromToPair = calculateNewDateRange(startTs, now, startGenerationTime, endGenerationTime, fullTelemetryGeneration);
+                    } catch (IllegalStateException e) {
+                        return new Telemetry<>("skip");
                     }
 
-                    ZonedDateTime startDate = DateTimeUtils.fromTs(fromMs).truncatedTo(ChronoUnit.HOURS);
-                    ZonedDateTime nowDate = DateTimeUtils.fromTs(toMs).truncatedTo(ChronoUnit.HOURS);
+                    ZonedDateTime startDate = DateTimeUtils.fromTs(fromToPair.getLeft()).truncatedTo(ChronoUnit.HOURS);
+                    ZonedDateTime nowDate = DateTimeUtils.fromTs(fromToPair.getRight()).truncatedTo(ChronoUnit.HOURS);
                     ZonedDateTime iteratedDate = startDate;
                     while (iteratedDate.isBefore(nowDate)) {
                         long iteratedTs = DateTimeUtils.toTs(iteratedDate);
@@ -979,24 +971,15 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
                     double phase = (3.14 * 3) / 12;
                     double koeff = 3.14 / 12;
 
-                    long fromMs = startTs;
-                    long toMs = now;
-
-                    if (!fullTelemetryGeneration) {
-                        try {
-                            var fromEndPair = DateTimeUtils.getDatesIntersection(fromMs, toMs, startGenerationTime, endGenerationTime);
-                            fromMs = fromEndPair.getA();
-                            toMs = fromEndPair.getB();
-                        } catch (IllegalStateException e) {
-                            return new Telemetry<>("skip");
-                        }
-                    } else {
-                        fromMs = startGenerationTime;
-                        toMs = endGenerationTime;
+                    Pair<Long, Long> fromToPair;
+                    try {
+                        fromToPair = calculateNewDateRange(startTs, now, startGenerationTime, endGenerationTime, fullTelemetryGeneration);
+                    } catch (IllegalStateException e) {
+                        return new Telemetry<>("skip");
                     }
 
-                    ZonedDateTime startDate = DateTimeUtils.fromTs(fromMs).truncatedTo(ChronoUnit.HOURS);
-                    ZonedDateTime nowDate = DateTimeUtils.fromTs(toMs).truncatedTo(ChronoUnit.HOURS);
+                    ZonedDateTime startDate = DateTimeUtils.fromTs(fromToPair.getLeft()).truncatedTo(ChronoUnit.HOURS);
+                    ZonedDateTime nowDate = DateTimeUtils.fromTs(fromToPair.getRight()).truncatedTo(ChronoUnit.HOURS);
                     ZonedDateTime iteratedDate = startDate;
                     while (iteratedDate.isBefore(nowDate)) {
                         long iteratedTs = DateTimeUtils.toTs(iteratedDate);
@@ -1018,24 +1001,15 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
                     double koeffDay = 3.14 / 14;
                     double koeffHour = 3.14 / 6;
 
-                    long fromMs = startTs;
-                    long toMs = now;
-
-                    if (!fullTelemetryGeneration) {
-                        try {
-                            var fromEndPair = DateTimeUtils.getDatesIntersection(fromMs, toMs, startGenerationTime, endGenerationTime);
-                            fromMs = fromEndPair.getA();
-                            toMs = fromEndPair.getB();
-                        } catch (IllegalStateException e) {
-                            return new Telemetry<>("skip");
-                        }
-                    } else {
-                        fromMs = startGenerationTime;
-                        toMs = endGenerationTime;
+                    Pair<Long, Long> fromToPair;
+                    try {
+                        fromToPair = calculateNewDateRange(startTs, now, startGenerationTime, endGenerationTime, fullTelemetryGeneration);
+                    } catch (IllegalStateException e) {
+                        return new Telemetry<>("skip");
                     }
 
-                    ZonedDateTime startDate = DateTimeUtils.fromTs(fromMs).truncatedTo(ChronoUnit.HOURS);
-                    ZonedDateTime nowDate = DateTimeUtils.fromTs(toMs).truncatedTo(ChronoUnit.HOURS);
+                    ZonedDateTime startDate = DateTimeUtils.fromTs(fromToPair.getLeft()).truncatedTo(ChronoUnit.HOURS);
+                    ZonedDateTime nowDate = DateTimeUtils.fromTs(fromToPair.getRight()).truncatedTo(ChronoUnit.HOURS);
                     ZonedDateTime iteratedDate = startDate;
                     while (iteratedDate.isBefore(nowDate)) {
                         long iteratedTs = DateTimeUtils.toTs(iteratedDate);
@@ -1060,24 +1034,15 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
             double phase = (3.14 * 3) / 128;
             double koeff = 3.14 / 128;
 
-            long fromMs = startTs;
-            long toMs = now;
-
-            if (!fullTelemetryGeneration) {
-                try {
-                    var fromEndPair = DateTimeUtils.getDatesIntersection(fromMs, toMs, startGenerationTime, endGenerationTime);
-                    fromMs = fromEndPair.getA();
-                    toMs = fromEndPair.getB();
-                } catch (IllegalStateException e) {
-                    return new Telemetry<>("skip");
-                }
-            } else {
-                fromMs = startGenerationTime;
-                toMs = endGenerationTime;
+            Pair<Long, Long> fromToPair;
+            try {
+                fromToPair = calculateNewDateRange(startTs, now, startGenerationTime, endGenerationTime, fullTelemetryGeneration);
+            } catch (IllegalStateException e) {
+                return new Telemetry<>("skip");
             }
 
-            ZonedDateTime startDate = DateTimeUtils.fromTs(fromMs).truncatedTo(ChronoUnit.HOURS);
-            ZonedDateTime nowDate = DateTimeUtils.fromTs(toMs).truncatedTo(ChronoUnit.HOURS);
+            ZonedDateTime startDate = DateTimeUtils.fromTs(fromToPair.getLeft()).truncatedTo(ChronoUnit.HOURS);
+            ZonedDateTime nowDate = DateTimeUtils.fromTs(fromToPair.getRight()).truncatedTo(ChronoUnit.HOURS);
             ZonedDateTime iteratedDate = startDate;
             while (iteratedDate.isBefore(nowDate)) {
                 long iteratedTs = DateTimeUtils.toTs(iteratedDate);
@@ -1116,31 +1081,22 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
         }
 
         Telemetry<Long> result = new Telemetry<>("temperature");
-        long now = ZonedDateTime.now(ZoneId.of("UTC")).toInstant().toEpochMilli();
+        long now = System.currentTimeMillis();
 
         long startTs = configuration.getStartDate();
         boolean occupied = configuration.isOccupied();
 
         long noiseAmplitude = 3;
 
-        long fromMs = startTs;
-        long toMs = now;
-
-        if (!fullTelemetryGeneration) {
-            try {
-                var fromEndPair = DateTimeUtils.getDatesIntersection(fromMs, toMs, startGenerationTime, endGenerationTime);
-                fromMs = fromEndPair.getA();
-                toMs = fromEndPair.getB();
-            } catch (IllegalStateException e) {
-                return new Telemetry<>("skip");
-            }
-        } else {
-            fromMs = startGenerationTime;
-            toMs = endGenerationTime;
+        Pair<Long, Long> fromToPair;
+        try {
+            fromToPair = calculateNewDateRange(startTs, now, startGenerationTime, endGenerationTime, fullTelemetryGeneration);
+        } catch (IllegalStateException e) {
+            return new Telemetry<>("skip");
         }
 
-        ZonedDateTime startDate = DateTimeUtils.fromTs(fromMs).truncatedTo(ChronoUnit.HOURS);
-        ZonedDateTime nowDate = DateTimeUtils.fromTs(toMs).truncatedTo(ChronoUnit.HOURS);
+        ZonedDateTime startDate = DateTimeUtils.fromTs(fromToPair.getLeft()).truncatedTo(ChronoUnit.HOURS);
+        ZonedDateTime nowDate = DateTimeUtils.fromTs(fromToPair.getRight()).truncatedTo(ChronoUnit.HOURS);
         ZonedDateTime iteratedDate = startDate;
         while (iteratedDate.isBefore(nowDate)) {
             long iteratedTs = DateTimeUtils.toTs(iteratedDate);
@@ -1169,20 +1125,17 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
         }
 
         long fromMs = configuration.getStartDate();
-        long toMs = ZonedDateTime.now(ZoneId.of("UTC")).toInstant().toEpochMilli();
+        long toMs = System.currentTimeMillis();
 
-        if (!fullTelemetryGeneration) {
-            try {
-                var fromEndPair = DateTimeUtils.getDatesIntersection(fromMs, toMs, startGenerationTime, endGenerationTime);
-                fromMs = fromEndPair.getA();
-                toMs = fromEndPair.getB();
-            } catch (IllegalStateException e) {
-                return new Telemetry<>("skip");
-            }
-        } else {
-            fromMs = startGenerationTime;
-            toMs = endGenerationTime;
+        Pair<Long, Long> fromToPair;
+        try {
+            fromToPair = calculateNewDateRange(fromMs, toMs, startGenerationTime, endGenerationTime, fullTelemetryGeneration);
+        } catch (IllegalStateException e) {
+            return new Telemetry<>("skip");
         }
+
+        fromMs = fromToPair.getLeft();
+        toMs = fromToPair.getRight();
 
         boolean occupied = configuration.isOccupied();
         int level = configuration.getLevel();
@@ -1435,5 +1388,22 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
 
     private String getHeatMeterConsAbsoluteFile() {
         return "heat_cons_absolute.js";
+    }
+
+    private Pair<Long, Long> calculateNewDateRange(long from, long to, long startGenerationTime, long endGenerationTime, boolean fullTelemetryGeneration)
+            throws IllegalStateException {
+        long newfromMs = from;
+        long newToMs = to;
+
+        if (!fullTelemetryGeneration) {
+            var fromEndPair = DateTimeUtils.getDatesIntersection(newfromMs, newToMs, startGenerationTime, endGenerationTime);
+            newfromMs = fromEndPair.getLeft();
+            newToMs = fromEndPair.getRight();
+        } else {
+            newfromMs = startGenerationTime;
+            newToMs = endGenerationTime;
+        }
+
+        return Pair.of(newfromMs, newToMs);
     }
 }

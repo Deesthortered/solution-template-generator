@@ -1,7 +1,7 @@
 package org.thingsboard.trendz.generator.utils;
 
 import org.thingsboard.trendz.generator.model.tb.Timestamp;
-import oshi.util.tuples.Pair;
+import org.apache.commons.lang3.tuple.Pair;
 
 import java.time.Instant;
 import java.time.ZoneId;
@@ -34,9 +34,9 @@ public class DateTimeUtils {
         final long earliestEndDate = Math.min(endDate, endGenerationDate);
 
         if (earliestEndDate < latestStartDate) {
-            throw new IllegalStateException("The latestStartDate is less than the earliestEndDate");
+            throw new IllegalStateException("The earliestEndDate is less than the latestStartDate");
         }
 
-        return new Pair<>(latestStartDate, earliestEndDate);
+        return Pair.of(latestStartDate, earliestEndDate);
     }
 }

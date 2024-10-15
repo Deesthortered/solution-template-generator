@@ -857,24 +857,18 @@ public class WaterMeteringSolution implements SolutionTemplateGenerator {
         Telemetry<Long> result = new Telemetry<>("consumption");
         ConsumerType type = consumerConfiguration.getType();
 
-        long fromMs = startYear.toInstant().toEpochMilli();
-        long toMs = ZonedDateTime.now(ZoneId.of("UTC")).toInstant().toEpochMilli();
+        long fromMs = DateTimeUtils.toTs(startYear);
+        long toMs = System.currentTimeMillis();
 
-        if (!fullTelemetryGeneration) {
-            try {
-                var fromEndPair = DateTimeUtils.getDatesIntersection(fromMs, toMs, startGenerationTime, endGenerationTime);
-                fromMs = fromEndPair.getA();
-                toMs = fromEndPair.getB();
-            } catch (IllegalStateException e) {
-                return new Telemetry<>("skip");
-            }
-        } else {
-            fromMs = startGenerationTime;
-            toMs = endGenerationTime;
+        Pair<Long, Long> fromToPair;
+        try {
+            fromToPair = calculateNewDateRange(fromMs, toMs, startGenerationTime, endGenerationTime, fullTelemetryGeneration);
+        } catch (IllegalStateException e) {
+            return new Telemetry<>("skip");
         }
 
-        ZonedDateTime startDate = DateTimeUtils.fromTs(fromMs, ZoneId.of("UTC")).truncatedTo(ChronoUnit.HOURS);
-        ZonedDateTime nowDate = DateTimeUtils.fromTs(toMs, ZoneId.of("UTC")).truncatedTo(ChronoUnit.HOURS);
+        ZonedDateTime startDate = DateTimeUtils.fromTs(fromToPair.getLeft()).truncatedTo(ChronoUnit.HOURS);
+        ZonedDateTime nowDate = DateTimeUtils.fromTs(fromToPair.getRight(), ZoneId.of("UTC")).truncatedTo(ChronoUnit.HOURS);
 
         Pair<Long, Long> intervalValues = getIntervalValuesRangeByConsumerType(consumerConfiguration.getType());
         int fullInterval = 366;
@@ -1237,5 +1231,22 @@ public class WaterMeteringSolution implements SolutionTemplateGenerator {
             default:
                 throw new IllegalArgumentException("Unsupported type: " + type);
         }
+    }
+
+    private Pair<Long, Long> calculateNewDateRange(long from, long to, long startGenerationTime, long endGenerationTime, boolean fullTelemetryGeneration)
+            throws IllegalStateException {
+        long newfromMs = from;
+        long newToMs = to;
+
+        if (!fullTelemetryGeneration) {
+            var fromEndPair = DateTimeUtils.getDatesIntersection(newfromMs, newToMs, startGenerationTime, endGenerationTime);
+            newfromMs = fromEndPair.getLeft();
+            newToMs = fromEndPair.getRight();
+        } else {
+            newfromMs = startGenerationTime;
+            newToMs = endGenerationTime;
+        }
+
+        return Pair.of(newfromMs, newToMs);
     }
 }

@@ -52,7 +52,7 @@ public class SolutionTemplateGeneratorApplication implements CommandLineRunner {
         this.mode = mode;
         this.currentSolutions = currentSolutions;
         this.skipTelemetry = skipTelemetry;
-        this.startYear = DateTimeUtils.fromTs(startGenerationTime, ZoneId.of("UTC"));
+        this.startYear = DateTimeUtils.fromTs(startGenerationTime);
         this.startGenerationTimeMs = startGenerationTime;
         this.endGenerationTimeMs = endGenerationTime;
         this.strictGeneration = strictGeneration;
