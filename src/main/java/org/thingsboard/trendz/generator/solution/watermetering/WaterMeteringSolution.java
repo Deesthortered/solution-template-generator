@@ -322,12 +322,10 @@ public class WaterMeteringSolution implements SolutionTemplateGenerator {
                         connections.add(ruleChainBuildingService.createRuleConnection(index + 3, index + 6));
 
                         consumerCounter++;
-                        RuleChainMetaData savedMetaData = this.tbRestClient.saveRuleChainMetadata(metaData);
-//                        TimeUnit.SECONDS.sleep(10);
-//                        log.warn("Sleeping for solving race condition problem!");
                     }
                 }
             }
+            RuleChainMetaData savedMetaData = this.tbRestClient.saveRuleChainMetadata(metaData);
         } catch (Exception e) {
             throw new RuntimeException("Exception during rule chain creation", e);
         }
