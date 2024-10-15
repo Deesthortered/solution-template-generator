@@ -694,11 +694,11 @@ public class TbRestClient {
         var hasNextPage = true;
         PageData<T> page;
 
-        customParams.put("page", pageIndex);
-        customParams.put("pageSize", pageSize);
-
         try {
             while (hasNextPage) {
+                customParams.put("page", pageIndex);
+                customParams.put("pageSize", pageSize);
+
                 final var urlParams = generateUrlParams(customParams);
                 page = restTemplate.exchange(
                         baseURL + request + urlParams,
