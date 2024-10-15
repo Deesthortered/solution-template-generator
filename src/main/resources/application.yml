@@ -2,10 +2,6 @@ spring:
   main:
     web-application-type: NONE
 
-logging:
-  level:
-    org.thingsboard.trendz.generator.service.rest.TbRestRequestInterceptor: INFO
-
 tb:
   api:
     host:     "${GENERATOR_HOST:http://localhost:8080}"
