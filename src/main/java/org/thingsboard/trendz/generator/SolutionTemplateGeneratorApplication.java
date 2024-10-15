@@ -46,7 +46,7 @@ public class SolutionTemplateGeneratorApplication implements CommandLineRunner {
             @Value("${generator.startGenerationTime}") Long startGenerationTime,
             @Value("${generator.endGenerationTime}") Long endGenerationTime,
             @Value("${generator.strictGeneration}") boolean strictGeneration,
-            @Value("${generator.strictGeneration}") boolean fullTelemetryGeneration
+            @Value("${generator.fullTelemetryGeneration}") boolean fullTelemetryGeneration
     ) {
         this.solutionTemplateDispatcher = solutionTemplateDispatcher;
         this.mode = mode;
