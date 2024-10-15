@@ -14,8 +14,8 @@ import org.thingsboard.trendz.generator.utils.RandomUtils;
 
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Locale;
 import java.util.TimeZone;
 
 @Slf4j
@@ -95,6 +95,7 @@ public class SolutionTemplateGeneratorApplication implements CommandLineRunner {
 
     private static void setDefaultTimezone() {
         TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
+        Locale.setDefault(Locale.US);
     }
 
     public static void main(String[] args) {
