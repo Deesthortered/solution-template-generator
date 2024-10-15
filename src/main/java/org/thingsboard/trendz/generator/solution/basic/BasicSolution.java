@@ -7,6 +7,7 @@ import org.thingsboard.rule.engine.debug.TbMsgGeneratorNode;
 import org.thingsboard.rule.engine.debug.TbMsgGeneratorNodeConfiguration;
 import org.thingsboard.rule.engine.telemetry.TbMsgTimeseriesNode;
 import org.thingsboard.rule.engine.telemetry.TbMsgTimeseriesNodeConfiguration;
+import org.thingsboard.server.common.data.Customer;
 import org.thingsboard.server.common.data.Device;
 import org.thingsboard.server.common.data.EntityType;
 import org.thingsboard.server.common.data.asset.Asset;
@@ -23,6 +24,7 @@ import org.thingsboard.trendz.generator.exception.DeviceAlreadyExistException;
 import org.thingsboard.trendz.generator.exception.RuleChainAlreadyExistException;
 import org.thingsboard.trendz.generator.exception.SolutionValidationException;
 import org.thingsboard.trendz.generator.model.tb.Attribute;
+import org.thingsboard.trendz.generator.model.tb.CustomerUser;
 import org.thingsboard.trendz.generator.model.tb.NodeConnectionType;
 import org.thingsboard.trendz.generator.model.tb.RelationType;
 import org.thingsboard.trendz.generator.model.tb.RuleNodeAdditionalInfo;
@@ -118,19 +120,15 @@ public class BasicSolution implements SolutionTemplateGenerator {
     }
 
     @Override
-    public void generate(boolean skipTelemetry,
-                         ZonedDateTime startYear,
-                         boolean strictGeneration,
-                         boolean fullTelemetryGeneration,
-                         long startGenerationTime,
-                         long endGenerationTime) {
+    public void generate(boolean skipTelemetry, ZonedDateTime startYear, boolean strictGeneration, boolean fullTelemetryGeneration,
+                         long startGenerationTime, long endGenerationTime) {
         log.info("Basic Solution - start generation");
         try {
 
-            final var customer = strictGeneration
+            Customer customer = strictGeneration
                     ? tbRestClient.createCustomer(CUSTOMER_TITLE)
                     : tbRestClient.createCustomerIfNotExists(CUSTOMER_TITLE);
-            final var customerUser = tbRestClient.createCustomerUser(
+            CustomerUser customerUser = tbRestClient.createCustomerUser(
                     customer, CUSTOMER_USER_EMAIL, CUSTOMER_USER_PASSWORD,
                     CUSTOMER_USER_FIRST_NAME, CUSTOMER_USER_LAST_NAME
             );
@@ -143,8 +141,8 @@ public class BasicSolution implements SolutionTemplateGenerator {
 
             Asset asset;
             Device device;
-            final long now = System.currentTimeMillis();
-            final Set<Attribute<?>> attributes = Set.of(
+            long now = System.currentTimeMillis();
+            Set<Attribute<?>> attributes = Set.of(
                     new Attribute<>("Generator Start Time", now),
                     new Attribute<>("doubleKey", 1.0),
                     new Attribute<>("longKey", 1L),

@@ -5,6 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.thingsboard.server.common.data.Customer;
 import org.thingsboard.server.common.data.Device;
 import org.thingsboard.server.common.data.EntityType;
 import org.thingsboard.server.common.data.asset.Asset;
@@ -46,7 +47,6 @@ import org.thingsboard.trendz.generator.utils.DateTimeUtils;
 import org.thingsboard.trendz.generator.utils.MySortedSet;
 import org.thingsboard.trendz.generator.utils.RandomUtils;
 
-import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
@@ -130,12 +130,8 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
     }
 
     @Override
-    public void generate(boolean skipTelemetry,
-                         ZonedDateTime startYear,
-                         boolean strictGeneration,
-                         boolean fullTelemetryGeneration,
-                         long startGenerationTime,
-                         long endGenerationTime) {
+    public void generate(boolean skipTelemetry, ZonedDateTime startYear, boolean strictGeneration, boolean fullTelemetryGeneration,
+                         long startGenerationTime, long endGenerationTime) {
         log.info("Energy Metering Solution - start generation");
         try {
             CustomerData customerData = createCustomerData(strictGeneration);
@@ -196,10 +192,10 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
 
 
     private CustomerData createCustomerData(boolean strictGeneration) {
-        var customer = strictGeneration
+        Customer customer = strictGeneration
                 ? tbRestClient.createCustomer(CUSTOMER_TITLE)
                 : tbRestClient.createCustomerIfNotExists(CUSTOMER_TITLE);
-        var customerUser = this.tbRestClient.createCustomerUser(
+        CustomerUser customerUser = this.tbRestClient.createCustomerUser(
                 customer, CUSTOMER_USER_EMAIL, CUSTOMER_USER_PASSWORD,
                 CUSTOMER_USER_FIRST_NAME, CUSTOMER_USER_LAST_NAME
         );
@@ -370,11 +366,8 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
     }
 
 
-    private ModelData makeData(boolean skipTelemetry,
-                               ZonedDateTime startYear,
-                               boolean fullTelemetryGeneration,
-                               long startGenerationTime,
-                               long endGenerationTime) {
+    private ModelData makeData(boolean skipTelemetry, ZonedDateTime startYear, boolean fullTelemetryGeneration,
+                               long startGenerationTime, long endGenerationTime) {
         long TS_JANUARY = DateTimeUtils.toTs(startYear);
         long TS_FEBRUARY = DateTimeUtils.toTs(startYear.plusMonths(1));
         long TS_MARCH = DateTimeUtils.toTs(startYear.plusMonths(2));
@@ -791,11 +784,7 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
     }
 
 
-    private Building makeBuildingByConfiguration(BuildingConfiguration configuration,
-                                                 boolean skipTelemetry,
-                                                 boolean fullTelemetryGeneration,
-                                                 long startGenerationTime,
-                                                 long endGenerationTime) {
+    private Building makeBuildingByConfiguration(BuildingConfiguration configuration, boolean skipTelemetry, boolean fullTelemetryGeneration, long startGenerationTime, long endGenerationTime) {
         Set<Apartment> apartments = MySortedSet.of();
         for (int floor = 1; floor <= configuration.getFloorCount(); floor++) {
             for (int number = 1; number <= configuration.getApartmentsByFloorCount(); number++) {
@@ -827,15 +816,8 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
                 .build();
     }
 
-    private Apartment createApartmentByConfiguration(ApartmentConfiguration configuration,
-                                                     String buildingName,
-                                                     int floor,
-                                                     int number,
-                                                     int apartmentByFloorCount,
-                                                     boolean skipTelemetry,
-                                                     boolean fullTelemetryGeneration,
-                                                     long startGenerationTime,
-                                                     long endGenerationTime) {
+    private Apartment createApartmentByConfiguration(ApartmentConfiguration configuration, String buildingName, int floor, int number, int apartmentByFloorCount,
+                                                     boolean skipTelemetry, boolean fullTelemetryGeneration, long startGenerationTime, long endGenerationTime) {
         String titleNumber = floor + "0" + number;
         String letterAndNumber = buildingName.charAt(0) + titleNumber;
         long startDate = configuration.getStartDate() + createRandomDateBias();
@@ -916,11 +898,8 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
     }
 
 
-    private Telemetry<Long> createTelemetryEnergyMeterConsumption(ApartmentConfiguration configuration,
-                                                                  boolean skipTelemetry,
-                                                                  boolean fullTelemetryGeneration,
-                                                                  long startGenerationTime,
-                                                                  long endGenerationTime) {
+    private Telemetry<Long> createTelemetryEnergyMeterConsumption(ApartmentConfiguration configuration, boolean skipTelemetry, boolean fullTelemetryGeneration,
+                                                                  long startGenerationTime, long endGenerationTime) {
         if (skipTelemetry) {
             return new Telemetry<>("skip");
         }
@@ -1071,11 +1050,7 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
         return result;
     }
 
-    private Telemetry<Long> createTelemetryHeatMeterTemperature(ApartmentConfiguration configuration,
-                                                                boolean skipTelemetry,
-                                                                boolean fullTelemetryGeneration,
-                                                                long startGenerationTime,
-                                                                long endGenerationTime) {
+    private Telemetry<Long> createTelemetryHeatMeterTemperature(ApartmentConfiguration configuration, boolean skipTelemetry, boolean fullTelemetryGeneration, long startGenerationTime, long endGenerationTime) {
         if (skipTelemetry) {
             return new Telemetry<>("skip");
         }
@@ -1115,11 +1090,8 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
         return result;
     }
 
-    private Telemetry<Long> createTelemetryHeatMeterConsumption(ApartmentConfiguration configuration,
-                                                                boolean skipTelemetry,
-                                                                boolean fullTelemetryGeneration,
-                                                                long startGenerationTime,
-                                                                long endGenerationTime) {
+    private Telemetry<Long> createTelemetryHeatMeterConsumption(ApartmentConfiguration configuration, boolean skipTelemetry, boolean fullTelemetryGeneration,
+                                                                long startGenerationTime, long endGenerationTime) {
         if (skipTelemetry) {
             return new Telemetry<>("skip");
         }
@@ -1241,7 +1213,7 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
 
     private Asset createBuilding(Building building, UUID ownerId, UUID assetGroupId, boolean strictGeneration) {
         Asset asset;
-        final Set<Attribute<?>> attributes = Set.of(
+        Set<Attribute<?>> attributes = Set.of(
                 new Attribute<>("address", building.getAddress())
         );
 
@@ -1265,7 +1237,7 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
 
     private Asset createApartment(Apartment apartment, UUID ownerId, UUID assetGroupId, boolean strictGeneration) {
         Asset asset;
-        final Set<Attribute<?>> attributes = Set.of(
+        Set<Attribute<?>> attributes = Set.of(
                 new Attribute<>("floor", apartment.getFloor()),
                 new Attribute<>("area", apartment.getArea()),
                 new Attribute<>("roomNumber", apartment.getRoomNumber()),
@@ -1291,7 +1263,7 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
 
     private Device createEnergyMeter(EnergyMeter energyMeter, UUID ownerId, UUID deviceGroupId, boolean strictGeneration) {
         Device device;
-        final Set<Attribute<?>> attributes = Set.of(
+        Set<Attribute<?>> attributes = Set.of(
                 new Attribute<>("installDate", energyMeter.getInstallDate()),
                 new Attribute<>("serialNumber", energyMeter.getSerialNumber())
         );
@@ -1319,7 +1291,7 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
 
     private Device createHeatMeter(HeatMeter heatMeter, UUID ownerId, UUID deviceGroupId, boolean strictGeneration) {
         Device device;
-        final Set<Attribute<?>> attributes = Set.of(
+        Set<Attribute<?>> attributes = Set.of(
                 new Attribute<>("installDate", heatMeter.getInstallDate()),
                 new Attribute<>("serialNumber", heatMeter.getSerialNumber())
         );

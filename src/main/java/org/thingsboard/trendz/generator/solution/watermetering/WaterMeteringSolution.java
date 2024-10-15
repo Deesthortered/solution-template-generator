@@ -5,6 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.thingsboard.server.common.data.Customer;
 import org.thingsboard.server.common.data.Device;
 import org.thingsboard.server.common.data.EntityType;
 import org.thingsboard.server.common.data.asset.Asset;
@@ -51,7 +52,6 @@ import org.thingsboard.trendz.generator.utils.MySortedSet;
 import org.thingsboard.trendz.generator.utils.RandomUtils;
 
 import java.time.DayOfWeek;
-import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
@@ -129,12 +129,8 @@ public class WaterMeteringSolution implements SolutionTemplateGenerator {
     }
 
     @Override
-    public void generate(boolean skipTelemetry,
-                         ZonedDateTime startYear,
-                         boolean strictGeneration,
-                         boolean fullTelemetryGeneration,
-                         long startGenerationTime,
-                         long endGenerationTime) {
+    public void generate(boolean skipTelemetry, ZonedDateTime startYear, boolean strictGeneration, boolean fullTelemetryGeneration,
+                         long startGenerationTime, long endGenerationTime) {
         log.info("Water Metering Solution - start generation");
         try {
             CustomerData customerData = createCustomerData(strictGeneration);
@@ -195,10 +191,10 @@ public class WaterMeteringSolution implements SolutionTemplateGenerator {
 
 
     private CustomerData createCustomerData(boolean strictGeneration) {
-        var customer = strictGeneration
+        Customer customer = strictGeneration
                 ? this.tbRestClient.createCustomer(CUSTOMER_TITLE)
                 : this.tbRestClient.createCustomerIfNotExists(CUSTOMER_TITLE);
-        var customerUser = this.tbRestClient.createCustomerUser(
+        CustomerUser customerUser = this.tbRestClient.createCustomerUser(
                 customer, CUSTOMER_USER_EMAIL, CUSTOMER_USER_PASSWORD,
                 CUSTOMER_USER_FIRST_NAME, CUSTOMER_USER_LAST_NAME
         );
@@ -350,11 +346,7 @@ public class WaterMeteringSolution implements SolutionTemplateGenerator {
     }
 
 
-    private ModelData makeData(boolean skipTelemetry,
-                               ZonedDateTime startYear,
-                               boolean fullTelemetryGeneration,
-                               long startGenerationTime,
-                               long endGenerationTime) {
+    private ModelData makeData(boolean skipTelemetry, ZonedDateTime startYear, boolean fullTelemetryGeneration, long startGenerationTime, long endGenerationTime) {
         int order = 0;
         Set<CityConfiguration> cityConfigurations = MySortedSet.of(
                 CityConfiguration.builder()
@@ -657,12 +649,12 @@ public class WaterMeteringSolution implements SolutionTemplateGenerator {
 
     private Asset createCity(City city, UUID ownerId, UUID assetGroupId, boolean strictGeneration) {
         Asset asset;
-        final Set<Attribute<?>> attributes = Set.of(
+        Set<Attribute<?>> attributes = Set.of(
                 new Attribute<>("population", city.getPopulation())
         );
 
         if (tbRestClient.isPe()) {
-            final var customerId = new CustomerId(ownerId);
+            var customerId = new CustomerId(ownerId);
             asset = strictGeneration
                     ? tbRestClient.createAsset(city.getSystemName(), city.entityType(), customerId, attributes)
                     : tbRestClient.createAssetIfNotExists(city.getSystemName(), city.entityType(), customerId, attributes)
@@ -745,11 +737,7 @@ public class WaterMeteringSolution implements SolutionTemplateGenerator {
     }
 
 
-    private City makeCityByConfiguration(CityConfiguration cityConfiguration,
-                                         boolean skipTelemetry,
-                                         boolean fullTelemetryGeneration,
-                                         long startGenerationTime,
-                                         long endGenerationTime) {
+    private City makeCityByConfiguration(CityConfiguration cityConfiguration, boolean skipTelemetry, boolean fullTelemetryGeneration, long startGenerationTime, long endGenerationTime) {
         Set<Region> regions = MySortedSet.of();
         Set<PumpStation> pumpStations = MySortedSet.of();
         for (RegionConfiguration regionConfiguration : cityConfiguration.getRegionConfigurations()) {
@@ -771,11 +759,7 @@ public class WaterMeteringSolution implements SolutionTemplateGenerator {
                 .build();
     }
 
-    private Region makeRegionByConfiguration(RegionConfiguration regionConfiguration,
-                                             boolean skipTelemetry,
-                                             boolean fullTelemetryGeneration,
-                                             long startGenerationTime,
-                                             long endGenerationTime) {
+    private Region makeRegionByConfiguration(RegionConfiguration regionConfiguration, boolean skipTelemetry, boolean fullTelemetryGeneration, long startGenerationTime, long endGenerationTime) {
         Set<Consumer> consumers = MySortedSet.of();
         for (ConsumerConfiguration consumerConfiguration : regionConfiguration.getConsumerConfigurations()) {
             Consumer consumer = makeConsumerByConfiguration(
@@ -801,12 +785,7 @@ public class WaterMeteringSolution implements SolutionTemplateGenerator {
                 .build();
     }
 
-    private Consumer makeConsumerByConfiguration(RegionConfiguration regionConfiguration,
-                                                 ConsumerConfiguration consumerConfiguration,
-                                                 boolean skipTelemetry,
-                                                 boolean fullTelemetryGeneration,
-                                                 long startGenerationTime,
-                                                 long endGenerationTime) {
+    private Consumer makeConsumerByConfiguration(RegionConfiguration regionConfiguration, ConsumerConfiguration consumerConfiguration, boolean skipTelemetry, boolean fullTelemetryGeneration, long startGenerationTime, long endGenerationTime) {
         ZonedDateTime startYear = regionConfiguration.getStartYear();
         String regionName = regionConfiguration.getName();
         String index = consumerConfiguration.getIndex();
@@ -844,12 +823,7 @@ public class WaterMeteringSolution implements SolutionTemplateGenerator {
     }
 
 
-    private Telemetry<Long> createTelemetryConsumerConsumption(ConsumerConfiguration consumerConfiguration,
-                                                               ZonedDateTime startYear,
-                                                               boolean skipTelemetry,
-                                                               boolean fullTelemetryGeneration,
-                                                               long startGenerationTime,
-                                                               long endGenerationTime) {
+    private Telemetry<Long> createTelemetryConsumerConsumption(ConsumerConfiguration consumerConfiguration, ZonedDateTime startYear, boolean skipTelemetry, boolean fullTelemetryGeneration, long startGenerationTime, long endGenerationTime) {
         if (skipTelemetry) {
             return new Telemetry<>("skip");
         }
@@ -868,7 +842,7 @@ public class WaterMeteringSolution implements SolutionTemplateGenerator {
         }
 
         ZonedDateTime startDate = DateTimeUtils.fromTs(fromToPair.getLeft()).truncatedTo(ChronoUnit.HOURS);
-        ZonedDateTime nowDate = DateTimeUtils.fromTs(fromToPair.getRight(), ZoneId.of("UTC")).truncatedTo(ChronoUnit.HOURS);
+        ZonedDateTime nowDate = DateTimeUtils.fromTs(fromToPair.getRight()).truncatedTo(ChronoUnit.HOURS);
 
         Pair<Long, Long> intervalValues = getIntervalValuesRangeByConsumerType(consumerConfiguration.getType());
         int fullInterval = 366;

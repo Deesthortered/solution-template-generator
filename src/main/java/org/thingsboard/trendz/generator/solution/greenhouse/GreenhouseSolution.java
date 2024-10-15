@@ -67,7 +67,6 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.Reader;
 import java.nio.file.Path;
-import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
@@ -170,12 +169,7 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
     }
 
     @Override
-    public void generate(boolean skipTelemetry,
-                         ZonedDateTime startYear,
-                         boolean strictGeneration,
-                         boolean fullTelemetryGeneration,
-                         long startGenerationTime,
-                         long endGenerationTime) {
+    public void generate(boolean skipTelemetry, ZonedDateTime startYear, boolean strictGeneration, boolean fullTelemetryGeneration, long startGenerationTime, long endGenerationTime) {
         log.info("Greenhouse Solution - start generation");
         try {
             CustomerData customerData = createCustomerData(strictGeneration);
@@ -957,11 +951,7 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
     }
 
 
-    private ModelData makeData(boolean skipTelemetry,
-                               ZonedDateTime startYear,
-                               boolean fullTelemetryGeneration,
-                               long startGenerationTime,
-                               long endGenerationTime) {
+    private ModelData makeData(boolean skipTelemetry, ZonedDateTime startYear, boolean fullTelemetryGeneration, long startGenerationTime, long endGenerationTime) {
         long startTs = DateTimeUtils.toTs(startYear);
         long now = System.currentTimeMillis();
 
@@ -1576,12 +1566,7 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
                 .build();
     }
 
-    private Greenhouse makeGreenhouseByConfiguration(GreenhouseConfiguration configuration,
-                                                     Map<Long, WeatherData> weatherDataMap,
-                                                     boolean skipTelemetry,
-                                                     boolean fullTelemetryGeneration,
-                                                     long startGenerationTime,
-                                                     long endGenerationTime) {
+    private Greenhouse makeGreenhouseByConfiguration(GreenhouseConfiguration configuration, Map<Long, WeatherData> weatherDataMap, boolean skipTelemetry, boolean fullTelemetryGeneration, long startGenerationTime, long endGenerationTime) {
 
         Telemetry<Integer> outsideLightTelemetry = createOutsideLightTelemetry(weatherDataMap, configuration, skipTelemetry, fullTelemetryGeneration, startGenerationTime, endGenerationTime);
         Telemetry<Integer> outsideTemperatureTelemetry = createOutsideTemperatureTelemetry(weatherDataMap, configuration, skipTelemetry, fullTelemetryGeneration, startGenerationTime, endGenerationTime);
@@ -1778,13 +1763,9 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
     }
 
 
-    private Map<Long, WeatherData> loadWeatherData(StationCity city,
-                                                   ZonedDateTime startYear,
-                                                   boolean skipTelemetry,
-                                                   boolean fullTelemetryGeneration,
-                                                   long startGenerationTime,
-                                                   long endGenerationTime) {
-        final Map<Long, WeatherData> noWeatherData = new HashMap<>();
+    private Map<Long, WeatherData> loadWeatherData(StationCity city, ZonedDateTime startYear, boolean skipTelemetry, boolean fullTelemetryGeneration,
+                                                   long startGenerationTime, long endGenerationTime) {
+        Map<Long, WeatherData> noWeatherData = new HashMap<>();
 
         if (skipTelemetry) {
             return noWeatherData;
@@ -1879,12 +1860,8 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
     }
 
 
-    private Telemetry<Integer> createOutsideLightTelemetry(Map<Long, WeatherData> tsToWeatherMap,
-                                                           GreenhouseConfiguration configuration,
-                                                           boolean skipTelemetry,
-                                                           boolean fullTelemetryGeneration,
-                                                           long startGenerationTime,
-                                                           long endGenerationTime) {
+    private Telemetry<Integer> createOutsideLightTelemetry(Map<Long, WeatherData> tsToWeatherMap, GreenhouseConfiguration configuration, boolean skipTelemetry,
+                                                           boolean fullTelemetryGeneration, long startGenerationTime, long endGenerationTime) {
         if (skipTelemetry) {
             return new Telemetry<>("skip");
         }
@@ -1923,12 +1900,8 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
         return result;
     }
 
-    private Telemetry<Integer> createOutsideTemperatureTelemetry(Map<Long, WeatherData> tsToWeatherMap,
-                                                                 GreenhouseConfiguration configuration,
-                                                                 boolean skipTelemetry,
-                                                                 boolean fullTelemetryGeneration,
-                                                                 long startGenerationTime,
-                                                                 long endGenerationTime) {
+    private Telemetry<Integer> createOutsideTemperatureTelemetry(Map<Long, WeatherData> tsToWeatherMap, GreenhouseConfiguration configuration, boolean skipTelemetry,
+                                                                 boolean fullTelemetryGeneration, long startGenerationTime, long endGenerationTime) {
         if (skipTelemetry) {
             return new Telemetry<>("skip");
         }
@@ -1960,12 +1933,8 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
         return result;
     }
 
-    private Telemetry<Integer> createOutsideHumidityTelemetry(Map<Long, WeatherData> tsToWeatherMap,
-                                                              GreenhouseConfiguration configuration,
-                                                              boolean skipTelemetry,
-                                                              boolean fullTelemetryGeneration,
-                                                              long startGenerationTime,
-                                                              long endGenerationTime) {
+    private Telemetry<Integer> createOutsideHumidityTelemetry(Map<Long, WeatherData> tsToWeatherMap, GreenhouseConfiguration configuration, boolean skipTelemetry, boolean fullTelemetryGeneration,
+                                                              long startGenerationTime, long endGenerationTime) {
         if (skipTelemetry) {
             return new Telemetry<>("skip");
         }
@@ -2155,12 +2124,8 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
     }
 
 
-    private Telemetry<Integer> createInsideLightTelemetry(Telemetry<Integer> outsideLightTelemetry,
-                                                          GreenhouseConfiguration configuration,
-                                                          boolean skipTelemetry,
-                                                          boolean fullTelemetryGeneration,
-                                                          long startGenerationTime,
-                                                          long endGenerationTime) {
+    private Telemetry<Integer> createInsideLightTelemetry(Telemetry<Integer> outsideLightTelemetry, GreenhouseConfiguration configuration, boolean skipTelemetry, boolean fullTelemetryGeneration,
+                                                          long startGenerationTime, long endGenerationTime) {
         if (skipTelemetry) {
             return new Telemetry<>("skip");
         }
@@ -2208,13 +2173,8 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
     }
 
 
-    private Telemetry<Integer> createCo2ConcentrationTelemetryAndInterruption(Set<Long> aerations,
-                                                                              Telemetry<Integer> temporalTelemetryCo2Generation,
-                                                                              GreenhouseConfiguration configuration,
-                                                                              boolean skipTelemetry,
-                                                                              boolean fullTelemetryGeneration,
-                                                                              long startGenerationTime,
-                                                                              long endGenerationTime) {
+    private Telemetry<Integer> createCo2ConcentrationTelemetryAndInterruption(Set<Long> aerations, Telemetry<Integer> temporalTelemetryCo2Generation, GreenhouseConfiguration configuration, boolean skipTelemetry, boolean fullTelemetryGeneration,
+                                                                              long startGenerationTime, long endGenerationTime) {
         if (skipTelemetry) {
             return new Telemetry<>("skip");
         }
@@ -2259,13 +2219,7 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
         return result;
     }
 
-    private Telemetry<Integer> createTemporalTelemetryCo2Generation(Telemetry<Integer> outsideLightTelemetry,
-                                                                    Telemetry<Integer> insideLightTelemetry,
-                                                                    GreenhouseConfiguration configuration,
-                                                                    boolean skipTelemetry,
-                                                                    boolean fullTelemetryGeneration,
-                                                                    long startGenerationTime,
-                                                                    long endGenerationTime) {
+    private Telemetry<Integer> createTemporalTelemetryCo2Generation(Telemetry<Integer> outsideLightTelemetry, Telemetry<Integer> insideLightTelemetry, GreenhouseConfiguration configuration, boolean skipTelemetry, boolean fullTelemetryGeneration, long startGenerationTime, long endGenerationTime) {
         if (skipTelemetry) {
             return new Telemetry<>("skip");
         }
@@ -2309,15 +2263,7 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
     }
 
 
-    private Telemetry<Integer> createInsideTemperatureTelemetry(Set<Long> aerations,
-                                                                Set<Long> heatings,
-                                                                Set<Long> coolings,
-                                                                Telemetry<Integer> outsideTemperatureTelemetry,
-                                                                GreenhouseConfiguration configuration,
-                                                                boolean skipTelemetry,
-                                                                boolean fullTelemetryGeneration,
-                                                                long startGenerationTime,
-                                                                long endGenerationTime) {
+    private Telemetry<Integer> createInsideTemperatureTelemetry(Set<Long> aerations, Set<Long> heatings, Set<Long> coolings, Telemetry<Integer> outsideTemperatureTelemetry, GreenhouseConfiguration configuration, boolean skipTelemetry, boolean fullTelemetryGeneration, long startGenerationTime, long endGenerationTime) {
         if (skipTelemetry) {
             return new Telemetry<>("skip");
         }
@@ -2409,17 +2355,8 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
         return result;
     }
 
-    private Telemetry<Integer> createInsideHumidityTelemetry(Set<Long> aerations,
-                                                             Set<Long> heatings,
-                                                             Set<Long> coolings,
-                                                             Set<Long> humidifications,
-                                                             Set<Long> dehumidifications,
-                                                             Telemetry<Integer> outsideHumidityTelemetry,
-                                                             GreenhouseConfiguration configuration,
-                                                             boolean skipTelemetry,
-                                                             boolean fullTelemetryGeneration,
-                                                             long startGenerationTime,
-                                                             long endGenerationTime) {
+    private Telemetry<Integer> createInsideHumidityTelemetry(Set<Long> aerations, Set<Long> heatings, Set<Long> coolings, Set<Long> humidifications, Set<Long> dehumidifications, Telemetry<Integer> outsideHumidityTelemetry, GreenhouseConfiguration configuration, boolean skipTelemetry,
+                                                             boolean fullTelemetryGeneration, long startGenerationTime, long endGenerationTime) {
         if (skipTelemetry) {
             return new Telemetry<>("skip");
         }
@@ -2506,11 +2443,7 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
     }
 
 
-    private Telemetry<Double> createTelemetrySoilNitrogenLevel(GreenhouseConfiguration configuration,
-                                                               boolean skipTelemetry,
-                                                               boolean fullTelemetryGeneration,
-                                                               long startGenerationTime,
-                                                               long endGenerationTime) {
+    private Telemetry<Double> createTelemetrySoilNitrogenLevel(GreenhouseConfiguration configuration, boolean skipTelemetry, boolean fullTelemetryGeneration, long startGenerationTime, long endGenerationTime) {
         if (skipTelemetry) {
             return new Telemetry<>("skip");
         }
@@ -2536,11 +2469,7 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
         return createSoilLevel(name, startLevel, minLevel, raiseValue, consumption);
     }
 
-    private Telemetry<Double> createTelemetrySoilPhosphorusLevel(GreenhouseConfiguration configuration,
-                                                                 boolean skipTelemetry,
-                                                                 boolean fullTelemetryGeneration,
-                                                                 long startGenerationTime,
-                                                                 long endGenerationTime) {
+    private Telemetry<Double> createTelemetrySoilPhosphorusLevel(GreenhouseConfiguration configuration, boolean skipTelemetry, boolean fullTelemetryGeneration, long startGenerationTime, long endGenerationTime) {
         if (skipTelemetry) {
             return new Telemetry<>("skip");
         }
@@ -2566,11 +2495,7 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
         return createSoilLevel(name, startLevel, minLevel, raiseValue, consumption);
     }
 
-    private Telemetry<Double> createTelemetrySoilPotassiumLevel(GreenhouseConfiguration configuration,
-                                                                boolean skipTelemetry,
-                                                                boolean fullTelemetryGeneration,
-                                                                long startGenerationTime,
-                                                                long endGenerationTime) {
+    private Telemetry<Double> createTelemetrySoilPotassiumLevel(GreenhouseConfiguration configuration, boolean skipTelemetry, boolean fullTelemetryGeneration, long startGenerationTime, long endGenerationTime) {
         if (skipTelemetry) {
             return new Telemetry<>("skip");
         }
@@ -2696,13 +2621,7 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
     }
 
 
-    private Telemetry<Double> createTelemetrySoilMoisture(GreenhouseConfiguration configuration,
-                                                          Telemetry<Double> temporalTelemetrySoilWaterConsumption,
-                                                          Set<Long> sectionIrrigations,
-                                                          boolean skipTelemetry,
-                                                          boolean fullTelemetryGeneration,
-                                                          long startGenerationTime,
-                                                          long endGenerationTime) {
+    private Telemetry<Double> createTelemetrySoilMoisture(GreenhouseConfiguration configuration, Telemetry<Double> temporalTelemetrySoilWaterConsumption, Set<Long> sectionIrrigations, boolean skipTelemetry, boolean fullTelemetryGeneration, long startGenerationTime, long endGenerationTime) {
         if (skipTelemetry) {
             return new Telemetry<>("skip");
         }
@@ -2748,11 +2667,7 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
         return result;
     }
 
-    private Telemetry<Double> createTemporalTelemetrySoilWaterConsumption(GreenhouseConfiguration configuration,
-                                                                          boolean skipTelemetry,
-                                                                          boolean fullTelemetryGeneration,
-                                                                          long startGenerationTime,
-                                                                          long endGenerationTime) {
+    private Telemetry<Double> createTemporalTelemetrySoilWaterConsumption(GreenhouseConfiguration configuration, boolean skipTelemetry, boolean fullTelemetryGeneration, long startGenerationTime, long endGenerationTime) {
         if (skipTelemetry) {
             return new Telemetry<>("skip");
         }
@@ -2791,13 +2706,7 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
     }
 
 
-    private Telemetry<Integer> createTelemetrySoilTemperature(GreenhouseConfiguration configuration,
-                                                              Telemetry<Integer> insideTemperatureTelemetry,
-                                                              Set<Long> sectionIrrigations,
-                                                              boolean skipTelemetry,
-                                                              boolean fullTelemetryGeneration,
-                                                              long startGenerationTime,
-                                                              long endGenerationTime) {
+    private Telemetry<Integer> createTelemetrySoilTemperature(GreenhouseConfiguration configuration, Telemetry<Integer> insideTemperatureTelemetry, Set<Long> sectionIrrigations, boolean skipTelemetry, boolean fullTelemetryGeneration, long startGenerationTime, long endGenerationTime) {
         if (skipTelemetry) {
             return new Telemetry<>("skip");
         }
@@ -2843,13 +2752,8 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
     }
 
 
-    private Telemetry<Double> createTelemetrySoilAcidity(GreenhouseConfiguration configuration,
-                                                         Set<Long> sectionIrrigations,
-                                                         Set<Long> acidification,
-                                                         boolean skipTelemetry,
-                                                         boolean fullTelemetryGeneration,
-                                                         long startGenerationTime,
-                                                         long endGenerationTime) {
+    private Telemetry<Double> createTelemetrySoilAcidity(GreenhouseConfiguration configuration, Set<Long> sectionIrrigations, Set<Long> acidification, boolean skipTelemetry, boolean fullTelemetryGeneration,
+                                                         long startGenerationTime, long endGenerationTime) {
         if (skipTelemetry) {
             return new Telemetry<>("skip");
         }
@@ -2898,13 +2802,7 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
     }
 
 
-    private void createTelemetryHarvestReporter(Telemetry<Double> telemetryCropWeight,
-                                                Telemetry<String> telemetryWorkerInCharge,
-                                                GreenhouseConfiguration configuration,
-                                                boolean skipTelemetry,
-                                                boolean fullTelemetryGeneration,
-                                                long startGenerationTime,
-                                                long endGenerationTime) {
+    private void createTelemetryHarvestReporter(Telemetry<Double> telemetryCropWeight, Telemetry<String> telemetryWorkerInCharge, GreenhouseConfiguration configuration, boolean skipTelemetry, boolean fullTelemetryGeneration, long startGenerationTime, long endGenerationTime) {
         if (skipTelemetry) {
             return;
         }
@@ -2963,23 +2861,7 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
     }
 
 
-    private void createTelemetryConsumptionEnergy(Telemetry<Integer> insideLightTelemetry,
-                                                  Set<Long> aerations,
-                                                  Set<Long> heatings,
-                                                  Set<Long> coolings,
-                                                  Set<Long> humidifications,
-                                                  Set<Long> dehumidifications,
-                                                  Map<String, Set<Long>> irrigations,
-                                                  GreenhouseConfiguration configuration,
-                                                  boolean skipTelemetry,
-                                                  boolean fullTelemetryGeneration,
-                                                  long startGenerationTime,
-                                                  long endGenerationTime,
-                                                  Telemetry<Double> energyConsumptionLight,
-                                                  Telemetry<Double> energyConsumptionHeating,
-                                                  Telemetry<Double> energyConsumptionCooling,
-                                                  Telemetry<Double> energyConsumptionAirControl,
-                                                  Telemetry<Double> energyConsumptionIrrigation) {
+    private void createTelemetryConsumptionEnergy(Telemetry<Integer> insideLightTelemetry, Set<Long> aerations, Set<Long> heatings, Set<Long> coolings, Set<Long> humidifications, Set<Long> dehumidifications, Map<String, Set<Long>> irrigations, GreenhouseConfiguration configuration, boolean skipTelemetry, boolean fullTelemetryGeneration, long startGenerationTime, long endGenerationTime, Telemetry<Double> energyConsumptionLight, Telemetry<Double> energyConsumptionHeating, Telemetry<Double> energyConsumptionCooling, Telemetry<Double> energyConsumptionAirControl, Telemetry<Double> energyConsumptionIrrigation) {
         if (skipTelemetry) {
             return;
         }
@@ -3056,13 +2938,7 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
         }
     }
 
-    private Telemetry<Double> createTelemetryConsumptionWater(Set<Long> humidifications,
-                                                              Map<String, Set<Long>> irrigations,
-                                                              GreenhouseConfiguration configuration,
-                                                              boolean skipTelemetry,
-                                                              boolean fullTelemetryGeneration,
-                                                              long startGenerationTime,
-                                                              long endGenerationTime) {
+    private Telemetry<Double> createTelemetryConsumptionWater(Set<Long> humidifications, Map<String, Set<Long>> irrigations, GreenhouseConfiguration configuration, boolean skipTelemetry, boolean fullTelemetryGeneration, long startGenerationTime, long endGenerationTime) {
         if (skipTelemetry) {
             return new Telemetry<>("skip");
         }
@@ -3253,10 +3129,7 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
         return device;
     }
 
-    private Device createSoilWarmMoistureSensor(SoilWarmMoistureSensor soilWarmMoistureSensor,
-                                                UUID ownerId,
-                                                UUID deviceGroupId,
-                                                boolean strictGeneration) {
+    private Device createSoilWarmMoistureSensor(SoilWarmMoistureSensor soilWarmMoistureSensor, UUID ownerId, UUID deviceGroupId, boolean strictGeneration) {
         String name = soilWarmMoistureSensor.getSystemName();
         String entityType = soilWarmMoistureSensor.entityType();
         final Set<Attribute<?>> attributes = Set.of(
@@ -3286,10 +3159,7 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
         return device;
     }
 
-    private Device createSoilAciditySensor(SoilAciditySensor soilAciditySensor,
-                                           UUID ownerId,
-                                           UUID deviceGroupId,
-                                           boolean strictGeneration) {
+    private Device createSoilAciditySensor(SoilAciditySensor soilAciditySensor, UUID ownerId, UUID deviceGroupId, boolean strictGeneration) {
         String name = soilAciditySensor.getSystemName();
         String entityType = soilAciditySensor.entityType();
         final Set<Attribute<?>> attributes = Set.of(
@@ -3318,10 +3188,7 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
         return device;
     }
 
-    private Device createInsideAirWarmHumiditySensor(InsideAirWarmHumiditySensor insideAirWarmHumiditySensor,
-                                                     UUID ownerId,
-                                                     UUID deviceGroupId,
-                                                     boolean strictGeneration) {
+    private Device createInsideAirWarmHumiditySensor(InsideAirWarmHumiditySensor insideAirWarmHumiditySensor, UUID ownerId, UUID deviceGroupId, boolean strictGeneration) {
         String name = insideAirWarmHumiditySensor.getSystemName();
         String entityType = insideAirWarmHumiditySensor.entityType();
         final Set<Attribute<?>> attributes = Set.of(

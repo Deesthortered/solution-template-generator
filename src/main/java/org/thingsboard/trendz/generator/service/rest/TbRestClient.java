@@ -217,57 +217,57 @@ public class TbRestClient {
 
 
     public Set<Customer> getAllCustomers() {
-        final var reference = new ParameterizedTypeReference<PageData<Customer>>() {
+        var reference = new ParameterizedTypeReference<PageData<Customer>>() {
         };
 
         return getAllEntities("/api/customers", reference, new HashMap<>());
     }
 
     public Set<Asset> getAllAssets() {
-        final var reference = new ParameterizedTypeReference<PageData<Asset>>() {
+        var reference = new ParameterizedTypeReference<PageData<Asset>>() {
         };
 
         return getAllEntities("/api/tenant/assets", reference, new HashMap<>());
     }
 
     public Set<Device> getAllDevices() {
-        final var reference = new ParameterizedTypeReference<PageData<Device>>() {
+        var reference = new ParameterizedTypeReference<PageData<Device>>() {
         };
 
         return getAllEntities("/api/tenant/devices", reference, new HashMap<>());
     }
 
     public Set<Dashboard> getAllTenantDashboards() {
-        final var reference = new ParameterizedTypeReference<PageData<Dashboard>>() {
+        var reference = new ParameterizedTypeReference<PageData<Dashboard>>() {
         };
 
         return getAllEntities("/api/tenant/dashboards", reference, new HashMap<>());
     }
 
     public Set<Dashboard> getAllCustomerDashboards(UUID customerId) {
-        final var reference = new ParameterizedTypeReference<PageData<Dashboard>>() {
+        var reference = new ParameterizedTypeReference<PageData<Dashboard>>() {
         };
 
         return getAllEntities("/api/customer/" + customerId.toString() + "/dashboards", reference, new HashMap<>());
     }
 
     public Customer createCustomer(String name) {
-        final var customer = new Customer();
+        var customer = new Customer();
         customer.setTitle(name);
         return restTemplate.postForEntity(baseURL + "/api/customer", customer, Customer.class).getBody();
     }
 
     public Customer createCustomerIfNotExists(String name) {
-        final var customerOpt = getCustomerByTitle(name);
+        var customerOpt = getCustomerByTitle(name);
         return customerOpt.orElseGet(() -> createCustomer(name));
     }
 
     public Asset createAsset(String name, String type, Set<Attribute<?>> attributes) {
         try {
-            final var asset = new Asset();
+            var asset = new Asset();
             asset.setName(name);
             asset.setType(type);
-            final var assetAdded = restTemplate.postForEntity(baseURL + "/api/asset", asset, Asset.class).getBody();
+            var assetAdded = restTemplate.postForEntity(baseURL + "/api/asset", asset, Asset.class).getBody();
 
             if (nonNull(attributes) && !attributes.isEmpty()) {
                 setEntityAttributes(assetAdded.getUuidId(), EntityType.ASSET, Attribute.Scope.SERVER_SCOPE, attributes);
@@ -286,10 +286,10 @@ public class TbRestClient {
 
     public Device createDevice(String name, String type, Set<Attribute<?>> attributes) {
         try {
-            final var device = new Device();
+            var device = new Device();
             device.setName(name);
             device.setType(type);
-            final var deviceAdded = restTemplate.postForEntity(baseURL + "/api/device", device, Device.class).getBody();
+            var deviceAdded = restTemplate.postForEntity(baseURL + "/api/device", device, Device.class).getBody();
 
             if (nonNull(attributes) && !attributes.isEmpty()) {
                 setEntityAttributes(deviceAdded.getUuidId(), EntityType.DEVICE, Attribute.Scope.SERVER_SCOPE, attributes);
@@ -301,7 +301,7 @@ public class TbRestClient {
     }
 
     public Device createDeviceIfNotExists(String name, String type, Set<Attribute<?>> attributes) {
-        final var deviceOpt = getDeviceByName(name);
+        var deviceOpt = getDeviceByName(name);
         return deviceOpt.orElseGet(() -> createDevice(name, type, attributes));
     }
 
@@ -316,7 +316,7 @@ public class TbRestClient {
     }
 
     public Dashboard createDashboardIfNotExists(String title) {
-        final var dashboardOpt = getTenantDashboardsByTitle(title).stream().findAny();
+        var dashboardOpt = getTenantDashboardsByTitle(title).stream().findAny();
         return dashboardOpt.orElseGet(() -> createDashboard(title));
     }
 
@@ -330,7 +330,7 @@ public class TbRestClient {
 
     public Asset createAsset(String name, String type, EntityId ownerId, Set<Attribute<?>> attributes) {
         try {
-            final var asset = new Asset();
+            var asset = new Asset();
             asset.setName(name);
             asset.setType(type);
             asset.setOwnerId(ownerId);
@@ -369,7 +369,7 @@ public class TbRestClient {
     }
 
     public Device createDeviceIfNotExists(String name, String type, EntityId ownerId, Set<Attribute<?>> attributes) {
-        final var deviceOpt = getDeviceByName(name);
+        var deviceOpt = getDeviceByName(name);
         return deviceOpt.orElseGet(() -> createDevice(name, type, ownerId, attributes));
     }
 
@@ -385,7 +385,7 @@ public class TbRestClient {
     }
 
     public Dashboard createDashboardIfNotExists(String title, EntityId ownerId) {
-        final var dashBoardOpt = getTenantDashboardsByTitle(title).stream().findAny();
+        var dashBoardOpt = getTenantDashboardsByTitle(title).stream().findAny();
         return dashBoardOpt.orElseGet(() -> createDashboard(title, ownerId));
     }
 
@@ -667,19 +667,19 @@ public class TbRestClient {
     }
 
     public Set<CustomerUser> getCustomerUsers(String customerId) {
-        final var reference = new ParameterizedTypeReference<PageData<CustomerUser>>() {
+        var reference = new ParameterizedTypeReference<PageData<CustomerUser>>() {
         };
 
         return getAllEntities("/api/customer/" + customerId + "/users", reference, new HashMap<>());
     }
 
     public Set<Dashboard> getTenantDashboardsByTitle(String title) {
-        final var customParams = new HashMap<String, Object>() {{
+        var customParams = new HashMap<String, Object>() {{
             put("textSearch", title);
             put("sortProperty", "title");
             put("sortOrder", "ASC");
         }};
-        final var reference = new ParameterizedTypeReference<PageData<Dashboard>>() {
+        var reference = new ParameterizedTypeReference<PageData<Dashboard>>() {
         };
 
         return getAllEntities("/api/tenant/dashboards", reference, customParams);
@@ -688,8 +688,8 @@ public class TbRestClient {
     private <T> Set<T> getAllEntities(String request,
                                       ParameterizedTypeReference<PageData<T>> type,
                                       Map<String, Object> customParams) {
-        final Set<T> result = new HashSet<>();
-        final var pageSize = 100;
+        Set<T> result = new HashSet<>();
+        var pageSize = 100;
         var pageIndex = 0;
         var hasNextPage = true;
         PageData<T> page;
@@ -699,7 +699,7 @@ public class TbRestClient {
                 customParams.put("page", pageIndex);
                 customParams.put("pageSize", pageSize);
 
-                final var urlParams = generateUrlParams(customParams);
+                var urlParams = generateUrlParams(customParams);
                 page = restTemplate.exchange(
                         baseURL + request + urlParams,
                         HttpMethod.GET,
@@ -724,8 +724,8 @@ public class TbRestClient {
             return "";
         }
 
-        final var charset = "UTF-8";
-        final var queryString = new StringJoiner("&", "?", "");
+        var charset = "UTF-8";
+        var queryString = new StringJoiner("&", "?", "");
 
         for (Map.Entry<String, Object> entry : params.entrySet()) {
             final var encodedKey = URLEncoder.encode(entry.getKey(), charset);
