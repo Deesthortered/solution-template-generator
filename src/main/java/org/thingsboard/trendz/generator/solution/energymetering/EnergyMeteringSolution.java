@@ -1226,7 +1226,7 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
         }
     }
 
-    private Telemetry<Long> makeHeatConsumption(long now, long startTs, long valueWarmTime, long valueColdTime, long noiseAmplitude, long noiseWidth) {
+    private Telemetry<Long> makeHeatConsumption(long toMs, long startTs, long valueWarmTime, long valueColdTime, long noiseAmplitude, long noiseWidth) {
         Telemetry<Long> result = new Telemetry<>("heatConsumption");
         int dayColdTimeEnd = 80;
         int dayWarmTimeStart = 120;
@@ -1235,9 +1235,9 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
 
         long shiftedNoiseAmplitude = noiseAmplitude / noiseWidth;
         ZonedDateTime startDate = DateTimeUtils.fromTs(startTs).truncatedTo(ChronoUnit.HOURS);
-        ZonedDateTime nowDate = DateTimeUtils.fromTs(now).truncatedTo(ChronoUnit.HOURS);
+        ZonedDateTime toDate = DateTimeUtils.fromTs(toMs).truncatedTo(ChronoUnit.HOURS);
         ZonedDateTime iteratedDate = startDate;
-        while (iteratedDate.isBefore(nowDate)) {
+        while (iteratedDate.isBefore(toDate)) {
             long iteratedTs = DateTimeUtils.toTs(iteratedDate);
             int day = iteratedDate.getDayOfYear();
 
