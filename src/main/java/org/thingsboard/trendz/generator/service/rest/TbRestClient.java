@@ -316,7 +316,7 @@ public class TbRestClient {
     }
 
     public Dashboard createDashboardIfNotExists(String title) {
-        final var dashboardOpt = getDashboardsByTitle(title).stream().findAny();
+        final var dashboardOpt = getTenantDashboardsByTitle(title).stream().findAny();
         return dashboardOpt.orElseGet(() -> createDashboard(title));
     }
 
@@ -385,7 +385,7 @@ public class TbRestClient {
     }
 
     public Dashboard createDashboardIfNotExists(String title, EntityId ownerId) {
-        final var dashBoardOpt = getDashboardsByTitle(title).stream().findAny();
+        final var dashBoardOpt = getTenantDashboardsByTitle(title).stream().findAny();
         return dashBoardOpt.orElseGet(() -> createDashboard(title, ownerId));
     }
 
@@ -673,17 +673,16 @@ public class TbRestClient {
         return getAllEntities("/api/customer/" + customerId + "/users", reference, new HashMap<>());
     }
 
-    public Set<Dashboard> getDashboardsByTitle(String title) {
+    public Set<Dashboard> getTenantDashboardsByTitle(String title) {
         final var customParams = new HashMap<String, Object>() {{
-            put("includeCustomers", true);
             put("textSearch", title);
-            put("sortProperty", "name");
+            put("sortProperty", "title");
             put("sortOrder", "ASC");
         }};
         final var reference = new ParameterizedTypeReference<PageData<Dashboard>>() {
         };
 
-        return getAllEntities("/api/dashboards/all", reference, customParams);
+        return getAllEntities("/api/tenant/dashboards", reference, customParams);
     }
 
     private <T> Set<T> getAllEntities(String request,
