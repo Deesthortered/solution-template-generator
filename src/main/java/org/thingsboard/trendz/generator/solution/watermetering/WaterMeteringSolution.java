@@ -129,8 +129,10 @@ public class WaterMeteringSolution implements SolutionTemplateGenerator {
     }
 
     @Override
-    public void generate(boolean skipTelemetry, ZonedDateTime startYear, boolean strictGeneration, boolean fullTelemetryGeneration,
-                         long startGenerationTime, long endGenerationTime) {
+    public void generate(
+            boolean skipTelemetry, ZonedDateTime startYear, boolean strictGeneration, boolean fullTelemetryGeneration,
+            long startGenerationTime, long endGenerationTime
+    ) {
         log.info("Water Metering Solution - start generation");
         try {
             CustomerData customerData = createCustomerData(strictGeneration);
@@ -321,7 +323,7 @@ public class WaterMeteringSolution implements SolutionTemplateGenerator {
                     }
                 }
             }
-            RuleChainMetaData savedMetaData = this.tbRestClient.saveRuleChainMetadata(metaData);
+            this.tbRestClient.saveRuleChainMetadata(metaData);
         } catch (Exception e) {
             throw new RuntimeException("Exception during rule chain creation", e);
         }
@@ -654,7 +656,7 @@ public class WaterMeteringSolution implements SolutionTemplateGenerator {
         );
 
         if (tbRestClient.isPe()) {
-            var customerId = new CustomerId(ownerId);
+            CustomerId customerId = new CustomerId(ownerId);
             asset = strictGeneration
                     ? tbRestClient.createAsset(city.getSystemName(), city.entityType(), customerId, attributes)
                     : tbRestClient.createAssetIfNotExists(city.getSystemName(), city.entityType(), customerId, attributes)
@@ -669,7 +671,7 @@ public class WaterMeteringSolution implements SolutionTemplateGenerator {
     }
 
     private Device createRegion(Region region, UUID ownerId, UUID deviceGroupId, boolean strictGeneration) {
-        final Set<Attribute<?>> noAttributes = Collections.emptySet();
+        Set<Attribute<?>> noAttributes = Collections.emptySet();
         Device device;
         if (tbRestClient.isPe()) {
             device = strictGeneration
@@ -691,7 +693,7 @@ public class WaterMeteringSolution implements SolutionTemplateGenerator {
 
     private Device createConsumer(Consumer consumer, UUID ownerId, UUID deviceGroupId, boolean strictGeneration) {
         Device device;
-        final Set<Attribute<?>> attributes = Set.of(
+        Set<Attribute<?>> attributes = Set.of(
                 new Attribute<>("type", consumer.getType())
         );
 
@@ -707,7 +709,7 @@ public class WaterMeteringSolution implements SolutionTemplateGenerator {
             tbRestClient.assignDeviceToCustomer(ownerId, device.getUuidId());
         }
 
-        final var deviceCredentials = tbRestClient.getDeviceCredentials(device.getUuidId());
+        DeviceCredentials deviceCredentials = tbRestClient.getDeviceCredentials(device.getUuidId());
 
         tbRestClient.pushTelemetry(deviceCredentials.getCredentialsId(), consumer.getConsumption());
 
@@ -716,7 +718,7 @@ public class WaterMeteringSolution implements SolutionTemplateGenerator {
     }
 
     private Device createPumpStation(PumpStation pumpStation, UUID ownerId, UUID deviceGroupId, boolean strictGeneration) {
-        final Set<Attribute<?>> noAttributes = Collections.emptySet();
+        Set<Attribute<?>> noAttributes = Collections.emptySet();
         Device device;
         if (tbRestClient.isPe()) {
             device = strictGeneration

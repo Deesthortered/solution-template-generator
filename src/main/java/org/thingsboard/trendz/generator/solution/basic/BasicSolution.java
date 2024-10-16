@@ -12,6 +12,7 @@ import org.thingsboard.server.common.data.Device;
 import org.thingsboard.server.common.data.EntityType;
 import org.thingsboard.server.common.data.asset.Asset;
 import org.thingsboard.server.common.data.group.EntityGroup;
+import org.thingsboard.server.common.data.id.CustomerId;
 import org.thingsboard.server.common.data.relation.EntityRelation;
 import org.thingsboard.server.common.data.rule.NodeConnectionInfo;
 import org.thingsboard.server.common.data.rule.RuleChain;
@@ -120,8 +121,10 @@ public class BasicSolution implements SolutionTemplateGenerator {
     }
 
     @Override
-    public void generate(boolean skipTelemetry, ZonedDateTime startYear, boolean strictGeneration, boolean fullTelemetryGeneration,
-                         long startGenerationTime, long endGenerationTime) {
+    public void generate(
+            boolean skipTelemetry, ZonedDateTime startYear, boolean strictGeneration, boolean fullTelemetryGeneration,
+            long startGenerationTime, long endGenerationTime
+    ) {
         log.info("Basic Solution - start generation");
         try {
 
@@ -152,7 +155,7 @@ public class BasicSolution implements SolutionTemplateGenerator {
             );
 
             if (tbRestClient.isPe()) {
-                var customerId = customer.getId();
+                CustomerId customerId = customer.getId();
 
                 asset = strictGeneration
                         ? tbRestClient.createAsset(ASSET_NAME, ASSET_TYPE, customerId, attributes)
@@ -186,7 +189,7 @@ public class BasicSolution implements SolutionTemplateGenerator {
                 tbRestClient.assignAssetToCustomer(customer.getUuidId(), asset.getUuidId());
                 tbRestClient.assignDeviceToCustomer(customer.getUuidId(), device.getUuidId());
             }
-            EntityRelation relation = tbRestClient.createRelation(RelationType.CONTAINS.getType(), asset.getId(), device.getId());
+            tbRestClient.createRelation(RelationType.CONTAINS.getType(), asset.getId(), device.getId());
 
             Telemetry<Integer> deviceTelemetry = new Telemetry<>("pushed_telemetry");
             ZonedDateTime startTime = ZonedDateTime.of(2023, 1, 1, 0, 0, 0, 0, ZoneId.of("UTC"));
@@ -259,9 +262,7 @@ public class BasicSolution implements SolutionTemplateGenerator {
             }
             connections.add(connection);
 
-            RuleChainMetaData savedMetaData = tbRestClient.saveRuleChainMetadata(metaData);
-
-
+            tbRestClient.saveRuleChainMetadata(metaData);
 
             log.info("Basic Solution - generation is completed!");
         } catch (Exception e) {

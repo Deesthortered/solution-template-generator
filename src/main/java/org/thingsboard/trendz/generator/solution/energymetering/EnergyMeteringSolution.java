@@ -130,8 +130,10 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
     }
 
     @Override
-    public void generate(boolean skipTelemetry, ZonedDateTime startYear, boolean strictGeneration, boolean fullTelemetryGeneration,
-                         long startGenerationTime, long endGenerationTime) {
+    public void generate(
+            boolean skipTelemetry, ZonedDateTime startYear, boolean strictGeneration, boolean fullTelemetryGeneration,
+            long startGenerationTime, long endGenerationTime
+    ) {
         log.info("Energy Metering Solution - start generation");
         try {
             CustomerData customerData = createCustomerData(strictGeneration);
@@ -366,8 +368,10 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
     }
 
 
-    private ModelData makeData(boolean skipTelemetry, ZonedDateTime startYear, boolean fullTelemetryGeneration,
-                               long startGenerationTime, long endGenerationTime) {
+    private ModelData makeData(
+            boolean skipTelemetry, ZonedDateTime startYear, boolean fullTelemetryGeneration,
+            long startGenerationTime, long endGenerationTime
+    ) {
         long TS_JANUARY = DateTimeUtils.toTs(startYear);
         long TS_FEBRUARY = DateTimeUtils.toTs(startYear.plusMonths(1));
         long TS_MARCH = DateTimeUtils.toTs(startYear.plusMonths(2));
@@ -784,7 +788,9 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
     }
 
 
-    private Building makeBuildingByConfiguration(BuildingConfiguration configuration, boolean skipTelemetry, boolean fullTelemetryGeneration, long startGenerationTime, long endGenerationTime) {
+    private Building makeBuildingByConfiguration(
+            BuildingConfiguration configuration, boolean skipTelemetry, boolean fullTelemetryGeneration, long startGenerationTime, long endGenerationTime
+    ) {
         Set<Apartment> apartments = MySortedSet.of();
         for (int floor = 1; floor <= configuration.getFloorCount(); floor++) {
             for (int number = 1; number <= configuration.getApartmentsByFloorCount(); number++) {
@@ -816,8 +822,10 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
                 .build();
     }
 
-    private Apartment createApartmentByConfiguration(ApartmentConfiguration configuration, String buildingName, int floor, int number, int apartmentByFloorCount,
-                                                     boolean skipTelemetry, boolean fullTelemetryGeneration, long startGenerationTime, long endGenerationTime) {
+    private Apartment createApartmentByConfiguration(
+            ApartmentConfiguration configuration, String buildingName, int floor, int number, int apartmentByFloorCount,
+            boolean skipTelemetry, boolean fullTelemetryGeneration, long startGenerationTime, long endGenerationTime
+    ) {
         String titleNumber = floor + "0" + number;
         String letterAndNumber = buildingName.charAt(0) + titleNumber;
         long startDate = configuration.getStartDate() + createRandomDateBias();
@@ -1186,7 +1194,7 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
         );
 
         if (tbRestClient.isPe()) {
-            var customerId = new CustomerId(ownerId);
+            CustomerId customerId = new CustomerId(ownerId);
             asset = strictGeneration
                     ? tbRestClient.createAsset(building.getSystemName(), building.entityType(), customerId, attributes)
                     : tbRestClient.createAssetIfNotExists(building.getSystemName(), building.entityType(), customerId, attributes)
@@ -1213,7 +1221,7 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
         );
 
         if (tbRestClient.isPe()) {
-            var customerId = new CustomerId(ownerId);
+            CustomerId customerId = new CustomerId(ownerId);
             asset = strictGeneration
                     ? tbRestClient.createAsset(apartment.getSystemName(), apartment.entityType(), customerId, attributes)
                     : tbRestClient.createAssetIfNotExists(apartment.getSystemName(), apartment.entityType(), customerId, attributes)
@@ -1277,7 +1285,7 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
             tbRestClient.assignDeviceToCustomer(ownerId, device.getUuidId());
         }
 
-        final var deviceCredentials = tbRestClient.getDeviceCredentials(device.getUuidId());
+        DeviceCredentials deviceCredentials = tbRestClient.getDeviceCredentials(device.getUuidId());
 
         tbRestClient.pushTelemetry(deviceCredentials.getCredentialsId(), heatMeter.getTemperature());
         tbRestClient.pushTelemetry(deviceCredentials.getCredentialsId(), heatMeter.getHeatConsumption());

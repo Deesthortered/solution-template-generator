@@ -7,6 +7,7 @@ import org.apache.commons.csv.CSVParser;
 import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.thingsboard.server.common.data.Customer;
 import org.thingsboard.server.common.data.Device;
 import org.thingsboard.server.common.data.EntityType;
 import org.thingsboard.server.common.data.asset.Asset;
@@ -220,10 +221,10 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
 
 
     private CustomerData createCustomerData(boolean strictGeneration) {
-        var customer = strictGeneration
+        Customer customer = strictGeneration
                 ? tbRestClient.createCustomer(CUSTOMER_TITLE)
                 : tbRestClient.createCustomerIfNotExists(CUSTOMER_TITLE);
-        var customerUser = this.tbRestClient.createCustomerUser(
+        CustomerUser customerUser = this.tbRestClient.createCustomerUser(
                 customer, CUSTOMER_USER_EMAIL, CUSTOMER_USER_PASSWORD,
                 CUSTOMER_USER_FIRST_NAME, CUSTOMER_USER_LAST_NAME
         );
@@ -1826,11 +1827,6 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
                 long iteratedTs = DateTimeUtils.toTs(iteratedDate);
                 WeatherData weatherData = tsToWeatherMap.get(iteratedTs);
                 if (weatherData == null) {
-                    String message = String.format(
-                            "No weather data in city %s, time = %s, will used data from %s",
-                            city, iteratedDate, DateTimeUtils.fromTs(last.getTs())
-                    );
-//                    log.warn(message);
                     weatherData = last;
                     tsToWeatherMap.put(iteratedTs, weatherData);
                 }
@@ -1861,17 +1857,21 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
     }
 
 
-    private Telemetry<Integer> createOutsideLightTelemetry(Map<Long, WeatherData> tsToWeatherMap, GreenhouseConfiguration configuration, boolean skipTelemetry,
-                                                           boolean fullTelemetryGeneration, long startGenerationTime, long endGenerationTime) {
+    private Telemetry<Integer> createOutsideLightTelemetry(
+            Map<Long, WeatherData> tsToWeatherMap, GreenhouseConfiguration configuration, boolean skipTelemetry,
+            boolean fullTelemetryGeneration, long startGenerationTime, long endGenerationTime
+    ) {
+        var skipTelemetryValue = new Telemetry<Integer>("skip");
+
         if (skipTelemetry) {
-            return new Telemetry<>("skip");
+            return skipTelemetryValue;
         }
 
         Pair<Long, Long> fromToPair;
         try {
             fromToPair = calculateNewDateRange(configuration.getStartTs(), configuration.getEndTs(), startGenerationTime, endGenerationTime, fullTelemetryGeneration);
         } catch (IllegalStateException e) {
-            return new Telemetry<>("skip");
+            return skipTelemetryValue;
         }
 
         Telemetry<Integer> result = new Telemetry<>("light_out");
@@ -1905,15 +1905,17 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
             Map<Long, WeatherData> tsToWeatherMap, GreenhouseConfiguration configuration, boolean skipTelemetry, boolean fullTelemetryGeneration,
             long startGenerationTime, long endGenerationTime
     ) {
+        var skipTelemetryValue = new Telemetry<Integer>("skip");
+
         if (skipTelemetry) {
-            return new Telemetry<>("skip");
+            return skipTelemetryValue;
         }
 
         Pair<Long, Long> fromToPair;
         try {
             fromToPair = calculateNewDateRange(configuration.getStartTs(), configuration.getEndTs(), startGenerationTime, endGenerationTime, fullTelemetryGeneration);
         } catch (IllegalStateException e) {
-            return new Telemetry<>("skip");
+            return skipTelemetryValue;
         }
 
         Telemetry<Integer> result = new Telemetry<>("temperature_out");
@@ -1936,17 +1938,21 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
         return result;
     }
 
-    private Telemetry<Integer> createOutsideHumidityTelemetry(Map<Long, WeatherData> tsToWeatherMap, GreenhouseConfiguration configuration, boolean skipTelemetry, boolean fullTelemetryGeneration,
-                                                              long startGenerationTime, long endGenerationTime) {
+    private Telemetry<Integer> createOutsideHumidityTelemetry(
+            Map<Long, WeatherData> tsToWeatherMap, GreenhouseConfiguration configuration, boolean skipTelemetry, boolean fullTelemetryGeneration,
+            long startGenerationTime, long endGenerationTime
+    ) {
+        var skipTelemetryValue = new Telemetry<Integer>("skip");
+
         if (skipTelemetry) {
-            return new Telemetry<>("skip");
+            return skipTelemetryValue;
         }
 
         Pair<Long, Long> fromToPair;
         try {
             fromToPair = calculateNewDateRange(configuration.getStartTs(), configuration.getEndTs(), startGenerationTime, endGenerationTime, fullTelemetryGeneration);
         } catch (IllegalStateException e) {
-            return new Telemetry<>("skip");
+            return skipTelemetryValue;
         }
 
         Telemetry<Integer> result = new Telemetry<>("humidity_out");
