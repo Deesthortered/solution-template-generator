@@ -19,18 +19,46 @@ import org.thingsboard.server.common.data.rule.RuleChain;
 import org.thingsboard.server.common.data.rule.RuleChainMetaData;
 import org.thingsboard.server.common.data.rule.RuleNode;
 import org.thingsboard.server.common.data.security.DeviceCredentials;
-import org.thingsboard.trendz.generator.exception.*;
+import org.thingsboard.trendz.generator.exception.AssetAlreadyExistException;
+import org.thingsboard.trendz.generator.exception.CustomerAlreadyExistException;
+import org.thingsboard.trendz.generator.exception.DeviceAlreadyExistException;
+import org.thingsboard.trendz.generator.exception.RuleChainAlreadyExistException;
+import org.thingsboard.trendz.generator.exception.SolutionValidationException;
 import org.thingsboard.trendz.generator.model.ModelData;
 import org.thingsboard.trendz.generator.model.ModelEntity;
-import org.thingsboard.trendz.generator.model.tb.*;
+import org.thingsboard.trendz.generator.model.tb.Attribute;
+import org.thingsboard.trendz.generator.model.tb.CustomerData;
+import org.thingsboard.trendz.generator.model.tb.CustomerUser;
+import org.thingsboard.trendz.generator.model.tb.RelationType;
+import org.thingsboard.trendz.generator.model.tb.RuleNodeAdditionalInfo;
+import org.thingsboard.trendz.generator.model.tb.Telemetry;
+import org.thingsboard.trendz.generator.model.tb.Timestamp;
 import org.thingsboard.trendz.generator.service.FileService;
 import org.thingsboard.trendz.generator.service.anomaly.AnomalyService;
 import org.thingsboard.trendz.generator.service.dashboard.DashboardService;
 import org.thingsboard.trendz.generator.service.rest.TbRestClient;
 import org.thingsboard.trendz.generator.service.roolchain.RuleChainBuildingService;
 import org.thingsboard.trendz.generator.solution.SolutionTemplateGenerator;
-import org.thingsboard.trendz.generator.solution.greenhouse.configuration.*;
-import org.thingsboard.trendz.generator.solution.greenhouse.model.*;
+import org.thingsboard.trendz.generator.solution.greenhouse.configuration.GreenhouseConfiguration;
+import org.thingsboard.trendz.generator.solution.greenhouse.configuration.PlantConfiguration;
+import org.thingsboard.trendz.generator.solution.greenhouse.configuration.StationCity;
+import org.thingsboard.trendz.generator.solution.greenhouse.configuration.WeatherData;
+import org.thingsboard.trendz.generator.solution.greenhouse.configuration.WorkerInChargeName;
+import org.thingsboard.trendz.generator.solution.greenhouse.model.EnergyMeter;
+import org.thingsboard.trendz.generator.solution.greenhouse.model.Greenhouse;
+import org.thingsboard.trendz.generator.solution.greenhouse.model.HarvestReporter;
+import org.thingsboard.trendz.generator.solution.greenhouse.model.InsideAirWarmHumiditySensor;
+import org.thingsboard.trendz.generator.solution.greenhouse.model.InsideCO2Sensor;
+import org.thingsboard.trendz.generator.solution.greenhouse.model.InsideLightSensor;
+import org.thingsboard.trendz.generator.solution.greenhouse.model.OutsideAirWarmHumiditySensor;
+import org.thingsboard.trendz.generator.solution.greenhouse.model.OutsideLightSensor;
+import org.thingsboard.trendz.generator.solution.greenhouse.model.Plant;
+import org.thingsboard.trendz.generator.solution.greenhouse.model.PlantName;
+import org.thingsboard.trendz.generator.solution.greenhouse.model.Section;
+import org.thingsboard.trendz.generator.solution.greenhouse.model.SoilAciditySensor;
+import org.thingsboard.trendz.generator.solution.greenhouse.model.SoilNpkSensor;
+import org.thingsboard.trendz.generator.solution.greenhouse.model.SoilWarmMoistureSensor;
+import org.thingsboard.trendz.generator.solution.greenhouse.model.WaterMeter;
 import org.thingsboard.trendz.generator.utils.DateTimeUtils;
 import org.thingsboard.trendz.generator.utils.JsonUtils;
 import org.thingsboard.trendz.generator.utils.MySortedSet;
@@ -42,7 +70,17 @@ import java.io.Reader;
 import java.nio.file.Path;
 import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.TreeSet;
+import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -121,7 +159,7 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
 
             if (!tbRestClient.isPe()) {
                 dashboardService.validateDashboardItems(getSolutionName(), null);
-                ModelData data = makeData(true, ZonedDateTime.now());
+                ModelData data = makeData(true, ZonedDateTime.now(), true, 0L, 0L);
                 validateData(data);
             }
 
@@ -132,14 +170,14 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
     }
 
     @Override
-    public void generate(boolean skipTelemetry, ZonedDateTime startYear) {
+    public void generate(boolean skipTelemetry, ZonedDateTime startYear, boolean strictGeneration, boolean fullTelemetryGeneration, long startGenerationTime, long endGenerationTime) {
         log.info("Greenhouse Solution - start generation");
         try {
-            CustomerData customerData = createCustomerData();
-            ModelData data = makeData(skipTelemetry, startYear);
-            applyData(data, customerData);
-            createRuleChain(data);
-            dashboardService.createDashboardItems(getSolutionName(), customerData.getCustomer().getId());
+            CustomerData customerData = createCustomerData(strictGeneration);
+            ModelData data = makeData(skipTelemetry, startYear, fullTelemetryGeneration, startGenerationTime, endGenerationTime);
+            applyData(data, customerData, strictGeneration);
+            createRuleChain(data, strictGeneration);
+            dashboardService.createDashboardItems(getSolutionName(), customerData.getCustomer().getId(), strictGeneration);
 
             log.info("Greenhouse Solution - generation is completed!");
         } catch (Exception e) {
@@ -156,7 +194,7 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
 
             if (!tbRestClient.isPe()) {
                 dashboardService.deleteDashboardItems(getSolutionName(), null);
-                ModelData data = makeData(true, ZonedDateTime.now());
+                ModelData data = makeData(true, ZonedDateTime.now(), true, 0L, 0L);
                 deleteData(data);
             }
 
@@ -182,8 +220,10 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
     }
 
 
-    private CustomerData createCustomerData() {
-        Customer customer = this.tbRestClient.createCustomer(CUSTOMER_TITLE);
+    private CustomerData createCustomerData(boolean strictGeneration) {
+        Customer customer = strictGeneration
+                ? tbRestClient.createCustomer(CUSTOMER_TITLE)
+                : tbRestClient.createCustomerIfNotExists(CUSTOMER_TITLE);
         CustomerUser customerUser = this.tbRestClient.createCustomerUser(
                 customer, CUSTOMER_USER_EMAIL, CUSTOMER_USER_PASSWORD,
                 CUSTOMER_USER_FIRST_NAME, CUSTOMER_USER_LAST_NAME
@@ -208,7 +248,10 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
     }
 
 
-    private void createRuleChain(ModelData data) {
+    private void createRuleChain(ModelData data, boolean strictGeneration) {
+        if (!strictGeneration) {
+            deleteRuleChain();
+        }
         Set<Greenhouse> greenhouses = mapToGreenhouses(data);
 
         try {
@@ -904,17 +947,19 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
         this.tbRestClient.getAllRuleChains()
                 .stream()
                 .filter(ruleChain -> ruleChain.getName().equals(RULE_CHAIN_NAME))
-                .findAny()
-                .ifPresent(ruleChain -> this.tbRestClient.deleteRuleChain(ruleChain.getUuidId()));
+                .toList()
+                .stream()
+                .map(ruleChain -> tbRestClient.getRuleChainById(ruleChain.getUuidId()))
+                .forEach(ruleChain -> ruleChain.ifPresent(chain -> tbRestClient.deleteRuleChain(chain.getUuidId())));
     }
 
 
-    private ModelData makeData(boolean skipTelemetry, ZonedDateTime startYear) {
+    private ModelData makeData(boolean skipTelemetry, ZonedDateTime startYear, boolean fullTelemetryGeneration, long startGenerationTime, long endGenerationTime) {
         long startTs = DateTimeUtils.toTs(startYear);
         long now = System.currentTimeMillis();
 
         Map<StationCity, Map<Long, WeatherData>> weatherMap = Arrays.stream(StationCity.values())
-                .map(city -> Pair.of(city, loadWeatherData(city, startYear, skipTelemetry)))
+                .map(city -> Pair.of(city, loadWeatherData(city, startYear, skipTelemetry, fullTelemetryGeneration, startGenerationTime, endGenerationTime)))
                 .collect(Collectors.toMap(Pair::getKey, Pair::getValue));
 
         int order = 0;
@@ -960,7 +1005,8 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
                 greenhouseConfigurations
                         .stream()
                         .map(configuration -> makeGreenhouseByConfiguration(
-                                configuration, weatherMap.get(configuration.getStationCity()), skipTelemetry
+                                configuration, weatherMap.get(configuration.getStationCity()), skipTelemetry,
+                                fullTelemetryGeneration, startGenerationTime, endGenerationTime
                         ))
                         .collect(Collectors.toList())
         );
@@ -970,36 +1016,40 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
                 .build();
     }
 
-    private void applyData(ModelData data, CustomerData customerData) {
+    private void applyData(ModelData data, CustomerData customerData, boolean strictGeneration) {
         CustomerUser customerUser = customerData.getUser();
         UUID ownerId = customerUser.getCustomerId().getId();
 
         UUID assetGroupId = null;
         UUID deviceGroupId = null;
         if (tbRestClient.isPe()) {
-            EntityGroup assetGroup = tbRestClient.createEntityGroup(ASSET_GROUP_NAME, EntityType.ASSET, ownerId, true);
-            EntityGroup deviceGroup = tbRestClient.createEntityGroup(DEVICE_GROUP_NAME, EntityType.DEVICE, ownerId, true);
+            EntityGroup assetGroup = strictGeneration
+                    ? tbRestClient.createEntityGroup(ASSET_GROUP_NAME, EntityType.ASSET, ownerId, true)
+                    : tbRestClient.createEntityGroupIfNotExists(ASSET_GROUP_NAME, EntityType.ASSET, ownerId, true);
+            EntityGroup deviceGroup = strictGeneration
+                    ? tbRestClient.createEntityGroup(DEVICE_GROUP_NAME, EntityType.DEVICE, ownerId, true)
+                    : tbRestClient.createEntityGroupIfNotExists(DEVICE_GROUP_NAME, EntityType.DEVICE, ownerId, true);
             assetGroupId = assetGroup.getUuidId();
             deviceGroupId = deviceGroup.getUuidId();
         }
 
         Set<Plant> plants = mapToPlants(data);
         for (Plant plant : plants) {
-            Asset plantAsset = createPlant(plant, ownerId, assetGroupId);
+            Asset plantAsset = createPlant(plant, ownerId, assetGroupId, strictGeneration);
         }
 
         Set<Greenhouse> greenhouses = mapToGreenhouses(data);
         for (Greenhouse greenhouse : greenhouses) {
-            Asset greenhouseAsset = createGreenhouse(greenhouse, ownerId, assetGroupId);
+            Asset greenhouseAsset = createGreenhouse(greenhouse, ownerId, assetGroupId, strictGeneration);
 
             for (Section section : greenhouse.getSections()) {
-                Asset sectionAsset = createSection(section, ownerId, assetGroupId);
+                Asset sectionAsset = createSection(section, ownerId, assetGroupId, strictGeneration);
                 this.tbRestClient.createRelation(RelationType.CONTAINS.getType(), greenhouseAsset.getId(), sectionAsset.getId());
 
-                Device soilWarmMoistureSensorDevice = createSoilWarmMoistureSensor(section.getSoilWarmMoistureSensor(), ownerId, deviceGroupId);
-                Device soilAciditySensorDevice = createSoilAciditySensor(section.getSoilAciditySensor(), ownerId, deviceGroupId);
-                Device soilNpkSensorDevice = createSoilNpkSensor(section.getSoilNpkSensor(), ownerId, deviceGroupId);
-                Device harvestReporterDevice = createHarvestReporter(section.getHarvestReporter(), ownerId, deviceGroupId);
+                Device soilWarmMoistureSensorDevice = createSoilWarmMoistureSensor(section.getSoilWarmMoistureSensor(), ownerId, deviceGroupId, strictGeneration);
+                Device soilAciditySensorDevice = createSoilAciditySensor(section.getSoilAciditySensor(), ownerId, deviceGroupId, strictGeneration);
+                Device soilNpkSensorDevice = createSoilNpkSensor(section.getSoilNpkSensor(), ownerId, deviceGroupId, strictGeneration);
+                Device harvestReporterDevice = createHarvestReporter(section.getHarvestReporter(), ownerId, deviceGroupId, strictGeneration);
 
                 this.tbRestClient.createRelation(RelationType.CONTAINS.getType(), sectionAsset.getId(), soilWarmMoistureSensorDevice.getId());
                 this.tbRestClient.createRelation(RelationType.CONTAINS.getType(), sectionAsset.getId(), soilAciditySensorDevice.getId());
@@ -1007,13 +1057,13 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
                 this.tbRestClient.createRelation(RelationType.CONTAINS.getType(), sectionAsset.getId(), harvestReporterDevice.getId());
             }
 
-            Device insideAirWarmHumiditySensorDevice = createInsideAirWarmHumiditySensor(greenhouse.getInsideAirWarmHumiditySensor(), ownerId, deviceGroupId);
-            Device insideLightSensorDevice = createInsideLightSensor(greenhouse.getInsideLightSensor(), ownerId, deviceGroupId);
-            Device insideCO2SensorDevice = createInsideCO2Sensor(greenhouse.getInsideCO2Sensor(), ownerId, deviceGroupId);
-            Device outsideAirWarmHumiditySensorDevice = createOutsideAirWarmHumiditySensor(greenhouse.getOutsideAirWarmHumiditySensor(), ownerId, deviceGroupId);
-            Device outsideLightSensorDevice = createOutsideLightSensor(greenhouse.getOutsideLightSensor(), ownerId, deviceGroupId);
-            Device energyMeter = createEnergyMeter(greenhouse.getEnergyMeter(), ownerId, deviceGroupId);
-            Device waterMeter = createWaterMeter(greenhouse.getWaterMeter(), ownerId, deviceGroupId);
+            Device insideAirWarmHumiditySensorDevice = createInsideAirWarmHumiditySensor(greenhouse.getInsideAirWarmHumiditySensor(), ownerId, deviceGroupId, strictGeneration);
+            Device insideLightSensorDevice = createInsideLightSensor(greenhouse.getInsideLightSensor(), ownerId, deviceGroupId, strictGeneration);
+            Device insideCO2SensorDevice = createInsideCO2Sensor(greenhouse.getInsideCO2Sensor(), ownerId, deviceGroupId, strictGeneration);
+            Device outsideAirWarmHumiditySensorDevice = createOutsideAirWarmHumiditySensor(greenhouse.getOutsideAirWarmHumiditySensor(), ownerId, deviceGroupId, strictGeneration);
+            Device outsideLightSensorDevice = createOutsideLightSensor(greenhouse.getOutsideLightSensor(), ownerId, deviceGroupId, strictGeneration);
+            Device energyMeter = createEnergyMeter(greenhouse.getEnergyMeter(), ownerId, deviceGroupId, strictGeneration);
+            Device waterMeter = createWaterMeter(greenhouse.getWaterMeter(), ownerId, deviceGroupId, strictGeneration);
 
             this.tbRestClient.createRelation(RelationType.CONTAINS.getType(), greenhouseAsset.getId(), insideAirWarmHumiditySensorDevice.getId());
             this.tbRestClient.createRelation(RelationType.CONTAINS.getType(), greenhouseAsset.getId(), insideLightSensorDevice.getId());
@@ -1519,24 +1569,28 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
                 .build();
     }
 
-    private Greenhouse makeGreenhouseByConfiguration(GreenhouseConfiguration configuration, Map<Long, WeatherData> weatherDataMap, boolean skipTelemetry) {
+    private Greenhouse makeGreenhouseByConfiguration(GreenhouseConfiguration configuration, Map<Long, WeatherData> weatherDataMap, boolean skipTelemetry, boolean fullTelemetryGeneration, long startGenerationTime, long endGenerationTime) {
 
-        Telemetry<Integer> outsideLightTelemetry = createOutsideLightTelemetry(weatherDataMap, configuration, skipTelemetry);
-        Telemetry<Integer> outsideTemperatureTelemetry = createOutsideTemperatureTelemetry(weatherDataMap, configuration, skipTelemetry);
-        Telemetry<Integer> outsideHumidityTelemetry = createOutsideHumidityTelemetry(weatherDataMap, configuration, skipTelemetry);
+        Telemetry<Integer> outsideLightTelemetry = createOutsideLightTelemetry(weatherDataMap, configuration, skipTelemetry, fullTelemetryGeneration, startGenerationTime, endGenerationTime);
+        Telemetry<Integer> outsideTemperatureTelemetry = createOutsideTemperatureTelemetry(weatherDataMap, configuration, skipTelemetry, fullTelemetryGeneration, startGenerationTime, endGenerationTime);
+        Telemetry<Integer> outsideHumidityTelemetry = createOutsideHumidityTelemetry(weatherDataMap, configuration, skipTelemetry, fullTelemetryGeneration, startGenerationTime, endGenerationTime);
 
-        Telemetry<Integer> insideLightTelemetry = createInsideLightTelemetry(outsideLightTelemetry, configuration, skipTelemetry);
+        Telemetry<Integer> insideLightTelemetry = createInsideLightTelemetry(outsideLightTelemetry, configuration, skipTelemetry, fullTelemetryGeneration, startGenerationTime, endGenerationTime);
 
         Set<Long> aerations = new HashSet<>();
-        Telemetry<Integer> temporalTelemetryCo2Generation = createTemporalTelemetryCo2Generation(outsideLightTelemetry, insideLightTelemetry, configuration, skipTelemetry);
-        Telemetry<Integer> co2ConcetracionTelemetry = createCo2ConcentrationTelemetryAndInterruption(aerations, temporalTelemetryCo2Generation, configuration, skipTelemetry);
+        Telemetry<Integer> temporalTelemetryCo2Generation = createTemporalTelemetryCo2Generation(
+                outsideLightTelemetry, insideLightTelemetry, configuration, skipTelemetry, fullTelemetryGeneration, startGenerationTime, endGenerationTime);
+        Telemetry<Integer> co2ConcetracionTelemetry = createCo2ConcentrationTelemetryAndInterruption(
+                aerations, temporalTelemetryCo2Generation, configuration, skipTelemetry, fullTelemetryGeneration, startGenerationTime, endGenerationTime);
 
         Set<Long> heatings = new HashSet<>();
         Set<Long> coolings = new HashSet<>();
         Set<Long> humidifications = new HashSet<>();
         Set<Long> dehumidifications = new HashSet<>();
-        Telemetry<Integer> insideTemperatureTelemetry = createInsideTemperatureTelemetry(aerations, heatings, coolings, outsideTemperatureTelemetry, configuration, skipTelemetry);
-        Telemetry<Integer> insideHumidityTelemetry = createInsideHumidityTelemetry(aerations, heatings, coolings, humidifications, dehumidifications, outsideHumidityTelemetry, configuration, skipTelemetry);
+        Telemetry<Integer> insideTemperatureTelemetry = createInsideTemperatureTelemetry(
+                aerations, heatings, coolings, outsideTemperatureTelemetry, configuration, skipTelemetry, fullTelemetryGeneration, startGenerationTime, endGenerationTime);
+        Telemetry<Integer> insideHumidityTelemetry = createInsideHumidityTelemetry(
+                aerations, heatings, coolings, humidifications, dehumidifications, outsideHumidityTelemetry, configuration, skipTelemetry, fullTelemetryGeneration, startGenerationTime, endGenerationTime);
 
         Map<String, Set<Long>> irrigations = new HashMap<>();
 
@@ -1547,21 +1601,29 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
                 String sectionName = String.format(configuration.getName() + ", section %s-%s", height, width);
                 Set<Long> sectionIrrigations = irrigations.computeIfAbsent(sectionName, key -> new HashSet<>());
 
-                Telemetry<Double> temporalTelemetrySoilWaterConsumption = createTemporalTelemetrySoilWaterConsumption(configuration, skipTelemetry);
-                Telemetry<Double> soilMoisture = createTelemetrySoilMoisture(configuration, temporalTelemetrySoilWaterConsumption, sectionIrrigations, skipTelemetry);
+                Telemetry<Double> temporalTelemetrySoilWaterConsumption = createTemporalTelemetrySoilWaterConsumption(
+                        configuration, skipTelemetry, fullTelemetryGeneration, startGenerationTime, endGenerationTime);
+                Telemetry<Double> soilMoisture = createTelemetrySoilMoisture(
+                        configuration, temporalTelemetrySoilWaterConsumption, sectionIrrigations, skipTelemetry, fullTelemetryGeneration, startGenerationTime, endGenerationTime);
 
-                Telemetry<Integer> telemetrySoilTemperature = createTelemetrySoilTemperature(configuration, insideTemperatureTelemetry, sectionIrrigations, skipTelemetry);
+                Telemetry<Integer> telemetrySoilTemperature = createTelemetrySoilTemperature(
+                        configuration, insideTemperatureTelemetry, sectionIrrigations, skipTelemetry, fullTelemetryGeneration, startGenerationTime, endGenerationTime);
 
                 Set<Long> acidification = new HashSet<>();
-                Telemetry<Double> telemetrySoilAcidity = createTelemetrySoilAcidity(configuration, sectionIrrigations, acidification, skipTelemetry);
+                Telemetry<Double> telemetrySoilAcidity = createTelemetrySoilAcidity(
+                        configuration, sectionIrrigations, acidification, skipTelemetry, fullTelemetryGeneration, startGenerationTime, endGenerationTime);
 
-                Telemetry<Double> nitrogenLevelTelemetry = createTelemetrySoilNitrogenLevel(configuration, skipTelemetry);
-                Telemetry<Double> phosphorusLevelTelemetry = createTelemetrySoilPhosphorusLevel(configuration, skipTelemetry);
-                Telemetry<Double> potassiumLevelTelemetry = createTelemetrySoilPotassiumLevel(configuration, skipTelemetry);
+                Telemetry<Double> nitrogenLevelTelemetry = createTelemetrySoilNitrogenLevel(
+                        configuration, skipTelemetry, fullTelemetryGeneration, startGenerationTime, endGenerationTime);
+                Telemetry<Double> phosphorusLevelTelemetry = createTelemetrySoilPhosphorusLevel(
+                        configuration, skipTelemetry, fullTelemetryGeneration, startGenerationTime, endGenerationTime);
+                Telemetry<Double> potassiumLevelTelemetry = createTelemetrySoilPotassiumLevel(
+                        configuration, skipTelemetry, fullTelemetryGeneration, startGenerationTime, endGenerationTime);
 
                 Telemetry<Double> telemetryCropWeight = new Telemetry<>("cropWeight");
                 Telemetry<String> telemetryWorkerInCharge = new Telemetry<>("workerInCharge");
-                createTelemetryHarvestReporter(telemetryCropWeight, telemetryWorkerInCharge, configuration, skipTelemetry);
+                createTelemetryHarvestReporter(
+                        telemetryCropWeight, telemetryWorkerInCharge, configuration, skipTelemetry, fullTelemetryGeneration, startGenerationTime, endGenerationTime);
 
 
                 SoilNpkSensor soilNpkSensor = SoilNpkSensor.builder()
@@ -1619,11 +1681,12 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
         Telemetry<Double> energyConsumptionAirControl = new Telemetry<>("energyConsumptionAirControl");
         Telemetry<Double> energyConsumptionIrrigation = new Telemetry<>("energyConsumptionIrrigation");
         createTelemetryConsumptionEnergy(
-                insideLightTelemetry, aerations, heatings, coolings, humidifications, dehumidifications, irrigations, configuration, skipTelemetry,
-                energyConsumptionLight, energyConsumptionHeating, energyConsumptionCooling, energyConsumptionAirControl, energyConsumptionIrrigation
+                insideLightTelemetry, aerations, heatings, coolings, humidifications, dehumidifications, irrigations, configuration, skipTelemetry, fullTelemetryGeneration,
+                startGenerationTime, endGenerationTime, energyConsumptionLight, energyConsumptionHeating, energyConsumptionCooling, energyConsumptionAirControl,
+                energyConsumptionIrrigation
         );
         Telemetry<Double> telemetryConsumptionWater = createTelemetryConsumptionWater(
-                humidifications, irrigations, configuration, skipTelemetry
+                humidifications, irrigations, configuration, skipTelemetry, fullTelemetryGeneration, startGenerationTime, endGenerationTime
         );
 
         OutsideAirWarmHumiditySensor outsideAirWarmHumiditySensor = OutsideAirWarmHumiditySensor.builder()
@@ -1703,9 +1766,20 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
     }
 
 
-    private Map<Long, WeatherData> loadWeatherData(StationCity city, ZonedDateTime startYear, boolean skipTelemetry) {
+    private Map<Long, WeatherData> loadWeatherData(
+            StationCity city, ZonedDateTime startYear, boolean skipTelemetry, boolean fullTelemetryGeneration, long startGenerationTime, long endGenerationTime
+    ) {
+        var noWeatherData = new HashMap<Long, WeatherData>();
+
         if (skipTelemetry) {
-            return new HashMap<>();
+            return noWeatherData;
+        }
+
+        Pair<Long, Long> fromToPair;
+        try {
+            fromToPair = DateTimeUtils.calculateNewDateRange(DateTimeUtils.toTs(startYear), System.currentTimeMillis(), startGenerationTime, endGenerationTime, fullTelemetryGeneration);
+        } catch (IllegalStateException e) {
+            return noWeatherData;
         }
 
         try {
@@ -1746,20 +1820,15 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
                             (w1, w2) -> w1
                     ));
 
-            long now = System.currentTimeMillis();
-            ZonedDateTime startDate = startYear.truncatedTo(ChronoUnit.HOURS);
-            ZonedDateTime nowDate = DateTimeUtils.fromTs(now).truncatedTo(ChronoUnit.HOURS);
+            ZonedDateTime startDate = DateTimeUtils.fromTs(fromToPair.getLeft()).truncatedTo(ChronoUnit.HOURS);
+            ZonedDateTime nowDate = DateTimeUtils.fromTs(fromToPair.getRight()).truncatedTo(ChronoUnit.HOURS);
             ZonedDateTime iteratedDate = startDate;
             WeatherData last = weatherDataList.get(0);
+
             while (iteratedDate.isBefore(nowDate)) {
                 long iteratedTs = DateTimeUtils.toTs(iteratedDate);
                 WeatherData weatherData = tsToWeatherMap.get(iteratedTs);
                 if (weatherData == null) {
-                    String message = String.format(
-                            "No weather data in city %s, time = %s, will used data from %s",
-                            city, iteratedDate, DateTimeUtils.fromTs(last.getTs())
-                    );
-//                    log.warn(message);
                     weatherData = last;
                     tsToWeatherMap.put(iteratedTs, weatherData);
                 }
@@ -1790,17 +1859,27 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
     }
 
 
-    private Telemetry<Integer> createOutsideLightTelemetry(Map<Long, WeatherData> tsToWeatherMap, GreenhouseConfiguration configuration, boolean skipTelemetry) {
+    private Telemetry<Integer> createOutsideLightTelemetry(
+            Map<Long, WeatherData> tsToWeatherMap, GreenhouseConfiguration configuration, boolean skipTelemetry,
+            boolean fullTelemetryGeneration, long startGenerationTime, long endGenerationTime
+    ) {
+        var skipTelemetryValue = new Telemetry<Integer>("skip");
+
         if (skipTelemetry) {
-            return new Telemetry<>("skip");
+            return skipTelemetryValue;
+        }
+
+        Pair<Long, Long> fromToPair;
+        try {
+            fromToPair = DateTimeUtils.calculateNewDateRange(configuration.getStartTs(), configuration.getEndTs(), startGenerationTime, endGenerationTime, fullTelemetryGeneration);
+        } catch (IllegalStateException e) {
+            return skipTelemetryValue;
         }
 
         Telemetry<Integer> result = new Telemetry<>("light_out");
-        long startTs = configuration.getStartTs();
-        long endTs = configuration.getEndTs();
 
-        ZonedDateTime startDate = DateTimeUtils.fromTs(startTs).truncatedTo(ChronoUnit.HOURS);
-        ZonedDateTime endDate = DateTimeUtils.fromTs(endTs).truncatedTo(ChronoUnit.HOURS);
+        ZonedDateTime startDate = DateTimeUtils.fromTs(fromToPair.getLeft()).truncatedTo(ChronoUnit.HOURS);
+        ZonedDateTime endDate = DateTimeUtils.fromTs(fromToPair.getRight()).truncatedTo(ChronoUnit.HOURS);
         ZonedDateTime iteratedDate = startDate;
         while (iteratedDate.isBefore(endDate)) {
             long iteratedTs = DateTimeUtils.toTs(iteratedDate);
@@ -1824,17 +1903,27 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
         return result;
     }
 
-    private Telemetry<Integer> createOutsideTemperatureTelemetry(Map<Long, WeatherData> tsToWeatherMap, GreenhouseConfiguration configuration, boolean skipTelemetry) {
+    private Telemetry<Integer> createOutsideTemperatureTelemetry(
+            Map<Long, WeatherData> tsToWeatherMap, GreenhouseConfiguration configuration, boolean skipTelemetry, boolean fullTelemetryGeneration,
+            long startGenerationTime, long endGenerationTime
+    ) {
+        var skipTelemetryValue = new Telemetry<Integer>("skip");
+
         if (skipTelemetry) {
-            return new Telemetry<>("skip");
+            return skipTelemetryValue;
+        }
+
+        Pair<Long, Long> fromToPair;
+        try {
+            fromToPair = DateTimeUtils.calculateNewDateRange(configuration.getStartTs(), configuration.getEndTs(), startGenerationTime, endGenerationTime, fullTelemetryGeneration);
+        } catch (IllegalStateException e) {
+            return skipTelemetryValue;
         }
 
         Telemetry<Integer> result = new Telemetry<>("temperature_out");
-        long startTs = configuration.getStartTs();
-        long endTs = configuration.getEndTs();
 
-        ZonedDateTime startDate = DateTimeUtils.fromTs(startTs).truncatedTo(ChronoUnit.HOURS);
-        ZonedDateTime endDate = DateTimeUtils.fromTs(endTs).truncatedTo(ChronoUnit.HOURS);
+        ZonedDateTime startDate = DateTimeUtils.fromTs(fromToPair.getLeft()).truncatedTo(ChronoUnit.HOURS);
+        ZonedDateTime endDate = DateTimeUtils.fromTs(fromToPair.getRight()).truncatedTo(ChronoUnit.HOURS);
         ZonedDateTime iteratedDate = startDate;
         while (iteratedDate.isBefore(endDate)) {
             long iteratedTs = DateTimeUtils.toTs(iteratedDate);
@@ -1851,17 +1940,27 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
         return result;
     }
 
-    private Telemetry<Integer> createOutsideHumidityTelemetry(Map<Long, WeatherData> tsToWeatherMap, GreenhouseConfiguration configuration, boolean skipTelemetry) {
+    private Telemetry<Integer> createOutsideHumidityTelemetry(
+            Map<Long, WeatherData> tsToWeatherMap, GreenhouseConfiguration configuration, boolean skipTelemetry, boolean fullTelemetryGeneration,
+            long startGenerationTime, long endGenerationTime
+    ) {
+        var skipTelemetryValue = new Telemetry<Integer>("skip");
+
         if (skipTelemetry) {
-            return new Telemetry<>("skip");
+            return skipTelemetryValue;
+        }
+
+        Pair<Long, Long> fromToPair;
+        try {
+            fromToPair = DateTimeUtils.calculateNewDateRange(configuration.getStartTs(), configuration.getEndTs(), startGenerationTime, endGenerationTime, fullTelemetryGeneration);
+        } catch (IllegalStateException e) {
+            return skipTelemetryValue;
         }
 
         Telemetry<Integer> result = new Telemetry<>("humidity_out");
-        long startTs = configuration.getStartTs();
-        long endTs = configuration.getEndTs();
 
-        ZonedDateTime startDate = DateTimeUtils.fromTs(startTs).truncatedTo(ChronoUnit.HOURS);
-        ZonedDateTime endDate = DateTimeUtils.fromTs(endTs).truncatedTo(ChronoUnit.HOURS);
+        ZonedDateTime startDate = DateTimeUtils.fromTs(fromToPair.getLeft()).truncatedTo(ChronoUnit.HOURS);
+        ZonedDateTime endDate = DateTimeUtils.fromTs(fromToPair.getRight()).truncatedTo(ChronoUnit.HOURS);
         ZonedDateTime iteratedDate = startDate;
         while (iteratedDate.isBefore(endDate)) {
             long iteratedTs = DateTimeUtils.toTs(iteratedDate);
@@ -1875,7 +1974,7 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
     }
 
     private int getHourLuxValues(int hour) {
-        /// As summer day [0 - 17_000]
+        /// As summer day [0-17_000]
         switch (hour) {
             case 0:
             case 1:
@@ -2036,10 +2135,23 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
     }
 
 
-    private Telemetry<Integer> createInsideLightTelemetry(Telemetry<Integer> outsideLightTelemetry, GreenhouseConfiguration configuration, boolean skipTelemetry) {
+    private Telemetry<Integer> createInsideLightTelemetry(
+            Telemetry<Integer> outsideLightTelemetry, GreenhouseConfiguration configuration, boolean skipTelemetry, boolean fullTelemetryGeneration,
+            long startGenerationTime, long endGenerationTime
+    ) {
+        var skipTelemetryValue = new Telemetry<Integer>("skip");
+
         if (skipTelemetry) {
-            return new Telemetry<>("skip");
+            return skipTelemetryValue;
         }
+
+        Pair<Long, Long> fromToPair;
+        try {
+            fromToPair = DateTimeUtils.calculateNewDateRange(configuration.getStartTs(), configuration.getEndTs(), startGenerationTime, endGenerationTime, fullTelemetryGeneration);
+        } catch (IllegalStateException e) {
+            return skipTelemetryValue;
+        }
+
         Telemetry<Integer> result = new Telemetry<>("light_in");
 
         Map<Timestamp, Telemetry.Point<Integer>> outsideLightTelemetryMap = outsideLightTelemetry.getPoints()
@@ -2053,8 +2165,8 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
         double dayLevel = (dayMinLevel + dayMaxLevel) / 2;
         double nightLevel = (nightMinLevel + nightMaxLevel) / 2;
 
-        ZonedDateTime startDate = DateTimeUtils.fromTs(configuration.getStartTs()).truncatedTo(ChronoUnit.HOURS);
-        ZonedDateTime endDate = DateTimeUtils.fromTs(configuration.getEndTs()).truncatedTo(ChronoUnit.HOURS);
+        ZonedDateTime startDate = DateTimeUtils.fromTs(fromToPair.getLeft()).truncatedTo(ChronoUnit.HOURS);
+        ZonedDateTime endDate = DateTimeUtils.fromTs(fromToPair.getRight()).truncatedTo(ChronoUnit.HOURS);
         ZonedDateTime iteratedDate = startDate;
         while (iteratedDate.isBefore(endDate)) {
             long iteratedTs = DateTimeUtils.toTs(iteratedDate);
@@ -2077,10 +2189,23 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
     }
 
 
-    private Telemetry<Integer> createCo2ConcentrationTelemetryAndInterruption(Set<Long> aerations, Telemetry<Integer> temporalTelemetryCo2Generation, GreenhouseConfiguration configuration, boolean skipTelemetry) {
+    private Telemetry<Integer> createCo2ConcentrationTelemetryAndInterruption(
+            Set<Long> aerations, Telemetry<Integer> temporalTelemetryCo2Generation, GreenhouseConfiguration configuration, boolean skipTelemetry, boolean fullTelemetryGeneration,
+            long startGenerationTime, long endGenerationTime
+    ) {
+        var skipTelemetryValue = new Telemetry<Integer>("skip");
+
         if (skipTelemetry) {
-            return new Telemetry<>("skip");
+            return skipTelemetryValue;
         }
+
+        Pair<Long, Long> fromToPair;
+        try {
+            fromToPair = DateTimeUtils.calculateNewDateRange(configuration.getStartTs(), configuration.getEndTs(), startGenerationTime, endGenerationTime, fullTelemetryGeneration);
+        } catch (IllegalStateException e) {
+            return skipTelemetryValue;
+        }
+
         Telemetry<Integer> result = new Telemetry<>("concentration");
 
         double startLevel = 1000;
@@ -2092,8 +2217,8 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
                 .stream()
                 .collect(Collectors.toMap(Telemetry.Point::getTs, Functions.identity()));
 
-        ZonedDateTime startDate = DateTimeUtils.fromTs(configuration.getStartTs()).truncatedTo(ChronoUnit.HOURS);
-        ZonedDateTime endDate = DateTimeUtils.fromTs(configuration.getEndTs()).truncatedTo(ChronoUnit.HOURS);
+        ZonedDateTime startDate = DateTimeUtils.fromTs(fromToPair.getLeft()).truncatedTo(ChronoUnit.HOURS);
+        ZonedDateTime endDate = DateTimeUtils.fromTs(fromToPair.getRight()).truncatedTo(ChronoUnit.HOURS);
         ZonedDateTime iteratedDate = startDate;
         double currentLevel = startLevel;
         while (iteratedDate.isBefore(endDate)) {
@@ -2115,10 +2240,23 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
         return result;
     }
 
-    private Telemetry<Integer> createTemporalTelemetryCo2Generation(Telemetry<Integer> outsideLightTelemetry, Telemetry<Integer> insideLightTelemetry, GreenhouseConfiguration configuration, boolean skipTelemetry) {
+    private Telemetry<Integer> createTemporalTelemetryCo2Generation(
+            Telemetry<Integer> outsideLightTelemetry, Telemetry<Integer> insideLightTelemetry, GreenhouseConfiguration configuration, boolean skipTelemetry,
+            boolean fullTelemetryGeneration, long startGenerationTime, long endGenerationTime
+    ) {
+        var skipTelemetryValue = new Telemetry<Integer>("skip");
+
         if (skipTelemetry) {
-            return new Telemetry<>("skip");
+            return skipTelemetryValue;
         }
+
+        Pair<Long, Long> fromToPair;
+        try {
+            fromToPair = DateTimeUtils.calculateNewDateRange(configuration.getStartTs(), configuration.getEndTs(), startGenerationTime, endGenerationTime, fullTelemetryGeneration);
+        } catch (IllegalStateException e) {
+            return skipTelemetryValue;
+        }
+
         Telemetry<Integer> result = new Telemetry<>("temporal__co2_concentration");
 
         int nightConsumption = 50;
@@ -2132,8 +2270,8 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
                 .stream()
                 .collect(Collectors.toMap(Telemetry.Point::getTs, Functions.identity()));
 
-        ZonedDateTime startDate = DateTimeUtils.fromTs(configuration.getStartTs()).truncatedTo(ChronoUnit.HOURS);
-        ZonedDateTime endDate = DateTimeUtils.fromTs(configuration.getEndTs()).truncatedTo(ChronoUnit.HOURS);
+        ZonedDateTime startDate = DateTimeUtils.fromTs(fromToPair.getLeft()).truncatedTo(ChronoUnit.HOURS);
+        ZonedDateTime endDate = DateTimeUtils.fromTs(fromToPair.getRight()).truncatedTo(ChronoUnit.HOURS);
         ZonedDateTime iteratedDate = startDate;
         while (iteratedDate.isBefore(endDate)) {
             long iteratedTs = DateTimeUtils.toTs(iteratedDate);
@@ -2152,10 +2290,23 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
     }
 
 
-    private Telemetry<Integer> createInsideTemperatureTelemetry(Set<Long> aerations, Set<Long> heatings, Set<Long> coolings, Telemetry<Integer> outsideTemperatureTelemetry, GreenhouseConfiguration configuration, boolean skipTelemetry) {
+    private Telemetry<Integer> createInsideTemperatureTelemetry(
+            Set<Long> aerations, Set<Long> heatings, Set<Long> coolings, Telemetry<Integer> outsideTemperatureTelemetry, GreenhouseConfiguration configuration,
+            boolean skipTelemetry, boolean fullTelemetryGeneration, long startGenerationTime, long endGenerationTime
+    ) {
+        var skipTelemetryValue = new Telemetry<Integer>("skip");
+
         if (skipTelemetry) {
-            return new Telemetry<>("skip");
+            return skipTelemetryValue;
         }
+
+        Pair<Long, Long> fromToPair;
+        try {
+            fromToPair = DateTimeUtils.calculateNewDateRange(configuration.getStartTs(), configuration.getEndTs(), startGenerationTime, endGenerationTime, fullTelemetryGeneration);
+        } catch (IllegalStateException e) {
+            return skipTelemetryValue;
+        }
+
         Telemetry<Integer> result = new Telemetry<>("temperature_in");
 
         double startLevel = 15;
@@ -2180,8 +2331,8 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
                 .stream()
                 .collect(Collectors.toMap(Telemetry.Point::getTs, Functions.identity()));
 
-        ZonedDateTime startDate = DateTimeUtils.fromTs(configuration.getStartTs()).truncatedTo(ChronoUnit.HOURS);
-        ZonedDateTime endDate = DateTimeUtils.fromTs(configuration.getEndTs()).truncatedTo(ChronoUnit.HOURS);
+        ZonedDateTime startDate = DateTimeUtils.fromTs(fromToPair.getLeft()).truncatedTo(ChronoUnit.HOURS);
+        ZonedDateTime endDate = DateTimeUtils.fromTs(fromToPair.getRight()).truncatedTo(ChronoUnit.HOURS);
         ZonedDateTime iteratedDate = startDate;
         double currentLevel = startLevel;
         while (iteratedDate.isBefore(endDate)) {
@@ -2237,10 +2388,23 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
         return result;
     }
 
-    private Telemetry<Integer> createInsideHumidityTelemetry(Set<Long> aerations, Set<Long> heatings, Set<Long> coolings, Set<Long> humidifications, Set<Long> dehumidifications, Telemetry<Integer> outsideHumidityTelemetry, GreenhouseConfiguration configuration, boolean skipTelemetry) {
+    private Telemetry<Integer> createInsideHumidityTelemetry(
+            Set<Long> aerations, Set<Long> heatings, Set<Long> coolings, Set<Long> humidifications, Set<Long> dehumidifications, Telemetry<Integer> outsideHumidityTelemetry,
+            GreenhouseConfiguration configuration, boolean skipTelemetry, boolean fullTelemetryGeneration, long startGenerationTime, long endGenerationTime
+    ) {
+        var skipTelemetryValue = new Telemetry<Integer>("skip");
+
         if (skipTelemetry) {
-            return new Telemetry<>("skip");
+            return skipTelemetryValue;
         }
+
+        Pair<Long, Long> fromToPair;
+        try {
+            fromToPair = DateTimeUtils.calculateNewDateRange(configuration.getStartTs(), configuration.getEndTs(), startGenerationTime, endGenerationTime, fullTelemetryGeneration);
+        } catch (IllegalStateException e) {
+            return skipTelemetryValue;
+        }
+
         Telemetry<Integer> result = new Telemetry<>("humidity_in");
 
         double startLevel = 30;
@@ -2261,8 +2425,8 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
                 .stream()
                 .collect(Collectors.toMap(Telemetry.Point::getTs, Functions.identity()));
 
-        ZonedDateTime startDate = DateTimeUtils.fromTs(configuration.getStartTs()).truncatedTo(ChronoUnit.HOURS);
-        ZonedDateTime endDate = DateTimeUtils.fromTs(configuration.getEndTs()).truncatedTo(ChronoUnit.HOURS);
+        ZonedDateTime startDate = DateTimeUtils.fromTs(fromToPair.getLeft()).truncatedTo(ChronoUnit.HOURS);
+        ZonedDateTime endDate = DateTimeUtils.fromTs(fromToPair.getRight()).truncatedTo(ChronoUnit.HOURS);
         ZonedDateTime iteratedDate = startDate;
         double currentLevel = startLevel;
         while (iteratedDate.isBefore(endDate)) {
@@ -2317,14 +2481,26 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
     }
 
 
-    private Telemetry<Double> createTelemetrySoilNitrogenLevel(GreenhouseConfiguration configuration, boolean skipTelemetry) {
+    private Telemetry<Double> createTelemetrySoilNitrogenLevel(
+            GreenhouseConfiguration configuration, boolean skipTelemetry, boolean fullTelemetryGeneration, long startGenerationTime, long endGenerationTime
+    ) {
+        var skipTelemetryValue = new Telemetry<Double>("skip");
+
         if (skipTelemetry) {
-            return new Telemetry<>("skip");
+            return skipTelemetryValue;
+        }
+
+        Pair<Long, Long> fromToPair;
+        try {
+            fromToPair = DateTimeUtils.calculateNewDateRange(configuration.getStartTs(), configuration.getEndTs(), startGenerationTime, endGenerationTime, fullTelemetryGeneration);
+        } catch (IllegalStateException e) {
+            return skipTelemetryValue;
         }
 
         PlantConfiguration plantConfiguration = configuration.getPlantConfiguration();
-        ZonedDateTime startDate = DateTimeUtils.fromTs(configuration.getStartTs());
-        ZonedDateTime endDate = DateTimeUtils.fromTs(configuration.getEndTs());
+
+        ZonedDateTime startDate = DateTimeUtils.fromTs(fromToPair.getLeft()).truncatedTo(ChronoUnit.HOURS);
+        ZonedDateTime endDate = DateTimeUtils.fromTs(fromToPair.getRight()).truncatedTo(ChronoUnit.HOURS);
         Telemetry<Double> consumption = createTemporalTelemetryPlantNitrogenConsumption(plantConfiguration, startDate, endDate);
 
         String name = "nitrogen";
@@ -2335,14 +2511,26 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
         return createSoilLevel(name, startLevel, minLevel, raiseValue, consumption);
     }
 
-    private Telemetry<Double> createTelemetrySoilPhosphorusLevel(GreenhouseConfiguration configuration, boolean skipTelemetry) {
+    private Telemetry<Double> createTelemetrySoilPhosphorusLevel(
+            GreenhouseConfiguration configuration, boolean skipTelemetry, boolean fullTelemetryGeneration, long startGenerationTime, long endGenerationTime
+    ) {
+        var skipTelemetryValue = new Telemetry<Double>("skip");
+
         if (skipTelemetry) {
-            return new Telemetry<>("skip");
+            return skipTelemetryValue;
+        }
+
+        Pair<Long, Long> fromToPair;
+        try {
+            fromToPair = DateTimeUtils.calculateNewDateRange(configuration.getStartTs(), configuration.getEndTs(), startGenerationTime, endGenerationTime, fullTelemetryGeneration);
+        } catch (IllegalStateException e) {
+            return skipTelemetryValue;
         }
 
         PlantConfiguration plantConfiguration = configuration.getPlantConfiguration();
-        ZonedDateTime startDate = DateTimeUtils.fromTs(configuration.getStartTs());
-        ZonedDateTime endDate = DateTimeUtils.fromTs(configuration.getEndTs());
+
+        ZonedDateTime startDate = DateTimeUtils.fromTs(fromToPair.getLeft()).truncatedTo(ChronoUnit.HOURS);
+        ZonedDateTime endDate = DateTimeUtils.fromTs(fromToPair.getRight()).truncatedTo(ChronoUnit.HOURS);
         Telemetry<Double> consumption = createTemporalTelemetryPlantPhosphorusConsumption(plantConfiguration, startDate, endDate);
 
         String name = "phosphorus";
@@ -2353,14 +2541,26 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
         return createSoilLevel(name, startLevel, minLevel, raiseValue, consumption);
     }
 
-    private Telemetry<Double> createTelemetrySoilPotassiumLevel(GreenhouseConfiguration configuration, boolean skipTelemetry) {
+    private Telemetry<Double> createTelemetrySoilPotassiumLevel(
+            GreenhouseConfiguration configuration, boolean skipTelemetry, boolean fullTelemetryGeneration, long startGenerationTime, long endGenerationTime
+    ) {
+        var skipTelemetryValue = new Telemetry<Double>("skip");
+
         if (skipTelemetry) {
-            return new Telemetry<>("skip");
+            return skipTelemetryValue;
+        }
+
+        Pair<Long, Long> fromToPair;
+        try {
+            fromToPair = DateTimeUtils.calculateNewDateRange(configuration.getStartTs(), configuration.getEndTs(), startGenerationTime, endGenerationTime, fullTelemetryGeneration);
+        } catch (IllegalStateException e) {
+            return skipTelemetryValue;
         }
 
         PlantConfiguration plantConfiguration = configuration.getPlantConfiguration();
-        ZonedDateTime startDate = DateTimeUtils.fromTs(configuration.getStartTs());
-        ZonedDateTime endDate = DateTimeUtils.fromTs(configuration.getEndTs());
+
+        ZonedDateTime startDate = DateTimeUtils.fromTs(fromToPair.getLeft()).truncatedTo(ChronoUnit.HOURS);
+        ZonedDateTime endDate = DateTimeUtils.fromTs(fromToPair.getRight()).truncatedTo(ChronoUnit.HOURS);
         Telemetry<Double> consumption = createTemporalTelemetryPlantPotassiumConsumption(plantConfiguration, startDate, endDate);
 
         String name = "potassium";
@@ -2471,10 +2671,20 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
     }
 
 
-    private Telemetry<Double> createTelemetrySoilMoisture(GreenhouseConfiguration configuration, Telemetry<Double> temporalTelemetrySoilWaterConsumption, Set<Long> sectionIrrigations, boolean skipTelemetry) {
+    private Telemetry<Double> createTelemetrySoilMoisture(GreenhouseConfiguration configuration, Telemetry<Double> temporalTelemetrySoilWaterConsumption, Set<Long> sectionIrrigations, boolean skipTelemetry, boolean fullTelemetryGeneration, long startGenerationTime, long endGenerationTime) {
+        var skipTelemetryValue = new Telemetry<Double>("skip");
+
         if (skipTelemetry) {
-            return new Telemetry<>("skip");
+            return skipTelemetryValue;
         }
+
+        Pair<Long, Long> fromToPair;
+        try {
+            fromToPair = DateTimeUtils.calculateNewDateRange(configuration.getStartTs(), configuration.getEndTs(), startGenerationTime, endGenerationTime, fullTelemetryGeneration);
+        } catch (IllegalStateException e) {
+            return skipTelemetryValue;
+        }
+
         Telemetry<Double> result = new Telemetry<>("moisture");
 
         PlantConfiguration plantConfiguration = configuration.getPlantConfiguration();
@@ -2486,8 +2696,8 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
                 .stream()
                 .collect(Collectors.toMap(Telemetry.Point::getTs, Functions.identity()));
 
-        ZonedDateTime startDate = DateTimeUtils.fromTs(configuration.getStartTs()).truncatedTo(ChronoUnit.HOURS);
-        ZonedDateTime endDate = DateTimeUtils.fromTs(configuration.getEndTs()).truncatedTo(ChronoUnit.HOURS);
+        ZonedDateTime startDate = DateTimeUtils.fromTs(fromToPair.getLeft()).truncatedTo(ChronoUnit.HOURS);
+        ZonedDateTime endDate = DateTimeUtils.fromTs(fromToPair.getRight()).truncatedTo(ChronoUnit.HOURS);
         ZonedDateTime iteratedDate = startDate;
         double currentLevel = startLevel;
         while (iteratedDate.isBefore(endDate)) {
@@ -2510,10 +2720,20 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
         return result;
     }
 
-    private Telemetry<Double> createTemporalTelemetrySoilWaterConsumption(GreenhouseConfiguration configuration, boolean skipTelemetry) {
+    private Telemetry<Double> createTemporalTelemetrySoilWaterConsumption(GreenhouseConfiguration configuration, boolean skipTelemetry, boolean fullTelemetryGeneration, long startGenerationTime, long endGenerationTime) {
+        var skipTelemetryValue = new Telemetry<Double>("skip");
+
         if (skipTelemetry) {
-            return new Telemetry<>("skip");
+            return skipTelemetryValue;
         }
+
+        Pair<Long, Long> fromToPair;
+        try {
+            fromToPair = DateTimeUtils.calculateNewDateRange(configuration.getStartTs(), configuration.getEndTs(), startGenerationTime, endGenerationTime, fullTelemetryGeneration);
+        } catch (IllegalStateException e) {
+            return skipTelemetryValue;
+        }
+
         Telemetry<Double> result = new Telemetry<>("temporal__soil_water_consumption");
 
         PlantConfiguration plantConfiguration = configuration.getPlantConfiguration();
@@ -2521,8 +2741,8 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
         double maxLevel = plantConfiguration.getMaxSoilMoisture();
         long period = 24L * (plantConfiguration.getMinRipeningPeriodDays() + plantConfiguration.getMaxRipeningPeriodDays()) / 2;
 
-        ZonedDateTime startDate = DateTimeUtils.fromTs(configuration.getStartTs()).truncatedTo(ChronoUnit.HOURS);
-        ZonedDateTime endDate = DateTimeUtils.fromTs(configuration.getEndTs()).truncatedTo(ChronoUnit.HOURS);
+        ZonedDateTime startDate = DateTimeUtils.fromTs(fromToPair.getLeft()).truncatedTo(ChronoUnit.HOURS);
+        ZonedDateTime endDate = DateTimeUtils.fromTs(fromToPair.getRight()).truncatedTo(ChronoUnit.HOURS);
         ZonedDateTime iteratedDate = startDate;
         while (iteratedDate.isBefore(endDate)) {
             long iteratedTs = DateTimeUtils.toTs(iteratedDate);
@@ -2542,10 +2762,23 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
     }
 
 
-    private Telemetry<Integer> createTelemetrySoilTemperature(GreenhouseConfiguration configuration, Telemetry<Integer> insideTemperatureTelemetry, Set<Long> sectionIrrigations, boolean skipTelemetry) {
+    private Telemetry<Integer> createTelemetrySoilTemperature(
+            GreenhouseConfiguration configuration, Telemetry<Integer> insideTemperatureTelemetry, Set<Long> sectionIrrigations, boolean skipTelemetry,
+            boolean fullTelemetryGeneration, long startGenerationTime, long endGenerationTime
+    ) {
+        var skipTelemetryValue = new Telemetry<Integer>("skip");
+
         if (skipTelemetry) {
-            return new Telemetry<>("skip");
+            return skipTelemetryValue;
         }
+
+        Pair<Long, Long> fromToPair;
+        try {
+            fromToPair = DateTimeUtils.calculateNewDateRange(configuration.getStartTs(), configuration.getEndTs(), startGenerationTime, endGenerationTime, fullTelemetryGeneration);
+        } catch (IllegalStateException e) {
+            return skipTelemetryValue;
+        }
+
         Telemetry<Integer> result = new Telemetry<>("temperature");
 
         PlantConfiguration plantConfiguration = configuration.getPlantConfiguration();
@@ -2559,8 +2792,8 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
                 .stream()
                 .collect(Collectors.toMap(Telemetry.Point::getTs, Functions.identity()));
 
-        ZonedDateTime startDate = DateTimeUtils.fromTs(configuration.getStartTs()).truncatedTo(ChronoUnit.HOURS);
-        ZonedDateTime endDate = DateTimeUtils.fromTs(configuration.getEndTs()).truncatedTo(ChronoUnit.HOURS);
+        ZonedDateTime startDate = DateTimeUtils.fromTs(fromToPair.getLeft()).truncatedTo(ChronoUnit.HOURS);
+        ZonedDateTime endDate = DateTimeUtils.fromTs(fromToPair.getRight()).truncatedTo(ChronoUnit.HOURS);
         ZonedDateTime iteratedDate = startDate;
         double currentLevel = startLevel;
         while (iteratedDate.isBefore(endDate)) {
@@ -2581,10 +2814,23 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
     }
 
 
-    private Telemetry<Double> createTelemetrySoilAcidity(GreenhouseConfiguration configuration, Set<Long> sectionIrrigations, Set<Long> acidification, boolean skipTelemetry) {
+    private Telemetry<Double> createTelemetrySoilAcidity(
+            GreenhouseConfiguration configuration, Set<Long> sectionIrrigations, Set<Long> acidification, boolean skipTelemetry, boolean fullTelemetryGeneration,
+            long startGenerationTime, long endGenerationTime
+    ) {
+        var skipTelemetryValue = new Telemetry<Double>("skip");
+
         if (skipTelemetry) {
-            return new Telemetry<>("skip");
+            return skipTelemetryValue;
         }
+
+        Pair<Long, Long> fromToPair;
+        try {
+            fromToPair = DateTimeUtils.calculateNewDateRange(configuration.getStartTs(), configuration.getEndTs(), startGenerationTime, endGenerationTime, fullTelemetryGeneration);
+        } catch (IllegalStateException e) {
+            return skipTelemetryValue;
+        }
+
         Telemetry<Double> result = new Telemetry<>("acidity");
 
         PlantConfiguration plantConfiguration = configuration.getPlantConfiguration();
@@ -2597,8 +2843,8 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
         double irrigationIncreaseLevel = (maxLevel - minLevel) / period * 24 * 5;
         double acidificationDecreaseLevel = (maxLevel - minLevel);
 
-        ZonedDateTime startDate = DateTimeUtils.fromTs(configuration.getStartTs()).truncatedTo(ChronoUnit.HOURS);
-        ZonedDateTime endDate = DateTimeUtils.fromTs(configuration.getEndTs()).truncatedTo(ChronoUnit.HOURS);
+        ZonedDateTime startDate = DateTimeUtils.fromTs(fromToPair.getLeft()).truncatedTo(ChronoUnit.HOURS);
+        ZonedDateTime endDate = DateTimeUtils.fromTs(fromToPair.getRight()).truncatedTo(ChronoUnit.HOURS);
         ZonedDateTime iteratedDate = startDate;
         double currentLevel = startLevel;
         while (iteratedDate.isBefore(endDate)) {
@@ -2623,8 +2869,18 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
     }
 
 
-    private void createTelemetryHarvestReporter(Telemetry<Double> telemetryCropWeight, Telemetry<String> telemetryWorkerInCharge, GreenhouseConfiguration configuration, boolean skipTelemetry) {
+    private void createTelemetryHarvestReporter(
+            Telemetry<Double> telemetryCropWeight, Telemetry<String> telemetryWorkerInCharge, GreenhouseConfiguration configuration, boolean skipTelemetry,
+            boolean fullTelemetryGeneration, long startGenerationTime, long endGenerationTime
+    ) {
         if (skipTelemetry) {
+            return;
+        }
+
+        Pair<Long, Long> fromToPair;
+        try {
+            fromToPair = DateTimeUtils.calculateNewDateRange(configuration.getStartTs(), configuration.getEndTs(), startGenerationTime, endGenerationTime, fullTelemetryGeneration);
+        } catch (IllegalStateException e) {
             return;
         }
 
@@ -2638,8 +2894,8 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
         double currentLevel = 0;
         boolean skip = true;
 
-        ZonedDateTime startDate = DateTimeUtils.fromTs(configuration.getStartTs()).truncatedTo(ChronoUnit.DAYS);
-        ZonedDateTime endDate = DateTimeUtils.fromTs(configuration.getEndTs()).truncatedTo(ChronoUnit.DAYS);
+        ZonedDateTime startDate = DateTimeUtils.fromTs(fromToPair.getLeft()).truncatedTo(ChronoUnit.HOURS);
+        ZonedDateTime endDate = DateTimeUtils.fromTs(fromToPair.getRight()).truncatedTo(ChronoUnit.HOURS);
         ZonedDateTime iteratedDate = startDate;
         while (iteratedDate.isBefore(endDate)) {
             long iteratedTs = DateTimeUtils.toTs(iteratedDate);
@@ -2675,8 +2931,15 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
     }
 
 
-    private void createTelemetryConsumptionEnergy(Telemetry<Integer> insideLightTelemetry, Set<Long> aerations, Set<Long> heatings, Set<Long> coolings, Set<Long> humidifications, Set<Long> dehumidifications, Map<String, Set<Long>> irrigations, GreenhouseConfiguration configuration, boolean skipTelemetry, Telemetry<Double> energyConsumptionLight, Telemetry<Double> energyConsumptionHeating, Telemetry<Double> energyConsumptionCooling, Telemetry<Double> energyConsumptionAirControl, Telemetry<Double> energyConsumptionIrrigation) {
+    private void createTelemetryConsumptionEnergy(Telemetry<Integer> insideLightTelemetry, Set<Long> aerations, Set<Long> heatings, Set<Long> coolings, Set<Long> humidifications, Set<Long> dehumidifications, Map<String, Set<Long>> irrigations, GreenhouseConfiguration configuration, boolean skipTelemetry, boolean fullTelemetryGeneration, long startGenerationTime, long endGenerationTime, Telemetry<Double> energyConsumptionLight, Telemetry<Double> energyConsumptionHeating, Telemetry<Double> energyConsumptionCooling, Telemetry<Double> energyConsumptionAirControl, Telemetry<Double> energyConsumptionIrrigation) {
         if (skipTelemetry) {
+            return;
+        }
+
+        Pair<Long, Long> fromToPair;
+        try {
+            fromToPair = DateTimeUtils.calculateNewDateRange(configuration.getStartTs(), configuration.getEndTs(), startGenerationTime, endGenerationTime, fullTelemetryGeneration);
+        } catch (IllegalStateException e) {
             return;
         }
 
@@ -2689,8 +2952,8 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
                 .flatMap(Collection::stream)
                 .collect(Collectors.groupingBy(Function.identity(), Collectors.counting()));
 
-        ZonedDateTime startDate = DateTimeUtils.fromTs(configuration.getStartTs()).truncatedTo(ChronoUnit.HOURS);
-        ZonedDateTime endDate = DateTimeUtils.fromTs(configuration.getEndTs()).truncatedTo(ChronoUnit.HOURS);
+        ZonedDateTime startDate = DateTimeUtils.fromTs(fromToPair.getLeft()).truncatedTo(ChronoUnit.HOURS);
+        ZonedDateTime endDate = DateTimeUtils.fromTs(fromToPair.getRight()).truncatedTo(ChronoUnit.HOURS);
         ZonedDateTime iteratedDate = startDate;
 
         while (iteratedDate.isBefore(endDate)) {
@@ -2742,10 +3005,20 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
         }
     }
 
-    private Telemetry<Double> createTelemetryConsumptionWater(Set<Long> humidifications, Map<String, Set<Long>> irrigations, GreenhouseConfiguration configuration, boolean skipTelemetry) {
+    private Telemetry<Double> createTelemetryConsumptionWater(Set<Long> humidifications, Map<String, Set<Long>> irrigations, GreenhouseConfiguration configuration, boolean skipTelemetry, boolean fullTelemetryGeneration, long startGenerationTime, long endGenerationTime) {
+        var skipTelemetryValue = new Telemetry<Double>("skip");
+
         if (skipTelemetry) {
-            return new Telemetry<>("skip");
+            return skipTelemetryValue;
         }
+
+        Pair<Long, Long> fromToPair;
+        try {
+            fromToPair = DateTimeUtils.calculateNewDateRange(configuration.getStartTs(), configuration.getEndTs(), startGenerationTime, endGenerationTime, fullTelemetryGeneration);
+        } catch (IllegalStateException e) {
+            return skipTelemetryValue;
+        }
+
         Telemetry<Double> result = new Telemetry<>("consumptionWater");
 
         Map<Long, Long> irrigationCountMap = irrigations.values()
@@ -2753,8 +3026,8 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
                 .flatMap(Collection::stream)
                 .collect(Collectors.groupingBy(Function.identity(), Collectors.counting()));
 
-        ZonedDateTime startDate = DateTimeUtils.fromTs(configuration.getStartTs()).truncatedTo(ChronoUnit.HOURS);
-        ZonedDateTime endDate = DateTimeUtils.fromTs(configuration.getEndTs()).truncatedTo(ChronoUnit.HOURS);
+        ZonedDateTime startDate = DateTimeUtils.fromTs(fromToPair.getLeft()).truncatedTo(ChronoUnit.HOURS);
+        ZonedDateTime endDate = DateTimeUtils.fromTs(fromToPair.getRight()).truncatedTo(ChronoUnit.HOURS);
         ZonedDateTime iteratedDate = startDate;
         while (iteratedDate.isBefore(endDate)) {
             long iteratedTs = DateTimeUtils.toTs(iteratedDate);
@@ -2777,20 +3050,10 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
     }
 
 
-    private Asset createPlant(Plant plant, UUID ownerId, UUID assetGroupId) {
+    private Asset createPlant(Plant plant, UUID ownerId, UUID assetGroupId, boolean strictGeneration) {
         String name = plant.getSystemName();
         String entityType = plant.entityType();
-
-        Asset asset;
-        if (tbRestClient.isPe()) {
-            asset = tbRestClient.createAsset(name, entityType, new CustomerId(ownerId));
-            tbRestClient.addEntitiesToTheGroup(assetGroupId, Set.of(asset.getUuidId()));
-        } else {
-            asset = tbRestClient.createAsset(name, entityType);
-            tbRestClient.assignAssetToCustomer(ownerId, asset.getUuidId());
-        }
-
-        Set<Attribute<?>> attributes = Set.of(
+        final Set<Attribute<?>> attributes = Set.of(
                 new Attribute<>("name", plant.getName()),
                 new Attribute<>("variety", plant.getVariety()),
                 new Attribute<>("dayMinTemperature", plant.getDayMinTemperature()),
@@ -2825,80 +3088,109 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
                 new Attribute<>("growthPeriodsPhosphorusConsumption", plant.getGrowthPeriodsPhosphorusConsumption()),
                 new Attribute<>("growthPeriodsPotassiumConsumption", plant.getGrowthPeriodsPotassiumConsumption())
         );
-        tbRestClient.setEntityAttributes(asset.getUuidId(), EntityType.ASSET, Attribute.Scope.SERVER_SCOPE, attributes);
+
+        Asset asset;
+        if (tbRestClient.isPe()) {
+            var newCustomerId = new CustomerId(ownerId);
+            asset = strictGeneration
+                    ? tbRestClient.createAsset(name, entityType, newCustomerId, attributes)
+                    : tbRestClient.createAssetIfNotExists(name, entityType, newCustomerId, attributes)
+            ;
+            tbRestClient.addEntitiesToTheGroup(assetGroupId, Set.of(asset.getUuidId()));
+        } else {
+            asset = strictGeneration
+                    ? tbRestClient.createAsset(name, entityType, attributes)
+                    : tbRestClient.createAssetIfNotExists(name, entityType, attributes)
+            ;
+            tbRestClient.assignAssetToCustomer(ownerId, asset.getUuidId());
+        }
 
         this.plantToIdMap.put(plant, asset.getUuidId());
         return asset;
     }
 
-    private Asset createGreenhouse(Greenhouse greenhouse, UUID ownerId, UUID assetGroupId) {
+    private Asset createGreenhouse(Greenhouse greenhouse, UUID ownerId, UUID assetGroupId, boolean strictGeneration) {
         String name = greenhouse.getSystemName();
         String entityType = greenhouse.entityType();
-
-        Asset asset;
-        if (tbRestClient.isPe()) {
-            asset = tbRestClient.createAsset(name, entityType, new CustomerId(ownerId));
-            tbRestClient.addEntitiesToTheGroup(assetGroupId, Set.of(asset.getUuidId()));
-        } else {
-            asset = tbRestClient.createAsset(name, entityType);
-            tbRestClient.assignAssetToCustomer(ownerId, asset.getUuidId());
-        }
-
-        Set<Attribute<?>> attributes = Set.of(
+        final Set<Attribute<?>> attributes = Set.of(
                 new Attribute<>("address", greenhouse.getAddress()),
                 new Attribute<>("latitude", greenhouse.getLatitude()),
                 new Attribute<>("longitude", greenhouse.getLongitude()),
                 new Attribute<>("workersInCharge", greenhouse.getWorkersInCharge())
         );
-        tbRestClient.setEntityAttributes(asset.getUuidId(), EntityType.ASSET, Attribute.Scope.SERVER_SCOPE, attributes);
+
+        Asset asset;
+        if (tbRestClient.isPe()) {
+            var customerId = new CustomerId(ownerId);
+            asset = strictGeneration
+                    ? tbRestClient.createAsset(name, entityType, customerId, attributes)
+                    : tbRestClient.createAssetIfNotExists(name, entityType, customerId, attributes)
+            ;
+            tbRestClient.addEntitiesToTheGroup(assetGroupId, Set.of(asset.getUuidId()));
+        } else {
+            asset = strictGeneration
+                    ? tbRestClient.createAsset(name, entityType, attributes)
+                    : tbRestClient.createAssetIfNotExists(name, entityType, attributes)
+            ;
+            tbRestClient.assignAssetToCustomer(ownerId, asset.getUuidId());
+        }
 
         this.greenhouseToIdMap.put(greenhouse, asset.getUuidId());
         return asset;
     }
 
-    private Asset createSection(Section section, UUID ownerId, UUID assetGroupId) {
+    private Asset createSection(Section section, UUID ownerId, UUID assetGroupId, boolean strictGeneration) {
         String name = section.getSystemName();
         String entityType = section.entityType();
-
-        Asset asset;
-        if (tbRestClient.isPe()) {
-            asset = tbRestClient.createAsset(name, entityType, new CustomerId(ownerId));
-            tbRestClient.addEntitiesToTheGroup(assetGroupId, Set.of(asset.getUuidId()));
-        } else {
-            asset = tbRestClient.createAsset(name, entityType);
-            tbRestClient.assignAssetToCustomer(ownerId, asset.getUuidId());
-        }
-
-        Set<Attribute<?>> attributes = Set.of(
+        final Set<Attribute<?>> attributes = Set.of(
                 new Attribute<>("position_height", section.getPositionHeight()),
                 new Attribute<>("position_width", section.getPositionWidth()),
                 new Attribute<>("area", section.getArea()),
                 new Attribute<>("from_greenhouse", section.getFromGreenhouse())
         );
-        tbRestClient.setEntityAttributes(asset.getUuidId(), EntityType.ASSET, Attribute.Scope.SERVER_SCOPE, attributes);
+
+        Asset asset;
+        if (tbRestClient.isPe()) {
+            var customerId = new CustomerId(ownerId);
+            asset = strictGeneration
+                    ? tbRestClient.createAsset(name, entityType, customerId, attributes)
+                    : tbRestClient.createAssetIfNotExists(name, entityType, customerId, attributes)
+            ;
+            tbRestClient.addEntitiesToTheGroup(assetGroupId, Set.of(asset.getUuidId()));
+        } else {
+            asset = strictGeneration
+                    ? tbRestClient.createAsset(name, entityType, attributes)
+                    : tbRestClient.createAssetIfNotExists(name, entityType, attributes)
+            ;
+            tbRestClient.assignAssetToCustomer(ownerId, asset.getUuidId());
+        }
 
         return asset;
     }
 
-    private Device createSoilNpkSensor(SoilNpkSensor soilNpkSensor, UUID ownerId, UUID deviceGroupId) {
+    private Device createSoilNpkSensor(SoilNpkSensor soilNpkSensor, UUID ownerId, UUID deviceGroupId, boolean strictGeneration) {
         String name = soilNpkSensor.getSystemName();
         String entityType = soilNpkSensor.entityType();
-
-        Device device;
-        if (tbRestClient.isPe()) {
-            device = tbRestClient.createDevice(name, entityType, new CustomerId(ownerId));
-            tbRestClient.addEntitiesToTheGroup(deviceGroupId, Set.of(device.getUuidId()));
-        } else {
-            device = tbRestClient.createDevice(name, entityType);
-            tbRestClient.assignDeviceToCustomer(ownerId, device.getUuidId());
-        }
-        DeviceCredentials deviceCredentials = tbRestClient.getDeviceCredentials(device.getUuidId());
-
-        Set<Attribute<?>> attributes = Set.of(
+        final Set<Attribute<?>> attributes = Set.of(
                 new Attribute<>("from_greenhouse", soilNpkSensor.getFromGreenhouse())
         );
 
-        tbRestClient.setEntityAttributes(device.getUuidId(), EntityType.DEVICE, Attribute.Scope.SERVER_SCOPE, attributes);
+        Device device;
+        if (tbRestClient.isPe()) {
+            device = strictGeneration
+                    ? tbRestClient.createDevice(name, entityType, new CustomerId(ownerId), attributes)
+                    : tbRestClient.createDeviceIfNotExists(name, entityType, new CustomerId(ownerId), attributes);
+            tbRestClient.addEntitiesToTheGroup(deviceGroupId, Set.of(device.getUuidId()));
+        } else {
+            device = strictGeneration
+                    ? tbRestClient.createDevice(name, entityType, attributes)
+                    : tbRestClient.createDeviceIfNotExists(name, entityType, attributes)
+            ;
+            tbRestClient.assignDeviceToCustomer(ownerId, device.getUuidId());
+        }
+
+        final var deviceCredentials = tbRestClient.getDeviceCredentials(device.getUuidId());
+
         tbRestClient.pushTelemetry(deviceCredentials.getCredentialsId(), soilNpkSensor.getNitrogen());
         tbRestClient.pushTelemetry(deviceCredentials.getCredentialsId(), soilNpkSensor.getPotassium());
         tbRestClient.pushTelemetry(deviceCredentials.getCredentialsId(), soilNpkSensor.getPhosphorus());
@@ -2907,25 +3199,29 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
         return device;
     }
 
-    private Device createSoilWarmMoistureSensor(SoilWarmMoistureSensor soilWarmMoistureSensor, UUID ownerId, UUID deviceGroupId) {
+    private Device createSoilWarmMoistureSensor(SoilWarmMoistureSensor soilWarmMoistureSensor, UUID ownerId, UUID deviceGroupId, boolean strictGeneration) {
         String name = soilWarmMoistureSensor.getSystemName();
         String entityType = soilWarmMoistureSensor.entityType();
-
-        Device device;
-        if (tbRestClient.isPe()) {
-            device = tbRestClient.createDevice(name, entityType, new CustomerId(ownerId));
-            tbRestClient.addEntitiesToTheGroup(deviceGroupId, Set.of(device.getUuidId()));
-        } else {
-            device = tbRestClient.createDevice(name, entityType);
-            tbRestClient.assignDeviceToCustomer(ownerId, device.getUuidId());
-        }
-        DeviceCredentials deviceCredentials = tbRestClient.getDeviceCredentials(device.getUuidId());
-
-        Set<Attribute<?>> attributes = Set.of(
+        final Set<Attribute<?>> attributes = Set.of(
                 new Attribute<>("from_greenhouse", soilWarmMoistureSensor.getFromGreenhouse())
         );
 
-        tbRestClient.setEntityAttributes(device.getUuidId(), EntityType.DEVICE, Attribute.Scope.SERVER_SCOPE, attributes);
+        Device device;
+        if (tbRestClient.isPe()) {
+            device = strictGeneration
+                    ? tbRestClient.createDevice(name, entityType, new CustomerId(ownerId), attributes)
+                    : tbRestClient.createDeviceIfNotExists(name, entityType, new CustomerId(ownerId), attributes);
+            tbRestClient.addEntitiesToTheGroup(deviceGroupId, Set.of(device.getUuidId()));
+        } else {
+            device = strictGeneration
+                    ? tbRestClient.createDevice(name, entityType, attributes)
+                    : tbRestClient.createDeviceIfNotExists(name, entityType, attributes)
+            ;
+            tbRestClient.assignDeviceToCustomer(ownerId, device.getUuidId());
+        }
+
+        final var deviceCredentials = tbRestClient.getDeviceCredentials(device.getUuidId());
+
         tbRestClient.pushTelemetry(deviceCredentials.getCredentialsId(), soilWarmMoistureSensor.getTemperature());
         tbRestClient.pushTelemetry(deviceCredentials.getCredentialsId(), soilWarmMoistureSensor.getMoisture());
 
@@ -2933,50 +3229,61 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
         return device;
     }
 
-    private Device createSoilAciditySensor(SoilAciditySensor soilAciditySensor, UUID ownerId, UUID deviceGroupId) {
+    private Device createSoilAciditySensor(SoilAciditySensor soilAciditySensor, UUID ownerId, UUID deviceGroupId, boolean strictGeneration) {
         String name = soilAciditySensor.getSystemName();
         String entityType = soilAciditySensor.entityType();
-
-        Device device;
-        if (tbRestClient.isPe()) {
-            device = tbRestClient.createDevice(name, entityType, new CustomerId(ownerId));
-            tbRestClient.addEntitiesToTheGroup(deviceGroupId, Set.of(device.getUuidId()));
-        } else {
-            device = tbRestClient.createDevice(name, entityType);
-            tbRestClient.assignDeviceToCustomer(ownerId, device.getUuidId());
-        }
-        DeviceCredentials deviceCredentials = tbRestClient.getDeviceCredentials(device.getUuidId());
-
-        Set<Attribute<?>> attributes = Set.of(
+        final Set<Attribute<?>> attributes = Set.of(
                 new Attribute<>("from_greenhouse", soilAciditySensor.getFromGreenhouse())
         );
 
-        tbRestClient.setEntityAttributes(device.getUuidId(), EntityType.DEVICE, Attribute.Scope.SERVER_SCOPE, attributes);
+        Device device;
+        if (tbRestClient.isPe()) {
+            device = strictGeneration
+                    ? tbRestClient.createDevice(name, entityType, new CustomerId(ownerId), attributes)
+                    : tbRestClient.createDeviceIfNotExists(name, entityType, new CustomerId(ownerId), attributes);
+            tbRestClient.addEntitiesToTheGroup(deviceGroupId, Set.of(device.getUuidId()));
+        } else {
+            device = strictGeneration
+                    ? tbRestClient.createDevice(name, entityType, attributes)
+                    : tbRestClient.createDeviceIfNotExists(name, entityType, attributes)
+            ;
+            tbRestClient.assignDeviceToCustomer(ownerId, device.getUuidId());
+        }
+
+        final var deviceCredentials = tbRestClient.getDeviceCredentials(device.getUuidId());
+
         tbRestClient.pushTelemetry(deviceCredentials.getCredentialsId(), soilAciditySensor.getAcidity());
 
         this.soilAciditySensorToIdMap.put(soilAciditySensor, device.getUuidId());
         return device;
     }
 
-    private Device createInsideAirWarmHumiditySensor(InsideAirWarmHumiditySensor insideAirWarmHumiditySensor, UUID ownerId, UUID deviceGroupId) {
+    private Device createInsideAirWarmHumiditySensor(InsideAirWarmHumiditySensor insideAirWarmHumiditySensor, UUID ownerId, UUID deviceGroupId, boolean strictGeneration) {
         String name = insideAirWarmHumiditySensor.getSystemName();
         String entityType = insideAirWarmHumiditySensor.entityType();
+        final Set<Attribute<?>> attributes = Set.of(
+                new Attribute<>("from_greenhouse", insideAirWarmHumiditySensor.getFromGreenhouse())
+        );
 
         Device device;
         if (tbRestClient.isPe()) {
-            device = tbRestClient.createDevice(name, entityType, new CustomerId(ownerId));
+            device = strictGeneration
+                    ? tbRestClient.createDevice(name, entityType, new CustomerId(ownerId), attributes)
+                    : tbRestClient.createDeviceIfNotExists(name, entityType, new CustomerId(ownerId), attributes);
             tbRestClient.addEntitiesToTheGroup(deviceGroupId, Set.of(device.getUuidId()));
         } else {
-            device = tbRestClient.createDevice(name, entityType);
+            device = strictGeneration
+                    ? tbRestClient.createDevice(name, entityType, attributes)
+                    : tbRestClient.createDeviceIfNotExists(name, entityType, attributes)
+            ;
             tbRestClient.assignDeviceToCustomer(ownerId, device.getUuidId());
         }
         DeviceCredentials deviceCredentials = tbRestClient.getDeviceCredentials(device.getUuidId());
 
-        Set<Attribute<?>> attributes = Set.of(
-                new Attribute<>("from_greenhouse", insideAirWarmHumiditySensor.getFromGreenhouse())
-        );
+        if (strictGeneration) {
+            tbRestClient.setEntityAttributes(device.getUuidId(), EntityType.DEVICE, Attribute.Scope.SERVER_SCOPE, attributes);
+        }
 
-        tbRestClient.setEntityAttributes(device.getUuidId(), EntityType.DEVICE, Attribute.Scope.SERVER_SCOPE, attributes);
         tbRestClient.pushTelemetry(deviceCredentials.getCredentialsId(), insideAirWarmHumiditySensor.getTemperatureIn());
         tbRestClient.pushTelemetry(deviceCredentials.getCredentialsId(), insideAirWarmHumiditySensor.getHumidityIn());
 
@@ -2984,75 +3291,84 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
         return device;
     }
 
-    private Device createInsideCO2Sensor(InsideCO2Sensor insideCO2Sensor, UUID ownerId, UUID deviceGroupId) {
+    private Device createInsideCO2Sensor(InsideCO2Sensor insideCO2Sensor, UUID ownerId, UUID deviceGroupId, boolean strictGeneration) {
         String name = insideCO2Sensor.getSystemName();
         String entityType = insideCO2Sensor.entityType();
-
-        Device device;
-        if (tbRestClient.isPe()) {
-            device = tbRestClient.createDevice(name, entityType, new CustomerId(ownerId));
-            tbRestClient.addEntitiesToTheGroup(deviceGroupId, Set.of(device.getUuidId()));
-        } else {
-            device = tbRestClient.createDevice(name, entityType);
-            tbRestClient.assignDeviceToCustomer(ownerId, device.getUuidId());
-        }
-        DeviceCredentials deviceCredentials = tbRestClient.getDeviceCredentials(device.getUuidId());
-
-        Set<Attribute<?>> attributes = Set.of(
+        final Set<Attribute<?>> attributes = Set.of(
                 new Attribute<>("from_greenhouse", insideCO2Sensor.getFromGreenhouse())
         );
 
-        tbRestClient.setEntityAttributes(device.getUuidId(), EntityType.DEVICE, Attribute.Scope.SERVER_SCOPE, attributes);
+        Device device;
+        if (tbRestClient.isPe()) {
+            device = strictGeneration
+                    ? tbRestClient.createDevice(name, entityType, new CustomerId(ownerId), attributes)
+                    : tbRestClient.createDeviceIfNotExists(name, entityType, new CustomerId(ownerId), attributes);
+            tbRestClient.addEntitiesToTheGroup(deviceGroupId, Set.of(device.getUuidId()));
+        } else {
+            device = strictGeneration
+                    ? tbRestClient.createDevice(name, entityType, attributes)
+                    : tbRestClient.createDeviceIfNotExists(name, entityType, attributes);
+            tbRestClient.assignDeviceToCustomer(ownerId, device.getUuidId());
+        }
+
+        final var deviceCredentials = tbRestClient.getDeviceCredentials(device.getUuidId());
+
         tbRestClient.pushTelemetry(deviceCredentials.getCredentialsId(), insideCO2Sensor.getConcentration());
 
         this.insideCO2SensorToIdMap.put(insideCO2Sensor, device.getUuidId());
         return device;
     }
 
-    private Device createInsideLightSensor(InsideLightSensor insideLightSensor, UUID ownerId, UUID deviceGroupId) {
+    private Device createInsideLightSensor(InsideLightSensor insideLightSensor, UUID ownerId, UUID deviceGroupId, boolean strictGeneration) {
         String name = insideLightSensor.getSystemName();
         String entityType = insideLightSensor.entityType();
-
-        Device device;
-        if (tbRestClient.isPe()) {
-            device = tbRestClient.createDevice(name, entityType, new CustomerId(ownerId));
-            tbRestClient.addEntitiesToTheGroup(deviceGroupId, Set.of(device.getUuidId()));
-        } else {
-            device = tbRestClient.createDevice(name, entityType);
-            tbRestClient.assignDeviceToCustomer(ownerId, device.getUuidId());
-        }
-        DeviceCredentials deviceCredentials = tbRestClient.getDeviceCredentials(device.getUuidId());
-
-        Set<Attribute<?>> attributes = Set.of(
+        final Set<Attribute<?>> attributes = Set.of(
                 new Attribute<>("from_greenhouse", insideLightSensor.getFromGreenhouse())
         );
 
-        tbRestClient.setEntityAttributes(device.getUuidId(), EntityType.DEVICE, Attribute.Scope.SERVER_SCOPE, attributes);
+        Device device;
+        if (tbRestClient.isPe()) {
+            device = strictGeneration
+                    ? tbRestClient.createDevice(name, entityType, new CustomerId(ownerId), attributes)
+                    : tbRestClient.createDeviceIfNotExists(name, entityType, new CustomerId(ownerId), attributes);
+            tbRestClient.addEntitiesToTheGroup(deviceGroupId, Set.of(device.getUuidId()));
+        } else {
+            device = strictGeneration
+                    ? tbRestClient.createDevice(name, entityType, attributes)
+                    : tbRestClient.createDeviceIfNotExists(name, entityType, attributes);
+            tbRestClient.assignDeviceToCustomer(ownerId, device.getUuidId());
+        }
+
+        final var deviceCredentials = tbRestClient.getDeviceCredentials(device.getUuidId());
+
         tbRestClient.pushTelemetry(deviceCredentials.getCredentialsId(), insideLightSensor.getLightIn());
 
         this.insideLightSensorToIdMap.put(insideLightSensor, device.getUuidId());
         return device;
     }
 
-    private Device createHarvestReporter(HarvestReporter harvestReporter, UUID ownerId, UUID deviceGroupId) {
+    private Device createHarvestReporter(HarvestReporter harvestReporter, UUID ownerId, UUID deviceGroupId, boolean strictGeneration) {
         String name = harvestReporter.getSystemName();
         String entityType = harvestReporter.entityType();
-
-        Device device;
-        if (tbRestClient.isPe()) {
-            device = tbRestClient.createDevice(name, entityType, new CustomerId(ownerId));
-            tbRestClient.addEntitiesToTheGroup(deviceGroupId, Set.of(device.getUuidId()));
-        } else {
-            device = tbRestClient.createDevice(name, entityType);
-            tbRestClient.assignDeviceToCustomer(ownerId, device.getUuidId());
-        }
-        DeviceCredentials deviceCredentials = tbRestClient.getDeviceCredentials(device.getUuidId());
-
-        Set<Attribute<?>> attributes = Set.of(
+        final Set<Attribute<?>> attributes = Set.of(
                 new Attribute<>("from_greenhouse", harvestReporter.getFromGreenhouse())
         );
 
-        tbRestClient.setEntityAttributes(device.getUuidId(), EntityType.DEVICE, Attribute.Scope.SERVER_SCOPE, attributes);
+        Device device;
+        if (tbRestClient.isPe()) {
+            device = strictGeneration
+                    ? tbRestClient.createDevice(name, entityType, new CustomerId(ownerId), attributes)
+                    : tbRestClient.createDeviceIfNotExists(name, entityType, new CustomerId(ownerId), attributes);
+            tbRestClient.addEntitiesToTheGroup(deviceGroupId, Set.of(device.getUuidId()));
+        } else {
+            device = strictGeneration
+                    ? tbRestClient.createDevice(name, entityType, attributes)
+                    : tbRestClient.createDeviceIfNotExists(name, entityType, attributes);
+            tbRestClient.assignDeviceToCustomer(ownerId, device.getUuidId());
+        }
+
+        final var deviceCredentials = tbRestClient.getDeviceCredentials(device.getUuidId());
+
         tbRestClient.pushTelemetry(deviceCredentials.getCredentialsId(), harvestReporter.getCropWeight());
         tbRestClient.pushTelemetry(deviceCredentials.getCredentialsId(), harvestReporter.getWorkerInCharge());
 
@@ -3060,25 +3376,28 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
         return device;
     }
 
-    private Device createEnergyMeter(EnergyMeter energyMeter, UUID ownerId, UUID deviceGroupId) {
+    private Device createEnergyMeter(EnergyMeter energyMeter, UUID ownerId, UUID deviceGroupId, boolean strictGeneration) {
         String name = energyMeter.getSystemName();
         String entityType = energyMeter.entityType();
-
-        Device device;
-        if (tbRestClient.isPe()) {
-            device = tbRestClient.createDevice(name, entityType, new CustomerId(ownerId));
-            tbRestClient.addEntitiesToTheGroup(deviceGroupId, Set.of(device.getUuidId()));
-        } else {
-            device = tbRestClient.createDevice(name, entityType);
-            tbRestClient.assignDeviceToCustomer(ownerId, device.getUuidId());
-        }
-        DeviceCredentials deviceCredentials = tbRestClient.getDeviceCredentials(device.getUuidId());
-
-        Set<Attribute<?>> attributes = Set.of(
+        final Set<Attribute<?>> attributes = Set.of(
                 new Attribute<>("from_greenhouse", energyMeter.getFromGreenhouse())
         );
 
-        tbRestClient.setEntityAttributes(device.getUuidId(), EntityType.DEVICE, Attribute.Scope.SERVER_SCOPE, attributes);
+        Device device;
+        if (tbRestClient.isPe()) {
+            device = strictGeneration
+                    ? tbRestClient.createDevice(name, entityType, new CustomerId(ownerId), attributes)
+                    : tbRestClient.createDeviceIfNotExists(name, entityType, new CustomerId(ownerId), attributes);
+            tbRestClient.addEntitiesToTheGroup(deviceGroupId, Set.of(device.getUuidId()));
+        } else {
+            device = strictGeneration
+                    ? tbRestClient.createDevice(name, entityType, attributes)
+                    : tbRestClient.createDeviceIfNotExists(name, entityType, attributes);
+            tbRestClient.assignDeviceToCustomer(ownerId, device.getUuidId());
+        }
+
+        final var deviceCredentials = tbRestClient.getDeviceCredentials(device.getUuidId());
+
         tbRestClient.pushTelemetry(deviceCredentials.getCredentialsId(), energyMeter.getEnergyConsumptionLight());
         tbRestClient.pushTelemetry(deviceCredentials.getCredentialsId(), energyMeter.getEnergyConsumptionHeating());
         tbRestClient.pushTelemetry(deviceCredentials.getCredentialsId(), energyMeter.getEnergyConsumptionCooling());
@@ -3089,50 +3408,55 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
         return device;
     }
 
-    private Device createWaterMeter(WaterMeter waterMeter, UUID ownerId, UUID deviceGroupId) {
+    private Device createWaterMeter(WaterMeter waterMeter, UUID ownerId, UUID deviceGroupId, boolean strictGeneration) {
         String name = waterMeter.getSystemName();
         String entityType = waterMeter.entityType();
-
-        Device device;
-        if (tbRestClient.isPe()) {
-            device = tbRestClient.createDevice(name, entityType, new CustomerId(ownerId));
-            tbRestClient.addEntitiesToTheGroup(deviceGroupId, Set.of(device.getUuidId()));
-        } else {
-            device = tbRestClient.createDevice(name, entityType);
-            tbRestClient.assignDeviceToCustomer(ownerId, device.getUuidId());
-        }
-        DeviceCredentials deviceCredentials = tbRestClient.getDeviceCredentials(device.getUuidId());
-
-        Set<Attribute<?>> attributes = Set.of(
+        final Set<Attribute<?>> attributes = Set.of(
                 new Attribute<>("from_greenhouse", waterMeter.getFromGreenhouse())
         );
 
-        tbRestClient.setEntityAttributes(device.getUuidId(), EntityType.DEVICE, Attribute.Scope.SERVER_SCOPE, attributes);
+        Device device;
+        if (tbRestClient.isPe()) {
+            device = strictGeneration
+                    ? tbRestClient.createDevice(name, entityType, new CustomerId(ownerId), attributes)
+                    : tbRestClient.createDeviceIfNotExists(name, entityType, new CustomerId(ownerId), attributes);
+            tbRestClient.addEntitiesToTheGroup(deviceGroupId, Set.of(device.getUuidId()));
+        } else {
+            device = strictGeneration
+                    ? tbRestClient.createDevice(name, entityType, attributes)
+                    : tbRestClient.createDeviceIfNotExists(name, entityType, attributes);
+            tbRestClient.assignDeviceToCustomer(ownerId, device.getUuidId());
+        }
+
+        final var deviceCredentials = tbRestClient.getDeviceCredentials(device.getUuidId());
+
         tbRestClient.pushTelemetry(deviceCredentials.getCredentialsId(), waterMeter.getConsumptionWater());
 
         this.waterMeterToIdMap.put(waterMeter, device.getUuidId());
         return device;
     }
 
-    private Device createOutsideAirWarmHumiditySensor(OutsideAirWarmHumiditySensor outsideAirWarmHumiditySensor, UUID ownerId, UUID deviceGroupId) {
+    private Device createOutsideAirWarmHumiditySensor(OutsideAirWarmHumiditySensor outsideAirWarmHumiditySensor, UUID ownerId, UUID deviceGroupId, boolean strictGeneration) {
         String name = outsideAirWarmHumiditySensor.getSystemName();
         String entityType = outsideAirWarmHumiditySensor.entityType();
-
-        Device device;
-        if (tbRestClient.isPe()) {
-            device = tbRestClient.createDevice(name, entityType, new CustomerId(ownerId));
-            tbRestClient.addEntitiesToTheGroup(deviceGroupId, Set.of(device.getUuidId()));
-        } else {
-            device = tbRestClient.createDevice(name, entityType);
-            tbRestClient.assignDeviceToCustomer(ownerId, device.getUuidId());
-        }
-        DeviceCredentials deviceCredentials = tbRestClient.getDeviceCredentials(device.getUuidId());
-
-        Set<Attribute<?>> attributes = Set.of(
+        final Set<Attribute<?>> attributes = Set.of(
                 new Attribute<>("from_greenhouse", outsideAirWarmHumiditySensor.getFromGreenhouse())
         );
 
-        tbRestClient.setEntityAttributes(device.getUuidId(), EntityType.DEVICE, Attribute.Scope.SERVER_SCOPE, attributes);
+        Device device;
+        if (tbRestClient.isPe()) {
+            device = strictGeneration
+                    ? tbRestClient.createDevice(name, entityType, new CustomerId(ownerId), attributes)
+                    : tbRestClient.createDeviceIfNotExists(name, entityType, new CustomerId(ownerId), attributes);
+            tbRestClient.addEntitiesToTheGroup(deviceGroupId, Set.of(device.getUuidId()));
+        } else {
+            device = strictGeneration
+                    ? tbRestClient.createDevice(name, entityType, attributes)
+                    : tbRestClient.createDeviceIfNotExists(name, entityType, attributes);
+            tbRestClient.assignDeviceToCustomer(ownerId, device.getUuidId());
+        }
+
+        final var deviceCredentials = tbRestClient.getDeviceCredentials(device.getUuidId());
         tbRestClient.pushTelemetry(deviceCredentials.getCredentialsId(), outsideAirWarmHumiditySensor.getTemperatureOut());
         tbRestClient.pushTelemetry(deviceCredentials.getCredentialsId(), outsideAirWarmHumiditySensor.getHumidityOut());
 
@@ -3140,25 +3464,28 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
         return device;
     }
 
-    private Device createOutsideLightSensor(OutsideLightSensor outsideLightSensor, UUID ownerId, UUID deviceGroupId) {
+    private Device createOutsideLightSensor(OutsideLightSensor outsideLightSensor, UUID ownerId, UUID deviceGroupId, boolean strictGeneration) {
         String name = outsideLightSensor.getSystemName();
         String entityType = outsideLightSensor.entityType();
-
-        Device device;
-        if (tbRestClient.isPe()) {
-            device = tbRestClient.createDevice(name, entityType, new CustomerId(ownerId));
-            tbRestClient.addEntitiesToTheGroup(deviceGroupId, Set.of(device.getUuidId()));
-        } else {
-            device = tbRestClient.createDevice(name, entityType);
-            tbRestClient.assignDeviceToCustomer(ownerId, device.getUuidId());
-        }
-        DeviceCredentials deviceCredentials = tbRestClient.getDeviceCredentials(device.getUuidId());
-
-        Set<Attribute<?>> attributes = Set.of(
+        final Set<Attribute<?>> attributes = Set.of(
                 new Attribute<>("from_greenhouse", outsideLightSensor.getFromGreenhouse())
         );
 
-        tbRestClient.setEntityAttributes(device.getUuidId(), EntityType.DEVICE, Attribute.Scope.SERVER_SCOPE, attributes);
+        Device device;
+        if (tbRestClient.isPe()) {
+            device = strictGeneration
+                    ? tbRestClient.createDevice(name, entityType, new CustomerId(ownerId), attributes)
+                    : tbRestClient.createDeviceIfNotExists(name, entityType, new CustomerId(ownerId), attributes);
+            tbRestClient.addEntitiesToTheGroup(deviceGroupId, Set.of(device.getUuidId()));
+        } else {
+            device = strictGeneration
+                    ? tbRestClient.createDevice(name, entityType, attributes)
+                    : tbRestClient.createDeviceIfNotExists(name, entityType, attributes);
+            tbRestClient.assignDeviceToCustomer(ownerId, device.getUuidId());
+        }
+
+        final var deviceCredentials = tbRestClient.getDeviceCredentials(device.getUuidId());
+
         tbRestClient.pushTelemetry(deviceCredentials.getCredentialsId(), outsideLightSensor.getLightOut());
 
         this.outsideLightSensorToIdMap.put(outsideLightSensor, device.getUuidId());

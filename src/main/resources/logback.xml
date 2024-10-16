@@ -17,5 +17,6 @@
     </root>
 
     <logger name="org.thingsboard.trendz.generator" level="INFO" />
+    <logger name="org.thingsboard.trendz.generator.service.rest.TbRestRequestInterceptor" level="INFO" />
 
 </configuration>

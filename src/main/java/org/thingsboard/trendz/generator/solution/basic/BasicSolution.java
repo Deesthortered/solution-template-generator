@@ -12,7 +12,7 @@ import org.thingsboard.server.common.data.Device;
 import org.thingsboard.server.common.data.EntityType;
 import org.thingsboard.server.common.data.asset.Asset;
 import org.thingsboard.server.common.data.group.EntityGroup;
-import org.thingsboard.server.common.data.relation.EntityRelation;
+import org.thingsboard.server.common.data.id.CustomerId;
 import org.thingsboard.server.common.data.rule.NodeConnectionInfo;
 import org.thingsboard.server.common.data.rule.RuleChain;
 import org.thingsboard.server.common.data.rule.RuleChainMetaData;
@@ -120,41 +120,77 @@ public class BasicSolution implements SolutionTemplateGenerator {
     }
 
     @Override
-    public void generate(boolean skipTelemetry, ZonedDateTime startYear) {
+    public void generate(
+            boolean skipTelemetry, ZonedDateTime startYear, boolean strictGeneration, boolean fullTelemetryGeneration,
+            long startGenerationTime, long endGenerationTime
+    ) {
         log.info("Basic Solution - start generation");
         try {
 
-            Customer customer = tbRestClient.createCustomer(CUSTOMER_TITLE);
+            Customer customer = strictGeneration
+                    ? tbRestClient.createCustomer(CUSTOMER_TITLE)
+                    : tbRestClient.createCustomerIfNotExists(CUSTOMER_TITLE);
             CustomerUser customerUser = tbRestClient.createCustomerUser(
                     customer, CUSTOMER_USER_EMAIL, CUSTOMER_USER_PASSWORD,
                     CUSTOMER_USER_FIRST_NAME, CUSTOMER_USER_LAST_NAME
             );
+
             if (tbRestClient.isPe()) {
                 tbRestClient.setCustomerUserToCustomerAdministratorsGroup(customer, customerUser);
             }
 
-            dashboardService.createDashboardItems(getSolutionName(), customer.getId());
+            dashboardService.createDashboardItems(getSolutionName(), customer.getId(), strictGeneration);
 
             Asset asset;
             Device device;
+            long now = System.currentTimeMillis();
+            Set<Attribute<?>> attributes = Set.of(
+                    new Attribute<>("Generator Start Time", now),
+                    new Attribute<>("doubleKey", 1.0),
+                    new Attribute<>("longKey", 1L),
+                    new Attribute<>("intKey", 1),
+                    new Attribute<>("booleanKey", true),
+                    new Attribute<>("StringKey", "qwerty")
+            );
+
             if (tbRestClient.isPe()) {
-                asset = tbRestClient.createAsset(ASSET_NAME, ASSET_TYPE, customer.getId());
-                device = tbRestClient.createDevice(DEVICE_NAME, DEVICE_TYPE, customer.getId());
-                EntityGroup assetGroup = tbRestClient.createEntityGroup(ASSET_GROUP_NAME, EntityType.ASSET, customer.getUuidId(), true);
-                EntityGroup deviceGroup = tbRestClient.createEntityGroup(DEVICE_GROUP_NAME, EntityType.DEVICE, customer.getUuidId(), true);
+                CustomerId customerId = customer.getId();
+
+                asset = strictGeneration
+                        ? tbRestClient.createAsset(ASSET_NAME, ASSET_TYPE, customerId, attributes)
+                        : tbRestClient.createAssetIfNotExists(ASSET_NAME, ASSET_TYPE, customerId, attributes)
+                ;
+
+                device = strictGeneration
+                        ? tbRestClient.createDevice(DEVICE_NAME, DEVICE_TYPE, customerId, attributes)
+                        : tbRestClient.createDeviceIfNotExists(DEVICE_NAME, DEVICE_TYPE, customerId, attributes);
+
+                EntityGroup assetGroup = strictGeneration
+                        ? tbRestClient.createEntityGroup(ASSET_GROUP_NAME, EntityType.ASSET, customer.getUuidId(), true)
+                        : tbRestClient.createEntityGroupIfNotExists(ASSET_GROUP_NAME, EntityType.ASSET, customer.getUuidId(), true);
+
+                EntityGroup deviceGroup = strictGeneration
+                        ? tbRestClient.createEntityGroup(DEVICE_GROUP_NAME, EntityType.DEVICE, customer.getUuidId(), true)
+                        : tbRestClient.createEntityGroupIfNotExists(DEVICE_GROUP_NAME, EntityType.DEVICE, customer.getUuidId(), true);
+
                 tbRestClient.addEntitiesToTheGroup(assetGroup.getUuidId(), Set.of(asset.getUuidId()));
                 tbRestClient.addEntitiesToTheGroup(deviceGroup.getUuidId(), Set.of(device.getUuidId()));
                 log.info("");
             } else {
-                asset = tbRestClient.createAsset(ASSET_NAME, ASSET_TYPE);
-                device = tbRestClient.createDevice(DEVICE_NAME, DEVICE_TYPE);
+                asset = strictGeneration
+                        ? tbRestClient.createAsset(ASSET_NAME, ASSET_TYPE, attributes)
+                        : tbRestClient.createAssetIfNotExists(ASSET_NAME, ASSET_TYPE, attributes)
+                ;
+                device = strictGeneration
+                        ? tbRestClient.createDevice(DEVICE_NAME, DEVICE_TYPE, attributes)
+                        : tbRestClient.createDeviceIfNotExists(DEVICE_NAME, DEVICE_TYPE, attributes)
+                ;
                 tbRestClient.assignAssetToCustomer(customer.getUuidId(), asset.getUuidId());
                 tbRestClient.assignDeviceToCustomer(customer.getUuidId(), device.getUuidId());
             }
-            EntityRelation relation = tbRestClient.createRelation(RelationType.CONTAINS.getType(), asset.getId(), device.getId());
+            tbRestClient.createRelation(RelationType.CONTAINS.getType(), asset.getId(), device.getId());
 
             Telemetry<Integer> deviceTelemetry = new Telemetry<>("pushed_telemetry");
-            long now = System.currentTimeMillis();
             ZonedDateTime startTime = ZonedDateTime.of(2023, 1, 1, 0, 0, 0, 0, ZoneId.of("UTC"));
             ZonedDateTime today = DateTimeUtils.fromTs(now).truncatedTo(ChronoUnit.DAYS);
             int valueCounter = 0;
@@ -166,21 +202,6 @@ public class BasicSolution implements SolutionTemplateGenerator {
 
             DeviceCredentials credentials = tbRestClient.getDeviceCredentials(device.getUuidId());
             tbRestClient.pushTelemetry(credentials.getCredentialsId(), deviceTelemetry);
-
-            Set<Attribute<?>> attributes = Set.of(
-                    new Attribute<>("Generator Start Time", now),
-                    new Attribute<>("doubleKey", 1.0),
-                    new Attribute<>("longKey", 1L),
-                    new Attribute<>("intKey", 1),
-                    new Attribute<>("booleanKey", true),
-                    new Attribute<>("StringKey", "qwerty")
-            );
-            tbRestClient.setEntityAttributes(
-                    device.getUuidId(), EntityType.DEVICE, Attribute.Scope.SERVER_SCOPE, attributes
-            );
-            tbRestClient.setEntityAttributes(
-                    asset.getUuidId(), EntityType.ASSET, Attribute.Scope.SERVER_SCOPE, attributes
-            );
 
             TbMsgGeneratorNodeConfiguration generatorConfiguration = new TbMsgGeneratorNodeConfiguration();
             generatorConfiguration.setOriginatorType(EntityType.DEVICE);
@@ -240,9 +261,7 @@ public class BasicSolution implements SolutionTemplateGenerator {
             }
             connections.add(connection);
 
-            RuleChainMetaData savedMetaData = tbRestClient.saveRuleChainMetadata(metaData);
-
-
+            tbRestClient.saveRuleChainMetadata(metaData);
 
             log.info("Basic Solution - generation is completed!");
         } catch (Exception e) {
@@ -290,11 +309,10 @@ public class BasicSolution implements SolutionTemplateGenerator {
             tbRestClient.getAllRuleChains()
                     .stream()
                     .filter(ruleChain -> ruleChain.getName().equals(RULE_CHAIN_NAME))
-                    .findAny()
-                    .flatMap(ruleChain -> tbRestClient.getRuleChainById(ruleChain.getUuidId()))
-                    .ifPresent(ruleChain -> {
-                        tbRestClient.deleteRuleChain(ruleChain.getUuidId());
-                    });
+                    .toList()
+                    .stream()
+                    .map(ruleChain -> tbRestClient.getRuleChainById(ruleChain.getUuidId()))
+                    .forEach(ruleChain -> ruleChain.ifPresent(chain -> tbRestClient.deleteRuleChain(chain.getUuidId())));
 
             dashboardService.deleteDashboardItems(getSolutionName(), null);
 

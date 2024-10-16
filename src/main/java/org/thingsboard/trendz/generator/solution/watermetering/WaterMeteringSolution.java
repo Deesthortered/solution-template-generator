@@ -16,12 +16,22 @@ import org.thingsboard.server.common.data.rule.RuleChain;
 import org.thingsboard.server.common.data.rule.RuleChainMetaData;
 import org.thingsboard.server.common.data.rule.RuleNode;
 import org.thingsboard.server.common.data.security.DeviceCredentials;
-import org.thingsboard.trendz.generator.exception.*;
+import org.thingsboard.trendz.generator.exception.AssetAlreadyExistException;
+import org.thingsboard.trendz.generator.exception.CustomerAlreadyExistException;
+import org.thingsboard.trendz.generator.exception.DeviceAlreadyExistException;
+import org.thingsboard.trendz.generator.exception.RuleChainAlreadyExistException;
+import org.thingsboard.trendz.generator.exception.SolutionValidationException;
 import org.thingsboard.trendz.generator.model.ModelData;
 import org.thingsboard.trendz.generator.model.ModelEntity;
 import org.thingsboard.trendz.generator.model.anomaly.AnomalyInfo;
 import org.thingsboard.trendz.generator.model.anomaly.AnomalyType;
-import org.thingsboard.trendz.generator.model.tb.*;
+import org.thingsboard.trendz.generator.model.tb.Attribute;
+import org.thingsboard.trendz.generator.model.tb.CustomerData;
+import org.thingsboard.trendz.generator.model.tb.CustomerUser;
+import org.thingsboard.trendz.generator.model.tb.RelationType;
+import org.thingsboard.trendz.generator.model.tb.RuleNodeAdditionalInfo;
+import org.thingsboard.trendz.generator.model.tb.Telemetry;
+import org.thingsboard.trendz.generator.model.tb.Timestamp;
 import org.thingsboard.trendz.generator.service.FileService;
 import org.thingsboard.trendz.generator.service.anomaly.AnomalyService;
 import org.thingsboard.trendz.generator.service.dashboard.DashboardService;
@@ -32,7 +42,11 @@ import org.thingsboard.trendz.generator.solution.watermetering.configuration.Cit
 import org.thingsboard.trendz.generator.solution.watermetering.configuration.ConsumerConfiguration;
 import org.thingsboard.trendz.generator.solution.watermetering.configuration.PumpStationConfiguration;
 import org.thingsboard.trendz.generator.solution.watermetering.configuration.RegionConfiguration;
-import org.thingsboard.trendz.generator.solution.watermetering.model.*;
+import org.thingsboard.trendz.generator.solution.watermetering.model.City;
+import org.thingsboard.trendz.generator.solution.watermetering.model.Consumer;
+import org.thingsboard.trendz.generator.solution.watermetering.model.ConsumerType;
+import org.thingsboard.trendz.generator.solution.watermetering.model.PumpStation;
+import org.thingsboard.trendz.generator.solution.watermetering.model.Region;
 import org.thingsboard.trendz.generator.utils.DateTimeUtils;
 import org.thingsboard.trendz.generator.utils.MySortedSet;
 import org.thingsboard.trendz.generator.utils.RandomUtils;
@@ -40,7 +54,15 @@ import org.thingsboard.trendz.generator.utils.RandomUtils;
 import java.time.DayOfWeek;
 import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.TreeSet;
+import java.util.UUID;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
@@ -96,7 +118,7 @@ public class WaterMeteringSolution implements SolutionTemplateGenerator {
 
             if (!tbRestClient.isPe()) {
                 dashboardService.validateDashboardItems(getSolutionName(), null);
-                ModelData data = makeData(true, ZonedDateTime.now());
+                ModelData data = makeData(true, ZonedDateTime.now(), true, 0L, 0L);
                 validateData(data);
             }
 
@@ -107,14 +129,17 @@ public class WaterMeteringSolution implements SolutionTemplateGenerator {
     }
 
     @Override
-    public void generate(boolean skipTelemetry, ZonedDateTime startYear) {
+    public void generate(
+            boolean skipTelemetry, ZonedDateTime startYear, boolean strictGeneration, boolean fullTelemetryGeneration,
+            long startGenerationTime, long endGenerationTime
+    ) {
         log.info("Water Metering Solution - start generation");
         try {
-            CustomerData customerData = createCustomerData();
-            ModelData data = makeData(skipTelemetry, startYear);
-            applyData(data, customerData);
-            createRuleChain(data);
-            dashboardService.createDashboardItems(getSolutionName(), customerData.getCustomer().getId());
+            CustomerData customerData = createCustomerData(strictGeneration);
+            ModelData data = makeData(skipTelemetry, startYear, fullTelemetryGeneration, startGenerationTime, endGenerationTime);
+            applyData(data, customerData, strictGeneration);
+            createRuleChain(data, strictGeneration);
+            dashboardService.createDashboardItems(getSolutionName(), customerData.getCustomer().getId(), strictGeneration);
 
             checkRandomStability();
             log.info("Water Metering Solution - generation is completed!");
@@ -132,7 +157,7 @@ public class WaterMeteringSolution implements SolutionTemplateGenerator {
 
             if (!tbRestClient.isPe()) {
                 dashboardService.deleteDashboardItems(getSolutionName(), null);
-                ModelData data = makeData(true, ZonedDateTime.now());
+                ModelData data = makeData(true, ZonedDateTime.now(), true, 0L, 0L);
                 deleteData(data);
             }
 
@@ -167,8 +192,10 @@ public class WaterMeteringSolution implements SolutionTemplateGenerator {
     }
 
 
-    private CustomerData createCustomerData() {
-        Customer customer = this.tbRestClient.createCustomer(CUSTOMER_TITLE);
+    private CustomerData createCustomerData(boolean strictGeneration) {
+        Customer customer = strictGeneration
+                ? this.tbRestClient.createCustomer(CUSTOMER_TITLE)
+                : this.tbRestClient.createCustomerIfNotExists(CUSTOMER_TITLE);
         CustomerUser customerUser = this.tbRestClient.createCustomerUser(
                 customer, CUSTOMER_USER_EMAIL, CUSTOMER_USER_PASSWORD,
                 CUSTOMER_USER_FIRST_NAME, CUSTOMER_USER_LAST_NAME
@@ -193,7 +220,11 @@ public class WaterMeteringSolution implements SolutionTemplateGenerator {
     }
 
 
-    private void createRuleChain(ModelData data) {
+    private void createRuleChain(ModelData data, boolean strictGeneration) {
+        if (!strictGeneration) {
+            deleteRuleChain();
+        }
+
         Set<City> cities = mapToCities(data);
 
         try {
@@ -289,12 +320,10 @@ public class WaterMeteringSolution implements SolutionTemplateGenerator {
                         connections.add(ruleChainBuildingService.createRuleConnection(index + 3, index + 6));
 
                         consumerCounter++;
-                        RuleChainMetaData savedMetaData = this.tbRestClient.saveRuleChainMetadata(metaData);
-//                        TimeUnit.SECONDS.sleep(10);
-//                        log.warn("Sleeping for solving race condition problem!");
                     }
                 }
             }
+            this.tbRestClient.saveRuleChainMetadata(metaData);
         } catch (Exception e) {
             throw new RuntimeException("Exception during rule chain creation", e);
         }
@@ -314,12 +343,14 @@ public class WaterMeteringSolution implements SolutionTemplateGenerator {
         this.tbRestClient.getAllRuleChains()
                 .stream()
                 .filter(ruleChain -> ruleChain.getName().equals(RULE_CHAIN_NAME))
-                .findAny()
-                .ifPresent(ruleChain -> this.tbRestClient.deleteRuleChain(ruleChain.getUuidId()));
+                .toList()
+                .stream()
+                .map(ruleChain -> tbRestClient.getRuleChainById(ruleChain.getUuidId()))
+                .forEach(ruleChain -> ruleChain.ifPresent(chain -> tbRestClient.deleteRuleChain(chain.getUuidId())));
     }
 
 
-    private ModelData makeData(boolean skipTelemetry, ZonedDateTime startYear) {
+    private ModelData makeData(boolean skipTelemetry, ZonedDateTime startYear, boolean fullTelemetryGeneration, long startGenerationTime, long endGenerationTime) {
         int order = 0;
         Set<CityConfiguration> cityConfigurations = MySortedSet.of(
                 CityConfiguration.builder()
@@ -488,40 +519,44 @@ public class WaterMeteringSolution implements SolutionTemplateGenerator {
         );
 
         Set<ModelEntity> cities = cityConfigurations.stream()
-                .map(configuration -> makeCityByConfiguration(configuration, skipTelemetry))
+                .map(configuration -> makeCityByConfiguration(configuration, skipTelemetry, fullTelemetryGeneration, startGenerationTime, endGenerationTime))
                 .collect(Collectors.toCollection(TreeSet::new));
 
         return new ModelData(cities);
     }
 
-    private void applyData(ModelData data, CustomerData customerData) {
+    private void applyData(ModelData data, CustomerData customerData, boolean strictGeneration) {
         CustomerUser customerUser = customerData.getUser();
         UUID ownerId = customerUser.getCustomerId().getId();
 
         UUID assetGroupId = null;
         UUID deviceGroupId = null;
         if (tbRestClient.isPe()) {
-            EntityGroup assetGroup = tbRestClient.createEntityGroup(ASSET_GROUP_NAME, EntityType.ASSET, ownerId, true);
-            EntityGroup deviceGroup = tbRestClient.createEntityGroup(DEVICE_GROUP_NAME, EntityType.DEVICE, ownerId, true);
+            EntityGroup assetGroup = strictGeneration
+                    ? tbRestClient.createEntityGroup(ASSET_GROUP_NAME, EntityType.ASSET, ownerId, true)
+                    : tbRestClient.createEntityGroupIfNotExists(ASSET_GROUP_NAME, EntityType.ASSET, ownerId, true);
+            EntityGroup deviceGroup = strictGeneration
+                    ? tbRestClient.createEntityGroup(DEVICE_GROUP_NAME, EntityType.DEVICE, ownerId, true)
+                    : tbRestClient.createEntityGroupIfNotExists(DEVICE_GROUP_NAME, EntityType.DEVICE, ownerId, true);
             assetGroupId = assetGroup.getUuidId();
             deviceGroupId = deviceGroup.getUuidId();
         }
 
         Set<City> cities = mapToCities(data);
         for (City city : cities) {
-            Asset cityAsset = createCity(city, ownerId, assetGroupId);
+            Asset cityAsset = createCity(city, ownerId, assetGroupId, strictGeneration);
 
             for (Region region : city.getRegions()) {
-                Device regionDevice = createRegion(region, ownerId, deviceGroupId);
+                Device regionDevice = createRegion(region, ownerId, deviceGroupId, strictGeneration);
                 this.tbRestClient.createRelation(RelationType.CONTAINS.getType(), cityAsset.getId(), regionDevice.getId());
 
                 for (Consumer consumer : region.getConsumers()) {
-                    Device consumerDevice = createConsumer(consumer, ownerId, deviceGroupId);
+                    Device consumerDevice = createConsumer(consumer, ownerId, deviceGroupId, strictGeneration);
                     this.tbRestClient.createRelation(RelationType.CONTAINS.getType(), regionDevice.getId(), consumerDevice.getId());
                 }
             }
             for (PumpStation pumpStation : city.getPumpStations()) {
-                Device pumpStationDevice = createPumpStation(pumpStation, ownerId, deviceGroupId);
+                Device pumpStationDevice = createPumpStation(pumpStation, ownerId, deviceGroupId, strictGeneration);
                 this.tbRestClient.createRelation(RelationType.CONTAINS.getType(), cityAsset.getId(), pumpStationDevice.getId());
             }
         }
@@ -616,30 +651,42 @@ public class WaterMeteringSolution implements SolutionTemplateGenerator {
     }
 
 
-    private Asset createCity(City city, UUID ownerId, UUID assetGroupId) {
+    private Asset createCity(City city, UUID ownerId, UUID assetGroupId, boolean strictGeneration) {
         Asset asset;
-        if (tbRestClient.isPe()) {
-            asset = tbRestClient.createAsset(city.getSystemName(), city.entityType(), new CustomerId(ownerId));
-            tbRestClient.addEntitiesToTheGroup(assetGroupId, Set.of(asset.getUuidId()));
-        } else {
-            asset = tbRestClient.createAsset(city.getSystemName(), city.entityType());
-            tbRestClient.assignAssetToCustomer(ownerId, asset.getUuidId());
-        }
-
         Set<Attribute<?>> attributes = Set.of(
                 new Attribute<>("population", city.getPopulation())
         );
-        tbRestClient.setEntityAttributes(asset.getUuidId(), EntityType.ASSET, Attribute.Scope.SERVER_SCOPE, attributes);
+
+        if (tbRestClient.isPe()) {
+            CustomerId customerId = new CustomerId(ownerId);
+            asset = strictGeneration
+                    ? tbRestClient.createAsset(city.getSystemName(), city.entityType(), customerId, attributes)
+                    : tbRestClient.createAssetIfNotExists(city.getSystemName(), city.entityType(), customerId, attributes)
+            ;
+            tbRestClient.addEntitiesToTheGroup(assetGroupId, Set.of(asset.getUuidId()));
+        } else {
+            asset = strictGeneration
+                    ? tbRestClient.createAsset(city.getSystemName(), city.entityType(), attributes)
+                    : tbRestClient.createAssetIfNotExists(city.getSystemName(), city.entityType(), attributes)
+            ;
+            tbRestClient.assignAssetToCustomer(ownerId, asset.getUuidId());
+        }
+
         return asset;
     }
 
-    private Device createRegion(Region region, UUID ownerId, UUID deviceGroupId) {
+    private Device createRegion(Region region, UUID ownerId, UUID deviceGroupId, boolean strictGeneration) {
+        Set<Attribute<?>> noAttributes = Collections.emptySet();
         Device device;
         if (tbRestClient.isPe()) {
-            device = tbRestClient.createDevice(region.getSystemName(), region.entityType(), new CustomerId(ownerId));
+            device = strictGeneration
+                    ? tbRestClient.createDevice(region.getSystemName(), region.entityType(), new CustomerId(ownerId), noAttributes)
+                    : tbRestClient.createDeviceIfNotExists(region.getSystemName(), region.entityType(), new CustomerId(ownerId), noAttributes);
             tbRestClient.addEntitiesToTheGroup(deviceGroupId, Set.of(device.getUuidId()));
         } else {
-            device = tbRestClient.createDevice(region.getSystemName(), region.entityType());
+            device = strictGeneration
+                    ? tbRestClient.createDevice(region.getSystemName(), region.entityType(), noAttributes)
+                    : tbRestClient.createDeviceIfNotExists(region.getSystemName(), region.entityType(), noAttributes);
             tbRestClient.assignDeviceToCustomer(ownerId, device.getUuidId());
         }
         DeviceCredentials deviceCredentials = tbRestClient.getDeviceCredentials(device.getUuidId());
@@ -649,21 +696,25 @@ public class WaterMeteringSolution implements SolutionTemplateGenerator {
         return device;
     }
 
-    private Device createConsumer(Consumer consumer, UUID ownerId, UUID deviceGroupId) {
+    private Device createConsumer(Consumer consumer, UUID ownerId, UUID deviceGroupId, boolean strictGeneration) {
         Device device;
-        if (tbRestClient.isPe()) {
-            device = tbRestClient.createDevice(consumer.getSystemName(), consumer.entityType(), new CustomerId(ownerId));
-            tbRestClient.addEntitiesToTheGroup(deviceGroupId, Set.of(device.getUuidId()));
-        } else {
-            device = tbRestClient.createDevice(consumer.getSystemName(), consumer.entityType());
-            tbRestClient.assignDeviceToCustomer(ownerId, device.getUuidId());
-        }
-        DeviceCredentials deviceCredentials = tbRestClient.getDeviceCredentials(device.getUuidId());
-
         Set<Attribute<?>> attributes = Set.of(
                 new Attribute<>("type", consumer.getType())
         );
-        tbRestClient.setEntityAttributes(device.getUuidId(), EntityType.DEVICE, Attribute.Scope.SERVER_SCOPE, attributes);
+
+        if (tbRestClient.isPe()) {
+            device = strictGeneration
+                    ? tbRestClient.createDevice(consumer.getSystemName(), consumer.entityType(), new CustomerId(ownerId), attributes)
+                    : tbRestClient.createDeviceIfNotExists(consumer.getSystemName(), consumer.entityType(), new CustomerId(ownerId), attributes);
+            tbRestClient.addEntitiesToTheGroup(deviceGroupId, Set.of(device.getUuidId()));
+        } else {
+            device = strictGeneration
+                    ? tbRestClient.createDevice(consumer.getSystemName(), consumer.entityType(), attributes)
+                    : tbRestClient.createDeviceIfNotExists(consumer.getSystemName(), consumer.entityType(), attributes);
+            tbRestClient.assignDeviceToCustomer(ownerId, device.getUuidId());
+        }
+
+        DeviceCredentials deviceCredentials = tbRestClient.getDeviceCredentials(device.getUuidId());
 
         tbRestClient.pushTelemetry(deviceCredentials.getCredentialsId(), consumer.getConsumption());
 
@@ -671,13 +722,18 @@ public class WaterMeteringSolution implements SolutionTemplateGenerator {
         return device;
     }
 
-    private Device createPumpStation(PumpStation pumpStation, UUID ownerId, UUID deviceGroupId) {
+    private Device createPumpStation(PumpStation pumpStation, UUID ownerId, UUID deviceGroupId, boolean strictGeneration) {
+        Set<Attribute<?>> noAttributes = Collections.emptySet();
         Device device;
         if (tbRestClient.isPe()) {
-            device = tbRestClient.createDevice(pumpStation.getSystemName(), pumpStation.entityType(), new CustomerId(ownerId));
+            device = strictGeneration
+                    ? tbRestClient.createDevice(pumpStation.getSystemName(), pumpStation.entityType(), new CustomerId(ownerId), noAttributes)
+                    : tbRestClient.createDeviceIfNotExists(pumpStation.getSystemName(), pumpStation.entityType(), new CustomerId(ownerId), noAttributes);
             tbRestClient.addEntitiesToTheGroup(deviceGroupId, Set.of(device.getUuidId()));
         } else {
-            device = tbRestClient.createDevice(pumpStation.getSystemName(), pumpStation.entityType());
+            device = strictGeneration
+                    ? tbRestClient.createDevice(pumpStation.getSystemName(), pumpStation.entityType(), noAttributes)
+                    : tbRestClient.createDeviceIfNotExists(pumpStation.getSystemName(), pumpStation.entityType(), noAttributes);
             tbRestClient.assignDeviceToCustomer(ownerId, device.getUuidId());
         }
         DeviceCredentials deviceCredentials = tbRestClient.getDeviceCredentials(device.getUuidId());
@@ -688,15 +744,16 @@ public class WaterMeteringSolution implements SolutionTemplateGenerator {
     }
 
 
-    private City makeCityByConfiguration(CityConfiguration cityConfiguration, boolean skipTelemetry) {
+    private City makeCityByConfiguration(CityConfiguration cityConfiguration, boolean skipTelemetry, boolean fullTelemetryGeneration, long startGenerationTime, long endGenerationTime) {
         Set<Region> regions = MySortedSet.of();
         Set<PumpStation> pumpStations = MySortedSet.of();
         for (RegionConfiguration regionConfiguration : cityConfiguration.getRegionConfigurations()) {
-            Region region = makeRegionByConfiguration(regionConfiguration, skipTelemetry);
+            Region region = makeRegionByConfiguration(
+                    regionConfiguration, skipTelemetry, fullTelemetryGeneration, startGenerationTime, endGenerationTime);
             regions.add(region);
 
             PumpStationConfiguration pumpStationConfiguration = regionConfiguration.getPumpStationConfiguration();
-            PumpStation pumpStation = makePumpStationByRegion(pumpStationConfiguration, region);
+            PumpStation pumpStation = makePumpStationByRegion(pumpStationConfiguration, region, fullTelemetryGeneration);
             pumpStations.add(pumpStation);
         }
 
@@ -709,10 +766,11 @@ public class WaterMeteringSolution implements SolutionTemplateGenerator {
                 .build();
     }
 
-    private Region makeRegionByConfiguration(RegionConfiguration regionConfiguration, boolean skipTelemetry) {
+    private Region makeRegionByConfiguration(RegionConfiguration regionConfiguration, boolean skipTelemetry, boolean fullTelemetryGeneration, long startGenerationTime, long endGenerationTime) {
         Set<Consumer> consumers = MySortedSet.of();
         for (ConsumerConfiguration consumerConfiguration : regionConfiguration.getConsumerConfigurations()) {
-            Consumer consumer = makeConsumerByConfiguration(regionConfiguration, consumerConfiguration, skipTelemetry);
+            Consumer consumer = makeConsumerByConfiguration(
+                    regionConfiguration, consumerConfiguration, skipTelemetry, fullTelemetryGeneration, startGenerationTime, endGenerationTime);
             consumers.add(consumer);
         }
 
@@ -721,7 +779,10 @@ public class WaterMeteringSolution implements SolutionTemplateGenerator {
                 .collect(Collectors.toSet());
 
         Telemetry<Long> fullConsumption = createTelemetryRegionFullConsumption(consumptionSet, skipTelemetry);
-        this.anomalyService.applyAnomaly(fullConsumption, regionConfiguration.getAnomalies());
+
+        if (!fullTelemetryGeneration) {
+            this.anomalyService.applyAnomaly(fullConsumption, regionConfiguration.getAnomalies());
+        }
 
         return Region.builder()
                 .systemName(regionConfiguration.getName())
@@ -731,15 +792,19 @@ public class WaterMeteringSolution implements SolutionTemplateGenerator {
                 .build();
     }
 
-    private Consumer makeConsumerByConfiguration(RegionConfiguration regionConfiguration, ConsumerConfiguration consumerConfiguration, boolean skipTelemetry) {
+    private Consumer makeConsumerByConfiguration(RegionConfiguration regionConfiguration, ConsumerConfiguration consumerConfiguration, boolean skipTelemetry, boolean fullTelemetryGeneration, long startGenerationTime, long endGenerationTime) {
         ZonedDateTime startYear = regionConfiguration.getStartYear();
         String regionName = regionConfiguration.getName();
         String index = consumerConfiguration.getIndex();
         ConsumerType type = consumerConfiguration.getType();
 
         String consumerName = regionName + " " + type.name() + "_" + index;
-        Telemetry<Long> consumption = createTelemetryConsumerConsumption(consumerConfiguration, startYear, skipTelemetry);
-        this.anomalyService.applyAnomaly(consumption, consumerConfiguration.getAnomalies());
+        Telemetry<Long> consumption = createTelemetryConsumerConsumption(
+                consumerConfiguration, startYear, skipTelemetry, fullTelemetryGeneration, startGenerationTime, endGenerationTime);
+
+        if (!fullTelemetryGeneration) {
+            this.anomalyService.applyAnomaly(consumption, consumerConfiguration.getAnomalies());
+        }
 
         return Consumer.builder()
                 .systemName(consumerName)
@@ -749,10 +814,13 @@ public class WaterMeteringSolution implements SolutionTemplateGenerator {
                 .build();
     }
 
-    private PumpStation makePumpStationByRegion(PumpStationConfiguration pumpStationConfiguration, Region region) {
+    private PumpStation makePumpStationByRegion(PumpStationConfiguration pumpStationConfiguration, Region region, boolean fullTelemetryGeneration) {
         String name = region.getSystemName() + " Pump Station";
         Telemetry<Long> provided = new Telemetry<>("provided", region.getFullConsumption().getPoints());
-        this.anomalyService.applyAnomaly(provided, pumpStationConfiguration.getAnomalies());
+
+        if (!fullTelemetryGeneration) {
+            this.anomalyService.applyAnomaly(provided, pumpStationConfiguration.getAnomalies());
+        }
 
         return PumpStation.builder()
                 .systemName(name)
@@ -762,17 +830,28 @@ public class WaterMeteringSolution implements SolutionTemplateGenerator {
     }
 
 
-    private Telemetry<Long> createTelemetryConsumerConsumption(ConsumerConfiguration consumerConfiguration, ZonedDateTime startYear, boolean skipTelemetry) {
+    private Telemetry<Long> createTelemetryConsumerConsumption(
+            ConsumerConfiguration consumerConfiguration, ZonedDateTime startYear, boolean skipTelemetry, boolean fullTelemetryGeneration,
+            long startGenerationTime, long endGenerationTime
+    ) {
+        var skipTelemetryValue = new Telemetry<Long>("skip");
+
         if (skipTelemetry) {
-            return new Telemetry<>("skip");
+            return skipTelemetryValue;
+        }
+
+        Pair<Long, Long> fromToPair;
+        try {
+            fromToPair = DateTimeUtils.calculateNewDateRange(DateTimeUtils.toTs(startYear), System.currentTimeMillis(), startGenerationTime, endGenerationTime, fullTelemetryGeneration);
+        } catch (IllegalStateException e) {
+            return skipTelemetryValue;
         }
 
         Telemetry<Long> result = new Telemetry<>("consumption");
         ConsumerType type = consumerConfiguration.getType();
 
-        long now = System.currentTimeMillis();
-        ZonedDateTime startDate = startYear.truncatedTo(ChronoUnit.HOURS);
-        ZonedDateTime nowDate = DateTimeUtils.fromTs(now).truncatedTo(ChronoUnit.HOURS);
+        ZonedDateTime startDate = DateTimeUtils.fromTs(fromToPair.getLeft()).truncatedTo(ChronoUnit.HOURS);
+        ZonedDateTime nowDate = DateTimeUtils.fromTs(fromToPair.getRight()).truncatedTo(ChronoUnit.HOURS);
 
         Pair<Long, Long> intervalValues = getIntervalValuesRangeByConsumerType(consumerConfiguration.getType());
         int fullInterval = 366;

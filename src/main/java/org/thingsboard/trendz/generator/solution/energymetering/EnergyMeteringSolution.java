@@ -2,6 +2,7 @@ package org.thingsboard.trendz.generator.solution.energymetering;
 
 import com.google.common.collect.Sets;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.thingsboard.server.common.data.Customer;
@@ -15,12 +16,21 @@ import org.thingsboard.server.common.data.rule.RuleChain;
 import org.thingsboard.server.common.data.rule.RuleChainMetaData;
 import org.thingsboard.server.common.data.rule.RuleNode;
 import org.thingsboard.server.common.data.security.DeviceCredentials;
-import org.thingsboard.trendz.generator.exception.*;
+import org.thingsboard.trendz.generator.exception.AssetAlreadyExistException;
+import org.thingsboard.trendz.generator.exception.CustomerAlreadyExistException;
+import org.thingsboard.trendz.generator.exception.DeviceAlreadyExistException;
+import org.thingsboard.trendz.generator.exception.RuleChainAlreadyExistException;
+import org.thingsboard.trendz.generator.exception.SolutionValidationException;
 import org.thingsboard.trendz.generator.model.ModelData;
 import org.thingsboard.trendz.generator.model.ModelEntity;
 import org.thingsboard.trendz.generator.model.anomaly.AnomalyInfo;
 import org.thingsboard.trendz.generator.model.anomaly.AnomalyType;
-import org.thingsboard.trendz.generator.model.tb.*;
+import org.thingsboard.trendz.generator.model.tb.Attribute;
+import org.thingsboard.trendz.generator.model.tb.CustomerData;
+import org.thingsboard.trendz.generator.model.tb.CustomerUser;
+import org.thingsboard.trendz.generator.model.tb.RelationType;
+import org.thingsboard.trendz.generator.model.tb.RuleNodeAdditionalInfo;
+import org.thingsboard.trendz.generator.model.tb.Telemetry;
 import org.thingsboard.trendz.generator.service.FileService;
 import org.thingsboard.trendz.generator.service.anomaly.AnomalyService;
 import org.thingsboard.trendz.generator.service.dashboard.DashboardService;
@@ -39,7 +49,15 @@ import org.thingsboard.trendz.generator.utils.RandomUtils;
 
 import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.TreeSet;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -101,7 +119,7 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
 
             if (!tbRestClient.isPe()) {
                 dashboardService.validateDashboardItems(getSolutionName(), null);
-                ModelData data = makeData(true, ZonedDateTime.now());
+                ModelData data = makeData(true, ZonedDateTime.now(), true, 0L, 0L);
                 validateData(data);
             }
 
@@ -112,14 +130,17 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
     }
 
     @Override
-    public void generate(boolean skipTelemetry, ZonedDateTime startYear) {
+    public void generate(
+            boolean skipTelemetry, ZonedDateTime startYear, boolean strictGeneration, boolean fullTelemetryGeneration,
+            long startGenerationTime, long endGenerationTime
+    ) {
         log.info("Energy Metering Solution - start generation");
         try {
-            CustomerData customerData = createCustomerData();
-            ModelData data = makeData(skipTelemetry, startYear);
-            applyData(data, customerData);
-            createRuleChain(data);
-            dashboardService.createDashboardItems(getSolutionName(), customerData.getCustomer().getId());
+            CustomerData customerData = createCustomerData(strictGeneration);
+            ModelData data = makeData(skipTelemetry, startYear, fullTelemetryGeneration, startGenerationTime, endGenerationTime);
+            applyData(data, customerData, strictGeneration);
+            createRuleChain(data, strictGeneration);
+            dashboardService.createDashboardItems(getSolutionName(), customerData.getCustomer().getId(), strictGeneration);
 
             checkRandomStability();
             log.info("Energy Metering Solution - generation is completed!");
@@ -137,7 +158,7 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
 
             if (!tbRestClient.isPe()) {
                 dashboardService.deleteDashboardItems(getSolutionName(), null);
-                ModelData data = makeData(true, ZonedDateTime.now());
+                ModelData data = makeData(true, ZonedDateTime.now(), true, 0L, 0L);
                 deleteData(data);
             }
 
@@ -172,8 +193,10 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
     }
 
 
-    private CustomerData createCustomerData() {
-        Customer customer = this.tbRestClient.createCustomer(CUSTOMER_TITLE);
+    private CustomerData createCustomerData(boolean strictGeneration) {
+        Customer customer = strictGeneration
+                ? tbRestClient.createCustomer(CUSTOMER_TITLE)
+                : tbRestClient.createCustomerIfNotExists(CUSTOMER_TITLE);
         CustomerUser customerUser = this.tbRestClient.createCustomerUser(
                 customer, CUSTOMER_USER_EMAIL, CUSTOMER_USER_PASSWORD,
                 CUSTOMER_USER_FIRST_NAME, CUSTOMER_USER_LAST_NAME
@@ -198,7 +221,11 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
     }
 
 
-    private void createRuleChain(ModelData data) {
+    private void createRuleChain(ModelData data, boolean strictGeneration) {
+        if (!strictGeneration) {
+            deleteRuleChain();
+        }
+
         Set<Building> buildings = mapToBuildings(data);
 
         try {
@@ -316,7 +343,7 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
                 }
             }
 
-            RuleChainMetaData savedMetaData = this.tbRestClient.saveRuleChainMetadata(metaData);
+            this.tbRestClient.saveRuleChainMetadata(metaData);
         } catch (Exception e) {
             throw new RuntimeException("Exception during rule chain creation", e);
         }
@@ -336,12 +363,17 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
         this.tbRestClient.getAllRuleChains()
                 .stream()
                 .filter(ruleChain -> ruleChain.getName().equals(RULE_CHAIN_NAME))
-                .findAny()
-                .ifPresent(ruleChain -> this.tbRestClient.deleteRuleChain(ruleChain.getUuidId()));
+                .toList()
+                .stream()
+                .map(ruleChain -> tbRestClient.getRuleChainById(ruleChain.getUuidId()))
+                .forEach(ruleChain -> ruleChain.ifPresent(chain -> tbRestClient.deleteRuleChain(chain.getUuidId())));
     }
 
 
-    private ModelData makeData(boolean skipTelemetry, ZonedDateTime startYear) {
+    private ModelData makeData(
+            boolean skipTelemetry, ZonedDateTime startYear, boolean fullTelemetryGeneration,
+            long startGenerationTime, long endGenerationTime
+    ) {
         long TS_JANUARY = DateTimeUtils.toTs(startYear);
         long TS_FEBRUARY = DateTimeUtils.toTs(startYear.plusMonths(1));
         long TS_MARCH = DateTimeUtils.toTs(startYear.plusMonths(2));
@@ -630,38 +662,43 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
         );
 
         Set<ModelEntity> buildings = buildingConfigurations.stream()
-                .map(configuration -> makeBuildingByConfiguration(configuration, skipTelemetry))
+                .map(configuration -> makeBuildingByConfiguration(
+                        configuration, skipTelemetry, fullTelemetryGeneration, startGenerationTime, endGenerationTime))
                 .collect(Collectors.toCollection(TreeSet::new));
 
         return new ModelData(buildings);
     }
 
-    private void applyData(ModelData data, CustomerData customerData) {
+    private void applyData(ModelData data, CustomerData customerData, boolean strictGeneration) {
         CustomerUser customerUser = customerData.getUser();
         UUID ownerId = customerUser.getCustomerId().getId();
 
         UUID assetGroupId = null;
         UUID deviceGroupId = null;
         if (tbRestClient.isPe()) {
-            EntityGroup assetGroup = tbRestClient.createEntityGroup(ASSET_GROUP_NAME, EntityType.ASSET, ownerId, true);
-            EntityGroup deviceGroup = tbRestClient.createEntityGroup(DEVICE_GROUP_NAME, EntityType.DEVICE, ownerId, true);
+            EntityGroup assetGroup = strictGeneration
+                    ? tbRestClient.createEntityGroup(ASSET_GROUP_NAME, EntityType.ASSET, ownerId, true)
+                    : tbRestClient.createEntityGroupIfNotExists(ASSET_GROUP_NAME, EntityType.ASSET, ownerId, true);
+            EntityGroup deviceGroup = strictGeneration
+                    ? tbRestClient.createEntityGroup(DEVICE_GROUP_NAME, EntityType.DEVICE, ownerId, true)
+                    : tbRestClient.createEntityGroupIfNotExists(DEVICE_GROUP_NAME, EntityType.DEVICE, ownerId, true);
             assetGroupId = assetGroup.getUuidId();
             deviceGroupId = deviceGroup.getUuidId();
         }
 
         Set<Building> buildings = mapToBuildings(data);
         for (Building building : buildings) {
-            Asset buildingAsset = createBuilding(building, ownerId, assetGroupId);
+            Asset buildingAsset = createBuilding(building, ownerId, assetGroupId, strictGeneration);
 
             Set<Apartment> apartments = building.getApartments();
             for (Apartment apartment : apartments) {
-                Asset apartmentAsset = createApartment(apartment, ownerId, assetGroupId);
+                Asset apartmentAsset = createApartment(apartment, ownerId, assetGroupId, strictGeneration);
                 this.tbRestClient.createRelation(RelationType.CONTAINS.getType(), buildingAsset.getId(), apartmentAsset.getId());
 
                 EnergyMeter energyMeter = apartment.getEnergyMeter();
                 HeatMeter heatMeter = apartment.getHeatMeter();
-                Device energyMeterDevice = createEnergyMeter(energyMeter, ownerId, deviceGroupId);
-                Device heatMeterDevice = createHeatMeter(heatMeter, ownerId, deviceGroupId);
+                Device energyMeterDevice = createEnergyMeter(energyMeter, ownerId, deviceGroupId, strictGeneration);
+                Device heatMeterDevice = createHeatMeter(heatMeter, ownerId, deviceGroupId, strictGeneration);
                 this.tbRestClient.createRelation(RelationType.CONTAINS.getType(), apartmentAsset.getId(), energyMeterDevice.getId());
                 this.tbRestClient.createRelation(RelationType.CONTAINS.getType(), apartmentAsset.getId(), heatMeterDevice.getId());
             }
@@ -753,7 +790,10 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
     }
 
 
-    private Building makeBuildingByConfiguration(BuildingConfiguration configuration, boolean skipTelemetry) {
+    private Building makeBuildingByConfiguration(
+            BuildingConfiguration configuration, boolean skipTelemetry, boolean fullTelemetryGeneration,
+            long startGenerationTime, long endGenerationTime
+    ) {
         Set<Apartment> apartments = MySortedSet.of();
         for (int floor = 1; floor <= configuration.getFloorCount(); floor++) {
             for (int number = 1; number <= configuration.getApartmentsByFloorCount(); number++) {
@@ -770,7 +810,9 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
                         .computeIfAbsent(floor, key -> new HashMap<>())
                         .computeIfAbsent(number, key -> configuration.getDefaultApartmentConfiguration());
 
-                Apartment apartment = createApartmentByConfiguration(apartmentConfiguration, configuration.getName(), floor, number, configuration.getApartmentsByFloorCount(), skipTelemetry);
+                Apartment apartment = createApartmentByConfiguration(
+                        apartmentConfiguration, configuration.getName(), floor, number, configuration.getApartmentsByFloorCount(), skipTelemetry,
+                        fullTelemetryGeneration, startGenerationTime, endGenerationTime);
                 apartments.add(apartment);
             }
         }
@@ -783,19 +825,29 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
                 .build();
     }
 
-    private Apartment createApartmentByConfiguration(ApartmentConfiguration configuration, String buildingName, int floor, int number, int apartmentByFloorCount, boolean skipTelemetry) {
+    private Apartment createApartmentByConfiguration(
+            ApartmentConfiguration configuration, String buildingName, int floor, int number, int apartmentByFloorCount,
+            boolean skipTelemetry, boolean fullTelemetryGeneration, long startGenerationTime, long endGenerationTime
+    ) {
         String titleNumber = floor + "0" + number;
         String letterAndNumber = buildingName.charAt(0) + titleNumber;
         long startDate = configuration.getStartDate() + createRandomDateBias();
 
-        Telemetry<Long> energyMeterConsumption = createTelemetryEnergyMeterConsumption(configuration, skipTelemetry);
-        this.anomalyService.applyAnomaly(energyMeterConsumption, configuration.getAnomalies());
+        Telemetry<Long> energyMeterConsumption = createTelemetryEnergyMeterConsumption(
+                configuration, skipTelemetry, fullTelemetryGeneration, startGenerationTime, endGenerationTime);
+        if (!fullTelemetryGeneration) {
+            this.anomalyService.applyAnomaly(energyMeterConsumption, configuration.getAnomalies());
+        }
         Telemetry<Long> energyMeterConsAbsolute = createTelemetryEnergyMeterConsAbsolute(energyMeterConsumption, skipTelemetry);
 
-        Telemetry<Long> heatMeterTemperature = createTelemetryHeatMeterTemperature(configuration, skipTelemetry);
-        Telemetry<Long> heatMeterConsumption = createTelemetryHeatMeterConsumption(configuration, skipTelemetry);
-        this.anomalyService.applyAnomaly(heatMeterTemperature, configuration.getAnomalies());
-        this.anomalyService.applyAnomaly(heatMeterConsumption, configuration.getAnomalies());
+        Telemetry<Long> heatMeterTemperature = createTelemetryHeatMeterTemperature(
+                configuration, skipTelemetry, fullTelemetryGeneration, startGenerationTime, endGenerationTime);
+        Telemetry<Long> heatMeterConsumption = createTelemetryHeatMeterConsumption(
+                configuration, skipTelemetry, fullTelemetryGeneration, startGenerationTime, endGenerationTime);
+        if (!fullTelemetryGeneration) {
+            this.anomalyService.applyAnomaly(heatMeterTemperature, configuration.getAnomalies());
+            this.anomalyService.applyAnomaly(heatMeterConsumption, configuration.getAnomalies());
+        }
         Telemetry<Long> heatMeterConsAbsolute = createTelemetryHeatMeterConsAbsolute(heatMeterConsumption, skipTelemetry);
 
         EnergyMeter energyMeter = EnergyMeter.builder()
@@ -857,17 +909,28 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
     }
 
 
-    private Telemetry<Long> createTelemetryEnergyMeterConsumption(ApartmentConfiguration configuration, boolean skipTelemetry) {
+    private Telemetry<Long> createTelemetryEnergyMeterConsumption(
+            ApartmentConfiguration configuration, boolean skipTelemetry, boolean fullTelemetryGeneration,
+            long startGenerationTime, long endGenerationTime
+    ) {
         if (skipTelemetry) {
             return new Telemetry<>("skip");
         }
 
         Telemetry<Long> result = new Telemetry<>("energyConsumption");
-        long now = System.currentTimeMillis();
-
-        long startTs = configuration.getStartDate();
         boolean occupied = configuration.isOccupied();
         int level = configuration.getLevel();
+
+        Pair<Long, Long> fromToPair;
+        try {
+            fromToPair = DateTimeUtils.calculateNewDateRange(configuration.getStartDate(), System.currentTimeMillis(), startGenerationTime, endGenerationTime, fullTelemetryGeneration);
+        } catch (IllegalStateException e) {
+            return new Telemetry<>("skip");
+        }
+
+        ZonedDateTime startDate = DateTimeUtils.fromTs(fromToPair.getLeft()).truncatedTo(ChronoUnit.HOURS);
+        ZonedDateTime nowDate = DateTimeUtils.fromTs(fromToPair.getRight()).truncatedTo(ChronoUnit.HOURS);
+        ZonedDateTime iteratedDate = startDate;
 
         if (occupied) {
             switch (level) {
@@ -879,9 +942,6 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
                     double phase = (3.14 * 1) / 12;
                     double koeff = 3.14 / 24;
 
-                    ZonedDateTime startDate = DateTimeUtils.fromTs(startTs).truncatedTo(ChronoUnit.HOURS);
-                    ZonedDateTime nowDate = DateTimeUtils.fromTs(now).truncatedTo(ChronoUnit.HOURS);
-                    ZonedDateTime iteratedDate = startDate;
                     while (iteratedDate.isBefore(nowDate)) {
                         long iteratedTs = DateTimeUtils.toTs(iteratedDate);
                         long argument = iteratedDate.getHour() - 12;
@@ -901,9 +961,6 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
                     double phase = (3.14 * 3) / 12;
                     double koeff = 3.14 / 12;
 
-                    ZonedDateTime startDate = DateTimeUtils.fromTs(startTs).truncatedTo(ChronoUnit.HOURS);
-                    ZonedDateTime nowDate = DateTimeUtils.fromTs(now).truncatedTo(ChronoUnit.HOURS);
-                    ZonedDateTime iteratedDate = startDate;
                     while (iteratedDate.isBefore(nowDate)) {
                         long iteratedTs = DateTimeUtils.toTs(iteratedDate);
                         long argument = iteratedDate.getHour() - 12;
@@ -924,9 +981,6 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
                     double koeffDay = 3.14 / 14;
                     double koeffHour = 3.14 / 6;
 
-                    ZonedDateTime startDate = DateTimeUtils.fromTs(startTs).truncatedTo(ChronoUnit.HOURS);
-                    ZonedDateTime nowDate = DateTimeUtils.fromTs(now).truncatedTo(ChronoUnit.HOURS);
-                    ZonedDateTime iteratedDate = startDate;
                     while (iteratedDate.isBefore(nowDate)) {
                         long iteratedTs = DateTimeUtils.toTs(iteratedDate);
                         long argumentDay = iteratedDate.getDayOfWeek().getValue() * 2L - 7;
@@ -950,9 +1004,6 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
             double phase = (3.14 * 3) / 128;
             double koeff = 3.14 / 128;
 
-            ZonedDateTime startDate = DateTimeUtils.fromTs(startTs).truncatedTo(ChronoUnit.HOURS);
-            ZonedDateTime nowDate = DateTimeUtils.fromTs(now).truncatedTo(ChronoUnit.HOURS);
-            ZonedDateTime iteratedDate = startDate;
             while (iteratedDate.isBefore(nowDate)) {
                 long iteratedTs = DateTimeUtils.toTs(iteratedDate);
                 long argument = iteratedDate.getHour() - 12;
@@ -966,7 +1017,9 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
         }
     }
 
-    private Telemetry<Long> createTelemetryEnergyMeterConsAbsolute(Telemetry<Long> energyConsumptionTelemetry, boolean skipTelemetry) {
+    private Telemetry<Long> createTelemetryEnergyMeterConsAbsolute(
+            Telemetry<Long> energyConsumptionTelemetry, boolean skipTelemetry
+    ) {
         if (skipTelemetry) {
             return new Telemetry<>("skip");
         }
@@ -980,22 +1033,31 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
         return result;
     }
 
-    private Telemetry<Long> createTelemetryHeatMeterTemperature(ApartmentConfiguration configuration, boolean skipTelemetry) {
+    private Telemetry<Long> createTelemetryHeatMeterTemperature(
+            ApartmentConfiguration configuration, boolean skipTelemetry, boolean fullTelemetryGeneration,
+            long startGenerationTime, long endGenerationTime
+    ) {
+        var skipTelemetryValue = new Telemetry<Long>("skip");
+
         if (skipTelemetry) {
-            return new Telemetry<>("skip");
+            return skipTelemetryValue;
+        }
+
+        Pair<Long, Long> fromToPair;
+        try {
+            fromToPair = DateTimeUtils.calculateNewDateRange(configuration.getStartDate(), System.currentTimeMillis(), startGenerationTime, endGenerationTime, fullTelemetryGeneration);
+        } catch (IllegalStateException e) {
+            return skipTelemetryValue;
         }
 
         Telemetry<Long> result = new Telemetry<>("temperature");
-        long now = System.currentTimeMillis();
-
-        long startTs = configuration.getStartDate();
         boolean occupied = configuration.isOccupied();
-
         long noiseAmplitude = 3;
 
-        ZonedDateTime startDate = DateTimeUtils.fromTs(startTs).truncatedTo(ChronoUnit.HOURS);
-        ZonedDateTime nowDate = DateTimeUtils.fromTs(now).truncatedTo(ChronoUnit.HOURS);
+        ZonedDateTime startDate = DateTimeUtils.fromTs(fromToPair.getLeft()).truncatedTo(ChronoUnit.HOURS);
+        ZonedDateTime nowDate = DateTimeUtils.fromTs(fromToPair.getRight()).truncatedTo(ChronoUnit.HOURS);
         ZonedDateTime iteratedDate = startDate;
+
         while (iteratedDate.isBefore(nowDate)) {
             long iteratedTs = DateTimeUtils.toTs(iteratedDate);
             long value;
@@ -1013,14 +1075,23 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
         return result;
     }
 
-    private Telemetry<Long> createTelemetryHeatMeterConsumption(ApartmentConfiguration configuration, boolean skipTelemetry) {
+    private Telemetry<Long> createTelemetryHeatMeterConsumption(
+            ApartmentConfiguration configuration, boolean skipTelemetry, boolean fullTelemetryGeneration,
+            long startGenerationTime, long endGenerationTime
+    ) {
+        var skipTelemetryValue = new Telemetry<Long>("skip");
+
         if (skipTelemetry) {
-            return new Telemetry<>("skip");
+            return skipTelemetryValue;
         }
 
-        long now = System.currentTimeMillis();
+        Pair<Long, Long> fromToPair;
+        try {
+            fromToPair = DateTimeUtils.calculateNewDateRange(configuration.getStartDate(), System.currentTimeMillis(), startGenerationTime, endGenerationTime, fullTelemetryGeneration);
+        } catch (IllegalStateException e) {
+            return skipTelemetryValue;
+        }
 
-        long startTs = configuration.getStartDate();
         boolean occupied = configuration.isOccupied();
         int level = configuration.getLevel();
 
@@ -1032,7 +1103,7 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
                     long noiseAmplitude = 300;
                     long noiseWidth = 100;
 
-                    return makeHeatConsumption(now, startTs, valueWarmTime, valueColdTime, noiseAmplitude, noiseWidth);
+                    return makeHeatConsumption(fromToPair.getRight(), fromToPair.getLeft(), valueWarmTime, valueColdTime, noiseAmplitude, noiseWidth);
                 }
                 case 2: {
                     long valueWarmTime = 0;
@@ -1040,7 +1111,7 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
                     long noiseAmplitude = 800;
                     long noiseWidth = 400;
 
-                    return makeHeatConsumption(now, startTs, valueWarmTime, valueColdTime, noiseAmplitude, noiseWidth);
+                    return makeHeatConsumption(fromToPair.getRight(), fromToPair.getLeft(), valueWarmTime, valueColdTime, noiseAmplitude, noiseWidth);
                 }
                 case 3: {
                     long valueWarmTime = 0;
@@ -1048,7 +1119,7 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
                     long noiseAmplitude = 2_000;
                     long noiseWidth = 800;
 
-                    return makeHeatConsumption(now, startTs, valueWarmTime, valueColdTime, noiseAmplitude, noiseWidth);
+                    return makeHeatConsumption(fromToPair.getRight(), fromToPair.getLeft(), valueWarmTime, valueColdTime, noiseAmplitude, noiseWidth);
                 }
                 default:
                     throw new IllegalStateException("Unsupported level: " + level);
@@ -1059,11 +1130,13 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
             long noiseAmplitude = 0;
             long noiseWidth = 1;
 
-            return makeHeatConsumption(now, startTs, valueWarmTime, valueColdTime, noiseAmplitude, noiseWidth);
+            return makeHeatConsumption(fromToPair.getRight(), fromToPair.getLeft(), valueWarmTime, valueColdTime, noiseAmplitude, noiseWidth);
         }
     }
 
-    private Telemetry<Long> makeHeatConsumption(long now, long startTs, long valueWarmTime, long valueColdTime, long noiseAmplitude, long noiseWidth) {
+    private Telemetry<Long> makeHeatConsumption(
+            long toMs, long startTs, long valueWarmTime, long valueColdTime, long noiseAmplitude, long noiseWidth
+    ) {
         Telemetry<Long> result = new Telemetry<>("heatConsumption");
         int dayColdTimeEnd = 80;
         int dayWarmTimeStart = 120;
@@ -1072,9 +1145,9 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
 
         long shiftedNoiseAmplitude = noiseAmplitude / noiseWidth;
         ZonedDateTime startDate = DateTimeUtils.fromTs(startTs).truncatedTo(ChronoUnit.HOURS);
-        ZonedDateTime nowDate = DateTimeUtils.fromTs(now).truncatedTo(ChronoUnit.HOURS);
+        ZonedDateTime toDate = DateTimeUtils.fromTs(toMs).truncatedTo(ChronoUnit.HOURS);
         ZonedDateTime iteratedDate = startDate;
-        while (iteratedDate.isBefore(nowDate)) {
+        while (iteratedDate.isBefore(toDate)) {
             long iteratedTs = DateTimeUtils.toTs(iteratedDate);
             int day = iteratedDate.getDayOfYear();
 
@@ -1108,7 +1181,9 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
         return result;
     }
 
-    private Telemetry<Long> createTelemetryHeatMeterConsAbsolute(Telemetry<Long> heatConsumptionTelemetry, boolean skipTelemetry) {
+    private Telemetry<Long> createTelemetryHeatMeterConsAbsolute(
+            Telemetry<Long> heatConsumptionTelemetry, boolean skipTelemetry
+    ) {
         if (skipTelemetry) {
             return new Telemetry<>("skip");
         }
@@ -1123,59 +1198,76 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
     }
 
 
-    private Asset createBuilding(Building building, UUID ownerId, UUID assetGroupId) {
+    private Asset createBuilding(Building building, UUID ownerId, UUID assetGroupId, boolean strictGeneration) {
         Asset asset;
-        if (tbRestClient.isPe()) {
-            asset = tbRestClient.createAsset(building.getSystemName(), building.entityType(), new CustomerId(ownerId));
-            tbRestClient.addEntitiesToTheGroup(assetGroupId, Set.of(asset.getUuidId()));
-        } else {
-            asset = tbRestClient.createAsset(building.getSystemName(), building.entityType());
-            tbRestClient.assignAssetToCustomer(ownerId, asset.getUuidId());
-        }
-
         Set<Attribute<?>> attributes = Set.of(
                 new Attribute<>("address", building.getAddress())
         );
-        tbRestClient.setEntityAttributes(asset.getUuidId(), EntityType.ASSET, Attribute.Scope.SERVER_SCOPE, attributes);
-        return asset;
-    }
 
-    private Asset createApartment(Apartment apartment, UUID ownerId, UUID assetGroupId) {
-        Asset asset;
         if (tbRestClient.isPe()) {
-            asset = tbRestClient.createAsset(apartment.getSystemName(), apartment.entityType(), new CustomerId(ownerId));
+            CustomerId customerId = new CustomerId(ownerId);
+            asset = strictGeneration
+                    ? tbRestClient.createAsset(building.getSystemName(), building.entityType(), customerId, attributes)
+                    : tbRestClient.createAssetIfNotExists(building.getSystemName(), building.entityType(), customerId, attributes)
+            ;
             tbRestClient.addEntitiesToTheGroup(assetGroupId, Set.of(asset.getUuidId()));
         } else {
-            asset = tbRestClient.createAsset(apartment.getSystemName(), apartment.entityType());
+            asset = strictGeneration
+                    ? tbRestClient.createAsset(building.getSystemName(), building.entityType(), attributes)
+                    : tbRestClient.createAssetIfNotExists(building.getSystemName(), building.entityType(), attributes)
+            ;
             tbRestClient.assignAssetToCustomer(ownerId, asset.getUuidId());
         }
 
+        return asset;
+    }
+
+    private Asset createApartment(Apartment apartment, UUID ownerId, UUID assetGroupId, boolean strictGeneration) {
+        Asset asset;
         Set<Attribute<?>> attributes = Set.of(
                 new Attribute<>("floor", apartment.getFloor()),
                 new Attribute<>("area", apartment.getArea()),
                 new Attribute<>("roomNumber", apartment.getRoomNumber()),
                 new Attribute<>("state", apartment.getState())
         );
-        tbRestClient.setEntityAttributes(asset.getUuidId(), EntityType.ASSET, Attribute.Scope.SERVER_SCOPE, attributes);
+
+        if (tbRestClient.isPe()) {
+            CustomerId customerId = new CustomerId(ownerId);
+            asset = strictGeneration
+                    ? tbRestClient.createAsset(apartment.getSystemName(), apartment.entityType(), customerId, attributes)
+                    : tbRestClient.createAssetIfNotExists(apartment.getSystemName(), apartment.entityType(), customerId, attributes)
+            ;
+            tbRestClient.addEntitiesToTheGroup(assetGroupId, Set.of(asset.getUuidId()));
+        } else {
+            asset = strictGeneration
+                    ? tbRestClient.createAsset(apartment.getSystemName(), apartment.entityType(), attributes)
+                    : tbRestClient.createAssetIfNotExists(apartment.getSystemName(), apartment.entityType(), attributes);
+            tbRestClient.assignAssetToCustomer(ownerId, asset.getUuidId());
+        }
+
         return asset;
     }
 
-    private Device createEnergyMeter(EnergyMeter energyMeter, UUID ownerId, UUID deviceGroupId) {
+    private Device createEnergyMeter(EnergyMeter energyMeter, UUID ownerId, UUID deviceGroupId, boolean strictGeneration) {
         Device device;
-        if (tbRestClient.isPe()) {
-            device = tbRestClient.createDevice(energyMeter.getSystemName(), energyMeter.entityType(), new CustomerId(ownerId));
-            tbRestClient.addEntitiesToTheGroup(deviceGroupId, Set.of(device.getUuidId()));
-        } else {
-            device = tbRestClient.createDevice(energyMeter.getSystemName(), energyMeter.entityType());
-            tbRestClient.assignDeviceToCustomer(ownerId, device.getUuidId());
-        }
-        DeviceCredentials deviceCredentials = tbRestClient.getDeviceCredentials(device.getUuidId());
-
         Set<Attribute<?>> attributes = Set.of(
                 new Attribute<>("installDate", energyMeter.getInstallDate()),
                 new Attribute<>("serialNumber", energyMeter.getSerialNumber())
         );
-        tbRestClient.setEntityAttributes(device.getUuidId(), EntityType.DEVICE, Attribute.Scope.SERVER_SCOPE, attributes);
+
+        if (tbRestClient.isPe()) {
+            device = strictGeneration
+                    ? tbRestClient.createDevice(energyMeter.getSystemName(), energyMeter.entityType(), new CustomerId(ownerId), attributes)
+                    : tbRestClient.createDeviceIfNotExists(energyMeter.getSystemName(), energyMeter.entityType(), new CustomerId(ownerId), attributes);
+            tbRestClient.addEntitiesToTheGroup(deviceGroupId, Set.of(device.getUuidId()));
+        } else {
+            device = strictGeneration
+                    ? tbRestClient.createDevice(energyMeter.getSystemName(), energyMeter.entityType(), attributes)
+                    : tbRestClient.createDeviceIfNotExists(energyMeter.getSystemName(), energyMeter.entityType(), attributes)
+            ;
+            tbRestClient.assignDeviceToCustomer(ownerId, device.getUuidId());
+        }
+        DeviceCredentials deviceCredentials = tbRestClient.getDeviceCredentials(device.getUuidId());
 
         tbRestClient.pushTelemetry(deviceCredentials.getCredentialsId(), energyMeter.getEnergyConsumption());
         tbRestClient.pushTelemetry(deviceCredentials.getCredentialsId(), energyMeter.getEnergyConsAbsolute());
@@ -1184,22 +1276,27 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
         return device;
     }
 
-    private Device createHeatMeter(HeatMeter heatMeter, UUID ownerId, UUID deviceGroupId) {
+    private Device createHeatMeter(HeatMeter heatMeter, UUID ownerId, UUID deviceGroupId, boolean strictGeneration) {
         Device device;
-        if (tbRestClient.isPe()) {
-            device = tbRestClient.createDevice(heatMeter.getSystemName(), heatMeter.entityType(), new CustomerId(ownerId));
-            tbRestClient.addEntitiesToTheGroup(deviceGroupId, Set.of(device.getUuidId()));
-        } else {
-            device = tbRestClient.createDevice(heatMeter.getSystemName(), heatMeter.entityType());
-            tbRestClient.assignDeviceToCustomer(ownerId, device.getUuidId());
-        }
-        DeviceCredentials deviceCredentials = tbRestClient.getDeviceCredentials(device.getUuidId());
-
         Set<Attribute<?>> attributes = Set.of(
                 new Attribute<>("installDate", heatMeter.getInstallDate()),
                 new Attribute<>("serialNumber", heatMeter.getSerialNumber())
         );
-        tbRestClient.setEntityAttributes(device.getUuidId(), EntityType.DEVICE, Attribute.Scope.SERVER_SCOPE, attributes);
+
+        if (tbRestClient.isPe()) {
+            device = strictGeneration
+                    ? tbRestClient.createDevice(heatMeter.getSystemName(), heatMeter.entityType(), new CustomerId(ownerId), attributes)
+                    : tbRestClient.createDeviceIfNotExists(heatMeter.getSystemName(), heatMeter.entityType(), new CustomerId(ownerId), attributes);
+            tbRestClient.addEntitiesToTheGroup(deviceGroupId, Set.of(device.getUuidId()));
+        } else {
+            device = strictGeneration
+                    ? tbRestClient.createDevice(heatMeter.getSystemName(), heatMeter.entityType(), attributes)
+                    : tbRestClient.createDeviceIfNotExists(heatMeter.getSystemName(), heatMeter.entityType(), attributes)
+            ;
+            tbRestClient.assignDeviceToCustomer(ownerId, device.getUuidId());
+        }
+
+        DeviceCredentials deviceCredentials = tbRestClient.getDeviceCredentials(device.getUuidId());
 
         tbRestClient.pushTelemetry(deviceCredentials.getCredentialsId(), heatMeter.getTemperature());
         tbRestClient.pushTelemetry(deviceCredentials.getCredentialsId(), heatMeter.getHeatConsumption());

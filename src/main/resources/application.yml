@@ -1,5 +1,6 @@
-server:
-  port: 8887
+spring:
+  main:
+    web-application-type: NONE
 
 tb:
   api:
@@ -11,7 +12,14 @@ tb:
 
 generator:
   mode: "${GENERATOR_MODE:generate}"  # generate, remove
-  solutions: WaterMetering
+  solutions: EnergyMetering, WaterMetering, Greenhouse
   skipTelemetry: false
-  startYear: 2023
+  # true - run generator expecting no entities (when 'generate' mode) or expecting all entities (when 'remove' mode)
+  # false - expecting that data is in inconsistent state
+  strictGeneration: true
+  # true - generate telemetry exactly from 'startGenerationTime' to 'endGenerationTime' and without generating anomalies
+  # false - generate telemetry from static range in the code and with generating anomalies
+  fullTelemetryGeneration: false
+  startGenerationTime: 1672531200000
+  endGenerationTime: 1728864000000
   telemetryTtl: 315360000 # 10 years in seconds

@@ -24,19 +24,21 @@ public class DashboardService {
     }
 
 
-    public void createDashboardItems(String solutionName, CustomerId customerId) {
+    public void createDashboardItems(String solutionName, CustomerId customerId, boolean strictGeneration) {
         if (tbRestClient.isPe()) {
-            EntityGroup dashboardGroup = tbRestClient.createEntityGroup(
-                    getDashboardGroupName(solutionName),
-                    EntityType.DASHBOARD,
-                    customerId.getId(),
-                    true
-            );
+            EntityGroup dashboardGroup = strictGeneration
+                    ? tbRestClient.createEntityGroup(getDashboardGroupName(solutionName), EntityType.DASHBOARD, customerId.getId(), true)
+                    : tbRestClient.createEntityGroupIfNotExists(getDashboardGroupName(solutionName), EntityType.DASHBOARD, customerId.getId(), true);
 
-            Dashboard dashboard = tbRestClient.createDashboard(getDashboardName(solutionName), customerId);
+            Dashboard dashboard = strictGeneration
+                    ? tbRestClient.createDashboard(getDashboardName(solutionName), customerId)
+                    : tbRestClient.createDashboardIfNotExists(getDashboardName(solutionName), customerId);
+
             tbRestClient.addEntitiesToTheGroup(dashboardGroup.getUuidId(), Set.of(dashboard.getUuidId()));
         } else {
-            Dashboard dashboard = tbRestClient.createDashboard(getDashboardName(solutionName));
+            Dashboard dashboard = strictGeneration
+                    ? tbRestClient.createDashboard(getDashboardName(solutionName))
+                    : tbRestClient.createDashboardIfNotExists(getDashboardName(solutionName));
         }
     }
 
