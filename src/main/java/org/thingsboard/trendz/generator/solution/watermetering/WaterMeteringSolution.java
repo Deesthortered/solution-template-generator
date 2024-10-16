@@ -343,8 +343,10 @@ public class WaterMeteringSolution implements SolutionTemplateGenerator {
         this.tbRestClient.getAllRuleChains()
                 .stream()
                 .filter(ruleChain -> ruleChain.getName().equals(RULE_CHAIN_NAME))
-                .findAny()
-                .ifPresent(ruleChain -> this.tbRestClient.deleteRuleChain(ruleChain.getUuidId()));
+                .toList()
+                .stream()
+                .map(ruleChain -> tbRestClient.getRuleChainById(ruleChain.getUuidId()))
+                .forEach(ruleChain -> ruleChain.ifPresent(chain -> tbRestClient.deleteRuleChain(chain.getUuidId())));
     }
 
 
@@ -663,7 +665,10 @@ public class WaterMeteringSolution implements SolutionTemplateGenerator {
             ;
             tbRestClient.addEntitiesToTheGroup(assetGroupId, Set.of(asset.getUuidId()));
         } else {
-            asset = tbRestClient.createAsset(city.getSystemName(), city.entityType(), attributes);
+            asset = strictGeneration
+                    ? tbRestClient.createAsset(city.getSystemName(), city.entityType(), attributes)
+                    : tbRestClient.createAssetIfNotExists(city.getSystemName(), city.entityType(), attributes)
+            ;
             tbRestClient.assignAssetToCustomer(ownerId, asset.getUuidId());
         }
 

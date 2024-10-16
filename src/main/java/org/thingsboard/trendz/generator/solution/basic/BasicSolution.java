@@ -310,11 +310,10 @@ public class BasicSolution implements SolutionTemplateGenerator {
             tbRestClient.getAllRuleChains()
                     .stream()
                     .filter(ruleChain -> ruleChain.getName().equals(RULE_CHAIN_NAME))
-                    .findAny()
-                    .flatMap(ruleChain -> tbRestClient.getRuleChainById(ruleChain.getUuidId()))
-                    .ifPresent(ruleChain -> {
-                        tbRestClient.deleteRuleChain(ruleChain.getUuidId());
-                    });
+                    .toList()
+                    .stream()
+                    .map(ruleChain -> tbRestClient.getRuleChainById(ruleChain.getUuidId()))
+                    .forEach(ruleChain -> ruleChain.ifPresent(chain -> tbRestClient.deleteRuleChain(chain.getUuidId())));
 
             dashboardService.deleteDashboardItems(getSolutionName(), null);
 

@@ -343,7 +343,7 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
                 }
             }
 
-            RuleChainMetaData savedMetaData = this.tbRestClient.saveRuleChainMetadata(metaData);
+            this.tbRestClient.saveRuleChainMetadata(metaData);
         } catch (Exception e) {
             throw new RuntimeException("Exception during rule chain creation", e);
         }
@@ -363,8 +363,10 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
         this.tbRestClient.getAllRuleChains()
                 .stream()
                 .filter(ruleChain -> ruleChain.getName().equals(RULE_CHAIN_NAME))
-                .findAny()
-                .ifPresent(ruleChain -> this.tbRestClient.deleteRuleChain(ruleChain.getUuidId()));
+                .toList()
+                .stream()
+                .map(ruleChain -> tbRestClient.getRuleChainById(ruleChain.getUuidId()))
+                .forEach(ruleChain -> ruleChain.ifPresent(chain -> tbRestClient.deleteRuleChain(chain.getUuidId())));
     }
 
 
