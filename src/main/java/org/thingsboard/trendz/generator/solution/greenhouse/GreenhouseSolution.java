@@ -170,8 +170,12 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
     }
 
     @Override
-    public void generate(boolean skipTelemetry, ZonedDateTime startYear, boolean strictGeneration, boolean fullTelemetryGeneration, long startGenerationTime, long endGenerationTime) {
+    public void generate(
+            boolean skipTelemetry, boolean strictGeneration, boolean fullTelemetryGeneration,
+            long startGenerationTime, long endGenerationTime
+    ) {
         log.info("Greenhouse Solution - start generation");
+        ZonedDateTime startYear = DateTimeUtils.getStartOfTheYear(startGenerationTime);
         try {
             CustomerData customerData = createCustomerData(strictGeneration);
             ModelData data = makeData(skipTelemetry, startYear, fullTelemetryGeneration, startGenerationTime, endGenerationTime);

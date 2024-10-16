@@ -6,6 +6,7 @@ import org.thingsboard.trendz.generator.model.tb.Timestamp;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
+import java.time.temporal.ChronoUnit;
 
 public class DateTimeUtils {
 
@@ -29,6 +30,10 @@ public class DateTimeUtils {
         return zonedDateTime.toInstant().toEpochMilli();
     }
 
+
+    public static ZonedDateTime getStartOfTheYear(long ts) {
+        return DateTimeUtils.fromTs(ts).withDayOfYear(1).truncatedTo(ChronoUnit.DAYS);
+    }
 
     public static Pair<Long, Long> getDatesIntersection(
             long startDate, long endDate, long startGenerationDate, long endGenerationDate

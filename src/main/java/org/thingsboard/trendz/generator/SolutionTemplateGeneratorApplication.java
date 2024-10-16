@@ -7,10 +7,8 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.thingsboard.trendz.generator.exception.SolutionValidationException;
 import org.thingsboard.trendz.generator.solution.SolutionTemplateGenerator;
-import org.thingsboard.trendz.generator.utils.DateTimeUtils;
 import org.thingsboard.trendz.generator.utils.RandomUtils;
 
-import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.Locale;
 import java.util.TimeZone;
@@ -25,7 +23,6 @@ public class SolutionTemplateGeneratorApplication implements CommandLineRunner {
     private final String mode;
     private final List<String> currentSolutions;
     private final boolean skipTelemetry;
-    private final ZonedDateTime startYear;
     private final Long startGenerationTimeMs;
     private final Long endGenerationTimeMs;
     private final boolean strictGeneration;
@@ -46,7 +43,6 @@ public class SolutionTemplateGeneratorApplication implements CommandLineRunner {
         this.mode = mode;
         this.currentSolutions = currentSolutions;
         this.skipTelemetry = skipTelemetry;
-        this.startYear = DateTimeUtils.fromTs(startGenerationTime);
         this.startGenerationTimeMs = startGenerationTime;
         this.endGenerationTimeMs = endGenerationTime;
         this.strictGeneration = strictGeneration;
@@ -58,6 +54,9 @@ public class SolutionTemplateGeneratorApplication implements CommandLineRunner {
         setDefaultTimezone();
         boolean modeGenerate = MODE_GENERATE.equals(this.mode);
         boolean modeRemove = MODE_REMOVE.equals(this.mode);
+        if (endGenerationTimeMs < startGenerationTimeMs) {
+            throw new IllegalArgumentException("Invalid generation time range");
+        }
 
         log.info("There is/are {} solutions found {}", this.currentSolutions.size(), this.currentSolutions);
         for (String solutionName : this.currentSolutions) {
@@ -72,7 +71,7 @@ public class SolutionTemplateGeneratorApplication implements CommandLineRunner {
                         if (this.strictGeneration) {
                             solutionGenerator.validate();
                         }
-                        solutionGenerator.generate(this.skipTelemetry, this.startYear, this.strictGeneration, fullTelemetryGeneration, startGenerationTimeMs, endGenerationTimeMs);
+                        solutionGenerator.generate(this.skipTelemetry, this.strictGeneration, fullTelemetryGeneration, startGenerationTimeMs, endGenerationTimeMs);
                         log.info("Current generator is finished: {}", solutionName);
                     } catch (SolutionValidationException e) {
                         log.error("Validation solution error: " + solutionGenerator.getSolutionName(), e.getCause());

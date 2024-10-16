@@ -121,7 +121,7 @@ public class BasicSolution implements SolutionTemplateGenerator {
 
     @Override
     public void generate(
-            boolean skipTelemetry, ZonedDateTime startYear, boolean strictGeneration, boolean fullTelemetryGeneration,
+            boolean skipTelemetry, boolean strictGeneration, boolean fullTelemetryGeneration,
             long startGenerationTime, long endGenerationTime
     ) {
         log.info("Basic Solution - start generation");

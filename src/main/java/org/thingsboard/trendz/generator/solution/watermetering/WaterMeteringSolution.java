@@ -130,10 +130,11 @@ public class WaterMeteringSolution implements SolutionTemplateGenerator {
 
     @Override
     public void generate(
-            boolean skipTelemetry, ZonedDateTime startYear, boolean strictGeneration, boolean fullTelemetryGeneration,
+            boolean skipTelemetry, boolean strictGeneration, boolean fullTelemetryGeneration,
             long startGenerationTime, long endGenerationTime
     ) {
         log.info("Water Metering Solution - start generation");
+        ZonedDateTime startYear = DateTimeUtils.getStartOfTheYear(startGenerationTime);
         try {
             CustomerData customerData = createCustomerData(strictGeneration);
             ModelData data = makeData(skipTelemetry, startYear, fullTelemetryGeneration, startGenerationTime, endGenerationTime);
