@@ -791,7 +791,8 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
 
 
     private Building makeBuildingByConfiguration(
-            BuildingConfiguration configuration, boolean skipTelemetry, boolean fullTelemetryGeneration, long startGenerationTime, long endGenerationTime
+            BuildingConfiguration configuration, boolean skipTelemetry, boolean fullTelemetryGeneration,
+            long startGenerationTime, long endGenerationTime
     ) {
         Set<Apartment> apartments = MySortedSet.of();
         for (int floor = 1; floor <= configuration.getFloorCount(); floor++) {
@@ -922,7 +923,7 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
 
         Pair<Long, Long> fromToPair;
         try {
-            fromToPair = calculateNewDateRange(configuration.getStartDate(), System.currentTimeMillis(), startGenerationTime, endGenerationTime, fullTelemetryGeneration);
+            fromToPair = DateTimeUtils.calculateNewDateRange(configuration.getStartDate(), System.currentTimeMillis(), startGenerationTime, endGenerationTime, fullTelemetryGeneration);
         } catch (IllegalStateException e) {
             return new Telemetry<>("skip");
         }
@@ -1016,7 +1017,9 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
         }
     }
 
-    private Telemetry<Long> createTelemetryEnergyMeterConsAbsolute(Telemetry<Long> energyConsumptionTelemetry, boolean skipTelemetry) {
+    private Telemetry<Long> createTelemetryEnergyMeterConsAbsolute(
+            Telemetry<Long> energyConsumptionTelemetry, boolean skipTelemetry
+    ) {
         if (skipTelemetry) {
             return new Telemetry<>("skip");
         }
@@ -1031,7 +1034,8 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
     }
 
     private Telemetry<Long> createTelemetryHeatMeterTemperature(
-            ApartmentConfiguration configuration, boolean skipTelemetry, boolean fullTelemetryGeneration, long startGenerationTime, long endGenerationTime
+            ApartmentConfiguration configuration, boolean skipTelemetry, boolean fullTelemetryGeneration,
+            long startGenerationTime, long endGenerationTime
     ) {
         var skipTelemetryValue = new Telemetry<Long>("skip");
 
@@ -1041,7 +1045,7 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
 
         Pair<Long, Long> fromToPair;
         try {
-            fromToPair = calculateNewDateRange(configuration.getStartDate(), System.currentTimeMillis(), startGenerationTime, endGenerationTime, fullTelemetryGeneration);
+            fromToPair = DateTimeUtils.calculateNewDateRange(configuration.getStartDate(), System.currentTimeMillis(), startGenerationTime, endGenerationTime, fullTelemetryGeneration);
         } catch (IllegalStateException e) {
             return skipTelemetryValue;
         }
@@ -1072,7 +1076,8 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
     }
 
     private Telemetry<Long> createTelemetryHeatMeterConsumption(
-            ApartmentConfiguration configuration, boolean skipTelemetry, boolean fullTelemetryGeneration, long startGenerationTime, long endGenerationTime
+            ApartmentConfiguration configuration, boolean skipTelemetry, boolean fullTelemetryGeneration,
+            long startGenerationTime, long endGenerationTime
     ) {
         var skipTelemetryValue = new Telemetry<Long>("skip");
 
@@ -1082,7 +1087,7 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
 
         Pair<Long, Long> fromToPair;
         try {
-            fromToPair = calculateNewDateRange(configuration.getStartDate(), System.currentTimeMillis(), startGenerationTime, endGenerationTime, fullTelemetryGeneration);
+            fromToPair = DateTimeUtils.calculateNewDateRange(configuration.getStartDate(), System.currentTimeMillis(), startGenerationTime, endGenerationTime, fullTelemetryGeneration);
         } catch (IllegalStateException e) {
             return skipTelemetryValue;
         }
@@ -1129,7 +1134,9 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
         }
     }
 
-    private Telemetry<Long> makeHeatConsumption(long toMs, long startTs, long valueWarmTime, long valueColdTime, long noiseAmplitude, long noiseWidth) {
+    private Telemetry<Long> makeHeatConsumption(
+            long toMs, long startTs, long valueWarmTime, long valueColdTime, long noiseAmplitude, long noiseWidth
+    ) {
         Telemetry<Long> result = new Telemetry<>("heatConsumption");
         int dayColdTimeEnd = 80;
         int dayWarmTimeStart = 120;
@@ -1174,7 +1181,9 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
         return result;
     }
 
-    private Telemetry<Long> createTelemetryHeatMeterConsAbsolute(Telemetry<Long> heatConsumptionTelemetry, boolean skipTelemetry) {
+    private Telemetry<Long> createTelemetryHeatMeterConsAbsolute(
+            Telemetry<Long> heatConsumptionTelemetry, boolean skipTelemetry
+    ) {
         if (skipTelemetry) {
             return new Telemetry<>("skip");
         }
@@ -1338,22 +1347,5 @@ public class EnergyMeteringSolution implements SolutionTemplateGenerator {
 
     private String getHeatMeterConsAbsoluteFile() {
         return "heat_cons_absolute.js";
-    }
-
-    private Pair<Long, Long> calculateNewDateRange(long from, long to, long startGenerationTime, long endGenerationTime, boolean fullTelemetryGeneration)
-            throws IllegalStateException {
-        long newfromMs = from;
-        long newToMs = to;
-
-        if (!fullTelemetryGeneration) {
-            var fromEndPair = DateTimeUtils.getDatesIntersection(newfromMs, newToMs, startGenerationTime, endGenerationTime);
-            newfromMs = fromEndPair.getLeft();
-            newToMs = fromEndPair.getRight();
-        } else {
-            newfromMs = startGenerationTime;
-            newToMs = endGenerationTime;
-        }
-
-        return Pair.of(newfromMs, newToMs);
     }
 }

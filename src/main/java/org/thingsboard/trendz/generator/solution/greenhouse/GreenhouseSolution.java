@@ -1777,7 +1777,7 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
 
         Pair<Long, Long> fromToPair;
         try {
-            fromToPair = calculateNewDateRange(DateTimeUtils.toTs(startYear), System.currentTimeMillis(), startGenerationTime, endGenerationTime, fullTelemetryGeneration);
+            fromToPair = DateTimeUtils.calculateNewDateRange(DateTimeUtils.toTs(startYear), System.currentTimeMillis(), startGenerationTime, endGenerationTime, fullTelemetryGeneration);
         } catch (IllegalStateException e) {
             return noWeatherData;
         }
@@ -1871,7 +1871,7 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
 
         Pair<Long, Long> fromToPair;
         try {
-            fromToPair = calculateNewDateRange(configuration.getStartTs(), configuration.getEndTs(), startGenerationTime, endGenerationTime, fullTelemetryGeneration);
+            fromToPair = DateTimeUtils.calculateNewDateRange(configuration.getStartTs(), configuration.getEndTs(), startGenerationTime, endGenerationTime, fullTelemetryGeneration);
         } catch (IllegalStateException e) {
             return skipTelemetryValue;
         }
@@ -1915,7 +1915,7 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
 
         Pair<Long, Long> fromToPair;
         try {
-            fromToPair = calculateNewDateRange(configuration.getStartTs(), configuration.getEndTs(), startGenerationTime, endGenerationTime, fullTelemetryGeneration);
+            fromToPair = DateTimeUtils.calculateNewDateRange(configuration.getStartTs(), configuration.getEndTs(), startGenerationTime, endGenerationTime, fullTelemetryGeneration);
         } catch (IllegalStateException e) {
             return skipTelemetryValue;
         }
@@ -1952,7 +1952,7 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
 
         Pair<Long, Long> fromToPair;
         try {
-            fromToPair = calculateNewDateRange(configuration.getStartTs(), configuration.getEndTs(), startGenerationTime, endGenerationTime, fullTelemetryGeneration);
+            fromToPair = DateTimeUtils.calculateNewDateRange(configuration.getStartTs(), configuration.getEndTs(), startGenerationTime, endGenerationTime, fullTelemetryGeneration);
         } catch (IllegalStateException e) {
             return skipTelemetryValue;
         }
@@ -2147,7 +2147,7 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
 
         Pair<Long, Long> fromToPair;
         try {
-            fromToPair = calculateNewDateRange(configuration.getStartTs(), configuration.getEndTs(), startGenerationTime, endGenerationTime, fullTelemetryGeneration);
+            fromToPair = DateTimeUtils.calculateNewDateRange(configuration.getStartTs(), configuration.getEndTs(), startGenerationTime, endGenerationTime, fullTelemetryGeneration);
         } catch (IllegalStateException e) {
             return skipTelemetryValue;
         }
@@ -2201,7 +2201,7 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
 
         Pair<Long, Long> fromToPair;
         try {
-            fromToPair = calculateNewDateRange(configuration.getStartTs(), configuration.getEndTs(), startGenerationTime, endGenerationTime, fullTelemetryGeneration);
+            fromToPair = DateTimeUtils.calculateNewDateRange(configuration.getStartTs(), configuration.getEndTs(), startGenerationTime, endGenerationTime, fullTelemetryGeneration);
         } catch (IllegalStateException e) {
             return skipTelemetryValue;
         }
@@ -2252,7 +2252,7 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
 
         Pair<Long, Long> fromToPair;
         try {
-            fromToPair = calculateNewDateRange(configuration.getStartTs(), configuration.getEndTs(), startGenerationTime, endGenerationTime, fullTelemetryGeneration);
+            fromToPair = DateTimeUtils.calculateNewDateRange(configuration.getStartTs(), configuration.getEndTs(), startGenerationTime, endGenerationTime, fullTelemetryGeneration);
         } catch (IllegalStateException e) {
             return skipTelemetryValue;
         }
@@ -2302,7 +2302,7 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
 
         Pair<Long, Long> fromToPair;
         try {
-            fromToPair = calculateNewDateRange(configuration.getStartTs(), configuration.getEndTs(), startGenerationTime, endGenerationTime, fullTelemetryGeneration);
+            fromToPair = DateTimeUtils.calculateNewDateRange(configuration.getStartTs(), configuration.getEndTs(), startGenerationTime, endGenerationTime, fullTelemetryGeneration);
         } catch (IllegalStateException e) {
             return skipTelemetryValue;
         }
@@ -2400,7 +2400,7 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
 
         Pair<Long, Long> fromToPair;
         try {
-            fromToPair = calculateNewDateRange(configuration.getStartTs(), configuration.getEndTs(), startGenerationTime, endGenerationTime, fullTelemetryGeneration);
+            fromToPair = DateTimeUtils.calculateNewDateRange(configuration.getStartTs(), configuration.getEndTs(), startGenerationTime, endGenerationTime, fullTelemetryGeneration);
         } catch (IllegalStateException e) {
             return skipTelemetryValue;
         }
@@ -2492,7 +2492,7 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
 
         Pair<Long, Long> fromToPair;
         try {
-            fromToPair = calculateNewDateRange(configuration.getStartTs(), configuration.getEndTs(), startGenerationTime, endGenerationTime, fullTelemetryGeneration);
+            fromToPair = DateTimeUtils.calculateNewDateRange(configuration.getStartTs(), configuration.getEndTs(), startGenerationTime, endGenerationTime, fullTelemetryGeneration);
         } catch (IllegalStateException e) {
             return skipTelemetryValue;
         }
@@ -2522,7 +2522,7 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
 
         Pair<Long, Long> fromToPair;
         try {
-            fromToPair = calculateNewDateRange(configuration.getStartTs(), configuration.getEndTs(), startGenerationTime, endGenerationTime, fullTelemetryGeneration);
+            fromToPair = DateTimeUtils.calculateNewDateRange(configuration.getStartTs(), configuration.getEndTs(), startGenerationTime, endGenerationTime, fullTelemetryGeneration);
         } catch (IllegalStateException e) {
             return skipTelemetryValue;
         }
@@ -2552,7 +2552,7 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
 
         Pair<Long, Long> fromToPair;
         try {
-            fromToPair = calculateNewDateRange(configuration.getStartTs(), configuration.getEndTs(), startGenerationTime, endGenerationTime, fullTelemetryGeneration);
+            fromToPair = DateTimeUtils.calculateNewDateRange(configuration.getStartTs(), configuration.getEndTs(), startGenerationTime, endGenerationTime, fullTelemetryGeneration);
         } catch (IllegalStateException e) {
             return skipTelemetryValue;
         }
@@ -2680,7 +2680,7 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
 
         Pair<Long, Long> fromToPair;
         try {
-            fromToPair = calculateNewDateRange(configuration.getStartTs(), configuration.getEndTs(), startGenerationTime, endGenerationTime, fullTelemetryGeneration);
+            fromToPair = DateTimeUtils.calculateNewDateRange(configuration.getStartTs(), configuration.getEndTs(), startGenerationTime, endGenerationTime, fullTelemetryGeneration);
         } catch (IllegalStateException e) {
             return skipTelemetryValue;
         }
@@ -2729,7 +2729,7 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
 
         Pair<Long, Long> fromToPair;
         try {
-            fromToPair = calculateNewDateRange(configuration.getStartTs(), configuration.getEndTs(), startGenerationTime, endGenerationTime, fullTelemetryGeneration);
+            fromToPair = DateTimeUtils.calculateNewDateRange(configuration.getStartTs(), configuration.getEndTs(), startGenerationTime, endGenerationTime, fullTelemetryGeneration);
         } catch (IllegalStateException e) {
             return skipTelemetryValue;
         }
@@ -2774,7 +2774,7 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
 
         Pair<Long, Long> fromToPair;
         try {
-            fromToPair = calculateNewDateRange(configuration.getStartTs(), configuration.getEndTs(), startGenerationTime, endGenerationTime, fullTelemetryGeneration);
+            fromToPair = DateTimeUtils.calculateNewDateRange(configuration.getStartTs(), configuration.getEndTs(), startGenerationTime, endGenerationTime, fullTelemetryGeneration);
         } catch (IllegalStateException e) {
             return skipTelemetryValue;
         }
@@ -2826,7 +2826,7 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
 
         Pair<Long, Long> fromToPair;
         try {
-            fromToPair = calculateNewDateRange(configuration.getStartTs(), configuration.getEndTs(), startGenerationTime, endGenerationTime, fullTelemetryGeneration);
+            fromToPair = DateTimeUtils.calculateNewDateRange(configuration.getStartTs(), configuration.getEndTs(), startGenerationTime, endGenerationTime, fullTelemetryGeneration);
         } catch (IllegalStateException e) {
             return skipTelemetryValue;
         }
@@ -2879,7 +2879,7 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
 
         Pair<Long, Long> fromToPair;
         try {
-            fromToPair = calculateNewDateRange(configuration.getStartTs(), configuration.getEndTs(), startGenerationTime, endGenerationTime, fullTelemetryGeneration);
+            fromToPair = DateTimeUtils.calculateNewDateRange(configuration.getStartTs(), configuration.getEndTs(), startGenerationTime, endGenerationTime, fullTelemetryGeneration);
         } catch (IllegalStateException e) {
             return;
         }
@@ -2938,7 +2938,7 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
 
         Pair<Long, Long> fromToPair;
         try {
-            fromToPair = calculateNewDateRange(configuration.getStartTs(), configuration.getEndTs(), startGenerationTime, endGenerationTime, fullTelemetryGeneration);
+            fromToPair = DateTimeUtils.calculateNewDateRange(configuration.getStartTs(), configuration.getEndTs(), startGenerationTime, endGenerationTime, fullTelemetryGeneration);
         } catch (IllegalStateException e) {
             return;
         }
@@ -3014,7 +3014,7 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
 
         Pair<Long, Long> fromToPair;
         try {
-            fromToPair = calculateNewDateRange(configuration.getStartTs(), configuration.getEndTs(), startGenerationTime, endGenerationTime, fullTelemetryGeneration);
+            fromToPair = DateTimeUtils.calculateNewDateRange(configuration.getStartTs(), configuration.getEndTs(), startGenerationTime, endGenerationTime, fullTelemetryGeneration);
         } catch (IllegalStateException e) {
             return skipTelemetryValue;
         }
@@ -3507,22 +3507,5 @@ public class GreenhouseSolution implements SolutionTemplateGenerator {
         fileContent = fileContent.replace("PUT_LONGITUDE", String.valueOf(longitude));
         fileContent = fileContent.replace("PUT_API_ID", apiId);
         return fileContent;
-    }
-
-    private Pair<Long, Long> calculateNewDateRange(long from, long to, long startGenerationTime, long endGenerationTime, boolean fullTelemetryGeneration)
-            throws IllegalStateException {
-        long newfromMs = from;
-        long newToMs = to;
-
-        if (!fullTelemetryGeneration) {
-            var fromEndPair = DateTimeUtils.getDatesIntersection(newfromMs, newToMs, startGenerationTime, endGenerationTime);
-            newfromMs = fromEndPair.getLeft();
-            newToMs = fromEndPair.getRight();
-        } else {
-            newfromMs = startGenerationTime;
-            newToMs = endGenerationTime;
-        }
-
-        return Pair.of(newfromMs, newToMs);
     }
 }

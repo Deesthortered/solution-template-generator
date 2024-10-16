@@ -842,7 +842,7 @@ public class WaterMeteringSolution implements SolutionTemplateGenerator {
 
         Pair<Long, Long> fromToPair;
         try {
-            fromToPair = calculateNewDateRange(DateTimeUtils.toTs(startYear), System.currentTimeMillis(), startGenerationTime, endGenerationTime, fullTelemetryGeneration);
+            fromToPair = DateTimeUtils.calculateNewDateRange(DateTimeUtils.toTs(startYear), System.currentTimeMillis(), startGenerationTime, endGenerationTime, fullTelemetryGeneration);
         } catch (IllegalStateException e) {
             return skipTelemetryValue;
         }
@@ -1214,22 +1214,5 @@ public class WaterMeteringSolution implements SolutionTemplateGenerator {
             default:
                 throw new IllegalArgumentException("Unsupported type: " + type);
         }
-    }
-
-    private Pair<Long, Long> calculateNewDateRange(long from, long to, long startGenerationTime, long endGenerationTime, boolean fullTelemetryGeneration)
-            throws IllegalStateException {
-        long newfromMs = from;
-        long newToMs = to;
-
-        if (!fullTelemetryGeneration) {
-            var fromEndPair = DateTimeUtils.getDatesIntersection(newfromMs, newToMs, startGenerationTime, endGenerationTime);
-            newfromMs = fromEndPair.getLeft();
-            newToMs = fromEndPair.getRight();
-        } else {
-            newfromMs = startGenerationTime;
-            newToMs = endGenerationTime;
-        }
-
-        return Pair.of(newfromMs, newToMs);
     }
 }
