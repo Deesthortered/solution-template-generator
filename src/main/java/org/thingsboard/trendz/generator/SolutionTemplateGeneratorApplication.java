@@ -1,12 +1,10 @@
 package org.thingsboard.trendz.generator;
 
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.context.ApplicationContext;
 import org.thingsboard.trendz.generator.exception.SolutionValidationException;
 import org.thingsboard.trendz.generator.solution.SolutionTemplateGenerator;
 import org.thingsboard.trendz.generator.utils.DateTimeUtils;
@@ -20,9 +18,6 @@ import java.util.TimeZone;
 @Slf4j
 @SpringBootApplication
 public class SolutionTemplateGeneratorApplication implements CommandLineRunner {
-
-    @Autowired
-    private ApplicationContext cnt;
 
     private final static String MODE_GENERATE = "generate";
     private final static String MODE_REMOVE = "remove";

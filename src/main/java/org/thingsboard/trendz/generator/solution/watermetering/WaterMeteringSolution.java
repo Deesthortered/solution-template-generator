@@ -552,7 +552,7 @@ public class WaterMeteringSolution implements SolutionTemplateGenerator {
                 }
             }
             for (PumpStation pumpStation : city.getPumpStations()) {
-                Device pumpStationDevice = createPumpStation(pumpStation, ownerId, deviceGroupId,strictGeneration);
+                Device pumpStationDevice = createPumpStation(pumpStation, ownerId, deviceGroupId, strictGeneration);
                 this.tbRestClient.createRelation(RelationType.CONTAINS.getType(), cityAsset.getId(), pumpStationDevice.getId());
             }
         }
@@ -823,23 +823,25 @@ public class WaterMeteringSolution implements SolutionTemplateGenerator {
     }
 
 
-    private Telemetry<Long> createTelemetryConsumerConsumption(ConsumerConfiguration consumerConfiguration, ZonedDateTime startYear, boolean skipTelemetry, boolean fullTelemetryGeneration, long startGenerationTime, long endGenerationTime) {
+    private Telemetry<Long> createTelemetryConsumerConsumption(
+            ConsumerConfiguration consumerConfiguration, ZonedDateTime startYear, boolean skipTelemetry, boolean fullTelemetryGeneration,
+            long startGenerationTime, long endGenerationTime
+    ) {
+        var skipTelemetryValue = new Telemetry<Long>("skip");
+
         if (skipTelemetry) {
-            return new Telemetry<>("skip");
+            return skipTelemetryValue;
+        }
+
+        Pair<Long, Long> fromToPair;
+        try {
+            fromToPair = calculateNewDateRange(DateTimeUtils.toTs(startYear), System.currentTimeMillis(), startGenerationTime, endGenerationTime, fullTelemetryGeneration);
+        } catch (IllegalStateException e) {
+            return skipTelemetryValue;
         }
 
         Telemetry<Long> result = new Telemetry<>("consumption");
         ConsumerType type = consumerConfiguration.getType();
-
-        long fromMs = DateTimeUtils.toTs(startYear);
-        long toMs = System.currentTimeMillis();
-
-        Pair<Long, Long> fromToPair;
-        try {
-            fromToPair = calculateNewDateRange(fromMs, toMs, startGenerationTime, endGenerationTime, fullTelemetryGeneration);
-        } catch (IllegalStateException e) {
-            return new Telemetry<>("skip");
-        }
 
         ZonedDateTime startDate = DateTimeUtils.fromTs(fromToPair.getLeft()).truncatedTo(ChronoUnit.HOURS);
         ZonedDateTime nowDate = DateTimeUtils.fromTs(fromToPair.getRight()).truncatedTo(ChronoUnit.HOURS);
