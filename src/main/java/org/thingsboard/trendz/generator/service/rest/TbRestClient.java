@@ -25,6 +25,7 @@ import org.thingsboard.server.common.data.rule.RuleChain;
 import org.thingsboard.server.common.data.rule.RuleChainMetaData;
 import org.thingsboard.server.common.data.security.Authority;
 import org.thingsboard.server.common.data.security.DeviceCredentials;
+import org.thingsboard.trendz.generator.exception.CustomerEmailIsUsedException;
 import org.thingsboard.trendz.generator.exception.PushTelemetryException;
 import org.thingsboard.trendz.generator.model.rest.ActivationAuthToken;
 import org.thingsboard.trendz.generator.model.rest.ActivationRequest;
@@ -124,7 +125,6 @@ public class TbRestClient {
                 .build();
 
         try {
-
             CustomerUser savedUser = restTemplate.postForEntity(baseURL + "/api/user?sendActivationMail=false", user, CustomerUser.class).getBody();
             Objects.requireNonNull(savedUser);
 
@@ -138,7 +138,9 @@ public class TbRestClient {
         } catch (HttpClientErrorException.BadRequest ex) {
             log.trace("Customer was already activated");
             var customerUsers = getCustomerUsers(customer.getId().getId().toString());
-            return customerUsers.stream().findAny().get();
+            return customerUsers.stream()
+                    .findAny()
+                    .orElseThrow(() -> new CustomerEmailIsUsedException(email));
         }
     }
 
