@@ -1,7 +1,7 @@
 <component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="SolutionTemplateGeneratorApplication (localhost-ce, generate)" type="SpringBootApplicationConfigurationType" factoryName="Spring Boot">
+  <configuration default="false" name="Run (localhost-ce, remove)" type="SpringBootApplicationConfigurationType" factoryName="Spring Boot">
     <envs>
-      <env name="GENERATOR_MODE" value="generate" />
+      <env name="GENERATOR_MODE" value="remove" />
     </envs>
     <module name="solution-template-generator" />
     <option name="SPRING_BOOT_MAIN_CLASS" value="org.thingsboard.trendz.generator.SolutionTemplateGeneratorApplication" />

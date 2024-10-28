@@ -52,6 +52,8 @@ public class PredictionSolution implements SolutionTemplateGenerator {
     private static final String DEVICE_GROUP_NAME = "Prediction Device Group";
 
     private static final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+    private static final String DATE_FIELD = "Date";
+    private static final int DEVICE_LIMIT = 10;
 
     private final TbRestClient tbRestClient;
     private final FileService fileService;
@@ -68,7 +70,7 @@ public class PredictionSolution implements SolutionTemplateGenerator {
 
     @Override
     public String getSolutionName() {
-        return "PredictionSolution";
+        return "Prediction";
     }
 
     @Override
@@ -161,7 +163,9 @@ public class PredictionSolution implements SolutionTemplateGenerator {
                     .map(deviceName -> Map.entry(deviceName, new Telemetry<Double>("skip")))
                     .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
         } else {
+            log.info("Parsing telemetry...");
             telemetryMap = loadTelemetry(filePath, startGenerationTime, endGenerationTime);
+            log.info("Telemetry was parsed");
         }
 
         Set<ModelEntity> devices = telemetryMap.keySet().stream()
@@ -170,8 +174,11 @@ public class PredictionSolution implements SolutionTemplateGenerator {
                 ))
                 .collect(Collectors.toCollection(TreeSet::new));
 
+        Set<ModelEntity> limitedDevices = devices.stream()
+                .limit(DEVICE_LIMIT)
+                .collect(Collectors.toCollection(TreeSet::new));
 
-        return new ModelData(devices);
+        return new ModelData(limitedDevices);
     }
 
     private void applyData(ModelData data, CustomerData customerData, boolean strictGeneration) {
@@ -193,9 +200,11 @@ public class PredictionSolution implements SolutionTemplateGenerator {
 
         Set<ElectricityLoadDiagrams20112014> meters = data.getData().stream()
                 .map(item -> (ElectricityLoadDiagrams20112014) item)
-                .collect(Collectors.toSet());
+                .collect(Collectors.toCollection(TreeSet::new));
 
+        int iterator = 1;
         for (ElectricityLoadDiagrams20112014 meter : meters) {
+            log.info("Pushing telemetry for device {}/{}: {}", iterator++, meters.size(), meter.getSystemName());
             Device consumerDevice = createMeter(meter, ownerId, deviceGroupId, strictGeneration);
         }
     }
@@ -263,28 +272,34 @@ public class PredictionSolution implements SolutionTemplateGenerator {
                 CSVParser parser = format.parse(reader);
         ) {
             Map<String, Telemetry<Double>> consumptionMap = parser.getHeaderMap().keySet().stream()
-                    .filter(header -> !header.isEmpty())
+                    .filter(header -> !header.equals(DATE_FIELD))
                     .map(header -> Map.entry(header, new Telemetry<Double>("consumption")))
                     .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
 
+            int iterator = 1;
             for (CSVRecord record : parser) {
-                long ts = 0;
+                LocalDateTime dateTime = LocalDateTime.parse(record.get(DATE_FIELD), formatter);
+                long ts = dateTime.toInstant(ZoneOffset.UTC).toEpochMilli();
+                if (ts < startGenerationTime && endGenerationTime <= ts) {
+                    continue;
+                }
+
                 for (String header : consumptionMap.keySet()) {
-                    String recordValue = record.get(header);
-                    if (header.isEmpty()) {
-                        LocalDateTime dateTime = LocalDateTime.parse(recordValue, formatter);
-                        ts = dateTime.toInstant(ZoneOffset.UTC).toEpochMilli();
-                        if (ts < startGenerationTime && endGenerationTime <= ts) {
-                            break;
-                        }
+                    if (header.equals(DATE_FIELD)) {
                         continue;
                     }
+                    String recordValue = record.get(header);
 
                     String valueStr = recordValue.replace(",", ".");
                     double value = Double.parseDouble(valueStr);
 
                     Telemetry<Double> telemetry = consumptionMap.get(header);
                     telemetry.add(new Telemetry.Point<>(Timestamp.of(ts), value));
+
+                    iterator++;
+                    if (iterator % 1000000 == 0) {
+                        log.info("Processed CSV row: {}", iterator);
+                    }
                 }
             }
 
@@ -311,7 +326,7 @@ public class PredictionSolution implements SolutionTemplateGenerator {
 
     private CSVFormat getFormat() {
         return CSVFormat.DEFAULT.builder()
-                .setSkipHeaderRecord(true)
+                .setHeader()
                 .setDelimiter(';')
                 .build();
     }
