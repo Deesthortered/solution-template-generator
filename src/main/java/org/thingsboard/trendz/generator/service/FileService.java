@@ -21,7 +21,11 @@ public class FileService {
     }
 
     public String getFileContent(String solutionName, String fileName) throws IOException {
-        Path path = Path.of(userDir, this.prefix, solutionName, fileName);
+        Path path = getFilePath(solutionName, fileName);
         return Files.readString(path);
+    }
+
+    public Path getFilePath(String solutionName, String fileName) {
+        return Path.of(userDir, this.prefix, solutionName, fileName);
     }
 }
