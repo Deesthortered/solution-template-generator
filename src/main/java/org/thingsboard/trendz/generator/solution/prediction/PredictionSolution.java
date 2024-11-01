@@ -278,7 +278,10 @@ public class PredictionSolution implements SolutionTemplateGenerator {
 
             int iterator = 1;
             for (CSVRecord record : parser) {
-                LocalDateTime dateTime = LocalDateTime.parse(record.get(DATE_FIELD), formatter);
+                LocalDateTime dateTime = LocalDateTime
+                        .parse(record.get(DATE_FIELD), formatter)
+                        .plusYears(10);
+
                 long ts = dateTime.toInstant(ZoneOffset.UTC).toEpochMilli();
                 if (ts < startGenerationTime && endGenerationTime <= ts) {
                     continue;
