@@ -17,20 +17,26 @@ import org.thingsboard.trendz.generator.exception.DeviceAlreadyExistException;
 import org.thingsboard.trendz.generator.exception.SolutionValidationException;
 import org.thingsboard.trendz.generator.model.ModelData;
 import org.thingsboard.trendz.generator.model.ModelEntity;
+import org.thingsboard.trendz.generator.model.anomaly.AnomalyInfo;
+import org.thingsboard.trendz.generator.model.anomaly.AnomalyType;
 import org.thingsboard.trendz.generator.model.tb.CustomerData;
 import org.thingsboard.trendz.generator.model.tb.CustomerUser;
 import org.thingsboard.trendz.generator.model.tb.Telemetry;
 import org.thingsboard.trendz.generator.model.tb.Timestamp;
 import org.thingsboard.trendz.generator.service.FileService;
+import org.thingsboard.trendz.generator.service.anomaly.AnomalyService;
 import org.thingsboard.trendz.generator.service.rest.TbRestClient;
 import org.thingsboard.trendz.generator.solution.SolutionTemplateGenerator;
 import org.thingsboard.trendz.generator.solution.prediction.model.ElectricityLoadDiagrams20112014;
+import org.thingsboard.trendz.generator.utils.MySortedSet;
 
 import java.io.FileReader;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.time.ZoneOffset;
+import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Map;
 import java.util.Set;
@@ -57,14 +63,17 @@ public class PredictionSolution implements SolutionTemplateGenerator {
 
     private final TbRestClient tbRestClient;
     private final FileService fileService;
+    private final AnomalyService anomalyService;
 
     @Autowired
     public PredictionSolution(
             TbRestClient tbRestClient,
-            FileService fileService
+            FileService fileService,
+            AnomalyService anomalyService
     ) {
         this.tbRestClient = tbRestClient;
         this.fileService = fileService;
+        this.anomalyService = anomalyService;
     }
 
 
@@ -168,10 +177,28 @@ public class PredictionSolution implements SolutionTemplateGenerator {
             log.info("Telemetry was parsed");
         }
 
+        Set<AnomalyInfo> anomalyInfoSet = MySortedSet.of(
+                AnomalyInfo.builder()
+                        .startDate(ZonedDateTime.of(2024, 2, 15, 0, 0, 0, 0, ZoneId.systemDefault()))
+                        .endDate(ZonedDateTime.of(2024, 3, 15, 0, 0, 0, 0, ZoneId.systemDefault()))
+                        .type(AnomalyType.DATA_GAP)
+                        .build(),
+
+                AnomalyInfo.builder()
+                        .startDate(ZonedDateTime.of(2024, 5, 1, 0, 0, 0, 0, ZoneId.systemDefault()))
+                        .endDate(ZonedDateTime.of(2024, 8, 1, 0, 0, 0, 0, ZoneId.systemDefault()))
+                        .type(AnomalyType.DATA_GAP)
+                        .build()
+        );
+
         Set<ModelEntity> devices = telemetryMap.keySet().stream()
-                .map(deviceName -> new ElectricityLoadDiagrams20112014(
-                        deviceName, "", telemetryMap.get(deviceName)
-                ))
+                .map(deviceName -> {
+                    Telemetry<Double> telemetry = telemetryMap.get(deviceName);
+                    this.anomalyService.applyAnomaly(telemetry, anomalyInfoSet);
+                    return new ElectricityLoadDiagrams20112014(
+                            deviceName, "", telemetry
+                    );
+                })
                 .collect(Collectors.toCollection(TreeSet::new));
 
         Set<ModelEntity> limitedDevices = devices.stream()

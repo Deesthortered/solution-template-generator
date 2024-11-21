@@ -18,7 +18,6 @@ import java.util.Set;
 @RequiredArgsConstructor
 public class AnomalyService {
 
-
     private final List<AnomalyCreator> anomalyCreatorList;
     private Map<AnomalyType, AnomalyCreator> typeToCreatorMap;
 
