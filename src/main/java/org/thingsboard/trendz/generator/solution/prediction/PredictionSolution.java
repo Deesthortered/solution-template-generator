@@ -18,7 +18,6 @@ import org.thingsboard.trendz.generator.exception.SolutionValidationException;
 import org.thingsboard.trendz.generator.model.ModelData;
 import org.thingsboard.trendz.generator.model.ModelEntity;
 import org.thingsboard.trendz.generator.model.anomaly.AnomalyInfo;
-import org.thingsboard.trendz.generator.model.anomaly.AnomalyType;
 import org.thingsboard.trendz.generator.model.tb.CustomerData;
 import org.thingsboard.trendz.generator.model.tb.CustomerUser;
 import org.thingsboard.trendz.generator.model.tb.Telemetry;
@@ -34,9 +33,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.time.LocalDateTime;
-import java.time.ZoneId;
 import java.time.ZoneOffset;
-import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Map;
 import java.util.Set;
@@ -168,7 +165,8 @@ public class PredictionSolution implements SolutionTemplateGenerator {
 
         Map<String, Telemetry<Double>> telemetryMap;
         if (skipTelemetry) {
-            telemetryMap = getAllDevicesNames(filePath).stream()
+            Set<String> allDevicesNames = getAllDevicesNames(filePath);
+            telemetryMap = allDevicesNames.stream()
                     .map(deviceName -> Map.entry(deviceName, new Telemetry<Double>("skip")))
                     .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
         } else {
@@ -178,17 +176,17 @@ public class PredictionSolution implements SolutionTemplateGenerator {
         }
 
         Set<AnomalyInfo> anomalyInfoSet = MySortedSet.of(
-                AnomalyInfo.builder()
-                        .startDate(ZonedDateTime.of(2024, 2, 15, 0, 0, 0, 0, ZoneId.systemDefault()))
-                        .endDate(ZonedDateTime.of(2024, 3, 15, 0, 0, 0, 0, ZoneId.systemDefault()))
-                        .type(AnomalyType.DATA_GAP)
-                        .build(),
-
-                AnomalyInfo.builder()
-                        .startDate(ZonedDateTime.of(2024, 5, 1, 0, 0, 0, 0, ZoneId.systemDefault()))
-                        .endDate(ZonedDateTime.of(2024, 8, 1, 0, 0, 0, 0, ZoneId.systemDefault()))
-                        .type(AnomalyType.DATA_GAP)
-                        .build()
+//                AnomalyInfo.builder()
+//                        .startDate(ZonedDateTime.of(2024, 2, 15, 0, 0, 0, 0, ZoneId.systemDefault()))
+//                        .endDate(ZonedDateTime.of(2024, 3, 15, 0, 0, 0, 0, ZoneId.systemDefault()))
+//                        .type(AnomalyType.DATA_GAP)
+//                        .build(),
+//
+//                AnomalyInfo.builder()
+//                        .startDate(ZonedDateTime.of(2024, 5, 1, 0, 0, 0, 0, ZoneId.systemDefault()))
+//                        .endDate(ZonedDateTime.of(2024, 8, 1, 0, 0, 0, 0, ZoneId.systemDefault()))
+//                        .type(AnomalyType.DATA_GAP)
+//                        .build()
         );
 
         Set<ModelEntity> devices = telemetryMap.keySet().stream()
@@ -307,7 +305,8 @@ public class PredictionSolution implements SolutionTemplateGenerator {
             for (CSVRecord record : parser) {
                 LocalDateTime dateTime = LocalDateTime
                         .parse(record.get(DATE_FIELD), formatter)
-                        .plusYears(10);
+//                        .plusYears(10)
+                        ;
 
                 long ts = dateTime.toInstant(ZoneOffset.UTC).toEpochMilli();
                 if (ts < startGenerationTime && endGenerationTime <= ts) {
@@ -346,7 +345,7 @@ public class PredictionSolution implements SolutionTemplateGenerator {
                 CSVParser parser = format.parse(reader);
         ) {
             return parser.getHeaderMap().keySet().stream()
-                    .filter(header -> !header.isEmpty())
+                    .filter(header -> !header.equals(DATE_FIELD))
                     .collect(Collectors.toCollection(TreeSet::new));
 
         } catch (IOException e) {
