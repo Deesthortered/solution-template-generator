@@ -180,6 +180,7 @@ public class ElectricityLoadSolution implements SolutionTemplateGenerator {
 
         Set<AnomalyInfo> anomalyInfoSet = MySortedSet.of();
 
+        log.info("Preprocessing the telemetry");
         Set<ModelEntity> devices = telemetryMap.keySet().stream()
                 .flatMap(deviceName -> {
                     Telemetry<Double> originalTelemetry = telemetryMap.get(deviceName);
@@ -209,17 +210,14 @@ public class ElectricityLoadSolution implements SolutionTemplateGenerator {
 
                     return Stream.of(
                             new ElectricityLoadDiagrams20112014(deviceName, "", fullTelemetry),
-                            new ElectricityLoadDiagrams20112014(deviceName, "", shortTelemetry)
+                            new ElectricityLoadDiagrams20112014(deviceName + "_short", "", shortTelemetry)
                     );
                 })
 
                 .collect(Collectors.toCollection(TreeSet::new));
 
-        Set<ModelEntity> limitedDevices = devices.stream()
-                .limit(DEVICE_LIMIT)
-                .collect(Collectors.toCollection(TreeSet::new));
-
-        return new ModelData(limitedDevices);
+        log.info("Preprocessing is finished");
+        return new ModelData(devices);
     }
 
     private void applyData(ModelData data, CustomerData customerData, boolean strictGeneration) {
@@ -307,6 +305,7 @@ public class ElectricityLoadSolution implements SolutionTemplateGenerator {
     }
 
     private Map<String, Telemetry<Double>> loadTelemetry(Path filePath, long startGenerationTime, long endGenerationTime) {
+        log.info("Start telemetry parsing from the file: {}", filePath);
         CSVFormat format = getFormat();
         try (
                 FileReader reader = new FileReader(filePath.toFile());
@@ -314,6 +313,7 @@ public class ElectricityLoadSolution implements SolutionTemplateGenerator {
         ) {
             Map<String, Telemetry<Double>> consumptionMap = parser.getHeaderMap().keySet().stream()
                     .filter(header -> !header.equals(DATE_FIELD))
+                    .limit(DEVICE_LIMIT)
                     .map(header -> Map.entry(header, new Telemetry<Double>("consumption")))
                     .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
 
@@ -338,14 +338,15 @@ public class ElectricityLoadSolution implements SolutionTemplateGenerator {
 
                     Telemetry<Double> telemetry = consumptionMap.get(header);
                     telemetry.add(new Telemetry.Point<>(Timestamp.of(ts), value));
+                }
 
-                    iterator++;
-                    if (iterator % 1000000 == 0) {
-                        log.info("Processed CSV row: {}", iterator);
-                    }
+                iterator++;
+                if (iterator % 10000 == 0) {
+                    log.info("Processed CSV row: {}", iterator);
                 }
             }
 
+            log.info("Start telemetry parsing from the file is finished");
             return consumptionMap;
         } catch (IOException e) {
             throw new RuntimeException(e);
