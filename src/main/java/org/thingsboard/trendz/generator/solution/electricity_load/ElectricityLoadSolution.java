@@ -1,4 +1,4 @@
-package org.thingsboard.trendz.generator.solution.prediction;
+package org.thingsboard.trendz.generator.solution.electricity_load;
 
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.csv.CSVFormat;
@@ -26,7 +26,8 @@ import org.thingsboard.trendz.generator.service.FileService;
 import org.thingsboard.trendz.generator.service.anomaly.AnomalyService;
 import org.thingsboard.trendz.generator.service.rest.TbRestClient;
 import org.thingsboard.trendz.generator.solution.SolutionTemplateGenerator;
-import org.thingsboard.trendz.generator.solution.prediction.model.ElectricityLoadDiagrams20112014;
+import org.thingsboard.trendz.generator.solution.electricity_load.model.ElectricityLoadDiagrams20112014;
+import org.thingsboard.trendz.generator.utils.DateTimeUtils;
 import org.thingsboard.trendz.generator.utils.MySortedSet;
 
 import java.io.FileReader;
@@ -34,25 +35,27 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
+import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Slf4j
 @Service
-public class PredictionSolution implements SolutionTemplateGenerator {
+public class ElectricityLoadSolution implements SolutionTemplateGenerator {
 
-    private static final String CUSTOMER_TITLE = "Prediction Customer";
-    private static final String CUSTOMER_USER_EMAIL = "prediction@thingsboard.io";
+    private static final String CUSTOMER_TITLE = "Electricity Load Customer";
+    private static final String CUSTOMER_USER_EMAIL = "electricity.load@thingsboard.io";
     private static final String CUSTOMER_USER_PASSWORD = "password";
-    private static final String CUSTOMER_USER_FIRST_NAME = "Prediction Solution";
+    private static final String CUSTOMER_USER_FIRST_NAME = "Electricity Load Solution";
     private static final String CUSTOMER_USER_LAST_NAME = "";
 
-    private static final String ASSET_GROUP_NAME = "Prediction Asset Group";
-    private static final String DEVICE_GROUP_NAME = "Prediction Device Group";
+    private static final String ASSET_GROUP_NAME = "Electricity Load Asset Group";
+    private static final String DEVICE_GROUP_NAME = "Electricity Load Device Group";
 
     private static final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
     private static final String DATE_FIELD = "Date";
@@ -63,7 +66,7 @@ public class PredictionSolution implements SolutionTemplateGenerator {
     private final AnomalyService anomalyService;
 
     @Autowired
-    public PredictionSolution(
+    public ElectricityLoadSolution(
             TbRestClient tbRestClient,
             FileService fileService,
             AnomalyService anomalyService
@@ -76,13 +79,13 @@ public class PredictionSolution implements SolutionTemplateGenerator {
 
     @Override
     public String getSolutionName() {
-        return "Prediction";
+        return "ElectricityLoad";
     }
 
     @Override
     public void validate() throws SolutionValidationException {
         try {
-            log.info("Prediction Solution - start validation");
+            log.info("Electricity Load Solution - start validation");
 
             validateCustomerData();
 
@@ -91,7 +94,7 @@ public class PredictionSolution implements SolutionTemplateGenerator {
                 validateData(data);
             }
 
-            log.info("Prediction Solution - validation is completed!");
+            log.info("Electricity Load Solution - validation is completed!");
         } catch (Exception e) {
             throw new SolutionValidationException(getSolutionName(), e);
         }
@@ -102,21 +105,21 @@ public class PredictionSolution implements SolutionTemplateGenerator {
             boolean skipTelemetry, boolean strictGeneration, boolean fullTelemetryGeneration,
             long startGenerationTime, long endGenerationTime
     ) {
-        log.info("Prediction Solution - start generation");
+        log.info("Electricity Load Solution - start generation");
         try {
             CustomerData customerData = createCustomerData(strictGeneration);
             ModelData data = makeData(skipTelemetry, startGenerationTime, endGenerationTime);
             applyData(data, customerData, strictGeneration);
 
-            log.info("Prediction Solution - generation is completed!");
+            log.info("Electricity Load Solution - generation is completed!");
         } catch (Exception e) {
-            log.error("Prediction Solution generate was failed, skipping...", e);
+            log.error("Electricity Load Solution generate was failed, skipping...", e);
         }
     }
 
     @Override
     public void remove() {
-        log.info("Prediction Solution - start removal");
+        log.info("Electricity Load Solution - start removal");
         try {
             deleteCustomerData();
 
@@ -125,9 +128,9 @@ public class PredictionSolution implements SolutionTemplateGenerator {
                 deleteData(data);
             }
 
-            log.info("Prediction Solution - removal is completed!");
+            log.info("Electricity Load Solution - removal is completed!");
         } catch (Exception e) {
-            log.error("Prediction Solution removal was failed, skipping...", e);
+            log.error("Electricity Load Solution removal was failed, skipping...", e);
         }
     }
 
@@ -175,28 +178,41 @@ public class PredictionSolution implements SolutionTemplateGenerator {
             log.info("Telemetry was parsed");
         }
 
-        Set<AnomalyInfo> anomalyInfoSet = MySortedSet.of(
-//                AnomalyInfo.builder()
-//                        .startDate(ZonedDateTime.of(2024, 2, 15, 0, 0, 0, 0, ZoneId.systemDefault()))
-//                        .endDate(ZonedDateTime.of(2024, 3, 15, 0, 0, 0, 0, ZoneId.systemDefault()))
-//                        .type(AnomalyType.DATA_GAP)
-//                        .build(),
-//
-//                AnomalyInfo.builder()
-//                        .startDate(ZonedDateTime.of(2024, 5, 1, 0, 0, 0, 0, ZoneId.systemDefault()))
-//                        .endDate(ZonedDateTime.of(2024, 8, 1, 0, 0, 0, 0, ZoneId.systemDefault()))
-//                        .type(AnomalyType.DATA_GAP)
-//                        .build()
-        );
+        Set<AnomalyInfo> anomalyInfoSet = MySortedSet.of();
 
         Set<ModelEntity> devices = telemetryMap.keySet().stream()
-                .map(deviceName -> {
-                    Telemetry<Double> telemetry = telemetryMap.get(deviceName);
-                    this.anomalyService.applyAnomaly(telemetry, anomalyInfoSet);
-                    return new ElectricityLoadDiagrams20112014(
-                            deviceName, "", telemetry
+                .flatMap(deviceName -> {
+                    Telemetry<Double> originalTelemetry = telemetryMap.get(deviceName);
+                    this.anomalyService.applyAnomaly(originalTelemetry, anomalyInfoSet);
+
+                    Telemetry<Double> fullTelemetry = originalTelemetry.getPoints().stream()
+                            .map(point -> {
+                                Timestamp oldTs = point.getTs();
+                                Timestamp newTs = Timestamp.of(DateTimeUtils.toTs(DateTimeUtils.fromTs(oldTs.get()).plusYears(12)));
+
+                                return new Telemetry.Point<>(newTs, point.getValue());
+                            })
+                            .collect(Collectors.collectingAndThen(
+                                    Collectors.toCollection(TreeSet::new),
+                                    set -> new Telemetry<>(originalTelemetry.getName(), set)
+                            ));
+
+                    Telemetry<Double> shortTelemetry = fullTelemetry.getPoints().stream()
+                            .filter(point -> {
+                                ZonedDateTime date = DateTimeUtils.fromTs(point.getTs());
+                                return date.getYear() < 2025;
+                            })
+                            .collect(Collectors.collectingAndThen(
+                                    Collectors.toCollection(TreeSet::new),
+                                    set -> new Telemetry<>(originalTelemetry.getName() + "_short", set)
+                            ));
+
+                    return Stream.of(
+                            new ElectricityLoadDiagrams20112014(deviceName, "", fullTelemetry),
+                            new ElectricityLoadDiagrams20112014(deviceName, "", shortTelemetry)
                     );
                 })
+
                 .collect(Collectors.toCollection(TreeSet::new));
 
         Set<ModelEntity> limitedDevices = devices.stream()
@@ -304,9 +320,7 @@ public class PredictionSolution implements SolutionTemplateGenerator {
             int iterator = 1;
             for (CSVRecord record : parser) {
                 LocalDateTime dateTime = LocalDateTime
-                        .parse(record.get(DATE_FIELD), formatter)
-//                        .plusYears(10)
-                        ;
+                        .parse(record.get(DATE_FIELD), formatter);
 
                 long ts = dateTime.toInstant(ZoneOffset.UTC).toEpochMilli();
                 if (ts < startGenerationTime && endGenerationTime <= ts) {

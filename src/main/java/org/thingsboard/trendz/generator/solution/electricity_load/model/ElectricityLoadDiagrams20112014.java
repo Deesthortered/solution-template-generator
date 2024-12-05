@@ -1,4 +1,4 @@
-package org.thingsboard.trendz.generator.solution.prediction.model;
+package org.thingsboard.trendz.generator.solution.electricity_load.model;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -17,7 +17,7 @@ public class ElectricityLoadDiagrams20112014 extends ModelEntity {
 
     @Override
     public String entityType() {
-        return "PR ElectricityLoadDiagrams20112014";
+        return "EL ElectricityLoadDiagrams20112014";
     }
 
     private String systemName;
