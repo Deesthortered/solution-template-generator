@@ -205,7 +205,7 @@ public class ElectricityLoadSolution implements SolutionTemplateGenerator {
                             })
                             .collect(Collectors.collectingAndThen(
                                     Collectors.toCollection(TreeSet::new),
-                                    set -> new Telemetry<>(originalTelemetry.getName() + "_short", set)
+                                    set -> new Telemetry<>(originalTelemetry.getName(), set)
                             ));
 
                     return Stream.of(
