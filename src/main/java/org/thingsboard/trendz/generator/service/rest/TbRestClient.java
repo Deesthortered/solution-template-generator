@@ -61,7 +61,7 @@ import static java.util.Objects.nonNull;
 public class TbRestClient {
 
     public static final String LOGIN_PATH = "/api/auth/login";
-    private static final int PUSH_TELEMETRY_DELAY = 100;
+    private static final int PUSH_TELEMETRY_DELAY = 200;
     private static final int PUSH_TELEMETRY_BATCH_SIZE = 100;
     private static final int PUSH_TELEMETRY_SUPPRESS_ERROR_COUNT = 10;
 

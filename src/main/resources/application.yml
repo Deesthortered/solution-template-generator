@@ -12,7 +12,7 @@ tb:
 
 generator:
   mode: "${GENERATOR_MODE:generate}"  # generate, remove
-  solutions: EnergyMetering, WaterMetering
+  solutions: WaterMetering
   skipTelemetry: false
 
   # true - run generator expecting no entities (when 'generate' mode) or expecting all entities (when 'remove' mode)
@@ -22,6 +22,6 @@ generator:
   # true - generate telemetry exactly from 'startGenerationTime' to 'endGenerationTime' and without generating anomalies
   # false - generate telemetry from static range in the code and with generating anomalies
   fullTelemetryGeneration: false
-  startGenerationTime: 1672531200000
-  endGenerationTime: 1893456000000
+  startGenerationTime: 1704067200000 # 2024/01/01 00:00:00
+  endGenerationTime: 1735689600000   # 2025/01/01 00:00:00
   telemetryTtl: 315360000 # 10 years in seconds
